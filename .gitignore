@@ -23,6 +23,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Claude — MCP config may contain Supabase project_ref; copy from .claude/.mcp.json.example
+.claude/.mcp.json
+
 # local env files
 .env.local
 .env.development.local
