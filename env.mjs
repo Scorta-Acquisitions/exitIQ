@@ -11,6 +11,8 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     SUPABASE_URL: z.string().url(),
     SUPABASE_SERVICE_SECRET_KEY: z.string().min(1),
+    // AI
+    ANTHROPIC_API_KEY: z.string().min(1),
   },
   client: {
     // Supabase — safe for browser
@@ -24,5 +26,6 @@ export const env = createEnv({
     SUPABASE_SERVICE_SECRET_KEY: process.env.SUPABASE_SERVICE_SECRET_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   },
 })
