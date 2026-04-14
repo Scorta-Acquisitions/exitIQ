@@ -22,7 +22,11 @@
     "e2e:ui": "playwright test --ui",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "postinstall": "npx patch-package -y",
-    "coupling-graph": "npx madge --extensions js,jsx,ts,tsx,css,md,mdx ./ --exclude '.next|tailwind.config.js|reset.d.ts|prettier.config.js|postcss.config.js|playwright.config.ts|next.config.js|next-env.d.ts|instrumentation.ts|e2e/|README.md|.storybook/|.eslintrc.js' --image graph.svg"
+    "coupling-graph": "npx madge --extensions js,jsx,ts,tsx,css,md,mdx ./ --exclude '.next|tailwind.config.js|reset.d.ts|prettier.config.js|postcss.config.js|playwright.config.ts|next.config.js|next-env.d.ts|instrumentation.ts|e2e/|README.md|.storybook/|.eslintrc.js' --image graph.svg",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.3.1",
@@ -50,8 +54,10 @@
     "@t3-oss/env-nextjs": "^0.13.10",
     "@vercel/otel": "^1.12.0",
     "class-variance-authority": "^0.7.1",
+    "drizzle-orm": "^0.45.2",
     "lodash": "^4.17.23",
     "next": "15.5.10",
+    "postgres": "^3.4.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwind-merge": "^3.5.0",
@@ -91,6 +97,7 @@
     "@vitest/ui": "^3.2.4",
     "all-contributors-cli": "^6.26.1",
     "cross-env": "^7.0.3",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.26.0",
     "eslint-config-next": "15.1.6",
     "eslint-config-prettier": "^10.1.8",
