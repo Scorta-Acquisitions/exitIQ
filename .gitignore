@@ -16,12 +16,17 @@ build
 # misc
 .DS_Store
 *.pem
+*.tsbuildinfo
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Claude — MCP config may contain Supabase project_ref; copy from .claude/.mcp.json.example
+.claude/.mcp.json
+.mcp.json
 
 # local env files
 .env.local
