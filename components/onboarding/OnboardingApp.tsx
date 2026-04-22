@@ -1,13 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { SELLER_QUESTIONS } from "@/components/onboarding/questions"
-import { calcScore } from "@/components/onboarding/scoring"
-import { QuestionStep } from "@/components/onboarding/QuestionStep"
+import { useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
 import { ProcessingScreen } from "@/components/onboarding/ProcessingScreen"
+import { SELLER_QUESTIONS } from "@/components/onboarding/questions"
+import { QuestionStep } from "@/components/onboarding/QuestionStep"
 import { ResultsScreen } from "@/components/onboarding/ResultsScreen"
+import { calcScore } from "@/components/onboarding/scoring"
 import type { Answers, AnswerValue, Phase } from "@/components/onboarding/types"
 
 const STORAGE_KEY = "scorta-onboarding"

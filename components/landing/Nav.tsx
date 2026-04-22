@@ -1,20 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-
 interface NavProps {
   onStartWidget: () => void
 }
 
 export function Nav({ onStartWidget }: NavProps) {
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20)
-    window.addEventListener("scroll", fn)
-    return () => window.removeEventListener("scroll", fn)
-  }, [])
-
   return (
     <nav
       style={{
@@ -28,10 +18,9 @@ export function Nav({ onStartWidget }: NavProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        background: scrolled ? "rgba(250,249,247,0.92)" : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        borderBottom: scrolled ? "1px solid #dad4c8" : "1px solid transparent",
-        transition: "all 200ms ease",
+        background: "rgba(250,249,247,0.92)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid #dad4c8",
       }}
     >
       {/* Logo */}

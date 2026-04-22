@@ -312,6 +312,60 @@ html {
   border-color: #84e7a5;
 }
 
+/* ─── Radix Select ─────────────────────────────────────────────────────────── */
+.scorta-select-trigger:focus {
+  outline: none;
+}
+
+.scorta-select-content[data-state="open"] {
+  animation: slideUp 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.scorta-select-content[data-state="closed"] {
+  animation: fadeIn 0.12s ease reverse forwards;
+}
+
+.scorta-select-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: background 120ms ease;
+}
+
+.scorta-select-item--light {
+  color: #1a1917;
+  font-weight: 400;
+}
+.scorta-select-item--light[data-highlighted] {
+  background: rgba(2, 73, 42, 0.07);
+  color: #02492a;
+  font-weight: 500;
+}
+.scorta-select-item--light[data-state="checked"] {
+  font-weight: 600;
+  color: #02492a;
+}
+
+.scorta-select-item--dark {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+}
+.scorta-select-item--dark[data-highlighted] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 500;
+}
+.scorta-select-item--dark[data-state="checked"] {
+  font-weight: 600;
+  color: #84e7a5;
+}
+
 .faq-answer {
   overflow: hidden;
   transition:

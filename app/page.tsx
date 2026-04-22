@@ -1,14 +1,14 @@
 "use client"
 
 import { useRef } from "react"
-import { Nav } from "@/components/landing/Nav"
-import { Hero } from "@/components/landing/Hero"
-import { TrustStrip } from "@/components/landing/TrustStrip"
-import { HowItWorks } from "@/components/landing/HowItWorks"
-import { Features } from "@/components/landing/Features"
-import { SavingsStrip } from "@/components/landing/SavingsStrip"
 import { FAQ } from "@/components/landing/FAQ"
+import { Features } from "@/components/landing/Features"
 import { Footer } from "@/components/landing/Footer"
+import { Hero } from "@/components/landing/Hero"
+import { HowItWorks } from "@/components/landing/HowItWorks"
+import { Nav } from "@/components/landing/Nav"
+import { SavingsStrip } from "@/components/landing/SavingsStrip"
+import { TrustStrip } from "@/components/landing/TrustStrip"
 
 export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null)
