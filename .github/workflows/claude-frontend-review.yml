@@ -30,7 +30,11 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-haiku-4-5
           custom_instructions: |
-            Read AGENTS.md at the repo root first. It contains your full instructions.
-            AGENTS.md will direct you to read two skill files before reviewing.
-            You MUST follow the steps in AGENTS.md exactly — especially the mandatory
-            first step of reading both skill files before touching the diff.
+            Read AGENTS.md at the repo root. Follow its protocol exactly.
+
+            Key constraint: DO NOT read .github/review-skills/ files in full.
+            Use grep to fetch only rule sections relevant to patterns found in the diff.
+            The grep lookup table is defined in AGENTS.md Step 2.
+
+            Workflow: diff first → identify patterns → grep only relevant rules → post ONE review comment.
+            Never post a task list or status update. Post findings directly.
