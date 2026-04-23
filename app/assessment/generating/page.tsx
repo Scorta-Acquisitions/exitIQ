@@ -45,58 +45,37 @@ export default function GeneratingPage() {
   }, [router])
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#02492a",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "40px 24px",
-      }}
-    >
+    <div className="bg-matcha-800 flex min-h-screen flex-col items-center justify-center px-6 py-10">
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "48px" }}>
+      <div className="mb-12 flex items-center gap-2">
         <div
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            background: "#84e7a5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "#02492a",
-          }}
+          className="bg-matcha-300 text-matcha-800 flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold"
+          aria-hidden="true"
         >
           IQ
         </div>
-        <span style={{ fontSize: "18px", fontWeight: 700, color: "#fff" }}>Exit IQ</span>
+        <span className="text-white text-lg font-bold">Exit IQ</span>
       </div>
 
-      {/* Spinner */}
-      <div style={{ marginBottom: "36px" }}>
+      {/* Spinner / done indicator */}
+      <div className="mb-9">
         {done ? (
           <div
-            style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "50%",
-              background: "rgba(132,231,165,0.15)",
-              border: "2px solid #84e7a5",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "28px",
-            }}
+            role="img"
+            aria-label="Report complete"
+            className="bg-matcha-300/15 border-matcha-300 flex h-16 w-16 items-center justify-center rounded-full border-2 text-[28px]"
           >
             ✓
           </div>
         ) : (
-          <svg width="64" height="64" viewBox="0 0 64 64" className="animate-spin-slow">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            className="animate-spin-slow"
+            aria-label="Generating report"
+            role="img"
+          >
             <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
             <circle
               cx="32"
@@ -117,7 +96,7 @@ export default function GeneratingPage() {
       <div
         role="list"
         aria-label="Report generation steps"
-        style={{ maxWidth: "360px", width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}
+        className="flex w-full max-w-[360px] flex-col gap-3.5"
       >
         {STEPS.map((label, i) => {
           const completed = i < stepIdx
@@ -128,42 +107,28 @@ export default function GeneratingPage() {
               key={i}
               role="listitem"
               aria-label={`${label} — ${completed || done ? "complete" : active ? "in progress" : "pending"}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                opacity: upcoming ? 0.3 : 1,
-                transition: "opacity 300ms ease",
-              }}
+              className={`flex items-center gap-3 transition-opacity duration-300 ${upcoming ? "opacity-30" : "opacity-100"}`}
             >
               <div
                 aria-hidden="true"
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background:
-                    completed || done ? "#84e7a5" : active ? "rgba(132,231,165,0.2)" : "rgba(255,255,255,0.08)",
-                  border: `2px solid ${completed || done ? "#84e7a5" : active ? "#84e7a5" : "rgba(255,255,255,0.15)"}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "10px",
-                  color: "#02492a",
-                  fontWeight: 700,
-                  transition: "all 400ms ease",
-                }}
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold transition-all duration-[400ms] ${
+                  completed || done
+                    ? "bg-matcha-300 border-matcha-300 text-matcha-800"
+                    : active
+                      ? "bg-matcha-300/20 border-matcha-300"
+                      : "bg-white/[8%] border-white/15"
+                }`}
               >
                 {(completed || done) && "✓"}
               </div>
               <span
-                style={{
-                  fontSize: "14px",
-                  fontWeight: active ? 600 : 400,
-                  color: completed || done ? "#84e7a5" : active ? "#fff" : "rgba(255,255,255,0.4)",
-                  transition: "all 300ms ease",
-                }}
+                className={`text-sm transition-all duration-300 ${
+                  completed || done
+                    ? "text-matcha-300"
+                    : active
+                      ? "text-white font-semibold"
+                      : "text-white/40"
+                }`}
               >
                 {label}
               </span>

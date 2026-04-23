@@ -16,7 +16,7 @@ const chipVariants = cva(
   }
 )
 
-const chipLabelVariants = cva("text-[13px] font-semibold", {
+const chipLabelVariants = cva("text-sm font-semibold", {
   variants: {
     selected: {
       true: "text-white",
@@ -26,7 +26,7 @@ const chipLabelVariants = cva("text-[13px] font-semibold", {
   defaultVariants: { selected: false },
 })
 
-const chipSubVariants = cva("text-[10px] mt-0.5", {
+const chipSubVariants = cva("text-xs mt-0.5", {
   variants: {
     selected: {
       true: "text-white/70",
@@ -47,12 +47,16 @@ interface GridChipsProps {
 export function GridChips({ label, options, value, onSelect, columns = 2 }: GridChipsProps) {
   return (
     <div className="flex flex-col gap-2">
-      {label && <div className="text-warm-charcoal text-[13px] font-semibold">{label}</div>}
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: "7px" }}>
+      {label && <div className="text-warm-charcoal text-sm font-semibold">{label}</div>}
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)` }} className="gap-2">
         {options.map((opt) => {
           const selected = value === opt.value
           return (
-            <button key={opt.value} onClick={() => onSelect(opt.value)} className={chipVariants({ selected })}>
+            <button
+              key={opt.value}
+              onClick={() => onSelect(opt.value)}
+              className={chipVariants({ selected })}
+            >
               <div className={chipLabelVariants({ selected })}>{opt.label}</div>
               {opt.sub && <div className={chipSubVariants({ selected })}>{opt.sub}</div>}
             </button>
