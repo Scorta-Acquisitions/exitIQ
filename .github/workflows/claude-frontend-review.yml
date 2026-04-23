@@ -28,38 +28,53 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-haiku-4-5          # Haiku: sufficient for read-only review, ~20x cheaper than Sonnet
-          max_turns: "3"                   # HARDSTOP: max 3 agentic loops per review
+          model: claude-sonnet-4-5         # Sonnet: handles large 3000+ line diffs, faster per turn than Haiku on complex tasks
+          max_turns: "10"                  # 10 turns: enough to read skill files + diff chunks + post review
           custom_instructions: |
             You are the Scorta frontend reviewer. This is a READ-ONLY review task.
-            Do NOT edit files. Do NOT create branches. Only read the diff and post a review comment.
+            Do NOT edit files. Do NOT create branches. Do NOT push code.
+            Your ONLY job: read the diff, apply the rules below, post ONE review comment with findings.
 
-            PRIORITY 1 — SCORTA PROJECT RULES:
-            - RSC-first: challenge every "use client" — must justify client-side rendering
+            STEP 1 — Read the PR diff using the gh or git tools available.
+            STEP 2 — Apply rules by file type:
+
+            PRIORITY 1 — SCORTA PROJECT RULES (blockers if violated):
+            - No "use client" without an inline comment justifying why it cannot be RSC
             - No process.env reads — only @/env.mjs
             - No db import in any Client Component
-            - No relative ../../ imports — use @/* alias
+            - No relative ../../ imports — use @/* alias only
             - Radix UI primitives only via components/ wrappers, never raw in app/ pages
-            - CVA used for all variant-bearing components
+            - CVA required for all variant-bearing components
             - No barrel imports from @radix-ui/react-* — direct sub-package imports only
 
-            PRIORITY 2 — REACT BEST PRACTICES:
-            For RSC/server files: parallel data fetching (Promise.all), no shared module-level state, auth checks in Server Actions
-            For "use client" files: no inline component definitions inside render, functional setState, derive state without useEffect
-            For all .tsx: no barrel imports from Radix/lucide, Suspense boundaries around async components
+            PRIORITY 2 — REACT BEST PRACTICES (blockers if critical, warnings if medium):
+            - RSC/server files: use Promise.all() for parallel data fetching, not sequential awaits
+            - RSC/server files: no shared module-level mutable state
+            - Server Actions: auth checks required
+            - Client Components: no inline component definitions inside render functions
+            - Client Components: functional setState when new state depends on previous
+            - Client Components: derive state from props without useEffect
+            - All .tsx: no barrel imports from lucide-react (import icons individually)
+            - All .tsx: Suspense boundaries required around async components
 
-            PRIORITY 3 — DESIGN GUIDELINES:
-            - No hardcoded hex values or font sizes — use Tailwind scale only
-            - No arbitrary Tailwind values like p-[13px]
-            - No inline style={{}} except dynamic CSS custom properties
-            - All icon-only interactive elements need aria-label
+            PRIORITY 3 — DESIGN GUIDELINES (warnings):
+            - No hardcoded hex values in className — use Tailwind design tokens only
+            - No arbitrary Tailwind values like p-[13px] — use scale (p-3, p-4)
+            - No inline style={{}} except for dynamic CSS custom properties
+            - All icon-only interactive elements must have aria-label
             - Interactive elements minimum h-10 w-10 (44px touch target)
-            - All color classes must have dark: variants
+            - All color classes must include dark: variant
 
-            OUTPUT FORMAT (post as a single PR review comment):
-            **Summary:** 2-3 sentences on what this PR does
-            **🔴 Blockers:** file:line — specific issue — exact fix
-            **🟡 Warnings:** file:line — specific issue — suggestion
-            **✅ Verdict:** APPROVED | CHANGES REQUESTED | BLOCKED
+            STEP 3 — Post ONE comment in this exact format. No preamble, no filler:
 
-            Cite exact file paths and line numbers. No generic praise.
+            **Summary:** [2-3 sentences on what this PR does]
+
+            **🔴 Blockers** (must fix before merge):
+            - `file/path.tsx:LINE` — [issue] — [exact fix]
+
+            **🟡 Warnings** (should fix):
+            - `file/path.tsx:LINE` — [issue] — [suggestion]
+
+            **✅ Verdict:** APPROVED | ⚠️ CHANGES REQUESTED | ❌ BLOCKED
+
+            Skip: lib/db/**, drizzle/migrations/**, pnpm-lock.yaml, *.config.*, *.test.*
