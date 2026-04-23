@@ -1,6 +1,6 @@
 name: Claude Frontend PR Review
 on:
-  # ONLY triggers when someone comments @claude — no auto-fire on every push
+  # Triggers only when someone comments @claude on a PR
   issue_comment:
     types: [created]
   pull_request_review_comment:
@@ -30,11 +30,6 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-haiku-4-5
           custom_instructions: |
-            Read AGENTS.md at the repo root. Follow its protocol exactly.
-
-            Key constraint: DO NOT read .github/review-skills/ files in full.
-            Use grep to fetch only rule sections relevant to patterns found in the diff.
-            The grep lookup table is defined in AGENTS.md Step 2.
-
-            Workflow: diff first → identify patterns → grep only relevant rules → post ONE review comment.
-            Never post a task list or status update. Post findings directly.
+            Read AGENTS.md at the repo root. All review rules are inline there — do not read any other files.
+            Follow the protocol in AGENTS.md exactly: diff → identify patterns → apply matching rule sections → post ONE review comment.
+            Never post a task list or status update. Post findings directly in the format specified in AGENTS.md Step 3.
