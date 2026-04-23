@@ -19,16 +19,10 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - name: Checkout PR branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
-      - name: Overlay .github and AGENTS.md from main
-        # PR branch may not have latest .github/review-skills or AGENTS.md — always pull from main
-        run: |
-          git fetch origin main --depth=1
-          git checkout origin/main -- .github/review-skills AGENTS.md
 
       - name: Run Claude Frontend Review
         uses: anthropics/claude-code-action@beta
