@@ -25,10 +25,7 @@ export function QuestionStep({ q, value, onChange, onNext, onBack, isFirst, anim
 
   const isValid =
     q.type === "contact"
-      ? !!(
-          (value as ContactValue)?.name?.trim().length &&
-          (value as ContactValue)?.email?.includes("@")
-        )
+      ? !!((value as ContactValue)?.name?.trim().length && (value as ContactValue)?.email?.includes("@"))
       : q.multi
         ? ((value as OptionValue[]) ?? []).length > 0
         : !!value
@@ -53,9 +50,7 @@ export function QuestionStep({ q, value, onChange, onNext, onBack, isFirst, anim
         >
           {q.headline}
         </div>
-        {q.sub && (
-          <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{q.sub}</div>
-        )}
+        {q.sub && <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{q.sub}</div>}
       </div>
 
       <div style={{ height: "24px" }} />
@@ -72,7 +67,7 @@ export function QuestionStep({ q, value, onChange, onNext, onBack, isFirst, anim
           {q.options.map((opt) => (
             <button
               key={opt.value}
-              className={`scorta-option-card${singleValue?.value === opt.value ? " selected" : ""}`}
+              className={`scorta-option-card${singleValue?.value === opt.value ? "selected" : ""}`}
               onClick={() => {
                 onChange(opt)
                 setTimeout(() => onNext(opt), 180)
@@ -94,19 +89,13 @@ export function QuestionStep({ q, value, onChange, onNext, onBack, isFirst, anim
                 }}
               >
                 {singleValue?.value === opt.value && (
-                  <div
-                    style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#02492a" }}
-                  />
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#02492a" }} />
                 )}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", lineHeight: 1.3 }}>
-                  {opt.label}
-                </div>
+                <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff", lineHeight: 1.3 }}>{opt.label}</div>
                 {opt.sub && (
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
-                    {opt.sub}
-                  </div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>{opt.sub}</div>
                 )}
               </div>
             </button>
@@ -123,11 +112,9 @@ export function QuestionStep({ q, value, onChange, onNext, onBack, isFirst, anim
               return (
                 <button
                   key={opt.value}
-                  className={`scorta-option-chip${sel ? " selected" : ""}`}
+                  className={`scorta-option-chip${sel ? "selected" : ""}`}
                   onClick={() => {
-                    onChange(
-                      sel ? multiValue.filter((v) => v.value !== opt.value) : [...multiValue, opt]
-                    )
+                    onChange(sel ? multiValue.filter((v) => v.value !== opt.value) : [...multiValue, opt])
                   }}
                 >
                   {opt.label}

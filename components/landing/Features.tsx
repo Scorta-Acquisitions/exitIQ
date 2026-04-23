@@ -255,9 +255,7 @@ const FEATURES = [
 export function Features() {
   return (
     <section style={{ padding: "96px 32px", background: "#faf9f7" }}>
-      <div
-        style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "80px" }}
-      >
+      <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "80px" }}>
         {FEATURES.map((f, i) => {
           const { Visual } = f
           return (

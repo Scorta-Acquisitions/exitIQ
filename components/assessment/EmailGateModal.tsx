@@ -1,3 +1,4 @@
+// use client: form state (firstName/email/timeline) + router navigation after gate submission
 "use client"
 
 import { useRouter } from "next/navigation"
@@ -32,11 +33,17 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
   return (
     <div
       style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         padding: "20px",
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       <div
         style={{
@@ -51,31 +58,49 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
       >
         {/* Header */}
         <div style={{ marginBottom: "24px" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            background: "#02492a", borderRadius: "1584px", padding: "4px 12px 4px 8px",
-            marginBottom: "16px",
-          }}>
-            <div style={{
-              width: "16px", height: "16px", borderRadius: "50%", background: "#84e7a5",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "8px", fontWeight: 700, color: "#02492a",
-            }}>IQ</div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#02492a",
+              borderRadius: "1584px",
+              padding: "4px 12px 4px 8px",
+              marginBottom: "16px",
+            }}
+          >
+            <div
+              style={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#84e7a5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "8px",
+                fontWeight: 700,
+                color: "#02492a",
+              }}
+            >
+              IQ
+            </div>
             <span style={{ fontSize: "11px", fontWeight: 600, color: "#84e7a5", letterSpacing: "0.5px" }}>Exit IQ</span>
           </div>
           <h2 style={{ fontSize: "22px", fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px" }}>
             Where should we send your report?
           </h2>
           <p style={{ fontSize: "14px", color: "#9f9b93", margin: 0, lineHeight: 1.5 }}>
-            Your full Exit IQ Report will be ready in seconds —
-            valuation range, risk flags, and a 90-day action plan.
+            Your full Exit IQ Report will be ready in seconds — valuation range, risk flags, and a 90-day action plan.
           </p>
         </div>
 
         {/* Fields */}
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}>
+            <label
+              style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}
+            >
               First name
             </label>
             <input
@@ -84,10 +109,17 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               style={{
-                width: "100%", padding: "12px 14px", fontSize: "15px",
-                border: "1.5px solid #dad4c8", borderRadius: "10px",
-                background: "#faf9f7", outline: "none", fontFamily: "inherit",
-                color: "#1a1917", transition: "border-color 150ms", boxSizing: "border-box",
+                width: "100%",
+                padding: "12px 14px",
+                fontSize: "15px",
+                border: "1.5px solid #dad4c8",
+                borderRadius: "10px",
+                background: "#faf9f7",
+                outline: "none",
+                fontFamily: "inherit",
+                color: "#1a1917",
+                transition: "border-color 150ms",
+                boxSizing: "border-box",
               }}
               onFocus={(e) => (e.target.style.borderColor = "#02492a")}
               onBlur={(e) => (e.target.style.borderColor = "#dad4c8")}
@@ -95,7 +127,9 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
           </div>
 
           <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}>
+            <label
+              style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}
+            >
               Email address
             </label>
             <input
@@ -104,10 +138,17 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={{
-                width: "100%", padding: "12px 14px", fontSize: "15px",
-                border: "1.5px solid #dad4c8", borderRadius: "10px",
-                background: "#faf9f7", outline: "none", fontFamily: "inherit",
-                color: "#1a1917", transition: "border-color 150ms", boxSizing: "border-box",
+                width: "100%",
+                padding: "12px 14px",
+                fontSize: "15px",
+                border: "1.5px solid #dad4c8",
+                borderRadius: "10px",
+                background: "#faf9f7",
+                outline: "none",
+                fontFamily: "inherit",
+                color: "#1a1917",
+                transition: "border-color 150ms",
+                boxSizing: "border-box",
               }}
               onFocus={(e) => (e.target.style.borderColor = "#02492a")}
               onBlur={(e) => (e.target.style.borderColor = "#dad4c8")}
@@ -115,7 +156,9 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
           </div>
 
           <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}>
+            <label
+              style={{ fontSize: "12px", fontWeight: 600, color: "#55534e", display: "block", marginBottom: "6px" }}
+            >
               Selling timeline
             </label>
             <div style={{ position: "relative" }}>
@@ -123,32 +166,52 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
                 value={timeline}
                 onChange={(e) => setTimeline(e.target.value)}
                 style={{
-                  width: "100%", padding: "12px 40px 12px 14px", fontSize: "15px",
-                  border: "1.5px solid #dad4c8", borderRadius: "10px",
-                  background: "#faf9f7", outline: "none", fontFamily: "inherit",
+                  width: "100%",
+                  padding: "12px 40px 12px 14px",
+                  fontSize: "15px",
+                  border: "1.5px solid #dad4c8",
+                  borderRadius: "10px",
+                  background: "#faf9f7",
+                  outline: "none",
+                  fontFamily: "inherit",
                   color: timeline ? "#1a1917" : "#9f9b93",
-                  appearance: "none", WebkitAppearance: "none",
-                  cursor: "pointer", transition: "border-color 150ms", boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  cursor: "pointer",
+                  transition: "border-color 150ms",
+                  boxSizing: "border-box",
                 }}
                 onFocus={(e) => (e.target.style.borderColor = "#02492a")}
                 onBlur={(e) => (e.target.style.borderColor = "#dad4c8")}
               >
-                <option value="" disabled>When are you looking to sell?</option>
+                <option value="" disabled>
+                  When are you looking to sell?
+                </option>
                 {SELLING_TIMELINE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
-              <div style={{
-                position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)",
-                pointerEvents: "none", color: "#9f9b93", fontSize: "11px",
-              }}>▼</div>
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  right: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                  color: "#9f9b93",
+                  fontSize: "11px",
+                }}
+              >
+                ▼
+              </div>
             </div>
           </div>
         </div>
 
-        {error && (
-          <div style={{ fontSize: "13px", color: "#d32f2f", marginTop: "10px" }}>{error}</div>
-        )}
+        {error && <div style={{ fontSize: "13px", color: "#d32f2f", marginTop: "10px" }}>{error}</div>}
 
         <button
           onClick={handleSubmit}

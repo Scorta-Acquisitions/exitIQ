@@ -1,6 +1,64 @@
+// use client: controlled Radix Select with callback-driven value changes
 "use client"
 
-import * as Select from "@radix-ui/react-select"
+import {
+  Content,
+  Icon,
+  Item,
+  ItemIndicator,
+  ItemText,
+  Portal,
+  Root,
+  Trigger,
+  Value,
+  Viewport,
+} from "@radix-ui/react-select"
+import { cva } from "class-variance-authority"
+
+const triggerVariants = cva(
+  "w-full flex items-center justify-between gap-2 border-[1.5px] rounded-[10px] px-3.5 py-3 text-sm font-[inherit] cursor-pointer outline-none appearance-none transition-all duration-150",
+  {
+    variants: {
+      variant: {
+        dark: "bg-transparent border-white/15 text-white focus:border-matcha-300",
+        light: "border-oat text-warm-charcoal",
+      },
+      hasValue: {
+        true: "",
+        false: "",
+      },
+    },
+    compoundVariants: [
+      { variant: "light", hasValue: true, className: "bg-matcha-800 border-matcha-800 text-white font-semibold" },
+      { variant: "light", hasValue: false, className: "bg-cream" },
+    ],
+    defaultVariants: { variant: "light", hasValue: false },
+  }
+)
+
+const itemVariants = cva(
+  "flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg text-sm cursor-pointer outline-none select-none transition-colors duration-100",
+  {
+    variants: {
+      variant: {
+        dark: "text-white data-[highlighted]:bg-white/10 data-[state=checked]:text-matcha-300",
+        light:
+          "text-near-black data-[highlighted]:bg-matcha-800/5 data-[state=checked]:text-matcha-800 data-[state=checked]:font-semibold",
+      },
+    },
+    defaultVariants: { variant: "light" },
+  }
+)
+
+const contentVariants = cva("rounded-[14px] p-1.5 shadow-lg overflow-hidden z-[200]", {
+  variants: {
+    variant: {
+      dark: "bg-matcha-800 border border-white/18",
+      light: "bg-white border border-oat",
+    },
+  },
+  defaultVariants: { variant: "light" },
+})
 
 interface DropdownSelectProps {
   id: string
@@ -13,137 +71,58 @@ interface DropdownSelectProps {
 }
 
 export function DropdownSelect({ id, label, value, options, placeholder, onChange, dark }: DropdownSelectProps) {
-  if (dark) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {label && (
-          <label
-            htmlFor={id}
-            style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.5px", textTransform: "uppercase" }}
-          >
-            {label}
-          </label>
-        )}
-        <Select.Root value={value} onValueChange={onChange}>
-          <Select.Trigger
-            id={id}
-            className="scorta-input scorta-select-trigger"
-            style={{ appearance: "none", WebkitAppearance: "none", paddingRight: "48px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Select.Value placeholder={<span style={{ color: "rgba(255,255,255,0.35)" }}>{placeholder}</span>} />
-            <Select.Icon className="scorta-select-icon" style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", flexShrink: 0 }}>
-              ▼
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Content
-              className="scorta-select-content"
-              position="popper"
-              side="bottom"
-              sideOffset={6}
-              style={{
-                width: "var(--radix-select-trigger-width)",
-                background: "#02492a",
-                border: "1.5px solid rgba(255,255,255,0.18)",
-                borderRadius: "14px",
-                padding: "6px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
-                zIndex: 200,
-                overflow: "hidden",
-              }}
-            >
-              <Select.Viewport style={{ maxHeight: "calc(8 * 42px)", overflowY: "auto" }}>
-                {options.map((opt) => (
-                  <Select.Item
-                    key={opt.value}
-                    value={opt.value}
-                    className="scorta-select-item scorta-select-item--dark"
-                  >
-                    <Select.ItemText>{opt.label}</Select.ItemText>
-                    <Select.ItemIndicator style={{ marginLeft: "auto", color: "#84e7a5", fontSize: "13px" }}>
-                      ✓
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </div>
-    )
-  }
+  const variant = dark ? "dark" : "light"
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={id} style={{ fontSize: "13px", fontWeight: 600, color: "#55534e", letterSpacing: "0.3px" }}>
+        <label
+          htmlFor={id}
+          className={
+            dark
+              ? "text-[13px] font-semibold tracking-[0.5px] text-white/60 uppercase"
+              : "text-warm-charcoal text-[13px] font-semibold tracking-[0.3px]"
+          }
+        >
           {label}
         </label>
       )}
-      <Select.Root value={value} onValueChange={onChange}>
-        <Select.Trigger
-          id={id}
-          className="scorta-select-trigger"
-          style={{
-            width: "100%",
-            appearance: "none",
-            WebkitAppearance: "none",
-            background: value ? "#02492a" : "#faf9f7",
-            border: `1.5px solid ${value ? "#02492a" : "#dad4c8"}`,
-            borderRadius: "10px",
-            padding: "12px 40px 12px 14px",
-            fontSize: "14px",
-            fontWeight: value ? 600 : 400,
-            color: value ? "#fff" : "#55534e",
-            outline: "none",
-            cursor: "pointer",
-            fontFamily: "inherit",
-            transition: "all 150ms ease",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            textAlign: "left",
-          }}
-        >
-          <Select.Value placeholder={<span style={{ color: "#9f9b93" }}>{placeholder}</span>} />
-          <Select.Icon style={{ color: value ? "rgba(255,255,255,0.7)" : "#9f9b93", fontSize: "11px", flexShrink: 0 }}>
+
+      <Root value={value} onValueChange={onChange}>
+        <Trigger id={id} className={triggerVariants({ variant, hasValue: !!value })}>
+          <Value placeholder={<span className={dark ? "text-white/35" : "text-warm-silver"}>{placeholder}</span>} />
+          <Icon
+            aria-hidden="true"
+            className={dark ? "shrink-0 text-[11px] text-white/50" : "text-warm-silver shrink-0 text-[11px]"}
+          >
             ▼
-          </Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content
-            className="scorta-select-content"
+          </Icon>
+        </Trigger>
+
+        <Portal>
+          <Content
+            className={contentVariants({ variant })}
             position="popper"
             side="bottom"
             sideOffset={6}
-            style={{
-              width: "var(--radix-select-trigger-width)",
-              background: "#fff",
-              border: "1.5px solid #dad4c8",
-              borderRadius: "14px",
-              padding: "6px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
-              zIndex: 200,
-              overflow: "hidden",
-            }}
+            style={{ width: "var(--radix-select-trigger-width)" }}
           >
-            <Select.Viewport style={{ maxHeight: "calc(8 * 42px)", overflowY: "auto" }}>
+            <Viewport style={{ maxHeight: "calc(8 * 42px)", overflowY: "auto" }}>
               {options.map((opt) => (
-                <Select.Item
-                  key={opt.value}
-                  value={opt.value}
-                  className="scorta-select-item scorta-select-item--light"
-                >
-                  <Select.ItemText>{opt.label}</Select.ItemText>
-                  <Select.ItemIndicator style={{ marginLeft: "auto", color: "#02492a", fontSize: "13px" }}>
+                <Item key={opt.value} value={opt.value} className={itemVariants({ variant })}>
+                  <ItemText>{opt.label}</ItemText>
+                  <ItemIndicator
+                    aria-hidden="true"
+                    className={dark ? "text-matcha-300 text-[13px]" : "text-matcha-800 text-[13px]"}
+                  >
                     ✓
-                  </Select.ItemIndicator>
-                </Select.Item>
+                  </ItemIndicator>
+                </Item>
               ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+            </Viewport>
+          </Content>
+        </Portal>
+      </Root>
     </div>
   )
 }

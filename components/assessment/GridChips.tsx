@@ -1,4 +1,40 @@
+// use client: interactive chip grid with auto-advance selection state management
 "use client"
+
+import { cva } from "class-variance-authority"
+
+const chipVariants = cva(
+  "border-[1.5px] rounded-[10px] text-center cursor-pointer transition-all duration-[130ms] ease-in font-[inherit] p-2.5",
+  {
+    variants: {
+      selected: {
+        true: "bg-matcha-800 border-matcha-800",
+        false: "bg-cream border-oat hover:border-matcha-800 hover:bg-[#f0faf5]",
+      },
+    },
+    defaultVariants: { selected: false },
+  }
+)
+
+const chipLabelVariants = cva("text-[13px] font-semibold", {
+  variants: {
+    selected: {
+      true: "text-white",
+      false: "text-near-black",
+    },
+  },
+  defaultVariants: { selected: false },
+})
+
+const chipSubVariants = cva("text-[10px] mt-0.5", {
+  variants: {
+    selected: {
+      true: "text-white/70",
+      false: "text-warm-silver",
+    },
+  },
+  defaultVariants: { selected: false },
+})
 
 interface GridChipsProps {
   label: string
@@ -10,46 +46,15 @@ interface GridChipsProps {
 
 export function GridChips({ label, options, value, onSelect, columns = 2 }: GridChipsProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div style={{ fontSize: "13px", fontWeight: 600, color: "#55534e" }}>{label}</div>
+    <div className="flex flex-col gap-2">
+      {label && <div className="text-warm-charcoal text-[13px] font-semibold">{label}</div>}
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: "7px" }}>
         {options.map((opt) => {
           const selected = value === opt.value
           return (
-            <button
-              key={opt.value}
-              onClick={() => onSelect(opt.value)}
-              style={{
-                background: selected ? "#02492a" : "#faf9f7",
-                border: `1.5px solid ${selected ? "#02492a" : "#dad4c8"}`,
-                borderRadius: "10px",
-                padding: opt.sub ? "10px 10px" : "10px 10px",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 130ms ease",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => {
-                if (!selected) {
-                  e.currentTarget.style.borderColor = "#02492a"
-                  e.currentTarget.style.background = "#f0faf5"
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!selected) {
-                  e.currentTarget.style.borderColor = "#dad4c8"
-                  e.currentTarget.style.background = "#faf9f7"
-                }
-              }}
-            >
-              <div style={{ fontSize: "13px", fontWeight: 600, color: selected ? "#fff" : "#1a1917" }}>
-                {opt.label}
-              </div>
-              {opt.sub && (
-                <div style={{ fontSize: "10px", color: selected ? "rgba(255,255,255,0.7)" : "#9f9b93", marginTop: "2px" }}>
-                  {opt.sub}
-                </div>
-              )}
+            <button key={opt.value} onClick={() => onSelect(opt.value)} className={chipVariants({ selected })}>
+              <div className={chipLabelVariants({ selected })}>{opt.label}</div>
+              {opt.sub && <div className={chipSubVariants({ selected })}>{opt.sub}</div>}
             </button>
           )
         })}

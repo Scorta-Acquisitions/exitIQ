@@ -48,21 +48,18 @@ export function RadarChart({ dimensions, size = 280 }: RadarChartProps) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "24px" }}>
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        style={{ overflow: "visible" }}
-      >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: "visible" }}>
         {/* Grid rings */}
         {[0.25, 0.5, 0.75, 1].map((scale) => (
           <polygon
             key={scale}
-            points={points.map((p) => {
-              const dx = (p.x - cx) * scale
-              const dy = (p.y - cy) * scale
-              return `${(cx + dx).toFixed(2)},${(cy + dy).toFixed(2)}`
-            }).join(" ")}
+            points={points
+              .map((p) => {
+                const dx = (p.x - cx) * scale
+                const dy = (p.y - cy) * scale
+                return `${(cx + dx).toFixed(2)},${(cy + dy).toFixed(2)}`
+              })
+              .join(" ")}
             fill="none"
             stroke="rgba(255,255,255,0.1)"
             strokeWidth="1"
@@ -133,17 +130,27 @@ export function RadarChart({ dimensions, size = 280 }: RadarChartProps) {
           <div
             key={dim.key}
             style={{
-              display: "flex", alignItems: "center", gap: "6px",
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "1584px", padding: "4px 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "1584px",
+              padding: "4px 10px",
             }}
           >
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#84e7a5", flexShrink: 0 }} />
             <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>{dim.name}</span>
-            <span style={{
-              fontSize: "11px", fontWeight: 700, color: "#84e7a5",
-              fontFamily: "var(--font-space-mono, monospace)",
-            }}>{dim.score}</span>
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "#84e7a5",
+                fontFamily: "var(--font-space-mono, monospace)",
+              }}
+            >
+              {dim.score}
+            </span>
           </div>
         ))}
       </div>

@@ -1,5 +1,11 @@
 import { findIndustry } from "@/lib/assessment/industries"
-import type { AssessmentSession, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
+import type {
+  AssessmentSession,
+  Stage1Answers,
+  Stage2Answers,
+  Stage3Answers,
+  Stage4Answers,
+} from "@/lib/assessment/session"
 import { getStateMarketBonus } from "@/lib/assessment/states"
 
 export type Grade = "A" | "B" | "C" | "D"
@@ -40,17 +46,30 @@ const REVENUE_MIDPOINTS: Record<string, number> = { ...SDE_MIDPOINTS }
 // ─── Dimension: Financial Attractiveness (25%) ───────────────────────────────
 function scoreFinancial(s1: Partial<Stage1Answers>, s2: Partial<Stage2Answers>): number {
   const sdeScores: Record<string, number> = {
-    under_250: 20, "250_500": 38, "500_1m": 52, "1m_2m": 66, "2m_5m": 80, "5m_10m": 92,
+    under_250: 20,
+    "250_500": 38,
+    "500_1m": 52,
+    "1m_2m": 66,
+    "2m_5m": 80,
+    "5m_10m": 92,
   }
   let score = sdeScores[s1.sde ?? ""] ?? 35
 
   const trendDeltas: Record<string, number> = {
-    declined_significantly: -22, declined_slightly: -10, flat: 0, grew_slightly: 10, grew_significantly: 22,
+    declined_significantly: -22,
+    declined_slightly: -10,
+    flat: 0,
+    grew_slightly: 10,
+    grew_significantly: 22,
   }
   score += trendDeltas[s2.revenueTrend ?? ""] ?? 0
 
   const recurringBonus: Record<string, number> = {
-    under_10: 0, "10_25": 8, "25_50": 16, "50_75": 26, over_75: 36,
+    under_10: 0,
+    "10_25": 8,
+    "25_50": 16,
+    "50_75": 26,
+    over_75: 36,
   }
   score += recurringBonus[s2.recurringRevenue ?? ""] ?? 0
 
@@ -60,7 +79,10 @@ function scoreFinancial(s1: Partial<Stage1Answers>, s2: Partial<Stage2Answers>):
 // ─── Dimension: Operational Independence (25%) ───────────────────────────────
 function scoreOperational(s2: Partial<Stage2Answers>, s3: Partial<Stage3Answers>): number {
   const ownerScores: Record<string, number> = {
-    everything_stops: 10, significant_impact: 35, minor_impact: 65, runs_independently: 90,
+    everything_stops: 10,
+    significant_impact: 35,
+    minor_impact: 65,
+    runs_independently: 90,
   }
   const kprScores: Record<string, number> = { none: 15, one: 42, two_three: 68, four_plus: 90 }
   const sopScores: Record<string, number> = { no_docs: 10, some_docs: 38, mostly_docs: 65, fully_docs: 90 }
@@ -98,7 +120,10 @@ function scoreDealReadiness(s2: Partial<Stage2Answers>, s3: Partial<Stage3Answer
   let score = Math.round((doc + legal) / 2)
 
   const leaseDeltas: Record<string, number> = {
-    owns_location: 10, long_term_lease: 0, short_lease: -12, no_fixed_location: 5,
+    owns_location: 10,
+    long_term_lease: 0,
+    short_lease: -12,
+    no_fixed_location: 5,
   }
   score += leaseDeltas[s2.realEstate ?? ""] ?? 0
 
@@ -110,7 +135,7 @@ function scoreBuyerAccess(
   s1: Partial<Stage1Answers>,
   s3: Partial<Stage3Answers>,
   s4: Partial<Stage4Answers>,
-  sbaEligible: boolean,
+  sbaEligible: boolean
 ): number {
   let score = sbaEligible && s3.sbaRestricted !== "yes" ? 30 : 0
 
@@ -173,7 +198,7 @@ function generateFlags(
   dims: RadarDimension[],
   s2: Partial<Stage2Answers>,
   s3: Partial<Stage3Answers>,
-  distressed: boolean,
+  distressed: boolean
 ): ScoreResult["flags"] {
   const green: string[] = []
   const yellow: string[] = []
@@ -182,7 +207,8 @@ function generateFlags(
   const dimMap = Object.fromEntries(dims.map((d) => [d.key, d.score]))
 
   if ((dimMap.financial ?? 0) >= 70) green.push("Strong SDE — attractive to buyers financing through SBA")
-  else if ((dimMap.financial ?? 0) < 50) red.push("SDE level limits your buyer pool — consider optimizing expenses pre-sale")
+  else if ((dimMap.financial ?? 0) < 50)
+    red.push("SDE level limits your buyer pool — consider optimizing expenses pre-sale")
   else yellow.push("Revenue fundamentals are solid — document trends clearly for buyers")
 
   if (s2.recurringRevenue === "over_75" || s2.recurringRevenue === "50_75") {
@@ -191,12 +217,16 @@ function generateFlags(
     yellow.push("Low recurring revenue — document client retention data to offset risk")
   }
 
-  if (s2.ownerDependency === "runs_independently") green.push("Business runs independently — maximizes your negotiating leverage")
-  else if (s2.ownerDependency === "everything_stops") red.push("High owner dependency is the #1 valuation killer — start cross-training now")
-  else if (s2.ownerDependency === "significant_impact") yellow.push("Moderate owner dependency — a documented transition plan helps buyers")
+  if (s2.ownerDependency === "runs_independently")
+    green.push("Business runs independently — maximizes your negotiating leverage")
+  else if (s2.ownerDependency === "everything_stops")
+    red.push("High owner dependency is the #1 valuation killer — start cross-training now")
+  else if (s2.ownerDependency === "significant_impact")
+    yellow.push("Moderate owner dependency — a documented transition plan helps buyers")
 
   if (s3.sops === "fully_docs") green.push("Fully documented operations — reduces buyer due diligence friction")
-  else if (s3.sops === "no_docs") yellow.push("Lack of SOPs extends deal timelines — 30 days of documentation pays off significantly")
+  else if (s3.sops === "no_docs")
+    yellow.push("Lack of SOPs extends deal timelines — 30 days of documentation pays off significantly")
 
   if (s2.docReadiness === "clean_docs") green.push("Clean financials ready — deal can move fast once a buyer is found")
   else if (s2.docReadiness === "no_docs") red.push("No financial documentation — this will delay or kill most deals")
@@ -204,8 +234,10 @@ function generateFlags(
   if (s3.legal === "yes_issues") red.push("Pending legal issues must be resolved before going to market")
   else green.push("Clean legal standing — no deal-blockers identified")
 
-  if (s2.customerConcentration === "over_50") red.push("Top 3 customers > 50% of revenue — buyer will require a price adjustment")
-  else if (s2.customerConcentration === "25_50") yellow.push("Customer concentration is manageable but worth disclosing early")
+  if (s2.customerConcentration === "over_50")
+    red.push("Top 3 customers > 50% of revenue — buyer will require a price adjustment")
+  else if (s2.customerConcentration === "25_50")
+    yellow.push("Customer concentration is manageable but worth disclosing early")
 
   if (s2.realEstate === "owns_location") green.push("Business owns its location — adds asset value and buyer security")
   else if (s2.realEstate === "short_lease") yellow.push("Short lease term — negotiate an extension before listing")
@@ -223,36 +255,58 @@ function generateChecklist(dims: RadarDimension[], s2: Partial<Stage2Answers>, s
   const dimMap = Object.fromEntries(dims.map((d) => [d.key, d.score]))
 
   if ((dimMap.dealReadiness ?? 100) < 70) {
-    if (s2.docReadiness !== "clean_docs") items.push({ text: "Get clean P&L statements and tax returns for the last 3 years from your CPA", priority: 10 })
-    if (s3.legal === "yes_issues") items.push({ text: "Consult your attorney to resolve any pending legal or regulatory issues", priority: 9 })
-    if (s2.realEstate === "short_lease") items.push({ text: "Negotiate a lease extension of at least 3–5 years before listing", priority: 8 })
+    if (s2.docReadiness !== "clean_docs")
+      items.push({ text: "Get clean P&L statements and tax returns for the last 3 years from your CPA", priority: 10 })
+    if (s3.legal === "yes_issues")
+      items.push({ text: "Consult your attorney to resolve any pending legal or regulatory issues", priority: 9 })
+    if (s2.realEstate === "short_lease")
+      items.push({ text: "Negotiate a lease extension of at least 3–5 years before listing", priority: 8 })
     items.push({ text: "Create a current inventory list and equipment valuation", priority: 5 })
   }
 
   if ((dimMap.operational ?? 100) < 70) {
-    if (s2.ownerDependency !== "runs_independently") items.push({ text: "Write a one-page operations manual for your top 5 owner-dependent tasks", priority: 9 })
-    if (s3.sops !== "fully_docs") items.push({ text: "Document recurring workflows in simple SOPs — even 3-page guides add significant value", priority: 7 })
-    if (s3.keyPersonRisk === "none") items.push({ text: "Cross-train at least one employee who can manage day-to-day operations", priority: 7 })
+    if (s2.ownerDependency !== "runs_independently")
+      items.push({ text: "Write a one-page operations manual for your top 5 owner-dependent tasks", priority: 9 })
+    if (s3.sops !== "fully_docs")
+      items.push({
+        text: "Document recurring workflows in simple SOPs — even 3-page guides add significant value",
+        priority: 7,
+      })
+    if (s3.keyPersonRisk === "none")
+      items.push({ text: "Cross-train at least one employee who can manage day-to-day operations", priority: 7 })
   }
 
   if ((dimMap.financial ?? 100) < 70) {
     items.push({ text: "Prepare a normalized EBITDA/SDE add-back schedule showing true owner earnings", priority: 8 })
-    if (s2.recurringRevenue === "under_10") items.push({ text: "Create a client retention summary — even informal recurring relationships can be documented", priority: 6 })
+    if (s2.recurringRevenue === "under_10")
+      items.push({
+        text: "Create a client retention summary — even informal recurring relationships can be documented",
+        priority: 6,
+      })
     items.push({ text: "Review and reduce any non-essential owner expenses running through the business", priority: 5 })
   }
 
   if ((dimMap.buyerAccess ?? 100) < 65) {
     items.push({ text: "Get a preliminary SBA 7(a) feasibility letter from a participating lender", priority: 7 })
-    items.push({ text: "Consult your CPA on seller financing structures — offering 10–20% note expands your buyer pool significantly", priority: 6 })
+    items.push({
+      text: "Consult your CPA on seller financing structures — offering 10–20% note expands your buyer pool significantly",
+      priority: 6,
+    })
   }
 
   if ((dimMap.market ?? 100) < 65) {
-    items.push({ text: "Research 3 comparable business sales in your industry to benchmark your expectations", priority: 5 })
+    items.push({
+      text: "Research 3 comparable business sales in your industry to benchmark your expectations",
+      priority: 5,
+    })
     items.push({ text: "Build a one-page business overview highlighting your competitive advantages", priority: 4 })
   }
 
   if (s2.customerConcentration === "over_50") {
-    items.push({ text: "Actively grow your customer base to reduce concentration risk before going to market", priority: 8 })
+    items.push({
+      text: "Actively grow your customer base to reduce concentration risk before going to market",
+      priority: 8,
+    })
   }
 
   return items
@@ -290,13 +344,21 @@ export function isSBAEligible(s1: Partial<Stage1Answers>): boolean {
   if (restricted.has(s1.industry ?? "")) return false
 
   const employeeMap: Record<string, number> = {
-    solo: 0, "1_5": 3, "6_15": 10, "16_50": 33, "50plus": 75,
+    solo: 0,
+    "1_5": 3,
+    "6_15": 10,
+    "16_50": 33,
+    "50plus": 75,
   }
   if ((employeeMap[s1.employees ?? ""] ?? 0) >= 75) return false
 
   const revMap: Record<string, number> = {
-    under_250: 125000, "250_500": 375000, "500_1m": 750000,
-    "1m_2m": 1500000, "2m_5m": 3500000, "5m_10m": 7500000,
+    under_250: 125000,
+    "250_500": 375000,
+    "500_1m": 750000,
+    "1m_2m": 1500000,
+    "2m_5m": 3500000,
+    "5m_10m": 7500000,
   }
   if ((revMap[s1.revenue ?? ""] ?? 0) > 5000000) return false
 
@@ -316,7 +378,7 @@ export function computeScore(session: Partial<AssessmentSession>): ScoreResult {
   const dimensions: RadarDimension[] = [
     { key: "financial", name: "Financial Attractiveness", score: scoreFinancial(s1, s2), weight: 0.25 },
     { key: "operational", name: "Operational Independence", score: scoreOperational(s2, s3), weight: 0.25 },
-    { key: "market", name: "Market Positioning", score: scoreMarket(s1), weight: 0.20 },
+    { key: "market", name: "Market Positioning", score: scoreMarket(s1), weight: 0.2 },
     { key: "dealReadiness", name: "Deal Readiness", score: scoreDealReadiness(s2, s3), weight: 0.15 },
     { key: "buyerAccess", name: "Buyer Accessibility", score: scoreBuyerAccess(s1, s3, s4, sbaEligible), weight: 0.15 },
   ]

@@ -70,8 +70,7 @@ export function getValuationRange(answers: Answers): [number, number] {
     over_10m: [9000000, 25000000],
   }
   const base = revenueMap[answers.revenue?.value ?? ""] ?? [200000, 600000]
-  const multiplier =
-    answers.years?.value === "over_10" ? 1.15 : answers.years?.value === "5_10" ? 1.05 : 1
+  const multiplier = answers.years?.value === "over_10" ? 1.15 : answers.years?.value === "5_10" ? 1.05 : 1
   return [Math.round(base[0] * multiplier), Math.round(base[1] * multiplier)]
 }
 

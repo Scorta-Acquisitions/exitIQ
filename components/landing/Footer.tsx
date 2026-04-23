@@ -67,9 +67,7 @@ export function Footer({ onStart }: FooterProps) {
         </div>
 
         {/* Footer links */}
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "32px", marginBottom: "40px" }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "32px", marginBottom: "40px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
               <div

@@ -28,19 +28,35 @@ export function NinetyDayChecklist({ items }: NinetyDayChecklistProps) {
         <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
           {completedCount}/{items.length} completed
         </span>
-        <span style={{
-          fontSize: "13px", fontWeight: 700, color: "#84e7a5",
-          fontFamily: "var(--font-space-mono, monospace)",
-        }}>{pct}%</span>
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: "#84e7a5",
+            fontFamily: "var(--font-space-mono, monospace)",
+          }}
+        >
+          {pct}%
+        </span>
       </div>
-      <div style={{
-        height: "4px", background: "rgba(255,255,255,0.08)", borderRadius: "2px",
-        marginBottom: "24px", overflow: "hidden",
-      }}>
-        <div style={{
-          width: `${pct}%`, height: "100%", background: "#84e7a5", borderRadius: "2px",
-          transition: "width 400ms ease",
-        }} />
+      <div
+        style={{
+          height: "4px",
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: "2px",
+          marginBottom: "24px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${pct}%`,
+            height: "100%",
+            background: "#84e7a5",
+            borderRadius: "2px",
+            transition: "width 400ms ease",
+          }}
+        />
       </div>
 
       {/* Items */}
@@ -52,11 +68,17 @@ export function NinetyDayChecklist({ items }: NinetyDayChecklistProps) {
               key={i}
               onClick={() => toggle(i)}
               style={{
-                display: "flex", alignItems: "flex-start", gap: "12px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
                 background: done ? "rgba(132,231,165,0.06)" : "rgba(255,255,255,0.04)",
                 border: `1.5px solid ${done ? "rgba(132,231,165,0.2)" : "rgba(255,255,255,0.08)"}`,
-                borderRadius: "12px", padding: "14px 16px", cursor: "pointer",
-                textAlign: "left", transition: "all 200ms ease", fontFamily: "inherit",
+                borderRadius: "12px",
+                padding: "14px 16px",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 200ms ease",
+                fontFamily: "inherit",
               }}
               onMouseEnter={(e) => {
                 if (!done) e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"
@@ -65,26 +87,43 @@ export function NinetyDayChecklist({ items }: NinetyDayChecklistProps) {
                 if (!done) e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"
               }}
             >
-              <div style={{
-                width: "20px", height: "20px", borderRadius: "6px", flexShrink: 0,
-                background: done ? "#84e7a5" : "transparent",
-                border: `2px solid ${done ? "#84e7a5" : "rgba(255,255,255,0.25)"}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 200ms ease", marginTop: "1px",
-              }}>
+              <div
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "6px",
+                  flexShrink: 0,
+                  background: done ? "#84e7a5" : "transparent",
+                  border: `2px solid ${done ? "#84e7a5" : "rgba(255,255,255,0.25)"}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 200ms ease",
+                  marginTop: "1px",
+                }}
+              >
                 {done && (
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="#02492a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M1 4L3.5 6.5L9 1"
+                      stroke="#02492a"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </div>
               <div>
-                <span style={{
-                  fontSize: "14px", lineHeight: 1.5,
-                  color: done ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.85)",
-                  textDecoration: done ? "line-through" : "none",
-                  transition: "all 200ms ease",
-                }}>
+                <span
+                  style={{
+                    fontSize: "14px",
+                    lineHeight: 1.5,
+                    color: done ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.85)",
+                    textDecoration: done ? "line-through" : "none",
+                    transition: "all 200ms ease",
+                  }}
+                >
                   {item}
                 </span>
               </div>

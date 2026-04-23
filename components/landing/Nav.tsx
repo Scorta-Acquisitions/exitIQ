@@ -1,3 +1,4 @@
+// use client: onStartWidget scroll callback + mouse-event hover handlers on CTA button
 "use client"
 
 interface NavProps {
@@ -7,6 +8,7 @@ interface NavProps {
 export function Nav({ onStartWidget }: NavProps) {
   return (
     <nav
+      aria-label="Main navigation"
       style={{
         position: "fixed",
         top: 0,
@@ -24,34 +26,22 @@ export function Nav({ onStartWidget }: NavProps) {
       }}
     >
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div
-          style={{
-            width: "32px",
-            height: "32px",
-            background: "#02492a",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+      <div className="flex items-center gap-2.5">
+        <div className="bg-matcha-800 flex h-8 w-8 items-center justify-center rounded-lg" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 2L13 5.5V10.5L8 14L3 10.5V5.5L8 2Z" fill="#84e7a5" />
           </svg>
         </div>
-        <span style={{ fontSize: "17px", fontWeight: 700, letterSpacing: "-0.5px", color: "#000" }}>Scorta</span>
+        <span className="text-near-black text-[17px] font-bold tracking-[-0.5px]">Scorta</span>
       </div>
 
       {/* Links */}
-      <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+      <div className="flex items-center gap-8">
         {["For Sellers", "For Buyers", "How It Works", "Pricing"].map((l) => (
           <a
             key={l}
             href="#"
-            style={{ fontSize: "14px", fontWeight: 500, color: "#55534e", transition: "color 150ms" }}
-            onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#000")}
-            onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#55534e")}
+            className="text-warm-charcoal hover:text-near-black text-sm font-medium transition-colors duration-150"
           >
             {l}
           </a>
@@ -59,12 +49,13 @@ export function Nav({ onStartWidget }: NavProps) {
       </div>
 
       {/* CTA */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <a href="#" style={{ fontSize: "14px", fontWeight: 500, color: "#55534e", padding: "8px 14px" }}>
+      <div className="flex items-center gap-2.5">
+        <a href="#" className="text-warm-charcoal px-3.5 py-2 text-sm font-medium">
           Sign in
         </a>
         <button
           onClick={onStartWidget}
+          aria-label="Get started with Exit IQ"
           style={{
             background: "#000",
             color: "#fff",

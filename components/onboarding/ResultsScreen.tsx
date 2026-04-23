@@ -83,7 +83,14 @@ export function ResultsScreen({ answers, score }: ResultsScreenProps) {
 
       {/* Cards */}
       <div
-        style={{ maxWidth: "680px", margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", gap: "16px" }}
+        style={{
+          maxWidth: "680px",
+          margin: "0 auto",
+          padding: "0 24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
       >
         {/* Valuation range */}
         <div
@@ -111,11 +118,15 @@ export function ResultsScreen({ answers, score }: ResultsScreenProps) {
             Estimated Valuation Range
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "6px" }}>
-            <div style={{ fontSize: "38px", fontWeight: 700, fontFamily: MONO, letterSpacing: "-1.5px", color: "#fff" }}>
+            <div
+              style={{ fontSize: "38px", fontWeight: 700, fontFamily: MONO, letterSpacing: "-1.5px", color: "#fff" }}
+            >
               {fmt(low)}
             </div>
             <div style={{ fontSize: "20px", color: "rgba(255,255,255,0.4)" }}>—</div>
-            <div style={{ fontSize: "38px", fontWeight: 700, fontFamily: MONO, letterSpacing: "-1.5px", color: "#fff" }}>
+            <div
+              style={{ fontSize: "38px", fontWeight: 700, fontFamily: MONO, letterSpacing: "-1.5px", color: "#fff" }}
+            >
               {fmt(high)}
             </div>
           </div>
@@ -185,9 +196,7 @@ export function ResultsScreen({ answers, score }: ResultsScreenProps) {
             <div style={{ fontSize: "28px", fontWeight: 700, fontFamily: MONO, letterSpacing: "-1px", color: "#000" }}>
               {fmt(brokerFee)}
             </div>
-            <div style={{ fontSize: "12px", color: "#9d6a09", marginTop: "4px" }}>
-              vs. 10% traditional commission
-            </div>
+            <div style={{ fontSize: "12px", color: "#9d6a09", marginTop: "4px" }}>vs. 10% traditional commission</div>
           </div>
           <div
             style={{
@@ -270,8 +279,7 @@ export function ResultsScreen({ answers, score }: ResultsScreenProps) {
                   borderRadius: "50%",
                   flexShrink: 0,
                   marginTop: "1px",
-                  background:
-                    f.type === "pass" ? "#02492a" : f.type === "warn" ? "#9d6a09" : "rgba(255,255,255,0.1)",
+                  background: f.type === "pass" ? "#02492a" : f.type === "warn" ? "#9d6a09" : "rgba(255,255,255,0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

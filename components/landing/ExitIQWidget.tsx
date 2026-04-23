@@ -98,9 +98,7 @@ export function ExitIQWidget() {
 
   const stepStyles = {
     opacity: exiting ? 0 : 1,
-    transform: exiting
-      ? exitDir === "forward" ? "translateY(-10px)" : "translateY(10px)"
-      : "translateY(0)",
+    transform: exiting ? (exitDir === "forward" ? "translateY(-10px)" : "translateY(10px)") : "translateY(0)",
     transition: "opacity 180ms ease, transform 180ms ease",
   }
 
@@ -131,16 +129,31 @@ export function ExitIQWidget() {
       {/* ExitIQ badge */}
       <div
         style={{
-          display: "inline-flex", alignItems: "center", gap: "6px",
-          background: "#02492a", borderRadius: "1584px", padding: "4px 12px 4px 8px",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          background: "#02492a",
+          borderRadius: "1584px",
+          padding: "4px 12px 4px 8px",
           marginBottom: "18px",
         }}
       >
-        <div style={{
-          width: "18px", height: "18px", borderRadius: "50%", background: "#84e7a5",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "9px", fontWeight: 700, color: "#02492a",
-        }}>IQ</div>
+        <div
+          style={{
+            width: "18px",
+            height: "18px",
+            borderRadius: "50%",
+            background: "#84e7a5",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "9px",
+            fontWeight: 700,
+            color: "#02492a",
+          }}
+        >
+          IQ
+        </div>
         <span style={{ fontSize: "12px", fontWeight: 600, color: "#84e7a5", letterSpacing: "0.5px" }}>Exit IQ</span>
       </div>
 
@@ -151,7 +164,9 @@ export function ExitIQWidget() {
             <div
               key={i}
               style={{
-                height: "3px", flex: 1, borderRadius: "2px",
+                height: "3px",
+                flex: 1,
+                borderRadius: "2px",
                 background: i <= step ? "#02492a" : "#eee9df",
                 transition: "background 300ms ease",
               }}
@@ -185,9 +200,16 @@ export function ExitIQWidget() {
                 <button
                   onClick={() => go(1, "forward")}
                   style={{
-                    marginTop: "14px", background: "#02492a", color: "#84e7a5",
-                    border: "none", borderRadius: "1584px", padding: "10px 22px",
-                    fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    marginTop: "14px",
+                    background: "#02492a",
+                    color: "#84e7a5",
+                    border: "none",
+                    borderRadius: "1584px",
+                    padding: "10px 22px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
                     transition: "all 150ms",
                   }}
                   onMouseEnter={(e) => {
@@ -225,9 +247,16 @@ export function ExitIQWidget() {
               <button
                 onClick={() => go(2, "forward")}
                 style={{
-                  marginTop: "20px", background: "#02492a", color: "#84e7a5",
-                  border: "none", borderRadius: "1584px", padding: "10px 22px",
-                  fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  marginTop: "20px",
+                  background: "#02492a",
+                  color: "#84e7a5",
+                  border: "none",
+                  borderRadius: "1584px",
+                  padding: "10px 22px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
                   transition: "all 150ms",
                 }}
                 onMouseEnter={(e) => {
@@ -291,9 +320,7 @@ export function ExitIQWidget() {
               <div style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.4px", marginBottom: "4px" }}>
                 How many full-time employees?
               </div>
-              <div style={{ fontSize: "13px", color: "#9f9b93", marginBottom: "16px" }}>
-                Including yourself.
-              </div>
+              <div style={{ fontSize: "13px", color: "#9f9b93", marginBottom: "16px" }}>Including yourself.</div>
               <GridChips
                 label=""
                 options={EMPLOYEE_OPTIONS}
@@ -325,9 +352,16 @@ export function ExitIQWidget() {
                 <button
                   onClick={() => handleFinalStep("state", answers.state ?? "")}
                   style={{
-                    marginTop: "14px", background: "#02492a", color: "#84e7a5",
-                    border: "none", borderRadius: "1584px", padding: "10px 22px",
-                    fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    marginTop: "14px",
+                    background: "#02492a",
+                    color: "#84e7a5",
+                    border: "none",
+                    borderRadius: "1584px",
+                    padding: "10px 22px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
                     transition: "all 150ms",
                   }}
                   onMouseEnter={(e) => {
@@ -355,9 +389,18 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       style={{
-        background: "none", border: "none", color: "#9f9b93", fontSize: "12px",
-        fontWeight: 500, padding: 0, marginBottom: "12px", cursor: "pointer",
-        display: "flex", alignItems: "center", gap: "4px", fontFamily: "inherit",
+        background: "none",
+        border: "none",
+        color: "#9f9b93",
+        fontSize: "12px",
+        fontWeight: 500,
+        padding: 0,
+        marginBottom: "12px",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        fontFamily: "inherit",
         transition: "color 150ms",
       }}
       onMouseEnter={(e) => (e.currentTarget.style.color = "#55534e")}
@@ -375,21 +418,38 @@ function SDETooltip() {
       <button
         onClick={() => setOpen(!open)}
         style={{
-          background: "#f0faf5", border: "1px solid #02492a", borderRadius: "1584px",
-          padding: "3px 10px", fontSize: "11px", fontWeight: 600, color: "#02492a",
-          cursor: "pointer", fontFamily: "inherit",
+          background: "#f0faf5",
+          border: "1px solid #02492a",
+          borderRadius: "1584px",
+          padding: "3px 10px",
+          fontSize: "11px",
+          fontWeight: 600,
+          color: "#02492a",
+          cursor: "pointer",
+          fontFamily: "inherit",
         }}
       >
         What is SDE? {open ? "▲" : "▼"}
       </button>
       {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 10,
-          background: "#1a1917", color: "#fff", borderRadius: "10px", padding: "12px 14px",
-          fontSize: "12px", lineHeight: 1.6, maxWidth: "280px", boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-        }}>
-          <strong style={{ color: "#84e7a5" }}>Seller Discretionary Earnings</strong> = Net profit + owner salary
-          + owner perks + one-time expenses + non-cash charges. It&apos;s the true economic benefit to an owner-operator.
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            left: 0,
+            zIndex: 10,
+            background: "#1a1917",
+            color: "#fff",
+            borderRadius: "10px",
+            padding: "12px 14px",
+            fontSize: "12px",
+            lineHeight: 1.6,
+            maxWidth: "280px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+          }}
+        >
+          <strong style={{ color: "#84e7a5" }}>Seller Discretionary Earnings</strong> = Net profit + owner salary +
+          owner perks + one-time expenses + non-cash charges. It&apos;s the true economic benefit to an owner-operator.
         </div>
       )}
     </div>

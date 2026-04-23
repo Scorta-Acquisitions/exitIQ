@@ -1,6 +1,41 @@
+// use client: interactive radio card selection with per-option highlight state
 "use client"
 
+import { cva } from "class-variance-authority"
 import type { StageAnswer, StageQuestion } from "@/lib/assessment/questions"
+
+const radioCardVariants = cva("scorta-option-card w-full", {
+  variants: {
+    selected: {
+      true: "selected",
+      false: "",
+    },
+  },
+  defaultVariants: { selected: false },
+})
+
+const radioIndicatorVariants = cva(
+  "shrink-0 flex items-center justify-center rounded-full border-2 w-5 h-5 transition-all duration-150",
+  {
+    variants: {
+      selected: {
+        true: "border-matcha-300 bg-matcha-300",
+        false: "border-white/30 bg-transparent",
+      },
+    },
+    defaultVariants: { selected: false },
+  }
+)
+
+const radioLabelVariants = cva("text-[15px] font-semibold", {
+  variants: {
+    selected: {
+      true: "text-matcha-300",
+      false: "text-white",
+    },
+  },
+  defaultVariants: { selected: false },
+})
 
 interface RadioCardsProps {
   question: StageQuestion
@@ -10,40 +45,17 @@ interface RadioCardsProps {
 
 export function RadioCards({ question, value, onChange }: RadioCardsProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+    <div className="flex flex-col gap-2.5">
       {question.options?.map((opt) => {
         const selected = value === opt.value
         return (
-          <button
-            key={opt.value}
-            onClick={() => onChange(opt.value)}
-            className={`scorta-option-card${selected ? " selected" : ""}`}
-          >
-            <div style={{
-              width: "20px",
-              height: "20px",
-              borderRadius: "50%",
-              border: `2px solid ${selected ? "#84e7a5" : "rgba(255,255,255,0.3)"}`,
-              background: selected ? "#84e7a5" : "transparent",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 150ms ease",
-            }}>
-              {selected && (
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#02492a" }} />
-              )}
+          <button key={opt.value} onClick={() => onChange(opt.value)} className={radioCardVariants({ selected })}>
+            <div className={radioIndicatorVariants({ selected })} aria-hidden="true">
+              {selected && <div className="bg-matcha-800 h-2 w-2 rounded-full" />}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "15px", fontWeight: 600, color: selected ? "#84e7a5" : "#fff" }}>
-                {opt.label}
-              </div>
-              {opt.sub && (
-                <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)", marginTop: "3px", lineHeight: 1.4 }}>
-                  {opt.sub}
-                </div>
-              )}
+            <div className="flex-1 text-left">
+              <div className={radioLabelVariants({ selected })}>{opt.label}</div>
+              {opt.sub && <div className="mt-0.5 text-[13px] leading-snug text-white/55">{opt.sub}</div>}
             </div>
           </button>
         )

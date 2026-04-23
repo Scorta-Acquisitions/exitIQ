@@ -101,10 +101,7 @@ export function Hero() {
       </div>
 
       {/* Headline */}
-      <div
-        className="animate-fade-up-2"
-        style={{ textAlign: "center", marginBottom: "16px", lineHeight: 1.25 }}
-      >
+      <div className="animate-fade-up-2" style={{ textAlign: "center", marginBottom: "16px", lineHeight: 1.25 }}>
         <div
           style={{
             fontSize: "clamp(22px, 3vw, 28px)",

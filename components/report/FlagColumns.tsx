@@ -1,4 +1,66 @@
+// use client: interactive flag columns (pure display, but co-located with client report page)
 "use client"
+
+import { cva } from "class-variance-authority"
+
+const columnVariants = cva("border-[1.5px] rounded-[14px] p-[18px]", {
+  variants: {
+    tone: {
+      green: "bg-matcha-300/8 border-matcha-300/20",
+      yellow: "bg-lemon/8 border-lemon/25",
+      red: "bg-[#ff6b6b]/8 border-[#ff6b6b]/25",
+    },
+  },
+})
+
+const headerIconVariants = cva(
+  "w-6 h-6 rounded-full border-[1.5px] flex items-center justify-center text-[11px] font-bold shrink-0",
+  {
+    variants: {
+      tone: {
+        green: "bg-matcha-300/8 border-matcha-300 text-matcha-300",
+        yellow: "bg-lemon/8 border-lemon text-lemon",
+        red: "bg-[#ff6b6b]/8 border-[#ff6b6b] text-[#ff6b6b]",
+      },
+    },
+  }
+)
+
+const headerLabelVariants = cva("text-[13px] font-bold", {
+  variants: {
+    tone: {
+      green: "text-matcha-300",
+      yellow: "text-lemon",
+      red: "text-[#ff6b6b]",
+    },
+  },
+})
+
+const dotVariants = cva("w-1.5 h-1.5 rounded-full shrink-0 mt-1.5", {
+  variants: {
+    tone: {
+      green: "bg-matcha-300",
+      yellow: "bg-lemon",
+      red: "bg-[#ff6b6b]",
+    },
+  },
+})
+
+const dividerVariants = cva("border-t", {
+  variants: {
+    tone: {
+      green: "border-matcha-300/20",
+      yellow: "border-lemon/25",
+      red: "border-[#ff6b6b]/25",
+    },
+  },
+})
+
+const COLUMNS = [
+  { key: "green" as const, label: "Strengths", icon: "✓", tone: "green" as const },
+  { key: "yellow" as const, label: "Watch Items", icon: "!", tone: "yellow" as const },
+  { key: "red" as const, label: "Deal Risks", icon: "✕", tone: "red" as const },
+]
 
 interface FlagColumnsProps {
   flags: {
@@ -8,57 +70,30 @@ interface FlagColumnsProps {
   }
 }
 
-const COLUMNS = [
-  { key: "green" as const, label: "Strengths", icon: "✓", color: "#84e7a5", bg: "rgba(132,231,165,0.08)", border: "rgba(132,231,165,0.2)" },
-  { key: "yellow" as const, label: "Watch Items", icon: "!", color: "#fbbd41", bg: "rgba(251,189,65,0.08)", border: "rgba(251,189,65,0.25)" },
-  { key: "red" as const, label: "Deal Risks", icon: "✕", color: "#ff6b6b", bg: "rgba(255,107,107,0.08)", border: "rgba(255,107,107,0.25)" },
-]
-
 export function FlagColumns({ flags }: FlagColumnsProps) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+    <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
       {COLUMNS.map((col) => {
         const items = flags[col.key]
         if (items.length === 0) return null
         return (
-          <div
-            key={col.key}
-            style={{
-              background: col.bg,
-              border: `1.5px solid ${col.border}`,
-              borderRadius: "14px",
-              padding: "18px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-              <div style={{
-                width: "24px", height: "24px", borderRadius: "50%",
-                background: col.bg,
-                border: `1.5px solid ${col.color}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "11px", fontWeight: 700, color: col.color, flexShrink: 0,
-              }}>{col.icon}</div>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: col.color }}>
+          <div key={col.key} className={columnVariants({ tone: col.tone })}>
+            <div className="mb-3.5 flex items-center gap-2">
+              <div className={headerIconVariants({ tone: col.tone })} aria-hidden="true">
+                {col.icon}
+              </div>
+              <span className={headerLabelVariants({ tone: col.tone })}>
                 {col.label} ({items.length})
               </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div className="flex flex-col gap-2.5">
               {items.map((item, i) => (
                 <div
                   key={i}
-                  style={{
-                    display: "flex", gap: "8px", alignItems: "flex-start",
-                    paddingBottom: i < items.length - 1 ? "10px" : 0,
-                    borderBottom: i < items.length - 1 ? `1px solid ${col.border}` : "none",
-                  }}
+                  className={`flex items-start gap-2 pb-2.5 ${i < items.length - 1 ? dividerVariants({ tone: col.tone }) : ""}`}
                 >
-                  <div style={{
-                    width: "5px", height: "5px", borderRadius: "50%",
-                    background: col.color, flexShrink: 0, marginTop: "6px",
-                  }} />
-                  <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: 1.55, margin: 0 }}>
-                    {item}
-                  </p>
+                  <div className={dotVariants({ tone: col.tone })} aria-hidden="true" />
+                  <p className="m-0 text-[13px] leading-[1.55] text-white/75">{item}</p>
                 </div>
               ))}
             </div>

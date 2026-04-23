@@ -1,3 +1,4 @@
+// use client: useRef for hero scroll target + scrollToTop handler passed to Nav/Footer
 "use client"
 
 import { useRef } from "react"
@@ -18,7 +19,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div style={{ background: "#faf9f7", color: "#000", overflowX: "hidden" }}>
+    <div className="bg-cream text-near-black overflow-x-hidden">
       <Nav onStartWidget={scrollToTop} />
       <div ref={heroRef}>
         <Hero />

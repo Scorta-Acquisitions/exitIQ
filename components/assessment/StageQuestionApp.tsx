@@ -19,13 +19,7 @@ interface StageQuestionAppProps {
   prevRoute: string
 }
 
-export function StageQuestionApp({
-  stageNum,
-  questions,
-  sessionKey,
-  nextRoute,
-  prevRoute,
-}: StageQuestionAppProps) {
+export function StageQuestionApp({ stageNum, questions, sessionKey, nextRoute, prevRoute }: StageQuestionAppProps) {
   const router = useRouter()
   const [idx, setIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<string, StageAnswer>>({})
@@ -43,7 +37,7 @@ export function StageQuestionApp({
 
   const canAdvance =
     currentQ.type === "free-text"
-      ? (currentAnswer as string | undefined)?.trim().length ?? 0 > 0
+      ? ((currentAnswer as string | undefined)?.trim().length ?? 0 > 0)
       : currentQ.type === "multi-checkbox"
         ? ((currentAnswer as string[] | undefined)?.length ?? 0) > 0
         : currentAnswer !== undefined && currentAnswer !== ""
@@ -91,22 +85,16 @@ export function StageQuestionApp({
   }
 
   const session = loadSession()
-  const sbaSnapshot = stageNum === 3 && idx === 0
-    ? computeSBASnapshot(session.stage1 ?? {})
-    : null
+  const sbaSnapshot = stageNum === 3 && idx === 0 ? computeSBASnapshot(session.stage1 ?? {}) : null
 
   const stepStyles = {
     opacity: exiting ? 0 : 1,
-    transform: exiting
-      ? exitDir === "forward" ? "translateY(-12px)" : "translateY(12px)"
-      : "translateY(0)",
+    transform: exiting ? (exitDir === "forward" ? "translateY(-12px)" : "translateY(12px)") : "translateY(0)",
     transition: "opacity 180ms ease, transform 180ms ease",
   }
 
   const needsExplicitNext =
-    currentQ.type === "free-text" ||
-    currentQ.type === "multi-checkbox" ||
-    currentQ.type === "sba-check"
+    currentQ.type === "free-text" || currentQ.type === "multi-checkbox" || currentQ.type === "sba-check"
 
   return (
     <AssessmentShell stageNum={stageNum} questionIdx={idx} totalQuestions={questions.length}>
@@ -115,10 +103,19 @@ export function StageQuestionApp({
         <button
           onClick={handleBack}
           style={{
-            background: "none", border: "none", color: "rgba(255,255,255,0.4)",
-            fontSize: "13px", fontWeight: 500, padding: 0, marginBottom: "32px",
-            cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
-            fontFamily: "inherit", transition: "color 150ms",
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.4)",
+            fontSize: "13px",
+            fontWeight: 500,
+            padding: 0,
+            marginBottom: "32px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontFamily: "inherit",
+            transition: "color 150ms",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
@@ -128,14 +125,16 @@ export function StageQuestionApp({
 
         {/* Question headline */}
         <div style={{ marginBottom: "32px" }}>
-          <h1 style={{
-            fontSize: "clamp(20px, 4vw, 28px)",
-            fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "-0.5px",
-            lineHeight: 1.3,
-            margin: "0 0 8px",
-          }}>
+          <h1
+            style={{
+              fontSize: "clamp(20px, 4vw, 28px)",
+              fontWeight: 700,
+              color: "#fff",
+              letterSpacing: "-0.5px",
+              lineHeight: 1.3,
+              margin: "0 0 8px",
+            }}
+          >
             {currentQ.headline}
           </h1>
           {currentQ.sub && (
@@ -150,19 +149,11 @@ export function StageQuestionApp({
 
         {/* Answer input */}
         {currentQ.type === "radio-cards" && (
-          <RadioCards
-            question={currentQ}
-            value={currentAnswer ?? ""}
-            onChange={(v) => handleAnswer(v)}
-          />
+          <RadioCards question={currentQ} value={currentAnswer ?? ""} onChange={(v) => handleAnswer(v)} />
         )}
 
         {currentQ.type === "sba-check" && (
-          <RadioCards
-            question={currentQ}
-            value={currentAnswer ?? ""}
-            onChange={(v) => handleAnswer(v)}
-          />
+          <RadioCards question={currentQ} value={currentAnswer ?? ""} onChange={(v) => handleAnswer(v)} />
         )}
 
         {currentQ.type === "multi-checkbox" && (
@@ -185,11 +176,7 @@ export function StageQuestionApp({
         {/* Next button for explicit-advance types */}
         {needsExplicitNext && (
           <div style={{ marginTop: "28px" }}>
-            <button
-              onClick={handleNext}
-              disabled={!canAdvance}
-              className="scorta-next-btn"
-            >
+            <button onClick={handleNext} disabled={!canAdvance} className="scorta-next-btn">
               {idx === questions.length - 1 ? "Continue →" : "Next →"}
             </button>
           </div>

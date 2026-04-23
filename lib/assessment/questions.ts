@@ -25,8 +25,16 @@ export const STAGE2_QUESTIONS: StageQuestion[] = [
     sub: "This is the single factor buyers weight most heavily.",
     type: "radio-cards",
     options: [
-      { value: "everything_stops", label: "Everything stops", sub: "Revenue would drop significantly — I handle most things" },
-      { value: "significant_impact", label: "Significant impact", sub: "Revenue would decline but the business wouldn't stop" },
+      {
+        value: "everything_stops",
+        label: "Everything stops",
+        sub: "Revenue would drop significantly — I handle most things",
+      },
+      {
+        value: "significant_impact",
+        label: "Significant impact",
+        sub: "Revenue would decline but the business wouldn't stop",
+      },
       { value: "minor_impact", label: "Minor impact", sub: "Team mostly handles it with some supervision" },
       { value: "runs_independently", label: "Runs independently", sub: "Team handles day-to-day without me" },
     ],
@@ -85,8 +93,16 @@ export const STAGE2_QUESTIONS: StageQuestion[] = [
     headline: "Does the business own or lease its location?",
     type: "radio-cards",
     options: [
-      { value: "owns_location", label: "We own the property", sub: "Real estate is included or can be sold separately" },
-      { value: "long_term_lease", label: "Long-term lease (3+ years remaining)", sub: "Stable tenancy — buyers will be comfortable" },
+      {
+        value: "owns_location",
+        label: "We own the property",
+        sub: "Real estate is included or can be sold separately",
+      },
+      {
+        value: "long_term_lease",
+        label: "Long-term lease (3+ years remaining)",
+        sub: "Stable tenancy — buyers will be comfortable",
+      },
       { value: "short_lease", label: "Short lease (under 3 years)", sub: "May need to renegotiate before listing" },
       { value: "no_fixed_location", label: "No fixed location", sub: "Remote, home-based, or mobile business" },
     ],
@@ -117,7 +133,11 @@ export const STAGE3_QUESTIONS: StageQuestion[] = [
     type: "sba-check",
     options: [
       { value: "no", label: "No — none of the above apply" },
-      { value: "yes", label: "Yes — one or more apply", sub: "Cannabis, gambling, speculative investment, adult content, or political lobbying" },
+      {
+        value: "yes",
+        label: "Yes — one or more apply",
+        sub: "Cannabis, gambling, speculative investment, adult content, or political lobbying",
+      },
     ],
   },
   {
