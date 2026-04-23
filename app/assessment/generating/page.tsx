@@ -54,7 +54,7 @@ export default function GeneratingPage() {
         >
           IQ
         </div>
-        <span className="text-white text-lg font-bold">Exit IQ</span>
+        <span className="text-lg font-bold text-white">Exit IQ</span>
       </div>
 
       {/* Spinner / done indicator */}
@@ -93,11 +93,7 @@ export default function GeneratingPage() {
       </div>
 
       {/* Steps */}
-      <div
-        role="list"
-        aria-label="Report generation steps"
-        className="flex w-full max-w-[360px] flex-col gap-3.5"
-      >
+      <div role="list" aria-label="Report generation steps" className="flex w-full max-w-[360px] flex-col gap-3.5">
         {STEPS.map((label, i) => {
           const completed = i < stepIdx
           const active = i === stepIdx && !done
@@ -116,18 +112,14 @@ export default function GeneratingPage() {
                     ? "bg-matcha-300 border-matcha-300 text-matcha-800"
                     : active
                       ? "bg-matcha-300/20 border-matcha-300"
-                      : "bg-white/[8%] border-white/15"
+                      : "border-white/15 bg-white/[8%]"
                 }`}
               >
                 {(completed || done) && "✓"}
               </div>
               <span
                 className={`text-sm transition-all duration-300 ${
-                  completed || done
-                    ? "text-matcha-300"
-                    : active
-                      ? "text-white font-semibold"
-                      : "text-white/40"
+                  completed || done ? "text-matcha-300" : active ? "font-semibold text-white" : "text-white/40"
                 }`}
               >
                 {label}

@@ -52,11 +52,7 @@ export function GridChips({ label, options, value, onSelect, columns = 2 }: Grid
         {options.map((opt) => {
           const selected = value === opt.value
           return (
-            <button
-              key={opt.value}
-              onClick={() => onSelect(opt.value)}
-              className={chipVariants({ selected })}
-            >
+            <button key={opt.value} onClick={() => onSelect(opt.value)} className={chipVariants({ selected })}>
               <div className={chipLabelVariants({ selected })}>{opt.label}</div>
               {opt.sub && <div className={chipSubVariants({ selected })}>{opt.sub}</div>}
             </button>
