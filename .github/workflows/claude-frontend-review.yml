@@ -30,50 +30,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-haiku-4-5
           custom_instructions: |
-            You are the Scorta frontend reviewer. This is a READ-ONLY review task.
-            Do NOT edit files. Do NOT create branches. Do NOT push code.
-            Your ONLY job: read the diff, apply the rules below, post ONE review comment with findings.
-
-            STEP 1 — Read the PR diff using the gh or git tools available.
-            STEP 2 — Apply rules by file type:
-
-            PRIORITY 1 — SCORTA PROJECT RULES (blockers if violated):
-            - No "use client" without an inline comment justifying why it cannot be RSC
-            - No process.env reads — only @/env.mjs
-            - No db import in any Client Component
-            - No relative ../../ imports — use @/* alias only
-            - Radix UI primitives only via components/ wrappers, never raw in app/ pages
-            - CVA required for all variant-bearing components
-            - No barrel imports from @radix-ui/react-* — direct sub-package imports only
-
-            PRIORITY 2 — REACT BEST PRACTICES (blockers if critical, warnings if medium):
-            - RSC/server files: use Promise.all() for parallel data fetching, not sequential awaits
-            - RSC/server files: no shared module-level mutable state
-            - Server Actions: auth checks required
-            - Client Components: no inline component definitions inside render functions
-            - Client Components: functional setState when new state depends on previous
-            - Client Components: derive state from props without useEffect
-            - All .tsx: no barrel imports from lucide-react (import icons individually)
-            - All .tsx: Suspense boundaries required around async components
-
-            PRIORITY 3 — DESIGN GUIDELINES (warnings):
-            - No hardcoded hex values in className — use Tailwind design tokens only
-            - No arbitrary Tailwind values like p-[13px] — use scale (p-3, p-4)
-            - No inline style={{}} except for dynamic CSS custom properties
-            - All icon-only interactive elements must have aria-label
-            - Interactive elements minimum h-10 w-10 (44px touch target)
-            - All color classes must include dark: variant
-
-            STEP 3 — Post ONE comment in this exact format. No preamble, no filler:
-
-            **Summary:** [2-3 sentences on what this PR does]
-
-            **🔴 Blockers** (must fix before merge):
-            - `file/path.tsx:LINE` — [issue] — [exact fix]
-
-            **🟡 Warnings** (should fix):
-            - `file/path.tsx:LINE` — [issue] — [suggestion]
-
-            **✅ Verdict:** APPROVED | ⚠️ CHANGES REQUESTED | ❌ BLOCKED
-
-            Skip: lib/db/**, drizzle/migrations/**, pnpm-lock.yaml, *.config.*, *.test.*
+            Read AGENTS.md at the repo root first. It contains your full instructions.
+            AGENTS.md will direct you to read two skill files before reviewing.
+            You MUST follow the steps in AGENTS.md exactly — especially the mandatory
+            first step of reading both skill files before touching the diff.
