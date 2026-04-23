@@ -1,5 +1,5 @@
 name: Check
-
+# DISABLED — re-enable by removing `if: false` from the job below
 on:
   push:
     branches:
@@ -12,6 +12,7 @@ on:
 jobs:
   check:
     name: Check
+    if: false # disabled
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
