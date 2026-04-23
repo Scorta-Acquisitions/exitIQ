@@ -28,8 +28,8 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-sonnet-4-5         # Sonnet: handles large 3000+ line diffs, faster per turn than Haiku on complex tasks
-          max_turns: "5"                   # 5 turns: read diff + apply rules + post review
+          model: claude-haiku-4-5          # Haiku: cost-efficient, 10 turns gives enough headroom for large diffs
+          max_turns: "10"                  # 10 turns: read diff + apply rules + post review
           custom_instructions: |
             You are the Scorta frontend reviewer. This is a READ-ONLY review task.
             Do NOT edit files. Do NOT create branches. Do NOT push code.
