@@ -1,0 +1,58 @@
+name: Claude Frontend PR Review
+on:
+  # ONLY triggers when someone comments @claude — no auto-fire on every push
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  frontend-review:
+    runs-on: ubuntu-latest
+    # Guard: only run if comment contains @claude AND is on a PR (not a plain issue)
+    if: |
+      contains(github.event.comment.body, '@claude') &&
+      (github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment')
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-haiku-4-5          # Haiku: sufficient for read-only review, ~20x cheaper than Sonnet
+          max_turns: "3"                   # HARDSTOP: max 3 agentic loops per review
+          custom_instructions: |
+            You are the Scorta frontend reviewer. This is a READ-ONLY review task.
+            Do NOT edit files. Do NOT create branches. Only read the diff and post a review comment.
+
+            PRIORITY 1 — SCORTA PROJECT RULES:
+            - RSC-first: challenge every "use client" — must justify client-side rendering
+            - No process.env reads — only @/env.mjs
+            - No db import in any Client Component
+            - No relative ../../ imports — use @/* alias
+            - Radix UI primitives only via components/ wrappers, never raw in app/ pages
+            - CVA used for all variant-bearing components
+            - No barrel imports from @radix-ui/react-* — direct sub-package imports only
+
+            PRIORITY 2 — REACT BEST PRACTICES:
+            For RSC/server files: parallel data fetching (Promise.all), no shared module-level state, auth checks in Server Actions
+            For "use client" files: no inline component definitions inside render, functional setState, derive state without useEffect
+            For all .tsx: no barrel imports from Radix/lucide, Suspense boundaries around async components
+
+            PRIORITY 3 — DESIGN GUIDELINES:
+            - No hardcoded hex values or font sizes — use Tailwind scale only
+            - No arbitrary Tailwind values like p-[13px]
+            - No inline style={{}} except dynamic CSS custom properties
+            - All icon-only interactive elements need aria-label
+            - Interactive elements minimum h-10 w-10 (44px touch target)
+            - All color classes must have dark: variants
+
+            OUTPUT FORMAT (post as a single PR review comment):
+            **Summary:** 2-3 sentences on what this PR does
+            **🔴 Blockers:** file:line — specific issue — exact fix
+            **🟡 Warnings:** file:line — specific issue — suggestion
+            **✅ Verdict:** APPROVED | CHANGES REQUESTED | BLOCKED
+
+            Cite exact file paths and line numbers. No generic praise.
