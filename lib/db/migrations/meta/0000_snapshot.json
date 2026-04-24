@@ -25,7 +25,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "report_md": {
@@ -53,7 +53,23 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "assessment_reports_session_id_idx": {
+          "name": "assessment_reports_session_id_idx",
+          "columns": [
+            {
+              "expression": "session_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "assessment_reports_session_id_assessment_sessions_session_id_fk": {
           "name": "assessment_reports_session_id_assessment_sessions_session_id_fk",
@@ -96,7 +112,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "completed_at": {

@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core"
 
 import type {
   GateAnswers,
@@ -12,7 +12,7 @@ import type {
 export const assessmentSessions = pgTable("assessment_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   sessionId: text("session_id").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   stage1: jsonb("stage1").$type<Stage1Answers>(),
   gate: jsonb("gate").$type<GateAnswers>(),
@@ -24,14 +24,18 @@ export const assessmentSessions = pgTable("assessment_sessions", {
   sbaEligible: boolean("sba_eligible"),
 })
 
-export const assessmentReports = pgTable("assessment_reports", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sessionId: text("session_id")
-    .notNull()
-    .references(() => assessmentSessions.sessionId),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  reportMd: text("report_md").notNull(),
-  teaserJson: jsonb("teaser_json"),
-  modelUsed: text("model_used").notNull(),
-  generationMs: integer("generation_ms"),
-})
+export const assessmentReports = pgTable(
+  "assessment_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => assessmentSessions.sessionId),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    reportMd: text("report_md").notNull(),
+    teaserJson: jsonb("teaser_json"),
+    modelUsed: text("model_used").notNull(),
+    generationMs: integer("generation_ms"),
+  },
+  (t) => [index("assessment_reports_session_id_idx").on(t.sessionId)]
+)
