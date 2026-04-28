@@ -6,8 +6,9 @@ import { EmailGateModal } from "@/components/assessment/EmailGateModal"
 import { GridChips } from "@/components/assessment/GridChips"
 import { SliderInput } from "@/components/assessment/SliderInput"
 import { TeaserCard } from "@/components/assessment/TeaserCard"
+import { persistSession } from "@/lib/assessment/api"
 import { INDUSTRY_OPTIONS } from "@/lib/assessment/industries"
-import { saveStage1 } from "@/lib/assessment/session"
+import { loadSession, saveStage1 } from "@/lib/assessment/session"
 import type { Stage1Answers } from "@/lib/assessment/session"
 import { US_STATES } from "@/lib/assessment/states"
 
@@ -73,7 +74,10 @@ export function ExitIQWidget() {
       setTimeout(() => go(step + 1, "forward"), 130)
     } else {
       setTimeout(() => {
-        saveStage1({ ...answers, [key]: value })
+        const updated = { ...answers, [key]: value }
+        saveStage1(updated)
+        const { sessionId } = loadSession()
+        if (sessionId) void persistSession({ sessionId, stage1: updated })
         setShowTeaser(true)
       }, 130)
     }
@@ -83,6 +87,8 @@ export function ExitIQWidget() {
     const updated = { ...answers, [key]: value }
     setAnswers(updated)
     saveStage1(updated)
+    const { sessionId } = loadSession()
+    if (sessionId) void persistSession({ sessionId, stage1: updated })
     setShowTeaser(true)
   }
 

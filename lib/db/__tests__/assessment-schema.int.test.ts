@@ -78,7 +78,7 @@ describe.skipIf(!integrationEnabled())("assessment schema (live DATABASE_URL)", 
     expect(rows).toHaveLength(1)
   })
 
-  it("has RLS enabled and expected anon policies registered", async () => {
+  it("has RLS enabled and only INSERT policies remain after 0001 migration", async () => {
     const rls = await sql<{ relname: string; relrowsecurity: boolean }[]>`
       SELECT c.relname, c.relrowsecurity
       FROM pg_class c
@@ -101,11 +101,15 @@ describe.skipIf(!integrationEnabled())("assessment schema (live DATABASE_URL)", 
     `
 
     const names = policies.map((p) => `${p.tablename}:${p.policyname}`)
+
+    // Retained: INSERT policies so the Next.js API can create rows via the anon key.
     expect(names).toContain("assessment_sessions:anon_insert_sessions")
-    expect(names).toContain("assessment_sessions:anon_select_sessions")
-    expect(names).toContain("assessment_sessions:anon_update_sessions")
     expect(names).toContain("assessment_reports:anon_insert_reports")
-    expect(names).toContain("assessment_reports:anon_select_reports")
+
+    // Dropped by 0001 migration: SELECT and UPDATE — all reads/writes now go through API routes.
+    expect(names).not.toContain("assessment_sessions:anon_select_sessions")
+    expect(names).not.toContain("assessment_sessions:anon_update_sessions")
+    expect(names).not.toContain("assessment_reports:anon_select_reports")
 
     for (const p of policies) {
       expect(p.roles).toContain("anon")

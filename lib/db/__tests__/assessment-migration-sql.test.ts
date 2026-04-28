@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationPath = join(process.cwd(), "lib/db/migrations/0000_colossal_gravity.sql")
+const migration0000Path = join(process.cwd(), "lib/db/migrations/0000_colossal_gravity.sql")
+const migration0001Path = join(process.cwd(), "lib/db/migrations/0001_drop_anon_rw_policies.sql")
 
 describe("0000_colossal_gravity migration SQL", () => {
-  const sql = readFileSync(migrationPath, "utf8")
+  const sql = readFileSync(migration0000Path, "utf8")
 
   it("defines both assessment tables", () => {
     expect(sql).toContain('CREATE TABLE "assessment_sessions"')
@@ -45,5 +46,26 @@ describe("0000_colossal_gravity migration SQL", () => {
     expect(sql).toMatch(/anon_update_sessions[\s\S]*FOR UPDATE TO anon/i)
     expect(sql).toMatch(/anon_insert_reports[\s\S]*FOR INSERT TO anon/i)
     expect(sql).toMatch(/anon_select_reports[\s\S]*FOR SELECT TO anon/i)
+  })
+})
+
+describe("0001_drop_anon_rw_policies migration SQL", () => {
+  const sql = readFileSync(migration0001Path, "utf8")
+
+  it("drops anon SELECT on sessions", () => {
+    expect(sql).toMatch(/DROP POLICY IF EXISTS\s+"anon_select_sessions"\s+ON\s+"assessment_sessions"/i)
+  })
+
+  it("drops anon UPDATE on sessions", () => {
+    expect(sql).toMatch(/DROP POLICY IF EXISTS\s+"anon_update_sessions"\s+ON\s+"assessment_sessions"/i)
+  })
+
+  it("drops anon SELECT on reports", () => {
+    expect(sql).toMatch(/DROP POLICY IF EXISTS\s+"anon_select_reports"\s+ON\s+"assessment_reports"/i)
+  })
+
+  it("does NOT drop INSERT policies (retained for API writes)", () => {
+    expect(sql).not.toContain('"anon_insert_sessions"')
+    expect(sql).not.toContain('"anon_insert_reports"')
   })
 })

@@ -1,17 +1,23 @@
 // @vitest-environment node
 //
-// Supabase PostgREST + RLS checks. Requires:
+// Supabase PostgREST + RLS checks after 0001_drop_anon_rw_policies migration.
+//
+// Policy state:
+//   assessment_sessions: anon INSERT ✅  |  SELECT ❌  |  UPDATE ❌
+//   assessment_reports:  anon INSERT ✅  |  SELECT ❌  |  UPDATE ❌
+//
+// Requires:
 //   RUN_DB_INTEGRATION_TESTS=1
 //   NEXT_PUBLIC_SUPABASE_URL
 //   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  (anon / publishable key)
 // Optional — two real accounts for JWT-vs-anon contrast (Supabase-recommended pattern):
 //   SUPABASE_RLS_TEST_USER_A_EMAIL, SUPABASE_RLS_TEST_USER_A_PASSWORD
 //   SUPABASE_RLS_TEST_USER_B_EMAIL, SUPABASE_RLS_TEST_USER_B_PASSWORD
-// Optional service-role smoke (never ship this key to the browser in app code):
+// Optional service-role smoke (never ship this key to the browser):
 //   SUPABASE_SERVICE_SECRET_KEY
 // Cleanup after each test (anon has no DELETE policy) — provide one of:
 //   DATABASE_URL  (direct SQL delete), or
-//   SUPABASE_SERVICE_SECRET_KEY  (same as smoke test; deletes via PostgREST)
+//   SUPABASE_SERVICE_SECRET_KEY  (deletes via PostgREST)
 
 import { createClient } from "@supabase/supabase-js"
 import postgres from "postgres"
@@ -29,9 +35,9 @@ function supabaseIntegrationEnabled() {
 function rlsAuthUsersConfigured() {
   return Boolean(
     process.env.SUPABASE_RLS_TEST_USER_A_EMAIL &&
-    process.env.SUPABASE_RLS_TEST_USER_A_PASSWORD &&
-    process.env.SUPABASE_RLS_TEST_USER_B_EMAIL &&
-    process.env.SUPABASE_RLS_TEST_USER_B_PASSWORD
+      process.env.SUPABASE_RLS_TEST_USER_A_PASSWORD &&
+      process.env.SUPABASE_RLS_TEST_USER_B_EMAIL &&
+      process.env.SUPABASE_RLS_TEST_USER_B_PASSWORD
   )
 }
 
@@ -87,56 +93,91 @@ describe("assessment RLS (Supabase clients)", () => {
     }
   })
 
-  it.skipIf(skipNoSupabase)("anon: insert session, insert report (FK), select, update session", async () => {
+  // ─── RETAINED: anon INSERT ───────────────────────────────────────────────────
+
+  it.skipIf(skipNoSupabase)("anon: INSERT session succeeds (INSERT policy retained)", async () => {
     const client = createClient(url, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
     const sessionId = `vitest-anon-${randomUUID()}`
 
-    const { error: insertSessionErr, data: insertedSession } = await client
-      .from("assessment_sessions")
-      .insert({ session_id: sessionId, stage1: { industry: "other" } })
-      .select("session_id")
-      .single()
+    // Do NOT chain .select() — SELECT policy was dropped; chaining would fail.
+    const { error } = await client.from("assessment_sessions").insert({ session_id: sessionId })
 
-    expect(insertSessionErr).toBeNull()
-    expect(insertedSession?.session_id).toBe(sessionId)
+    expect(error).toBeNull()
+  })
 
-    const { error: insertReportErr } = await client.from("assessment_reports").insert({
+  it.skipIf(skipNoSupabase)("anon: INSERT report succeeds and FK constraint is honored", async () => {
+    const client = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    const sessionId = `vitest-rpt-${randomUUID()}`
+
+    const { error: sessErr } = await client.from("assessment_sessions").insert({ session_id: sessionId })
+    expect(sessErr).toBeNull()
+
+    // FK references assessment_sessions.session_id — enforced at the DB level regardless of RLS.
+    const { error: rptErr } = await client.from("assessment_reports").insert({
       session_id: sessionId,
       report_md: "# Test",
       model_used: "vitest",
     })
-
-    expect(insertReportErr).toBeNull()
-
-    const { data: sessions, error: selectSessionErr } = await client
-      .from("assessment_sessions")
-      .select("session_id")
-      .eq("session_id", sessionId)
-
-    expect(selectSessionErr).toBeNull()
-    expect(sessions?.length).toBeGreaterThanOrEqual(1)
-
-    const { error: updateErr } = await client
-      .from("assessment_sessions")
-      .update({ score: 42 })
-      .eq("session_id", sessionId)
-
-    expect(updateErr).toBeNull()
-
-    const { data: afterUpdate } = await client
-      .from("assessment_sessions")
-      .select("score")
-      .eq("session_id", sessionId)
-      .single()
-
-    expect(afterUpdate?.score).toBe(42)
+    expect(rptErr).toBeNull()
   })
 
+  it.skipIf(skipNoSupabase)("anon: duplicate session_id is rejected (unique constraint)", async () => {
+    const client = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    const sessionId = `vitest-dup-${randomUUID()}`
+    const { error: firstErr } = await client.from("assessment_sessions").insert({ session_id: sessionId })
+    expect(firstErr).toBeNull()
+
+    const { error: dupErr } = await client.from("assessment_sessions").insert({ session_id: sessionId })
+    expect(dupErr).not.toBeNull()
+    expect(dupErr?.code).toBe("23505")
+  })
+
+  // ─── BLOCKED: anon SELECT ────────────────────────────────────────────────────
+
   it.skipIf(skipNoSupabase)(
-    "anon: second client can read rows created by first (Phase 1 permissive anon policies)",
+    "anon: SELECT sessions returns empty set (SELECT policy dropped — default deny)",
+    async () => {
+      const client = createClient(url, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+
+      // Insert a row so we know there is data — anon still can INSERT.
+      const sessionId = `vitest-noread-${randomUUID()}`
+      await client.from("assessment_sessions").insert({ session_id: sessionId })
+
+      // SELECT should return empty — RLS default-deny makes all rows invisible to anon.
+      const { data, error } = await client.from("assessment_sessions").select("session_id").limit(10)
+
+      expect(error).toBeNull() // Not a pg error; Postgres silently returns 0 rows.
+      expect(data ?? []).toEqual([])
+    }
+  )
+
+  it.skipIf(skipNoSupabase)(
+    "anon: SELECT reports returns empty set (SELECT policy dropped — default deny)",
+    async () => {
+      const client = createClient(url, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+
+      const { data, error } = await client.from("assessment_reports").select("session_id").limit(10)
+
+      expect(error).toBeNull()
+      expect(data ?? []).toEqual([])
+    }
+  )
+
+  it.skipIf(skipNoSupabase)(
+    "anon: a second anon client cannot read rows written by a first (SELECT policy dropped)",
     async () => {
       const writer = createClient(url, anonKey, {
         auth: { persistSession: false, autoRefreshToken: false },
@@ -149,6 +190,7 @@ describe("assessment RLS (Supabase clients)", () => {
       const { error: wErr } = await writer.from("assessment_sessions").insert({ session_id: sessionId })
       expect(wErr).toBeNull()
 
+      // Reader should see nothing — SELECT policy is gone.
       const { data, error: rErr } = await reader
         .from("assessment_sessions")
         .select("session_id")
@@ -156,27 +198,98 @@ describe("assessment RLS (Supabase clients)", () => {
         .maybeSingle()
 
       expect(rErr).toBeNull()
-      expect(data?.session_id).toBe(sessionId)
+      expect(data).toBeNull()
     }
   )
 
-  it.skipIf(skipNoSupabase)("anon: duplicate session_id is rejected (unique constraint)", async () => {
-    const client = createClient(url, anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
+  // ─── BLOCKED: anon UPDATE ────────────────────────────────────────────────────
 
-    const sessionId = `vitest-dup-${randomUUID()}`
-    const { error: firstErr } = await client.from("assessment_sessions").insert({ session_id: sessionId })
-    expect(firstErr).toBeNull()
+  it.skipIf(skipNoSupabase)(
+    "anon: UPDATE sessions affects 0 rows (UPDATE policy dropped — rows invisible)",
+    async () => {
+      const client = createClient(url, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
 
-    const { error: dupErr } = await client.from("assessment_sessions").insert({ session_id: sessionId })
+      const sessionId = `vitest-noupdate-sess-${randomUUID()}`
+      await client.from("assessment_sessions").insert({ session_id: sessionId })
 
-    expect(dupErr).not.toBeNull()
-    expect(dupErr?.code).toBe("23505")
-  })
+      // No UPDATE policy → no rows are visible → 0 rows matched → no error from PostgREST.
+      const { error: updateErr } = await client
+        .from("assessment_sessions")
+        .update({ score: 99 })
+        .eq("session_id", sessionId)
+
+      expect(updateErr).toBeNull()
+
+      // Verify via service_role that the value was NOT persisted.
+      if (serviceRoleConfigured()) {
+        const serviceClient = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
+        const { data } = await serviceClient
+          .from("assessment_sessions")
+          .select("score")
+          .eq("session_id", sessionId)
+          .maybeSingle()
+        expect(data?.score).not.toBe(99)
+      }
+    }
+  )
+
+  it.skipIf(skipNoSupabase)(
+    "anon: UPDATE reports affects 0 rows (no UPDATE policy — never existed)",
+    async () => {
+      const sessionId = `vitest-noupdate-rpt-${randomUUID()}`
+
+      // Use service_role to set up the row so we know the initial value.
+      // Falls back to anon INSERT when service_role is not configured.
+      if (serviceRoleConfigured()) {
+        const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
+        await svc.from("assessment_sessions").insert({ session_id: sessionId })
+        await svc
+          .from("assessment_reports")
+          .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
+      } else {
+        const anon = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
+        await anon.from("assessment_sessions").insert({ session_id: sessionId })
+        await anon
+          .from("assessment_reports")
+          .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
+      }
+
+      const client = createClient(url, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const { error: updateErr } = await client
+        .from("assessment_reports")
+        .update({ report_md: "tampered" })
+        .eq("session_id", sessionId)
+
+      // RLS blocks visibility → 0 rows affected, no PostgREST error.
+      expect(updateErr).toBeNull()
+
+      // Verify via service_role that the row is unchanged.
+      if (serviceRoleConfigured()) {
+        const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
+        const { data } = await svc
+          .from("assessment_reports")
+          .select("report_md")
+          .eq("session_id", sessionId)
+          .maybeSingle()
+        expect(data?.report_md).toBe("original")
+      }
+    }
+  )
+
+  // ─── service_role smoke ───────────────────────────────────────────────────────
 
   it.skipIf(skipNoSupabase || !serviceRoleConfigured())(
-    "service_role: can read a row after anon inserts it (RLS bypass smoke)",
+    "service_role: bypasses RLS and can read a row anon inserted",
     async () => {
       const anonClient = createClient(url, anonKey, {
         auth: { persistSession: false, autoRefreshToken: false },
@@ -200,32 +313,12 @@ describe("assessment RLS (Supabase clients)", () => {
     }
   )
 
-  it.skipIf(skipNoSupabase)("anon: cannot update assessment_reports (no update policy in Phase 1)", async () => {
-    const client = createClient(url, anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
-
-    const sessionId = `vitest-noupdate-report-${randomUUID()}`
-    await client.from("assessment_sessions").insert({ session_id: sessionId })
-    await client.from("assessment_reports").insert({
-      session_id: sessionId,
-      report_md: "a",
-      model_used: "vitest",
-    })
-
-    const { error } = await client.from("assessment_reports").update({ report_md: "b" }).eq("session_id", sessionId)
-
-    const { data } = await client.from("assessment_reports").select("report_md").eq("session_id", sessionId).single()
-
-    // PostgREST may return error (e.g. 42501) or a successful 0-row update when RLS blocks — assert row unchanged.
-    const updateBlocked = error !== null || data?.report_md === "a"
-    expect(updateBlocked).toBe(true)
-  })
+  // ─── authenticated role ───────────────────────────────────────────────────────
 
   const skipAuthUsers = skipNoSupabase || !rlsAuthUsersConfigured()
 
   it.skipIf(skipAuthUsers)(
-    "authenticated users A and B: select assessment_sessions returns no rows (no RLS policies for authenticated role)",
+    "authenticated users A and B: SELECT assessment_sessions returns no rows (no RLS policies for authenticated role)",
     async () => {
       const userA = {
         email: process.env.SUPABASE_RLS_TEST_USER_A_EMAIL!,
@@ -263,7 +356,7 @@ describe("assessment RLS (Supabase clients)", () => {
     }
   )
 
-  it.skipIf(skipAuthUsers)("authenticated user cannot insert into assessment_sessions", async () => {
+  it.skipIf(skipAuthUsers)("authenticated user cannot INSERT into assessment_sessions", async () => {
     const client = createClient(url, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
@@ -274,7 +367,6 @@ describe("assessment RLS (Supabase clients)", () => {
     expect(signErr).toBeNull()
 
     const sessionId = `vitest-auth-blocked-${randomUUID()}`
-
     const { error } = await client.from("assessment_sessions").insert({ session_id: sessionId })
 
     expect(error).not.toBeNull()

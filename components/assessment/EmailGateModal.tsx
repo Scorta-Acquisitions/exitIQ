@@ -3,8 +3,9 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { persistSession, requestTeaser } from "@/lib/assessment/api"
 import { computeTag, SELLING_TIMELINE_OPTIONS } from "@/lib/assessment/segmentation"
-import { saveGate } from "@/lib/assessment/session"
+import { loadSession, saveGate } from "@/lib/assessment/session"
 
 interface EmailGateModalProps {
   onClose: () => void
@@ -24,7 +25,16 @@ export function EmailGateModal({ onClose }: EmailGateModalProps) {
     if (!valid) return
     setSubmitting(true)
     const tag = computeTag(timeline)
-    saveGate({ firstName: firstName.trim(), email: email.trim(), sellingTimeline: timeline, tag })
+    const gate = { firstName: firstName.trim(), email: email.trim(), sellingTimeline: timeline, tag }
+    saveGate(gate)
+
+    // Persist stage1 + gate to DB, then kick off teaser generation (fire and forget).
+    const { sessionId, stage1 } = loadSession()
+    if (sessionId) {
+      void persistSession({ sessionId, stage1, gate })
+      void requestTeaser(sessionId)
+    }
+
     setTimeout(() => {
       router.push("/assessment/stage-2")
     }, 300)

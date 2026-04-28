@@ -3,6 +3,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { persistSession, requestGenerate } from "@/lib/assessment/api"
 import { loadSession, markComplete } from "@/lib/assessment/session"
 
 const STEPS = [
@@ -35,6 +36,23 @@ export default function GeneratingPage() {
         markComplete()
         setDone(true)
         const sessionId = session.sessionId ?? "local"
+
+        // Persist completion to DB with all stage data so the server can compute
+        // score + SBA, then kick off background AI report generation.
+        if (session.sessionId) {
+          const completedAt = Date.now()
+          void persistSession({
+            sessionId: session.sessionId,
+            stage1: session.stage1,
+            gate: session.gate,
+            stage2: session.stage2,
+            stage3: session.stage3,
+            stage4: session.stage4,
+            completedAt,
+          })
+          void requestGenerate(session.sessionId)
+        }
+
         setTimeout(() => {
           router.push(`/report/${sessionId}`)
         }, 600)

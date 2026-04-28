@@ -7,6 +7,7 @@ import { FreeTextInput } from "@/components/assessment/FreeTextInput"
 import { MultiCheckbox } from "@/components/assessment/MultiCheckbox"
 import { RadioCards } from "@/components/assessment/RadioCards"
 import { SBAInfoCard } from "@/components/assessment/SBAInfoCard"
+import { persistSession } from "@/lib/assessment/api"
 import type { StageAnswer, StageQuestion } from "@/lib/assessment/questions"
 import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { loadSession, saveStage } from "@/lib/assessment/session"
@@ -60,7 +61,9 @@ export function StageQuestionApp({ stageNum, questions, sessionKey, nextRoute, p
       if (idx < questions.length - 1) {
         transition(idx + 1, "forward")
       } else {
-        saveStage(sessionKey, updated as Record<string, string | string[]>)
+        // Last auto-advance question in this stage — persist to DB then navigate.
+        const { sessionId } = loadSession()
+        if (sessionId) void persistSession({ sessionId, [sessionKey]: updated })
         router.push(nextRoute)
       }
     }
@@ -71,7 +74,10 @@ export function StageQuestionApp({ stageNum, questions, sessionKey, nextRoute, p
     if (idx < questions.length - 1) {
       transition(idx + 1, "forward")
     } else {
+      // Last explicit-next question in this stage — persist to DB then navigate.
       saveStage(sessionKey, answers as Record<string, string | string[]>)
+      const { sessionId } = loadSession()
+      if (sessionId) void persistSession({ sessionId, [sessionKey]: answers })
       router.push(nextRoute)
     }
   }
