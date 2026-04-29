@@ -24,9 +24,11 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 }
 
+const fontVariables = `${ebGaramond.variable} ${inter.variable}`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${ebGaramond.variable} ${inter.variable}`}>
+    <html lang="en" className={fontVariables}>
       <body>{children}</body>
     </html>
   )

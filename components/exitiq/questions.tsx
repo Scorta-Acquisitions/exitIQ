@@ -23,8 +23,8 @@ function hexToRgb(hex: string): string {
 // ── Step label ────────────────────────────────────────────────────────────────
 function StepLabel({ current, total }: { current: number; total: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ display: "flex", gap: 5, flex: 1 }}>
+    <div className="flex items-center gap-2">
+      <div className="flex gap-[5px] flex-1">
         {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
@@ -75,9 +75,9 @@ function QHead({ children }: { children: React.ReactNode }) {
 // ── Q1: Industry chips ────────────────────────────────────────────────────────
 function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+    <div className="flex flex-col gap-[18px]">
       <QHead>What type of business do you own?</QHead>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <div className="flex flex-wrap gap-2">
         {INDUSTRIES.map(({ label, color }, i) => (
           <button
             key={label}
@@ -129,10 +129,10 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
   const pct = (val - 1) / 24
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="flex flex-col gap-5">
       <QHead>How long have you been in business?</QHead>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-baseline">
           <div
             style={{
               fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -156,7 +156,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           </div>
         </div>
 
-        <div style={{ position: "relative", height: 40, display: "flex", alignItems: "center" }}>
+        <div className="relative h-10 flex items-center">
           <div
             style={{
               position: "absolute",
@@ -213,7 +213,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div className="flex justify-between">
           {["1yr", "5yr", "10yr", "15yr", "25yr+"].map((l) => (
             <div key={l} style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
               {l}
@@ -263,9 +263,9 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
   const [hover, setHover] = React.useState<number | null>(null)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="flex flex-col gap-4">
       <QHead>What is your annual revenue?</QHead>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div className="grid grid-cols-2 gap-2">
         {REVENUE_RANGES.map(({ label }, i) => (
           <button
             key={label}
@@ -313,8 +313,8 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
   const [showTip, setShowTip] = React.useState(false)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-[10px]">
         <QHead>What is your annual SDE?</QHead>
         <button
           onClick={() => setShowTip((t) => !t)}
@@ -362,7 +362,7 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div className="grid grid-cols-2 gap-2">
         {SDE_RANGES.map(({ label }, i) => (
           <button
             key={label}
@@ -409,7 +409,7 @@ function EmployeeDots({ count, color }: { count: number; color?: string }) {
   const MAX = 25
   const shown = Math.min(count, MAX)
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 6 }}>
+    <div className="flex flex-wrap gap-[3px] mt-1.5">
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
@@ -450,9 +450,9 @@ function Q5Employees({
   const [hover, setHover] = React.useState<number | null>(null)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="flex flex-col gap-4">
       <QHead>How many employees do you have?</QHead>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="flex flex-col gap-2">
         {EMPLOYEE_OPTIONS.map(({ label, dots, transferability }, i) => (
           <button
             key={label}
@@ -471,7 +471,7 @@ function Q5Employees({
               transform: hover === i ? "translateX(4px)" : "none",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div className="flex justify-between items-start">
               <div>
                 <div
                   style={{
@@ -528,9 +528,9 @@ function Q6State({
   const isHot = (s: string) => HOT_STATES.includes(s)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="flex flex-col gap-4">
       <QHead>What state is your business in?</QHead>
-      <div style={{ position: "relative" }}>
+      <div className="relative">
         <input
           type="text"
           placeholder="Search state…"
@@ -584,11 +584,8 @@ function Q6State({
                     onAnswer(s, e)
                   }
                 }}
+                className="flex items-center justify-between w-full"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
                   padding: "10px 16px",
                   background: "transparent",
                   border: "none",
@@ -641,10 +638,8 @@ function NextUnlockHint({ step }: { step: number }) {
   if (!hint) return null
   return (
     <div
+      className="flex items-center gap-2"
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
         padding: "9px 14px",
         background: "rgba(var(--emerald-rgb),.05)",
         border: "1px solid rgba(var(--emerald-rgb),.13)",
@@ -692,20 +687,14 @@ export function QuestionPanel({ step, onAnswer, processing, disabled }: Question
   if (!Component) return null
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div className="flex flex-col gap-2.5">
       <div
         key={`q-${step}`}
-        className="glass-panel"
+        className="glass-panel p-7 flex flex-col gap-[22px] relative overflow-hidden"
         style={{
-          padding: 28,
-          display: "flex",
-          flexDirection: "column",
-          gap: 22,
           animation: "slideUp .55s cubic-bezier(.34,1.2,.64,1)",
           opacity: disabled && !processing ? 0.55 : 1,
           transition: "opacity .3s ease",
-          position: "relative",
-          overflow: "hidden",
         }}
       >
         <ScanLine />

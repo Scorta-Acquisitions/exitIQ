@@ -46,13 +46,13 @@ export interface RiskArea {
 }
 
 export const INDUSTRIES: Industry[] = [
-  { label: "Restaurant", multiple: [1.5, 3.0], color: "#f4c5a8", buyerLead: "Operator buyers" },
-  { label: "Retail", multiple: [2.0, 3.5], color: "#c8b8e0", buyerLead: "Strategic acquirers" },
-  { label: "Home Services", multiple: [2.5, 4.0], color: "#a7e5d3", buyerLead: "PE-backed rollups" },
-  { label: "Medical", multiple: [3.0, 5.0], color: "#a8c8e8", buyerLead: "DSO / group buyers" },
-  { label: "Manufacturing", multiple: [3.0, 5.0], color: "#a8c8e8", buyerLead: "PE & strategics" },
-  { label: "Professional Services", multiple: [2.5, 4.0], color: "#c8b8e0", buyerLead: "Strategic buyers" },
-  { label: "Other", multiple: [2.0, 3.5], color: "#a7e5d3", buyerLead: "Individual acquirers" },
+  { label: "Restaurant", multiple: [1.5, 3.0], color: "var(--peach)", buyerLead: "Operator buyers" },
+  { label: "Retail", multiple: [2.0, 3.5], color: "var(--lavender)", buyerLead: "Strategic acquirers" },
+  { label: "Home Services", multiple: [2.5, 4.0], color: "var(--mint)", buyerLead: "PE-backed rollups" },
+  { label: "Medical", multiple: [3.0, 5.0], color: "var(--sky)", buyerLead: "DSO / group buyers" },
+  { label: "Manufacturing", multiple: [3.0, 5.0], color: "var(--sky)", buyerLead: "PE & strategics" },
+  { label: "Professional Services", multiple: [2.5, 4.0], color: "var(--lavender)", buyerLead: "Strategic buyers" },
+  { label: "Other", multiple: [2.0, 3.5], color: "var(--mint)", buyerLead: "Individual acquirers" },
 ]
 
 export const YEAR_OPTIONS: YearOption[] = [
@@ -154,10 +154,10 @@ export const HOT_STATES: string[] = [
 ]
 
 export const BUYER_CARDS: BuyerCard[] = [
-  { type: "SBA-backed operator", icon: "◉", base: "high", color: "#a7e5d3" },
-  { type: "Local strategic buyer", icon: "◎", base: "medium", color: "#c8b8e0" },
-  { type: "Acquisition entrepreneur", icon: "◈", base: "medium", color: "#a8c8e8" },
-  { type: "Institutional buyer", icon: "○", base: "low", color: "rgba(245,245,245,.25)" },
+  { type: "SBA-backed operator", icon: "◉", base: "high", color: "var(--mint)" },
+  { type: "Local strategic buyer", icon: "◎", base: "medium", color: "var(--lavender)" },
+  { type: "Acquisition entrepreneur", icon: "◈", base: "medium", color: "var(--sky)" },
+  { type: "Institutional buyer", icon: "○", base: "low", color: "var(--t4)" },
 ]
 
 export const RADAR_AXES: string[] = [
