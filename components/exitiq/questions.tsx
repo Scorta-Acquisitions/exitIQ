@@ -1,3 +1,4 @@
+// use client: useState, hooks, interactivity
 "use client"
 
 import React from "react"
@@ -31,8 +32,8 @@ function StepLabel({ current, total }: { current: number; total: number }) {
               flex: 1,
               height: 2,
               borderRadius: 9999,
-              background: i < current ? "#10b981" : i === current ? "rgba(16,185,129,.38)" : "var(--s1)",
-              boxShadow: i < current ? "0 0 6px rgba(16,185,129,.55)" : "none",
+              background: i < current ? "var(--emerald)" : i === current ? "rgba(var(--emerald-rgb),.38)" : "var(--s1)",
+              boxShadow: i < current ? "0 0 6px rgba(var(--emerald-rgb),.55)" : "none",
               transition: "background .6s ease, box-shadow .6s ease",
             }}
           />
@@ -147,7 +148,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
             style={{
               fontSize: 12,
               fontWeight: 500,
-              color: "rgba(167,229,211,.7)",
+              color: "rgba(var(--mint-rgb),.7)",
               fontFamily: "Inter, sans-serif",
             }}
           >
@@ -173,8 +174,8 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
               width: `${pct * 100}%`,
               height: 4,
               borderRadius: 9999,
-              background: "linear-gradient(90deg,#a7e5d3,#10b981)",
-              boxShadow: "0 0 10px rgba(16,185,129,.5)",
+              background: "linear-gradient(90deg,var(--mint),var(--emerald))",
+              boxShadow: "0 0 10px rgba(var(--emerald-rgb),.5)",
               transition: "width .15s ease",
             }}
           />
@@ -204,7 +205,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
               height: 20,
               borderRadius: "50%",
               background: "var(--btn-bg)",
-              boxShadow: "0 0 14px rgba(16,185,129,.55), 0 2px 8px rgba(0,0,0,.35)",
+              boxShadow: "0 0 14px rgba(var(--emerald-rgb),.55), 0 2px 8px rgba(0,0,0,.35)",
               transition: "left .15s ease",
               pointerEvents: "none",
               zIndex: 1,
@@ -240,9 +241,9 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
         }}
         onMouseEnter={(e) => {
           if (!disabled) {
-            e.currentTarget.style.background = "rgba(167,229,211,.15)"
-            e.currentTarget.style.borderColor = "rgba(167,229,211,.4)"
-            e.currentTarget.style.color = "#a7e5d3"
+            e.currentTarget.style.background = "rgba(var(--mint-rgb),.15)"
+            e.currentTarget.style.borderColor = "rgba(var(--mint-rgb),.4)"
+            e.currentTarget.style.color = "var(--mint)"
           }
         }}
         onMouseLeave={(e) => {
@@ -275,13 +276,13 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
               padding: "14px 16px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(16,185,129,.1)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(16,185,129,.45)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(var(--emerald-rgb),.1)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(var(--emerald-rgb),.45)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 60}ms cubic-bezier(.34,1.3,.64,1) both`,
               transform: hover === i ? "translateY(-2px) scale(1.02)" : "none",
-              boxShadow: hover === i ? "0 0 20px rgba(16,185,129,.12)" : "none",
+              boxShadow: hover === i ? "0 0 20px rgba(var(--emerald-rgb),.12)" : "none",
             }}
           >
             <div
@@ -289,7 +290,7 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
                 fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                 fontSize: 18,
                 fontWeight: 300,
-                color: hover === i ? "#10b981" : "var(--t1)",
+                color: hover === i ? "var(--emerald)" : "var(--t1)",
                 letterSpacing: "-.2px",
                 transition: "color .2s",
               }}
@@ -372,13 +373,13 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
               padding: "14px 16px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(200,184,224,.1)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(200,184,224,.4)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(var(--lavender-rgb),.1)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(var(--lavender-rgb),.4)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 65}ms cubic-bezier(.34,1.3,.64,1) both`,
               transform: hover === i ? "translateY(-2px) scale(1.02)" : "none",
-              boxShadow: hover === i ? "0 0 20px rgba(200,184,224,.12)" : "none",
+              boxShadow: hover === i ? "0 0 20px rgba(var(--lavender-rgb),.12)" : "none",
             }}
           >
             <div
@@ -386,7 +387,7 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
                 fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                 fontSize: 18,
                 fontWeight: 300,
-                color: hover === i ? "#c8b8e0" : "var(--t1)",
+                color: hover === i ? "var(--lavender)" : "var(--t1)",
                 letterSpacing: "-.2px",
                 transition: "color .2s",
               }}
@@ -416,8 +417,8 @@ function EmployeeDots({ count, color }: { count: number; color?: string }) {
             width: 7,
             height: 7,
             borderRadius: "50%",
-            background: color ?? "rgba(167,229,211,.7)",
-            boxShadow: "0 0 4px rgba(167,229,211,.5)",
+            background: color ?? "rgba(var(--mint-rgb),.7)",
+            boxShadow: "0 0 4px rgba(var(--mint-rgb),.5)",
             animation: `chipFloat .4s ${i * 20}ms cubic-bezier(.34,1.4,.64,1) both`,
           }}
         />
@@ -462,8 +463,8 @@ function Q5Employees({
               padding: "14px 18px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(168,200,232,.08)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(168,200,232,.38)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(var(--sky-rgb),.08)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(var(--sky-rgb),.38)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 55}ms cubic-bezier(.34,1.3,.64,1) both`,
@@ -477,14 +478,14 @@ function Q5Employees({
                     fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                     fontSize: 20,
                     fontWeight: 300,
-                    color: hover === i ? "#a8c8e8" : "var(--t1)",
+                    color: hover === i ? "var(--sky)" : "var(--t1)",
                     letterSpacing: "-.2px",
                     transition: "color .2s",
                   }}
                 >
                   {label}
                 </div>
-                <EmployeeDots count={dots} color={hover === i ? "#a8c8e8" : undefined} />
+                <EmployeeDots count={dots} color={hover === i ? "var(--sky)" : undefined} />
               </div>
               <div
                 style={{
@@ -497,7 +498,7 @@ function Q5Employees({
                 <div>Transferability</div>
                 <div
                   style={{
-                    color: hover === i ? "#a8c8e8" : "var(--t2)",
+                    color: hover === i ? "var(--sky)" : "var(--t2)",
                     fontWeight: 500,
                     marginTop: 2,
                   }}
@@ -552,7 +553,7 @@ function Q6State({
             outline: "none",
             transition: "border .2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(167,229,211,.35)")}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(var(--mint-rgb),.35)")}
           onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--inp-border)")}
         />
         {open && filtered.length > 0 && (
@@ -599,7 +600,7 @@ function Q6State({
                   textAlign: "left",
                   transition: "background .15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(167,229,211,.08)")}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(var(--mint-rgb),.08)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <span>{s}</span>
@@ -609,7 +610,7 @@ function Q6State({
                       fontSize: 10,
                       fontWeight: 600,
                       letterSpacing: ".8px",
-                      color: "#10b981",
+                      color: "var(--emerald)",
                       textTransform: "uppercase",
                     }}
                   >
@@ -645,8 +646,8 @@ function NextUnlockHint({ step }: { step: number }) {
         alignItems: "center",
         gap: 8,
         padding: "9px 14px",
-        background: "rgba(16,185,129,.05)",
-        border: "1px solid rgba(16,185,129,.13)",
+        background: "rgba(var(--emerald-rgb),.05)",
+        border: "1px solid rgba(var(--emerald-rgb),.13)",
         borderRadius: 10,
         animation: "fadeIn .5s ease",
       }}
@@ -656,9 +657,9 @@ function NextUnlockHint({ step }: { step: number }) {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          background: "#10b981",
+          background: "var(--emerald)",
           flexShrink: 0,
-          boxShadow: "0 0 6px rgba(16,185,129,.7)",
+          boxShadow: "0 0 6px rgba(var(--emerald-rgb),.7)",
           animation: "liveBlink 2s ease-in-out infinite",
         }}
       />
@@ -670,7 +671,7 @@ function NextUnlockHint({ step }: { step: number }) {
           lineHeight: 1.5,
         }}
       >
-        <span style={{ color: "rgba(16,185,129,.7)", fontWeight: 500 }}>Next unlock: </span>
+        <span style={{ color: "rgba(var(--emerald-rgb),.7)", fontWeight: 500 }}>Next unlock: </span>
         {hint.unlocks}
       </span>
     </div>

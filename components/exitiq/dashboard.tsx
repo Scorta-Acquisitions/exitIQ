@@ -1,3 +1,4 @@
+// use client: hooks, state, real-time updates
 "use client"
 
 import React from "react"
@@ -9,7 +10,7 @@ import { ConfidenceMeter, Divider, LiveBadge, RadarRings, ScanLine, useSpring } 
 function OdometerNum({
   target,
   prefix = "$",
-  color = "#10b981",
+  color = "var(--emerald)",
   size = 26,
 }: {
   target: number
@@ -84,7 +85,7 @@ function DiagnosisZone({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <ZoneLabel accent="rgba(167,229,211,.5)">Current Diagnosis</ZoneLabel>
+      <ZoneLabel accent="rgba(var(--mint-rgb),.5)">Current Diagnosis</ZoneLabel>
       <ConfidenceMeter value={confidence} />
       <div style={{ minHeight: 18 }}>
         {processing || recalcMsg ? (
@@ -100,13 +101,13 @@ function DiagnosisZone({
                     width: 4,
                     height: 4,
                     borderRadius: "50%",
-                    background: "#a7e5d3",
+                    background: "var(--mint)",
                     animation: `dotBounce .9s ${i * 0.18}s ease-in-out infinite`,
                   }}
                 />
               ))}
             </div>
-            <span style={{ fontSize: 11, color: "rgba(167,229,211,.65)", fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontSize: 11, color: "rgba(var(--mint-rgb),.65)", fontFamily: "Inter, sans-serif" }}>
               {recalcMsg ?? "Recalculating…"}
             </span>
           </div>
@@ -182,7 +183,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
               <div
                 style={{
                   fontSize: 10,
-                  color: "#10b981",
+                  color: "var(--emerald)",
                   fontWeight: 500,
                   marginTop: 3,
                   fontFamily: "Inter, sans-serif",
@@ -203,7 +204,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
             fontWeight: 600,
             letterSpacing: ".8px",
             textTransform: "uppercase",
-            color: "rgba(244,197,168,.55)",
+            color: "rgba(var(--peach-rgb),.55)",
             fontFamily: "Inter, sans-serif",
           }}
         >
@@ -223,10 +224,10 @@ function SignalsZone({ derived }: { derived: Derived }) {
         ) : (
           <div key={brokerFee.text} style={{ animation: "numRoll .5s cubic-bezier(.34,1.3,.64,1)" }}>
             <div style={{ display: "flex", alignItems: "baseline" }}>
-              <OdometerNum target={brokerFee.low} color="#f4c5a8" size={26} />
+              <OdometerNum target={brokerFee.low} color="var(--peach)" size={26} />
               <span
                 style={{
-                  color: "rgba(244,197,168,.35)",
+                  color: "rgba(var(--peach-rgb),.35)",
                   margin: "0 5px",
                   fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                   fontSize: 22,
@@ -234,12 +235,12 @@ function SignalsZone({ derived }: { derived: Derived }) {
               >
                 –
               </span>
-              <OdometerNum target={brokerFee.high} color="#f4c5a8" size={26} />
+              <OdometerNum target={brokerFee.high} color="var(--peach)" size={26} />
             </div>
             <div
               style={{
                 fontSize: 10,
-                color: "rgba(244,197,168,.5)",
+                color: "rgba(var(--peach-rgb),.5)",
                 marginTop: 3,
                 fontFamily: "Inter, sans-serif",
                 lineHeight: 1.45,
@@ -260,7 +261,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
               fontWeight: 600,
               letterSpacing: ".8px",
               textTransform: "uppercase",
-              color: "rgba(167,229,211,.5)",
+              color: "rgba(var(--mint-rgb),.5)",
               fontFamily: "Inter, sans-serif",
             }}
           >
@@ -290,7 +291,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
                     letterSpacing: ".6px",
                     textTransform: "uppercase",
                     fontFamily: "Inter, sans-serif",
-                    color: i === 0 ? "#10b981" : i <= 2 ? "#a7e5d3" : "var(--t4)",
+                    color: i === 0 ? "var(--emerald)" : i <= 2 ? "var(--mint)" : "var(--t4)",
                   }}
                 >
                   {likelihood}
@@ -316,7 +317,7 @@ function StillNeededZone({ step }: { step: number }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <ZoneLabel accent="rgba(244,197,168,.5)">Still Needed for Full Report</ZoneLabel>
+      <ZoneLabel accent="rgba(var(--peach-rgb),.5)">Still Needed for Full Report</ZoneLabel>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {needs.slice(0, 3).map(({ label, desc }, i) => (
           <div
@@ -335,7 +336,7 @@ function StillNeededZone({ step }: { step: number }) {
                   width: 6,
                   height: 6,
                   borderRadius: "50%",
-                  background: "rgba(244,197,168,.4)",
+                  background: "rgba(var(--peach-rgb),.4)",
                   flexShrink: 0,
                   marginTop: 4,
                 }}
@@ -363,8 +364,8 @@ function StillNeededZone({ step }: { step: number }) {
       {step < 6 && (
         <div
           style={{
-            background: "rgba(16,185,129,.05)",
-            border: "1px solid rgba(16,185,129,.14)",
+            background: "rgba(var(--emerald-rgb),.05)",
+            border: "1px solid rgba(var(--emerald-rgb),.14)",
             borderRadius: 10,
             padding: "10px 12px",
             marginTop: 2,
@@ -376,7 +377,7 @@ function StillNeededZone({ step }: { step: number }) {
               fontWeight: 600,
               letterSpacing: ".8px",
               textTransform: "uppercase",
-              color: "rgba(16,185,129,.6)",
+              color: "rgba(var(--emerald-rgb),.6)",
               fontFamily: "Inter, sans-serif",
               marginBottom: 5,
             }}
@@ -399,7 +400,7 @@ function StillNeededZone({ step }: { step: number }) {
                   width: 4,
                   height: 4,
                   borderRadius: "50%",
-                  background: "rgba(16,185,129,.5)",
+                  background: "rgba(var(--emerald-rgb),.5)",
                   flexShrink: 0,
                 }}
               />
@@ -435,7 +436,7 @@ function MarketConditions({ derived }: { derived: Derived }) {
             width: 5,
             height: 5,
             borderRadius: "50%",
-            background: "#a7e5d3",
+            background: "var(--mint)",
             animation: "liveBlink 1.6s ease-in-out infinite",
           }}
         />
@@ -452,7 +453,7 @@ function MarketConditions({ derived }: { derived: Derived }) {
             <span style={{ fontSize: 11, fontWeight: 500, color: "var(--t2)", fontFamily: "Inter, sans-serif" }}>
               {r.val}
             </span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: "#a7e5d3", fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: "var(--mint)", fontFamily: "Inter, sans-serif" }}>
               {r.delta}
             </span>
           </div>

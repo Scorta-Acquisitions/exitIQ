@@ -1,3 +1,4 @@
+// use client: requires state, event handlers, WebGL setup
 "use client"
 
 import React from "react"
@@ -141,7 +142,7 @@ export function ExitIQApp() {
             inset: 0,
             pointerEvents: "none",
             zIndex: 40,
-            background: "radial-gradient(ellipse at 50% 50%, rgba(16,185,129,.06) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 50% 50%, rgba(var(--emerald-rgb),.06) 0%, transparent 60%)",
             opacity: processing ? 1 : 0,
             transition: "opacity .4s ease",
           }}
@@ -176,8 +177,9 @@ export function ExitIQApp() {
           </div>
           <div style={{ display: "flex", gap: 28 }}>
             {["How it works", "Coming soon", "For sellers"].map((l) => (
-              <div
+              <button
                 key={l}
+                type="button"
                 style={{
                   fontSize: 14,
                   fontWeight: 500,
@@ -185,12 +187,15 @@ export function ExitIQApp() {
                   cursor: "pointer",
                   fontFamily: "Inter, sans-serif",
                   transition: "color .15s",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
               >
                 {l}
-              </div>
+              </button>
             ))}
           </div>
           <button
@@ -241,7 +246,7 @@ export function ExitIQApp() {
                     fontWeight: 600,
                     letterSpacing: ".96px",
                     textTransform: "uppercase",
-                    color: "rgba(167,229,211,.65)",
+                    color: "rgba(var(--mint-rgb),.65)",
                     marginBottom: 10,
                     fontFamily: "Inter, sans-serif",
                   }}
@@ -391,8 +396,8 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
             width: 8,
             height: 8,
             borderRadius: "50%",
-            background: "#10b981",
-            boxShadow: "0 0 12px rgba(16,185,129,.9)",
+            background: "var(--emerald)",
+            boxShadow: "0 0 12px rgba(var(--emerald-rgb),.9)",
             animation: "liveBlink 2s infinite",
           }}
         />
@@ -402,7 +407,7 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
             fontWeight: 600,
             letterSpacing: ".96px",
             textTransform: "uppercase",
-            color: "rgba(16,185,129,.8)",
+            color: "rgba(var(--emerald-rgb),.8)",
             fontFamily: "Inter, sans-serif",
           }}
         >

@@ -1,3 +1,4 @@
+// use client: custom hooks, animations
 "use client"
 
 import React from "react"
@@ -31,13 +32,13 @@ export function useSpring(target: number, stiffness = 0.09, damping = 0.78): num
 
 // ── SignalOrb ─────────────────────────────────────────────────────────────────
 const ORB_GRADS = [
-  "radial-gradient(circle at 38% 36%, rgba(167,229,211,.95) 0%, rgba(200,184,224,.65) 42%, rgba(168,200,232,.3) 68%, transparent 85%)",
-  "radial-gradient(circle at 40% 34%, rgba(167,229,211,1) 0%, rgba(200,184,224,.82) 40%, rgba(244,197,168,.38) 68%, transparent 85%)",
-  "radial-gradient(circle at 37% 38%, rgba(168,200,232,.95) 0%, rgba(167,229,211,.72) 42%, rgba(200,184,224,.38) 68%, transparent 85%)",
-  "radial-gradient(circle at 40% 36%, rgba(200,184,224,.95) 0%, rgba(168,200,232,.82) 40%, rgba(167,229,211,.38) 68%, transparent 85%)",
-  "radial-gradient(circle at 38% 36%, rgba(167,229,211,1) 0%, rgba(200,184,224,.92) 35%, rgba(168,200,232,.58) 65%, transparent 82%)",
-  "radial-gradient(circle at 42% 34%, rgba(244,197,168,.9) 0%, rgba(167,229,211,.75) 40%, rgba(200,184,224,.4) 68%, transparent 85%)",
-  "radial-gradient(circle at 38% 36%, rgba(168,200,232,.95) 0%, rgba(167,229,211,.8) 38%, rgba(244,197,168,.35) 65%, transparent 83%)",
+  "radial-gradient(circle at 38% 36%, rgba(var(--mint-rgb),.95) 0%, rgba(var(--lavender-rgb),.65) 42%, rgba(var(--sky-rgb),.3) 68%, transparent 85%)",
+  "radial-gradient(circle at 40% 34%, rgba(var(--mint-rgb),1) 0%, rgba(var(--lavender-rgb),.82) 40%, rgba(var(--peach-rgb),.38) 68%, transparent 85%)",
+  "radial-gradient(circle at 37% 38%, rgba(var(--sky-rgb),.95) 0%, rgba(var(--mint-rgb),.72) 42%, rgba(var(--lavender-rgb),.38) 68%, transparent 85%)",
+  "radial-gradient(circle at 40% 36%, rgba(var(--lavender-rgb),.95) 0%, rgba(var(--sky-rgb),.82) 40%, rgba(var(--mint-rgb),.38) 68%, transparent 85%)",
+  "radial-gradient(circle at 38% 36%, rgba(var(--mint-rgb),1) 0%, rgba(var(--lavender-rgb),.92) 35%, rgba(var(--sky-rgb),.58) 65%, transparent 82%)",
+  "radial-gradient(circle at 42% 34%, rgba(var(--peach-rgb),.9) 0%, rgba(var(--mint-rgb),.75) 40%, rgba(var(--lavender-rgb),.4) 68%, transparent 85%)",
+  "radial-gradient(circle at 38% 36%, rgba(var(--sky-rgb),.95) 0%, rgba(var(--mint-rgb),.8) 38%, rgba(var(--peach-rgb),.35) 65%, transparent 83%)",
 ]
 
 interface SignalOrbProps {
@@ -60,7 +61,9 @@ export function SignalOrb({ phase, size = 120, active = false }: SignalOrbProps)
         flexShrink: 0,
         position: "relative",
         transition: "background 1.4s ease, filter .4s ease",
-        boxShadow: active ? "0 0 60px 20px rgba(167,229,211,.28), 0 0 120px 40px rgba(200,184,224,.15)" : "none",
+        boxShadow: active
+          ? "0 0 60px 20px rgba(var(--mint-rgb),.28), 0 0 120px 40px rgba(var(--lavender-rgb),.15)"
+          : "none",
       }}
     >
       <div
@@ -124,7 +127,7 @@ export function RadarRings({ active }: { active: boolean }) {
             width: 60,
             height: 60,
             borderRadius: "50%",
-            border: `1px solid rgba(167,229,211,${active ? 0.6 : 0.22})`,
+            border: `1px solid rgba(var(--mint-rgb),${active ? 0.6 : 0.22})`,
             animation: `radarPulse ${2.0 + i * 0.5}s ${i * 0.45}s ease-out infinite`,
             transition: "border-color .6s ease",
           }}
@@ -135,8 +138,8 @@ export function RadarRings({ active }: { active: boolean }) {
           width: 10,
           height: 10,
           borderRadius: "50%",
-          background: "rgba(167,229,211,.95)",
-          boxShadow: "0 0 14px 5px rgba(167,229,211,.7)",
+          background: "rgba(var(--mint-rgb),.95)",
+          boxShadow: "0 0 14px 5px rgba(var(--mint-rgb),.7)",
           animation: "glowDot 2.4s ease-in-out infinite",
         }}
       />
@@ -149,14 +152,14 @@ export function AIInsight({ text }: { text: string }) {
   return (
     <div
       style={{
-        background: "rgba(167,229,211,.055)",
-        border: "1px solid rgba(167,229,211,.2)",
+        background: "rgba(var(--mint-rgb),.055)",
+        border: "1px solid rgba(var(--mint-rgb),.2)",
         borderRadius: 14,
         padding: "14px 18px",
         display: "flex",
         gap: 12,
         alignItems: "flex-start",
-        boxShadow: "0 0 28px rgba(167,229,211,.08)",
+        boxShadow: "0 0 28px rgba(var(--mint-rgb),.08)",
         animation: "slideRight .55s cubic-bezier(.34,1.2,.64,1)",
       }}
     >
@@ -165,10 +168,10 @@ export function AIInsight({ text }: { text: string }) {
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: "#a7e5d3",
+          background: "var(--mint)",
           flexShrink: 0,
           marginTop: 6,
-          boxShadow: "0 0 8px rgba(167,229,211,.9)",
+          boxShadow: "0 0 8px rgba(var(--mint-rgb),.9)",
           animation: "liveBlink 2.4s ease-in-out infinite",
         }}
       />
@@ -200,7 +203,7 @@ export function ProcessingDots({ label = "AI processing signal…" }: { label?: 
               width: 5,
               height: 5,
               borderRadius: "50%",
-              background: "#a7e5d3",
+              background: "var(--mint)",
               animation: `dotBounce .9s ${i * 0.18}s ease-in-out infinite`,
             }}
           />
@@ -209,7 +212,7 @@ export function ProcessingDots({ label = "AI processing signal…" }: { label?: 
       <span
         style={{
           fontSize: 12,
-          color: "rgba(167,229,211,.72)",
+          color: "rgba(var(--mint-rgb),.72)",
           fontWeight: 500,
           fontFamily: "Inter, sans-serif",
         }}
@@ -236,9 +239,9 @@ export function Ripple({ x, y, onDone }: RippleProps) {
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 999 }}>
       {[
-        { size: "160vmax", color: "rgba(167,229,211,.28)", delay: 0 },
-        { size: "100vmax", color: "rgba(200,184,224,.18)", delay: 120 },
-        { size: "60vmax", color: "rgba(168,200,232,.14)", delay: 200 },
+        { size: "160vmax", color: "rgba(var(--mint-rgb),.28)", delay: 0 },
+        { size: "100vmax", color: "rgba(var(--lavender-rgb),.18)", delay: 120 },
+        { size: "60vmax", color: "rgba(var(--sky-rgb),.14)", delay: 200 },
       ].map((r, i) => (
         <div
           key={i}
@@ -264,7 +267,7 @@ export function ConfidenceMeter({ value }: { value: number }) {
   const r = 36
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - Math.min(disp, 100) / 100)
-  const color = disp > 70 ? "#10b981" : disp > 40 ? "#a7e5d3" : "#a8c8e8"
+  const color = disp > 70 ? "var(--emerald)" : disp > 40 ? "var(--mint)" : "var(--sky)"
   const label =
     disp === 0
       ? "Awaiting input"
@@ -380,8 +383,8 @@ export function LiveBadge({ label = "Live Analysis" }: { label?: string }) {
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: "#a7e5d3",
-          boxShadow: "0 0 8px rgba(167,229,211,.85)",
+          background: "var(--mint)",
+          boxShadow: "0 0 8px rgba(var(--mint-rgb),.85)",
           animation: "liveBlink 2s ease-in-out infinite",
         }}
       />

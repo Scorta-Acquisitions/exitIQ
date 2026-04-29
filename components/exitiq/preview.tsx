@@ -1,3 +1,4 @@
+// use client: form state, modal interaction
 "use client"
 
 import React from "react"
@@ -69,11 +70,11 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
         {polyVisible && (
           <polygon
             points={polyPoints}
-            fill="rgba(167,229,211,.1)"
-            stroke="rgba(167,229,211,.55)"
+            fill="rgba(var(--mint-rgb),.1)"
+            stroke="rgba(var(--mint-rgb),.55)"
             strokeWidth={1.5}
             style={{
-              filter: "drop-shadow(0 0 5px rgba(167,229,211,.4))",
+              filter: "drop-shadow(0 0 5px rgba(var(--mint-rgb),.4))",
               animation: "fadeIn .5s ease",
             }}
           />
@@ -87,9 +88,9 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
                 cx={x}
                 cy={y}
                 r={3}
-                fill={s > 0 ? "#a7e5d3" : "var(--s1)"}
+                fill={s > 0 ? "var(--mint)" : "var(--s1)"}
                 style={{
-                  filter: s > 0 ? "drop-shadow(0 0 4px rgba(167,229,211,.8))" : "none",
+                  filter: s > 0 ? "drop-shadow(0 0 4px rgba(var(--mint-rgb),.8))" : "none",
                   animation: `fadeIn .4s ${i * 55}ms ease both`,
                 }}
               />
@@ -164,7 +165,7 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
             <div
               style={{
                 fontSize: 9,
-                color: "rgba(167,229,211,.55)",
+                color: "rgba(var(--mint-rgb),.55)",
                 fontWeight: 500,
                 fontFamily: "Inter, sans-serif",
               }}
@@ -258,8 +259,8 @@ function UnlockList() {
         flexDirection: "column",
         gap: 8,
         padding: "16px 18px",
-        background: "rgba(16,185,129,.05)",
-        border: "1px solid rgba(16,185,129,.15)",
+        background: "rgba(var(--emerald-rgb),.05)",
+        border: "1px solid rgba(var(--emerald-rgb),.15)",
         borderRadius: 14,
       }}
     >
@@ -269,7 +270,7 @@ function UnlockList() {
           fontWeight: 600,
           letterSpacing: ".8px",
           textTransform: "uppercase",
-          color: "rgba(16,185,129,.7)",
+          color: "rgba(var(--emerald-rgb),.7)",
           fontFamily: "Inter, sans-serif",
         }}
       >
@@ -281,8 +282,13 @@ function UnlockList() {
           style={{ display: "flex", alignItems: "flex-start", gap: 8, animation: `slideUp .4s ${i * 70}ms ease both` }}
         >
           <svg width={13} height={13} viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-            <rect x={1.5} y={5.5} width={10} height={7} rx={1.5} fill="rgba(16,185,129,.2)" />
-            <path d="M4 5.5V4a2.5 2.5 0 0 1 5 0v1.5" stroke="rgba(16,185,129,.55)" strokeWidth={1.1} fill="none" />
+            <rect x={1.5} y={5.5} width={10} height={7} rx={1.5} fill="rgba(var(--emerald-rgb),.2)" />
+            <path
+              d="M4 5.5V4a2.5 2.5 0 0 1 5 0v1.5"
+              stroke="rgba(var(--emerald-rgb),.55)"
+              strokeWidth={1.1}
+              fill="none"
+            />
           </svg>
           <span style={{ fontSize: 12, color: "var(--t3)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
             {item}
@@ -329,8 +335,8 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               width: 7,
               height: 7,
               borderRadius: "50%",
-              background: "#10b981",
-              boxShadow: "0 0 10px rgba(16,185,129,.9)",
+              background: "var(--emerald)",
+              boxShadow: "0 0 10px rgba(var(--emerald-rgb),.9)",
               animation: "liveBlink 2s infinite",
             }}
           />
@@ -340,7 +346,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               fontWeight: 600,
               letterSpacing: ".96px",
               textTransform: "uppercase",
-              color: "rgba(16,185,129,.8)",
+              color: "rgba(var(--emerald-rgb),.8)",
               fontFamily: "Inter, sans-serif",
             }}
           >
@@ -419,7 +425,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
             <div
               style={{
                 fontSize: 10,
-                color: "#10b981",
+                color: "var(--emerald)",
                 fontWeight: 500,
                 marginTop: 3,
                 fontFamily: "Inter, sans-serif",
@@ -432,8 +438,8 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
 
         <div
           style={{
-            background: "rgba(244,197,168,.07)",
-            border: "1px solid rgba(244,197,168,.18)",
+            background: "rgba(var(--peach-rgb),.07)",
+            border: "1px solid rgba(var(--peach-rgb),.18)",
             borderRadius: 12,
             padding: "14px 16px",
             position: "relative",
@@ -446,7 +452,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               fontWeight: 600,
               letterSpacing: ".96px",
               textTransform: "uppercase",
-              color: "rgba(244,197,168,.55)",
+              color: "rgba(var(--peach-rgb),.55)",
               fontFamily: "Inter, sans-serif",
               marginBottom: 6,
             }}
@@ -460,7 +466,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
                   fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                   fontSize: 17,
                   fontWeight: 300,
-                  color: "#f4c5a8",
+                  color: "var(--peach)",
                   letterSpacing: "-.15px",
                   animation: "numRoll .7s ease",
                 }}
@@ -470,7 +476,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               <div
                 style={{
                   fontSize: 10,
-                  color: "rgba(244,197,168,.45)",
+                  color: "rgba(var(--peach-rgb),.45)",
                   marginTop: 3,
                   fontFamily: "Inter, sans-serif",
                   lineHeight: 1.5,
@@ -488,8 +494,8 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
 
         <div
           style={{
-            background: "rgba(167,229,211,.05)",
-            border: "1px solid rgba(167,229,211,.12)",
+            background: "rgba(var(--mint-rgb),.05)",
+            border: "1px solid rgba(var(--mint-rgb),.12)",
             borderRadius: 12,
             padding: "14px 16px",
           }}
@@ -500,7 +506,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               fontWeight: 600,
               letterSpacing: ".96px",
               textTransform: "uppercase",
-              color: "rgba(167,229,211,.5)",
+              color: "rgba(var(--mint-rgb),.5)",
               fontFamily: "Inter, sans-serif",
               marginBottom: 6,
             }}
@@ -517,8 +523,8 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
 
         <div
           style={{
-            background: "rgba(200,184,224,.05)",
-            border: "1px solid rgba(200,184,224,.12)",
+            background: "rgba(var(--lavender-rgb),.05)",
+            border: "1px solid rgba(var(--lavender-rgb),.12)",
             borderRadius: 12,
             padding: "14px 16px",
           }}
@@ -529,7 +535,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
               fontWeight: 600,
               letterSpacing: ".96px",
               textTransform: "uppercase",
-              color: "rgba(200,184,224,.5)",
+              color: "rgba(var(--lavender-rgb),.5)",
               fontFamily: "Inter, sans-serif",
               marginBottom: 6,
             }}
@@ -753,8 +759,8 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: "rgba(167,229,211,.1)",
-              border: "1px solid rgba(167,229,211,.25)",
+              background: "rgba(var(--mint-rgb),.1)",
+              border: "1px solid rgba(var(--mint-rgb),.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -767,12 +773,17 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
                 width={14}
                 height={9}
                 rx={2}
-                fill="rgba(167,229,211,.2)"
-                stroke="rgba(167,229,211,.5)"
+                fill="rgba(var(--mint-rgb),.2)"
+                stroke="rgba(var(--mint-rgb),.5)"
                 strokeWidth={1}
               />
-              <path d="M5.5 8V5.5a3.5 3.5 0 0 1 7 0V8" stroke="rgba(167,229,211,.5)" strokeWidth={1.3} fill="none" />
-              <circle cx={9} cy={12.5} r={1.5} fill="#a7e5d3" />
+              <path
+                d="M5.5 8V5.5a3.5 3.5 0 0 1 7 0V8"
+                stroke="rgba(var(--mint-rgb),.5)"
+                strokeWidth={1.3}
+                fill="none"
+              />
+              <circle cx={9} cy={12.5} r={1.5} fill="var(--mint)" />
             </svg>
           </div>
           <div>
@@ -782,7 +793,7 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
                 fontWeight: 600,
                 letterSpacing: ".96px",
                 textTransform: "uppercase",
-                color: "rgba(167,229,211,.65)",
+                color: "rgba(var(--mint-rgb),.65)",
                 fontFamily: "Inter, sans-serif",
               }}
             >
@@ -831,8 +842,8 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
         {derived.valuationRange && (
           <div
             style={{
-              background: "rgba(16,185,129,.06)",
-              border: "1px solid rgba(16,185,129,.18)",
+              background: "rgba(var(--emerald-rgb),.06)",
+              border: "1px solid rgba(var(--emerald-rgb),.18)",
               borderRadius: 12,
               padding: "11px 16px",
               display: "flex",
@@ -848,7 +859,7 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
                 fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                 fontSize: 20,
                 fontWeight: 300,
-                color: "#10b981",
+                color: "var(--emerald)",
                 letterSpacing: "-.2px",
               }}
             >
@@ -863,7 +874,7 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             style={inpStyle}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(167,229,211,.4)")}
+            onFocus={(e) => (e.target.style.borderColor = "rgba(var(--mint-rgb),.4)")}
             onBlur={(e) => (e.target.style.borderColor = "var(--inp-border)")}
           />
           <input
@@ -872,7 +883,7 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={inpStyle}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(167,229,211,.4)")}
+            onFocus={(e) => (e.target.style.borderColor = "rgba(var(--mint-rgb),.4)")}
             onBlur={(e) => (e.target.style.borderColor = "var(--inp-border)")}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           />
@@ -902,10 +913,10 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
                   cursor: "pointer",
                   fontFamily: "Inter, sans-serif",
                   transition: "all .18s ease",
-                  background: timeline === t ? "rgba(167,229,211,.15)" : "var(--s1)",
-                  border: `1px solid ${timeline === t ? "rgba(167,229,211,.42)" : "var(--b3)"}`,
-                  color: timeline === t ? "#a7e5d3" : "var(--t3)",
-                  boxShadow: timeline === t ? "0 0 12px rgba(167,229,211,.1)" : "none",
+                  background: timeline === t ? "rgba(var(--mint-rgb),.15)" : "var(--s1)",
+                  border: `1px solid ${timeline === t ? "rgba(var(--mint-rgb),.42)" : "var(--b3)"}`,
+                  color: timeline === t ? "var(--mint)" : "var(--t3)",
+                  boxShadow: timeline === t ? "0 0 12px rgba(var(--mint-rgb),.1)" : "none",
                 }}
               >
                 {t}

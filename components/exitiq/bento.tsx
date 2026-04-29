@@ -1,3 +1,4 @@
+// use client: hover state, animations
 "use client"
 
 import React from "react"
