@@ -217,7 +217,9 @@ export function buildReportPrompt(session: AssessmentSession): string {
         : "Subscribe for monthly Exit IQ updates as you prepare at exitiq.com"
 
   const ownerName = gate.firstName ?? "Business Owner"
-  const gradeLabel = { A: "A — Excellent", B: "B — Good", C: "C — Needs Preparation", D: "D — Early Stage" }[score.grade]
+  const gradeLabel = { A: "A — Excellent", B: "B — Good", C: "C — Needs Preparation", D: "D — Early Stage" }[
+    score.grade
+  ]
 
   return `You are a senior sell-side M&A advisor at a boutique firm specializing in main-street and lower-middle-market business exits under $10M. You are authoring a personalized Exit IQ Report for ${ownerName}.
 

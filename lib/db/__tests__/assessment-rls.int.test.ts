@@ -35,9 +35,9 @@ function supabaseIntegrationEnabled() {
 function rlsAuthUsersConfigured() {
   return Boolean(
     process.env.SUPABASE_RLS_TEST_USER_A_EMAIL &&
-      process.env.SUPABASE_RLS_TEST_USER_A_PASSWORD &&
-      process.env.SUPABASE_RLS_TEST_USER_B_EMAIL &&
-      process.env.SUPABASE_RLS_TEST_USER_B_PASSWORD
+    process.env.SUPABASE_RLS_TEST_USER_A_PASSWORD &&
+    process.env.SUPABASE_RLS_TEST_USER_B_EMAIL &&
+    process.env.SUPABASE_RLS_TEST_USER_B_PASSWORD
   )
 }
 
@@ -237,54 +237,51 @@ describe("assessment RLS (Supabase clients)", () => {
     }
   )
 
-  it.skipIf(skipNoSupabase)(
-    "anon: UPDATE reports affects 0 rows (no UPDATE policy — never existed)",
-    async () => {
-      const sessionId = `vitest-noupdate-rpt-${randomUUID()}`
+  it.skipIf(skipNoSupabase)("anon: UPDATE reports affects 0 rows (no UPDATE policy — never existed)", async () => {
+    const sessionId = `vitest-noupdate-rpt-${randomUUID()}`
 
-      // Use service_role to set up the row so we know the initial value.
-      // Falls back to anon INSERT when service_role is not configured.
-      if (serviceRoleConfigured()) {
-        const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        })
-        await svc.from("assessment_sessions").insert({ session_id: sessionId })
-        await svc
-          .from("assessment_reports")
-          .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
-      } else {
-        const anon = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
-        await anon.from("assessment_sessions").insert({ session_id: sessionId })
-        await anon
-          .from("assessment_reports")
-          .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
-      }
-
-      const client = createClient(url, anonKey, {
+    // Use service_role to set up the row so we know the initial value.
+    // Falls back to anon INSERT when service_role is not configured.
+    if (serviceRoleConfigured()) {
+      const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
         auth: { persistSession: false, autoRefreshToken: false },
       })
-      const { error: updateErr } = await client
+      await svc.from("assessment_sessions").insert({ session_id: sessionId })
+      await svc
         .from("assessment_reports")
-        .update({ report_md: "tampered" })
-        .eq("session_id", sessionId)
-
-      // RLS blocks visibility → 0 rows affected, no PostgREST error.
-      expect(updateErr).toBeNull()
-
-      // Verify via service_role that the row is unchanged.
-      if (serviceRoleConfigured()) {
-        const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        })
-        const { data } = await svc
-          .from("assessment_reports")
-          .select("report_md")
-          .eq("session_id", sessionId)
-          .maybeSingle()
-        expect(data?.report_md).toBe("original")
-      }
+        .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
+    } else {
+      const anon = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } })
+      await anon.from("assessment_sessions").insert({ session_id: sessionId })
+      await anon
+        .from("assessment_reports")
+        .insert({ session_id: sessionId, report_md: "original", model_used: "vitest" })
     }
-  )
+
+    const client = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+    const { error: updateErr } = await client
+      .from("assessment_reports")
+      .update({ report_md: "tampered" })
+      .eq("session_id", sessionId)
+
+    // RLS blocks visibility → 0 rows affected, no PostgREST error.
+    expect(updateErr).toBeNull()
+
+    // Verify via service_role that the row is unchanged.
+    if (serviceRoleConfigured()) {
+      const svc = createClient(url, process.env.SUPABASE_SERVICE_SECRET_KEY!, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const { data } = await svc
+        .from("assessment_reports")
+        .select("report_md")
+        .eq("session_id", sessionId)
+        .maybeSingle()
+      expect(data?.report_md).toBe("original")
+    }
+  })
 
   // ─── service_role smoke ───────────────────────────────────────────────────────
 

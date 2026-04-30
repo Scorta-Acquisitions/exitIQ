@@ -1,35 +1,5 @@
-// use client: useRef for hero scroll target + scrollToTop handler passed to Nav/Footer
-"use client"
+import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
 
-import { useRef } from "react"
-import { FAQ } from "@/components/landing/FAQ"
-import { Features } from "@/components/landing/Features"
-import { Footer } from "@/components/landing/Footer"
-import { Hero } from "@/components/landing/Hero"
-import { HowItWorks } from "@/components/landing/HowItWorks"
-import { Nav } from "@/components/landing/Nav"
-import { SavingsStrip } from "@/components/landing/SavingsStrip"
-import { TrustStrip } from "@/components/landing/TrustStrip"
-
-export default function LandingPage() {
-  const heroRef = useRef<HTMLDivElement>(null)
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  return (
-    <div className="bg-cream text-near-black overflow-x-hidden">
-      <Nav onStartWidget={scrollToTop} />
-      <div ref={heroRef}>
-        <Hero />
-      </div>
-      <TrustStrip />
-      <HowItWorks />
-      <Features />
-      <SavingsStrip />
-      <FAQ />
-      <Footer onStart={scrollToTop} />
-    </div>
-  )
+export default function Home() {
+  return <ExitIQApp />
 }
