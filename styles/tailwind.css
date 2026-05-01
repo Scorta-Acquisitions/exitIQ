@@ -151,6 +151,11 @@ body {
   100% { transform: translateX(200%); }
 }
 
+/* ── Landing page light canvas override ─────────────────────────────────────── */
+.scorta-landing {
+  background: #f5f5f5;
+}
+
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
