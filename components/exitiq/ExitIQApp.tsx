@@ -1,3 +1,4 @@
+// use client: manages assessment state machine, WebGL canvas lifecycle via useEffect/useRef, and all user interaction handlers
 "use client"
 
 import React from "react"

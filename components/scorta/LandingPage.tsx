@@ -1,3 +1,4 @@
+// use client: contains interactive state (useState for overlay, FAQ accordion, announcement bar) and event handlers
 "use client"
 
 import React from "react"
@@ -240,17 +241,17 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
           { label: "For sellers", id: "for-sellers" },
           { label: "Vision", id: "vision" },
         ].map(({ label, id }) => (
-          <span
+          <button
             key={id}
             onClick={() => scrollTo(id)}
-            style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}
+            style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}
           >
             {label}
-          </span>
+          </button>
         ))}
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <span style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</span>
+        <button style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</button>
         <button
           onClick={onStart}
           style={pillPrimary}
@@ -284,7 +285,10 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
         }}
       />
       <div
+        role="button"
+        tabIndex={0}
         onClick={onOpen}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen()}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
@@ -1268,12 +1272,23 @@ function FAQSection() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {faqs.map(({ q, a }, i) => (
-            <div
-              key={i}
-              style={{ borderTop: `1px solid ${C.hairline}`, cursor: "pointer" }}
-              onClick={() => setOpen(open === i ? null : i)}
-            >
-              <div style={{ padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 20 }}>
+            <div key={i} style={{ borderTop: `1px solid ${C.hairline}` }}>
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  padding: "20px 0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: 20,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
                 <span style={{ fontFamily: inter, fontSize: 16, fontWeight: 500, color: C.ink, lineHeight: 1.4, flex: 1 }}>
                   {q}
                 </span>
@@ -1296,7 +1311,7 @@ function FAQSection() {
                     <path d="M6 2v8M2 6h8" stroke={C.muted} strokeWidth={1.3} strokeLinecap="round" />
                   </svg>
                 </div>
-              </div>
+              </button>
               {open === i && (
                 <div style={{ paddingBottom: 24, animation: "slideUp 0.2s ease" }}>
                   <p style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", margin: 0 }}>

@@ -1,3 +1,4 @@
+// use client: uses useState/useEffect for animated metric counters and dynamic chart rendering
 "use client"
 
 import React from "react"

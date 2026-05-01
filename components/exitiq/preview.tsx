@@ -1,3 +1,4 @@
+// use client: uses useState for radar chart draw sequence and form field state in EmailGateModal
 "use client"
 
 import React from "react"

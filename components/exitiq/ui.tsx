@@ -1,3 +1,4 @@
+// use client: implements spring physics hook with useRef/useEffect and browser animation frame APIs
 "use client"
 
 import React from "react"
