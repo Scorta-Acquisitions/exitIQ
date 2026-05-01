@@ -1,4 +1,3 @@
-// use client: requires state, event handlers, WebGL setup
 "use client"
 
 import React from "react"
@@ -110,23 +109,39 @@ export function ExitIQApp() {
       {/* WebGL canvas — fixed behind everything */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 z-0 w-full h-full"
-        style={{ transition: "opacity .5s ease" }}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          width: "100%",
+          height: "100%",
+          transition: "opacity .5s ease",
+        }}
       />
 
       {/* App root */}
       <div
-        className="relative z-[1] min-h-screen flex flex-col"
-        style={{ opacity: mounted ? 1 : 0, transition: "opacity .9s ease" }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          opacity: mounted ? 1 : 0,
+          transition: "opacity .9s ease",
+        }}
       >
         {/* Ripple overlay */}
         {ripple && <Ripple x={ripple.x} y={ripple.y} onDone={() => setRipple(null)} />}
 
         {/* Processing flash */}
         <div
-          className="fixed inset-0 pointer-events-none z-40"
           style={{
-            background: "radial-gradient(ellipse at 50% 50%, rgba(var(--emerald-rgb),.06) 0%, transparent 60%)",
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 40,
+            background: "radial-gradient(ellipse at 50% 50%, rgba(16,185,129,.06) 0%, transparent 60%)",
             opacity: processing ? 1 : 0,
             transition: "opacity .4s ease",
           }}
@@ -136,7 +151,18 @@ export function ExitIQApp() {
         {showModal && <EmailGateModal derived={derived} onClose={() => setShowModal(false)} onSubmit={handleSubmit} />}
 
         {/* ── Nav ── */}
-        <nav className="glass flex items-center justify-between shrink-0 mt-3.5 mx-5 h-[58px] px-6">
+        <nav
+          className="glass"
+          style={{
+            margin: "14px 20px 0",
+            padding: "0 24px",
+            height: 58,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}
+        >
           <div
             style={{
               fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -148,11 +174,10 @@ export function ExitIQApp() {
           >
             Scorta
           </div>
-          <div className="flex gap-7">
+          <div style={{ display: "flex", gap: 28 }}>
             {["How it works", "Coming soon", "For sellers"].map((l) => (
-              <button
+              <div
                 key={l}
-                type="button"
                 style={{
                   fontSize: 14,
                   fontWeight: 500,
@@ -160,17 +185,12 @@ export function ExitIQApp() {
                   cursor: "pointer",
                   fontFamily: "Inter, sans-serif",
                   transition: "color .15s",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
-                onFocus={(e) => (e.currentTarget.style.color = "var(--t1)")}
-                onBlur={(e) => (e.currentTarget.style.color = "var(--t3)")}
               >
                 {l}
-              </button>
+              </div>
             ))}
           </div>
           <button
@@ -195,11 +215,24 @@ export function ExitIQApp() {
         </nav>
 
         {/* ── Hero layout (2 columns) ── */}
-        <div className="flex-1 grid grid-cols-[1fr_minmax(320px,400px)] gap-5 py-7 px-5 max-w-[1200px] mx-auto w-full items-start min-h-[calc(100vh-100px)]">
+        <div
+          style={{
+            flex: 1,
+            display: "grid",
+            gridTemplateColumns: "1fr minmax(320px,400px)",
+            gap: 20,
+            padding: "28px 20px",
+            maxWidth: 1200,
+            margin: "0 auto",
+            width: "100%",
+            alignItems: "start",
+            minHeight: "calc(100vh - 100px)",
+          }}
+        >
           {/* ── Left column ── */}
-          <div className="flex flex-col gap-6 pr-4">
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingRight: 16 }}>
             {/* Orb + headline */}
-            <div className="flex items-center gap-6">
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
               <SignalOrb phase={stepCount} size={ORB_SIZE} active={processing || !!recalcMsg} />
               <div>
                 <div
@@ -208,7 +241,7 @@ export function ExitIQApp() {
                     fontWeight: 600,
                     letterSpacing: ".96px",
                     textTransform: "uppercase",
-                    color: "rgba(var(--mint-rgb),.65)",
+                    color: "rgba(167,229,211,.65)",
                     marginBottom: 10,
                     fontFamily: "Inter, sans-serif",
                   }}
@@ -275,7 +308,7 @@ export function ExitIQApp() {
 
             {/* Answer trail chips */}
             {Object.keys(answers).length > 0 && !submitted && step < 6 && (
-              <div className="flex flex-wrap gap-1.5" style={{ animation: "fadeIn .4s ease" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, animation: "fadeIn .4s ease" }}>
                 {Object.values(answers).map((a, i) => (
                   <div
                     key={i}
@@ -306,10 +339,13 @@ export function ExitIQApp() {
 
         {/* ── Footer ── */}
         <footer
-          className="flex justify-between items-center py-7 px-5"
           style={{
             background: "var(--footer-bg)",
             borderTop: "1px solid var(--footer-border)",
+            padding: "28px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             transition: "background .5s ease",
           }}
         >
@@ -337,18 +373,26 @@ export function ExitIQApp() {
 function PostSubmitCard({ onReset }: { onReset: () => void }) {
   return (
     <div
-      className="glass-panel p-8 flex flex-col gap-5 relative overflow-hidden"
-      style={{ animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)" }}
+      className="glass-panel"
+      style={{
+        padding: 32,
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)",
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
       <ScanLine />
-      <div className="flex items-center gap-2">
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div
           style={{
             width: 8,
             height: 8,
             borderRadius: "50%",
-            background: "var(--emerald)",
-            boxShadow: "0 0 12px rgba(var(--emerald-rgb),.9)",
+            background: "#10b981",
+            boxShadow: "0 0 12px rgba(16,185,129,.9)",
             animation: "liveBlink 2s infinite",
           }}
         />
@@ -358,7 +402,7 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
             fontWeight: 600,
             letterSpacing: ".96px",
             textTransform: "uppercase",
-            color: "rgba(var(--emerald-rgb),.8)",
+            color: "rgba(16,185,129,.8)",
             fontFamily: "Inter, sans-serif",
           }}
         >

@@ -1,4 +1,3 @@
-// use client: useState, hooks, interactivity
 "use client"
 
 import React from "react"
@@ -23,8 +22,8 @@ function hexToRgb(hex: string): string {
 // ── Step label ────────────────────────────────────────────────────────────────
 function StepLabel({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-[5px] flex-1">
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", gap: 5, flex: 1 }}>
         {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
@@ -32,8 +31,8 @@ function StepLabel({ current, total }: { current: number; total: number }) {
               flex: 1,
               height: 2,
               borderRadius: 9999,
-              background: i < current ? "var(--emerald)" : i === current ? "rgba(var(--emerald-rgb),.38)" : "var(--s1)",
-              boxShadow: i < current ? "0 0 6px rgba(var(--emerald-rgb),.55)" : "none",
+              background: i < current ? "#10b981" : i === current ? "rgba(16,185,129,.38)" : "var(--s1)",
+              boxShadow: i < current ? "0 0 6px rgba(16,185,129,.55)" : "none",
               transition: "background .6s ease, box-shadow .6s ease",
             }}
           />
@@ -75,9 +74,9 @@ function QHead({ children }: { children: React.ReactNode }) {
 // ── Q1: Industry chips ────────────────────────────────────────────────────────
 function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
   return (
-    <div className="flex flex-col gap-[18px]">
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <QHead>What type of business do you own?</QHead>
-      <div className="flex flex-wrap gap-2">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {INDUSTRIES.map(({ label, color }, i) => (
           <button
             key={label}
@@ -129,10 +128,10 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
   const pct = (val - 1) / 24
 
   return (
-    <div className="flex flex-col gap-5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <QHead>How long have you been in business?</QHead>
-      <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-baseline">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div
             style={{
               fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -148,7 +147,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
             style={{
               fontSize: 12,
               fontWeight: 500,
-              color: "rgba(var(--mint-rgb),.7)",
+              color: "rgba(167,229,211,.7)",
               fontFamily: "Inter, sans-serif",
             }}
           >
@@ -156,7 +155,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           </div>
         </div>
 
-        <div className="relative h-10 flex items-center">
+        <div style={{ position: "relative", height: 40, display: "flex", alignItems: "center" }}>
           <div
             style={{
               position: "absolute",
@@ -174,8 +173,8 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
               width: `${pct * 100}%`,
               height: 4,
               borderRadius: 9999,
-              background: "linear-gradient(90deg,var(--mint),var(--emerald))",
-              boxShadow: "0 0 10px rgba(var(--emerald-rgb),.5)",
+              background: "linear-gradient(90deg,#a7e5d3,#10b981)",
+              boxShadow: "0 0 10px rgba(16,185,129,.5)",
               transition: "width .15s ease",
             }}
           />
@@ -205,7 +204,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
               height: 20,
               borderRadius: "50%",
               background: "var(--btn-bg)",
-              boxShadow: "0 0 14px rgba(var(--emerald-rgb),.55), 0 2px 8px rgba(0,0,0,.35)",
+              boxShadow: "0 0 14px rgba(16,185,129,.55), 0 2px 8px rgba(0,0,0,.35)",
               transition: "left .15s ease",
               pointerEvents: "none",
               zIndex: 1,
@@ -213,7 +212,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           />
         </div>
 
-        <div className="flex justify-between">
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           {["1yr", "5yr", "10yr", "15yr", "25yr+"].map((l) => (
             <div key={l} style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
               {l}
@@ -241,9 +240,9 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
         }}
         onMouseEnter={(e) => {
           if (!disabled) {
-            e.currentTarget.style.background = "rgba(var(--mint-rgb),.15)"
-            e.currentTarget.style.borderColor = "rgba(var(--mint-rgb),.4)"
-            e.currentTarget.style.color = "var(--mint)"
+            e.currentTarget.style.background = "rgba(167,229,211,.15)"
+            e.currentTarget.style.borderColor = "rgba(167,229,211,.4)"
+            e.currentTarget.style.color = "#a7e5d3"
           }
         }}
         onMouseLeave={(e) => {
@@ -263,9 +262,9 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
   const [hover, setHover] = React.useState<number | null>(null)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What is your annual revenue?</QHead>
-      <div className="grid grid-cols-2 gap-2">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {REVENUE_RANGES.map(({ label }, i) => (
           <button
             key={label}
@@ -276,13 +275,13 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
               padding: "14px 16px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(var(--emerald-rgb),.1)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(var(--emerald-rgb),.45)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(16,185,129,.1)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(16,185,129,.45)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 60}ms cubic-bezier(.34,1.3,.64,1) both`,
               transform: hover === i ? "translateY(-2px) scale(1.02)" : "none",
-              boxShadow: hover === i ? "0 0 20px rgba(var(--emerald-rgb),.12)" : "none",
+              boxShadow: hover === i ? "0 0 20px rgba(16,185,129,.12)" : "none",
             }}
           >
             <div
@@ -290,7 +289,7 @@ function Q3Revenue({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mous
                 fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                 fontSize: 18,
                 fontWeight: 300,
-                color: hover === i ? "var(--emerald)" : "var(--t1)",
+                color: hover === i ? "#10b981" : "var(--t1)",
                 letterSpacing: "-.2px",
                 transition: "color .2s",
               }}
@@ -313,8 +312,8 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
   const [showTip, setShowTip] = React.useState(false)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-[10px]">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <QHead>What is your annual SDE?</QHead>
         <button
           onClick={() => setShowTip((t) => !t)}
@@ -362,7 +361,7 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {SDE_RANGES.map(({ label }, i) => (
           <button
             key={label}
@@ -373,13 +372,13 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
               padding: "14px 16px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(var(--lavender-rgb),.1)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(var(--lavender-rgb),.4)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(200,184,224,.1)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(200,184,224,.4)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 65}ms cubic-bezier(.34,1.3,.64,1) both`,
               transform: hover === i ? "translateY(-2px) scale(1.02)" : "none",
-              boxShadow: hover === i ? "0 0 20px rgba(var(--lavender-rgb),.12)" : "none",
+              boxShadow: hover === i ? "0 0 20px rgba(200,184,224,.12)" : "none",
             }}
           >
             <div
@@ -387,7 +386,7 @@ function Q4SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
                 fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                 fontSize: 18,
                 fontWeight: 300,
-                color: hover === i ? "var(--lavender)" : "var(--t1)",
+                color: hover === i ? "#c8b8e0" : "var(--t1)",
                 letterSpacing: "-.2px",
                 transition: "color .2s",
               }}
@@ -409,7 +408,7 @@ function EmployeeDots({ count, color }: { count: number; color?: string }) {
   const MAX = 25
   const shown = Math.min(count, MAX)
   return (
-    <div className="flex flex-wrap gap-[3px] mt-1.5">
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 6 }}>
       {Array.from({ length: shown }).map((_, i) => (
         <div
           key={i}
@@ -417,8 +416,8 @@ function EmployeeDots({ count, color }: { count: number; color?: string }) {
             width: 7,
             height: 7,
             borderRadius: "50%",
-            background: color ?? "rgba(var(--mint-rgb),.7)",
-            boxShadow: "0 0 4px rgba(var(--mint-rgb),.5)",
+            background: color ?? "rgba(167,229,211,.7)",
+            boxShadow: "0 0 4px rgba(167,229,211,.5)",
             animation: `chipFloat .4s ${i * 20}ms cubic-bezier(.34,1.4,.64,1) both`,
           }}
         />
@@ -450,9 +449,9 @@ function Q5Employees({
   const [hover, setHover] = React.useState<number | null>(null)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>How many employees do you have?</QHead>
-      <div className="flex flex-col gap-2">
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {EMPLOYEE_OPTIONS.map(({ label, dots, transferability }, i) => (
           <button
             key={label}
@@ -463,29 +462,29 @@ function Q5Employees({
               padding: "14px 18px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === i ? "rgba(var(--sky-rgb),.08)" : "var(--s2)",
-              border: `1px solid ${hover === i ? "rgba(var(--sky-rgb),.38)" : "var(--b3)"}`,
+              background: hover === i ? "rgba(168,200,232,.08)" : "var(--s2)",
+              border: `1px solid ${hover === i ? "rgba(168,200,232,.38)" : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
               animation: `chipFloat .5s ${i * 55}ms cubic-bezier(.34,1.3,.64,1) both`,
               transform: hover === i ? "translateX(4px)" : "none",
             }}
           >
-            <div className="flex justify-between items-start">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div
                   style={{
                     fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                     fontSize: 20,
                     fontWeight: 300,
-                    color: hover === i ? "var(--sky)" : "var(--t1)",
+                    color: hover === i ? "#a8c8e8" : "var(--t1)",
                     letterSpacing: "-.2px",
                     transition: "color .2s",
                   }}
                 >
                   {label}
                 </div>
-                <EmployeeDots count={dots} color={hover === i ? "var(--sky)" : undefined} />
+                <EmployeeDots count={dots} color={hover === i ? "#a8c8e8" : undefined} />
               </div>
               <div
                 style={{
@@ -498,7 +497,7 @@ function Q5Employees({
                 <div>Transferability</div>
                 <div
                   style={{
-                    color: hover === i ? "var(--sky)" : "var(--t2)",
+                    color: hover === i ? "#a8c8e8" : "var(--t2)",
                     fontWeight: 500,
                     marginTop: 2,
                   }}
@@ -528,9 +527,9 @@ function Q6State({
   const isHot = (s: string) => HOT_STATES.includes(s)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What state is your business in?</QHead>
-      <div className="relative">
+      <div style={{ position: "relative" }}>
         <input
           type="text"
           placeholder="Search state…"
@@ -553,7 +552,7 @@ function Q6State({
             outline: "none",
             transition: "border .2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(var(--mint-rgb),.35)")}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(167,229,211,.35)")}
           onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--inp-border)")}
         />
         {open && filtered.length > 0 && (
@@ -584,8 +583,11 @@ function Q6State({
                     onAnswer(s, e)
                   }
                 }}
-                className="flex items-center justify-between w-full"
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
                   padding: "10px 16px",
                   background: "transparent",
                   border: "none",
@@ -597,7 +599,7 @@ function Q6State({
                   textAlign: "left",
                   transition: "background .15s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(var(--mint-rgb),.08)")}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(167,229,211,.08)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <span>{s}</span>
@@ -607,7 +609,7 @@ function Q6State({
                       fontSize: 10,
                       fontWeight: 600,
                       letterSpacing: ".8px",
-                      color: "var(--emerald)",
+                      color: "#10b981",
                       textTransform: "uppercase",
                     }}
                   >
@@ -638,11 +640,13 @@ function NextUnlockHint({ step }: { step: number }) {
   if (!hint) return null
   return (
     <div
-      className="flex items-center gap-2"
       style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
         padding: "9px 14px",
-        background: "rgba(var(--emerald-rgb),.05)",
-        border: "1px solid rgba(var(--emerald-rgb),.13)",
+        background: "rgba(16,185,129,.05)",
+        border: "1px solid rgba(16,185,129,.13)",
         borderRadius: 10,
         animation: "fadeIn .5s ease",
       }}
@@ -652,9 +656,9 @@ function NextUnlockHint({ step }: { step: number }) {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          background: "var(--emerald)",
+          background: "#10b981",
           flexShrink: 0,
-          boxShadow: "0 0 6px rgba(var(--emerald-rgb),.7)",
+          boxShadow: "0 0 6px rgba(16,185,129,.7)",
           animation: "liveBlink 2s ease-in-out infinite",
         }}
       />
@@ -666,7 +670,7 @@ function NextUnlockHint({ step }: { step: number }) {
           lineHeight: 1.5,
         }}
       >
-        <span style={{ color: "rgba(var(--emerald-rgb),.7)", fontWeight: 500 }}>Next unlock: </span>
+        <span style={{ color: "rgba(16,185,129,.7)", fontWeight: 500 }}>Next unlock: </span>
         {hint.unlocks}
       </span>
     </div>
@@ -687,14 +691,20 @@ export function QuestionPanel({ step, onAnswer, processing, disabled }: Question
   if (!Component) return null
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div
         key={`q-${step}`}
-        className="glass-panel p-7 flex flex-col gap-[22px] relative overflow-hidden"
+        className="glass-panel"
         style={{
+          padding: 28,
+          display: "flex",
+          flexDirection: "column",
+          gap: 22,
           animation: "slideUp .55s cubic-bezier(.34,1.2,.64,1)",
           opacity: disabled && !processing ? 0.55 : 1,
           transition: "opacity .3s ease",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         <ScanLine />

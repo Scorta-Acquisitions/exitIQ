@@ -27,17 +27,6 @@
   --inp-bg: rgba(245,245,245,.07);
   --inp-border: rgba(245,245,245,.14);
   --dd-bg: rgba(12,10,9,.92);
-  /* Palette accent colors — theme-invariant */
-  --mint: #a7e5d3;
-  --mint-rgb: 167, 229, 211;
-  --emerald: #10b981;
-  --emerald-rgb: 16, 185, 129;
-  --sky: #a8c8e8;
-  --sky-rgb: 168, 200, 232;
-  --lavender: #c8b8e0;
-  --lavender-rgb: 200, 184, 224;
-  --peach: #f4c5a8;
-  --peach-rgb: 244, 197, 168;
 }
 
 /* ── Cream theme ───────────────────────────────────────────────────────────── */

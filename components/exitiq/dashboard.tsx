@@ -1,4 +1,3 @@
-// use client: hooks, state, real-time updates
 "use client"
 
 import React from "react"
@@ -10,7 +9,7 @@ import { ConfidenceMeter, Divider, LiveBadge, RadarRings, ScanLine, useSpring } 
 function OdometerNum({
   target,
   prefix = "$",
-  color = "var(--emerald)",
+  color = "#10b981",
   size = 26,
 }: {
   target: number
@@ -84,17 +83,16 @@ function DiagnosisZone({
             : "High confidence — signal formed"
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <ZoneLabel accent="rgba(var(--mint-rgb),.5)">Current Diagnosis</ZoneLabel>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <ZoneLabel accent="rgba(167,229,211,.5)">Current Diagnosis</ZoneLabel>
       <ConfidenceMeter value={confidence} />
       <div style={{ minHeight: 18 }}>
         {processing || recalcMsg ? (
           <div
             key={recalcMsg ?? "proc"}
-            className="flex items-center gap-[7px]"
-            style={{ animation: "fadeIn .3s ease" }}
+            style={{ display: "flex", alignItems: "center", gap: 7, animation: "fadeIn .3s ease" }}
           >
-            <div className="flex gap-[3px]">
+            <div style={{ display: "flex", gap: 3 }}>
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
@@ -102,13 +100,13 @@ function DiagnosisZone({
                     width: 4,
                     height: 4,
                     borderRadius: "50%",
-                    background: "var(--mint)",
+                    background: "#a7e5d3",
                     animation: `dotBounce .9s ${i * 0.18}s ease-in-out infinite`,
                   }}
                 />
               ))}
             </div>
-            <span style={{ fontSize: 11, color: "rgba(var(--mint-rgb),.65)", fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontSize: 11, color: "rgba(167,229,211,.65)", fontFamily: "Inter, sans-serif" }}>
               {recalcMsg ?? "Recalculating…"}
             </span>
           </div>
@@ -136,11 +134,11 @@ function SignalsZone({ derived }: { derived: Derived }) {
   const { valuationRange, multiple, brokerFee } = derived
 
   return (
-    <div className="flex flex-col gap-[14px]">
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <ZoneLabel>Key Signals</ZoneLabel>
 
       {/* Valuation */}
-      <div className="flex flex-col gap-1">
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <div
           style={{
             fontSize: 10,
@@ -166,7 +164,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
           </div>
         ) : (
           <div key={valuationRange.text} style={{ animation: "numRoll .55s cubic-bezier(.34,1.3,.64,1)" }}>
-            <div className="flex items-baseline flex-wrap">
+            <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap" }}>
               <OdometerNum target={valuationRange.low} color="var(--t1)" size={26} />
               <span
                 style={{
@@ -184,7 +182,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
               <div
                 style={{
                   fontSize: 10,
-                  color: "var(--emerald)",
+                  color: "#10b981",
                   fontWeight: 500,
                   marginTop: 3,
                   fontFamily: "Inter, sans-serif",
@@ -198,14 +196,14 @@ function SignalsZone({ derived }: { derived: Derived }) {
       </div>
 
       {/* Broker fee */}
-      <div className="flex flex-col gap-1">
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <div
           style={{
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: ".8px",
             textTransform: "uppercase",
-            color: "rgba(var(--peach-rgb),.55)",
+            color: "rgba(244,197,168,.55)",
             fontFamily: "Inter, sans-serif",
           }}
         >
@@ -224,11 +222,11 @@ function SignalsZone({ derived }: { derived: Derived }) {
           </div>
         ) : (
           <div key={brokerFee.text} style={{ animation: "numRoll .5s cubic-bezier(.34,1.3,.64,1)" }}>
-            <div className="flex items-baseline">
-              <OdometerNum target={brokerFee.low} color="var(--peach)" size={26} />
+            <div style={{ display: "flex", alignItems: "baseline" }}>
+              <OdometerNum target={brokerFee.low} color="#f4c5a8" size={26} />
               <span
                 style={{
-                  color: "rgba(var(--peach-rgb),.35)",
+                  color: "rgba(244,197,168,.35)",
                   margin: "0 5px",
                   fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
                   fontSize: 22,
@@ -236,12 +234,12 @@ function SignalsZone({ derived }: { derived: Derived }) {
               >
                 –
               </span>
-              <OdometerNum target={brokerFee.high} color="var(--peach)" size={26} />
+              <OdometerNum target={brokerFee.high} color="#f4c5a8" size={26} />
             </div>
             <div
               style={{
                 fontSize: 10,
-                color: "rgba(var(--peach-rgb),.5)",
+                color: "rgba(244,197,168,.5)",
                 marginTop: 3,
                 fontFamily: "Inter, sans-serif",
                 lineHeight: 1.45,
@@ -255,14 +253,14 @@ function SignalsZone({ derived }: { derived: Derived }) {
 
       {/* Buyer match */}
       {derived.industry && (
-        <div className="flex flex-col gap-1.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div
             style={{
               fontSize: 10,
               fontWeight: 600,
               letterSpacing: ".8px",
               textTransform: "uppercase",
-              color: "rgba(var(--mint-rgb),.5)",
+              color: "rgba(167,229,211,.5)",
               fontFamily: "Inter, sans-serif",
             }}
           >
@@ -281,7 +279,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
                   animation: `slideUp .35s ${i * 65}ms ease both`,
                 }}
               >
-                <div className="flex items-center gap-[7px]">
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ color, fontSize: 11 }}>{icon}</span>
                   <span style={{ fontSize: 11, color: "var(--t2)", fontFamily: "Inter, sans-serif" }}>{type}</span>
                 </div>
@@ -292,7 +290,7 @@ function SignalsZone({ derived }: { derived: Derived }) {
                     letterSpacing: ".6px",
                     textTransform: "uppercase",
                     fontFamily: "Inter, sans-serif",
-                    color: i === 0 ? "var(--emerald)" : i <= 2 ? "var(--mint)" : "var(--t4)",
+                    color: i === 0 ? "#10b981" : i <= 2 ? "#a7e5d3" : "var(--t4)",
                   }}
                 >
                   {likelihood}
@@ -317,9 +315,9 @@ function StillNeededZone({ step }: { step: number }) {
   if (needs.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <ZoneLabel accent="rgba(var(--peach-rgb),.5)">Still Needed for Full Report</ZoneLabel>
-      <div className="flex flex-col gap-1.5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <ZoneLabel accent="rgba(244,197,168,.5)">Still Needed for Full Report</ZoneLabel>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {needs.slice(0, 3).map(({ label, desc }, i) => (
           <div
             key={label}
@@ -331,13 +329,13 @@ function StillNeededZone({ step }: { step: number }) {
               animation: `slideUp .35s ${i * 55}ms ease both`,
             }}
           >
-            <div className="flex items-start gap-[7px]">
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
               <div
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: "50%",
-                  background: "rgba(var(--peach-rgb),.4)",
+                  background: "rgba(244,197,168,.4)",
                   flexShrink: 0,
                   marginTop: 4,
                 }}
@@ -365,8 +363,8 @@ function StillNeededZone({ step }: { step: number }) {
       {step < 6 && (
         <div
           style={{
-            background: "rgba(var(--emerald-rgb),.05)",
-            border: "1px solid rgba(var(--emerald-rgb),.14)",
+            background: "rgba(16,185,129,.05)",
+            border: "1px solid rgba(16,185,129,.14)",
             borderRadius: 10,
             padding: "10px 12px",
             marginTop: 2,
@@ -378,7 +376,7 @@ function StillNeededZone({ step }: { step: number }) {
               fontWeight: 600,
               letterSpacing: ".8px",
               textTransform: "uppercase",
-              color: "rgba(var(--emerald-rgb),.6)",
+              color: "rgba(16,185,129,.6)",
               fontFamily: "Inter, sans-serif",
               marginBottom: 5,
             }}
@@ -401,7 +399,7 @@ function StillNeededZone({ step }: { step: number }) {
                   width: 4,
                   height: 4,
                   borderRadius: "50%",
-                  background: "rgba(var(--emerald-rgb),.5)",
+                  background: "rgba(16,185,129,.5)",
                   flexShrink: 0,
                 }}
               />
@@ -418,15 +416,17 @@ function StillNeededZone({ step }: { step: number }) {
 function MarketConditions({ derived }: { derived: Derived }) {
   const hot = derived.isHotState
   return (
-    <div className="glass flex flex-col gap-[9px] p-[13px_15px]">
+    <div className="glass" style={{ padding: "13px 15px", display: "flex", flexDirection: "column", gap: 9 }}>
       <div
-        className="flex items-center gap-1.5"
         style={{
           fontSize: 9,
           fontWeight: 600,
           letterSpacing: "1px",
           textTransform: "uppercase",
           color: "var(--t3)",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
           fontFamily: "Inter, sans-serif",
         }}
       >
@@ -435,7 +435,7 @@ function MarketConditions({ derived }: { derived: Derived }) {
             width: 5,
             height: 5,
             borderRadius: "50%",
-            background: "var(--mint)",
+            background: "#a7e5d3",
             animation: "liveBlink 1.6s ease-in-out infinite",
           }}
         />
@@ -446,13 +446,13 @@ function MarketConditions({ derived }: { derived: Derived }) {
         { label: "Avg deal close", val: `${hot ? 74 : 87} days`, delta: hot ? "−13 days" : "−4 days" },
         { label: "M&A volume Q2 '25", val: "$4.2B", delta: "+8% QoQ" },
       ].map((r, i) => (
-        <div key={i} className="flex justify-between items-center">
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 10, color: "var(--t3)", fontFamily: "Inter, sans-serif" }}>{r.label}</span>
-          <div className="flex gap-[5px] items-center">
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
             <span style={{ fontSize: 11, fontWeight: 500, color: "var(--t2)", fontFamily: "Inter, sans-serif" }}>
               {r.val}
             </span>
-            <span style={{ fontSize: 9, fontWeight: 600, color: "var(--mint)", fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: "#a7e5d3", fontFamily: "Inter, sans-serif" }}>
               {r.delta}
             </span>
           </div>
@@ -472,14 +472,34 @@ interface DashboardPanelProps {
 
 export function DashboardPanel({ step, derived, processing, recalcMsg }: DashboardPanelProps) {
   return (
-    <div className="flex flex-col gap-2.5 relative">
-      <div className="absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 z-0 pointer-events-none">
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "28%",
+          left: "50%",
+          transform: "translate(-50%,-50%)",
+          width: 160,
+          height: 160,
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      >
         <RadarRings active={processing || step >= 3} />
       </div>
 
       <div
-        className="glass-panel p-[22px] flex flex-col gap-[18px] relative z-[1] overflow-hidden"
-        style={{ animation: "panelGlow 5s ease-in-out infinite" }}
+        className="glass-panel"
+        style={{
+          padding: 22,
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
+          position: "relative",
+          zIndex: 1,
+          overflow: "hidden",
+          animation: "panelGlow 5s ease-in-out infinite",
+        }}
       >
         <ScanLine speed={4} />
         <LiveBadge />
