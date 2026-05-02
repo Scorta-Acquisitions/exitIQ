@@ -8,6 +8,7 @@ import { buildTeaserPrompt } from "@/lib/ai/prompts"
 import type { AssessmentSession } from "@/lib/assessment/session"
 import { db } from "@/lib/db"
 import { assessmentReports, assessmentSessions } from "@/lib/db/schema"
+import { logger, timed } from "@/lib/logger"
 
 const teaserBodySchema = z.object({
   sessionId: z.string().min(1),
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   })
 
   if (!session) {
+    logger.warn("teaser.not_found", { sessionId })
     return Response.json({ error: "not_found" }, { status: 404 })
   }
 
@@ -51,6 +53,7 @@ export async function POST(req: Request) {
   if (!session.gate) missing.push("gate")
 
   if (missing.length > 0) {
+    logger.warn("teaser.incomplete_session", { sessionId, missing: missing.join(",") })
     return Response.json({ error: "incomplete_session", missing }, { status: 422 })
   }
 
@@ -67,35 +70,46 @@ export async function POST(req: Request) {
 
   const prompt = buildTeaserPrompt(assessmentSession)
 
-  const genResult = await (
-    generateObject as (opts: {
-      model: unknown
-      schema: unknown
-      prompt: string
-    }) => Promise<{ object: z.infer<typeof teaserOutputSchema> }>
-  )({
-    model: anthropic(HAIKU_MODEL),
-    schema: teaserOutputSchema,
-    prompt,
-  })
-  const { object } = genResult
+  const { object } = await timed(
+    "ai.teaser",
+    () =>
+      (
+        generateObject as (opts: {
+          model: unknown
+          schema: unknown
+          prompt: string
+        }) => Promise<{ object: z.infer<typeof teaserOutputSchema> }>
+      )({
+        model: anthropic(HAIKU_MODEL),
+        schema: teaserOutputSchema,
+        prompt,
+      }),
+    { sessionId, model: HAIKU_MODEL }
+  )
 
   after(async () => {
-    await db
-      .insert(assessmentReports)
-      .values({
-        sessionId,
-        reportMd: "",
-        teaserJson: object,
-        modelUsed: HAIKU_MODEL,
-        generationMs: null,
-      })
-      .onConflictDoUpdate({
-        target: assessmentReports.sessionId,
-        set: {
+    try {
+      await db
+        .insert(assessmentReports)
+        .values({
+          sessionId,
+          reportMd: "",
           teaserJson: object,
-        },
+          modelUsed: HAIKU_MODEL,
+          generationMs: null,
+        })
+        .onConflictDoUpdate({
+          target: assessmentReports.sessionId,
+          set: {
+            teaserJson: object,
+          },
+        })
+    } catch (err) {
+      logger.error("teaser.save_failed", {
+        sessionId,
+        error: err instanceof Error ? err.message : String(err),
       })
+    }
   })
 
   return Response.json(object)

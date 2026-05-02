@@ -2,6 +2,11 @@
 "use client"
 
 import React from "react"
+import { fetchReport, persistSession } from "@/lib/assessment/api"
+import { computeTag } from "@/lib/assessment/segmentation"
+import type { SegmentTag } from "@/lib/assessment/session"
+import { generateSessionId, loadSession } from "@/lib/assessment/session"
+import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
 import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
@@ -12,6 +17,14 @@ import { QuestionPanel } from "./questions"
 import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
+
+// Maps frontend year-bucket labels to representative year numbers for Stage1Answers.years
+const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
+  "Under 2 years": 1,
+  "2 – 5 years": 3,
+  "5 – 10 years": 7,
+  "10+ years": 15,
+}
 
 export function ExitIQApp() {
   const [step, setStep] = React.useState(0)
@@ -24,6 +37,8 @@ export function ExitIQApp() {
   const [submitted, setSubmitted] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
+  const [currentSessionId, setCurrentSessionId] = React.useState<string | null>(null)
+  const [reportReady, setReportReady] = React.useState(false)
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
@@ -44,6 +59,28 @@ export function ExitIQApp() {
   React.useEffect(() => {
     glRef.current?.setConf(derived.confidence / 100)
   }, [derived.confidence])
+
+  // ── Report polling — 5s interval, max 12 retries (~60s) ─────────────────────
+  React.useEffect(() => {
+    if (!submitted || !currentSessionId || reportReady) return
+
+    let attempts = 0
+    let timer: ReturnType<typeof setTimeout>
+
+    const poll = async () => {
+      if (attempts >= 12) return
+      attempts++
+      const result = await fetchReport(currentSessionId)
+      if (result?.status === "ready") {
+        setReportReady(true)
+        return
+      }
+      timer = setTimeout(poll, 5000)
+    }
+
+    timer = setTimeout(poll, 5000)
+    return () => clearTimeout(timer)
+  }, [submitted, currentSessionId, reportReady])
 
   // ── Answer handler ───────────────────────────────────────────────────────────
   const handleAnswer = React.useCallback(
@@ -96,13 +133,43 @@ export function ExitIQApp() {
     setProcessing(false)
     setShowModal(false)
     setSubmitted(false)
+    setCurrentSessionId(null)
+    setReportReady(false)
     glRef.current?.setConf(0)
   }, [])
 
   const handleUnlock = () => setShowModal(true)
-  const handleSubmit = (_data: { firstName: string; email: string; timeline: string }) => {
+
+  const handleSubmit = (data: { firstName: string; email: string; timeline: string }) => {
+    const timelineSlug = TIMELINE_LABEL_TO_SLUG[data.timeline] ?? "curious"
+    const tag = computeTag(timelineSlug) as SegmentTag
+
+    const YEAR_TO_NUMBER = YEAR_LABEL_TO_NUMBER
+    const session = loadSession()
+    const sid = session.sessionId ?? generateSessionId()
+
+    setCurrentSessionId(sid)
     setShowModal(false)
     setSubmitted(true)
+
+    void persistSession({
+      sessionId: sid,
+      stage1: {
+        industry: answers.industry ?? "",
+        years: YEAR_TO_NUMBER[answers.years] ?? 5,
+        revenue: answers.revenue ?? "",
+        sde: answers.sde ?? "",
+        employees: answers.employees ?? "",
+        state: answers.state ?? "",
+      },
+      gate: {
+        firstName: data.firstName,
+        email: data.email,
+        sellingTimeline: timelineSlug,
+        tag,
+      },
+      completedAt: Date.now(),
+    })
   }
 
   return (
@@ -301,7 +368,7 @@ export function ExitIQApp() {
                 <PreviewCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              <PostSubmitCard onReset={reset} />
+              <PostSubmitCard onReset={reset} reportReady={reportReady} />
             )}
 
             {/* AI Insight */}
@@ -371,7 +438,7 @@ export function ExitIQApp() {
 }
 
 // ── Post-submit confirmation card ─────────────────────────────────────────────
-function PostSubmitCard({ onReset }: { onReset: () => void }) {
+function PostSubmitCard({ onReset, reportReady }: { onReset: () => void; reportReady: boolean }) {
   return (
     <div
       className="glass-panel"
@@ -392,8 +459,8 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
             width: 8,
             height: 8,
             borderRadius: "50%",
-            background: "#10b981",
-            boxShadow: "0 0 12px rgba(16,185,129,.9)",
+            background: reportReady ? "#10b981" : "#f59e0b",
+            boxShadow: reportReady ? "0 0 12px rgba(16,185,129,.9)" : "0 0 12px rgba(245,158,11,.9)",
             animation: "liveBlink 2s infinite",
           }}
         />
@@ -403,11 +470,11 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
             fontWeight: 600,
             letterSpacing: ".96px",
             textTransform: "uppercase",
-            color: "rgba(16,185,129,.8)",
+            color: reportReady ? "rgba(16,185,129,.8)" : "rgba(245,158,11,.8)",
             fontFamily: "Inter, sans-serif",
           }}
         >
-          Report queued
+          {reportReady ? "Report ready" : "Report generating"}
         </div>
       </div>
       <h2
@@ -421,7 +488,7 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
           margin: 0,
         }}
       >
-        Your full ExitIQ Report is on its way.
+        {reportReady ? "Your ExitIQ Report is ready." : "Your full ExitIQ Report is on its way."}
       </h2>
       <p
         style={{
@@ -432,8 +499,9 @@ function PostSubmitCard({ onReset }: { onReset: () => void }) {
           margin: 0,
         }}
       >
-        Check your inbox for your valuation breakdown, buyer risk scan, and personalized 90-day exit prep plan. In the
-        meantime, Scorta is preparing your full assessment.
+        {reportReady
+          ? "Check your inbox — your valuation breakdown, buyer risk scan, and 90-day exit prep plan have been sent."
+          : "Check your inbox for your valuation breakdown, buyer risk scan, and personalized 90-day exit prep plan. In the meantime, Scorta is preparing your full assessment."}
       </p>
       <button
         onClick={onReset}

@@ -46,7 +46,28 @@ export type TeaserResult = {
   valuationRange: string
   topStrength: string
   topRisk: string
-  segmentTag: "hot_seller" | "warm_explorer" | "nurture" | "burned_by_broker"
+  leadQuality: "hot_seller" | "warm_explorer" | "nurture" | "burned_by_broker"
+}
+
+export type ReportResult = {
+  status: "pending" | "ready"
+  reportMd: string | null
+  teaserJson: TeaserResult | null
+  createdAt: string | null
+}
+
+/**
+ * Polls `GET /api/assessment/report/[sessionId]` once and returns the result.
+ * Returns `null` on any network or server error.
+ */
+export async function fetchReport(sessionId: string): Promise<ReportResult | null> {
+  try {
+    const res = await fetch(`/api/assessment/report/${encodeURIComponent(sessionId)}`)
+    if (!res.ok) return null
+    return (await res.json()) as ReportResult
+  } catch {
+    return null
+  }
 }
 
 /**

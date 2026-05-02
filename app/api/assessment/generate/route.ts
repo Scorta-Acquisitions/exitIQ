@@ -8,6 +8,7 @@ import { buildReportPrompt } from "@/lib/ai/prompts"
 import type { AssessmentSession } from "@/lib/assessment/session"
 import { db } from "@/lib/db"
 import { assessmentReports, assessmentSessions } from "@/lib/db/schema"
+import { logger } from "@/lib/logger"
 
 const generateBodySchema = z.object({
   sessionId: z.string().min(1),
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
   })
 
   if (!session) {
+    logger.warn("generate.not_found", { sessionId })
     return Response.json({ error: "not_found" }, { status: 404 })
   }
 
@@ -46,6 +48,7 @@ export async function POST(req: Request) {
   if (!session.stage4) missing.push("stage4")
 
   if (missing.length > 0) {
+    logger.warn("generate.incomplete_session", { sessionId, missing: missing.join(",") })
     return Response.json({ error: "incomplete_session", missing }, { status: 422 })
   }
 
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
   })
 
   if (existingReport?.reportMd) {
-    // Stream the cached report back
+    logger.info("generate.cache_hit", { sessionId, model: existingReport.modelUsed })
     const cached = existingReport.reportMd
     const stream = new ReadableStream({
       start(controller) {
@@ -83,29 +86,39 @@ export async function POST(req: Request) {
   const prompt = buildReportPrompt(assessmentSession)
   const startMs = Date.now()
 
+  logger.info("generate.started", { sessionId, model: SONNET_MODEL })
+
   const result = streamText({
     model: anthropic(SONNET_MODEL),
     prompt,
     onFinish: ({ text }) => {
       const generationMs = Date.now() - startMs
+      logger.info("generate.finished", { sessionId, model: SONNET_MODEL, durationMs: generationMs })
       after(async () => {
-        await db
-          .insert(assessmentReports)
-          .values({
-            sessionId,
-            reportMd: text,
-            teaserJson: null,
-            modelUsed: SONNET_MODEL,
-            generationMs,
-          })
-          .onConflictDoUpdate({
-            target: assessmentReports.sessionId,
-            set: {
+        try {
+          await db
+            .insert(assessmentReports)
+            .values({
+              sessionId,
               reportMd: text,
+              teaserJson: null,
               modelUsed: SONNET_MODEL,
               generationMs,
-            },
+            })
+            .onConflictDoUpdate({
+              target: assessmentReports.sessionId,
+              set: {
+                reportMd: text,
+                modelUsed: SONNET_MODEL,
+                generationMs,
+              },
+            })
+        } catch (err) {
+          logger.error("generate.save_failed", {
+            sessionId,
+            error: err instanceof Error ? err.message : String(err),
           })
+        }
       })
     },
   })

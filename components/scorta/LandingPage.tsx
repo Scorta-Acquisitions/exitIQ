@@ -116,6 +116,7 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
         position: "fixed",
         inset: 0,
         zIndex: 2000,
+        overflowY: "auto",
         transform: "translateZ(0)",
         animation: "fadeIn 0.2s ease",
       }}
