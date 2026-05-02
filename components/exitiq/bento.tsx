@@ -1,4 +1,3 @@
-// use client: hover state, animations
 "use client"
 
 import React from "react"
@@ -29,8 +28,8 @@ const BENTO_CARDS: BentoCard[] = [
         <path d="M4 4h14v2H4zM4 8h10M4 11h8M4 14h6M14 12l4 4-4 4" />
       </svg>
     ),
-    accent: "rgba(var(--mint-rgb),.55)",
-    bg: "rgba(var(--mint-rgb),.04)",
+    accent: "rgba(167,229,211,.55)",
+    bg: "rgba(167,229,211,.04)",
   },
   {
     title: "Buyer management",
@@ -52,8 +51,8 @@ const BENTO_CARDS: BentoCard[] = [
         <path d="M15 14c2 0 4 1 4 3" />
       </svg>
     ),
-    accent: "rgba(var(--lavender-rgb),.55)",
-    bg: "rgba(var(--lavender-rgb),.04)",
+    accent: "rgba(200,184,224,.55)",
+    bg: "rgba(200,184,224,.04)",
   },
   {
     title: "Document vault",
@@ -71,12 +70,12 @@ const BENTO_CARDS: BentoCard[] = [
       >
         <rect x={3} y={3} width={16} height={18} rx={2} />
         <path d="M7 7h8M7 11h8M7 15h4" />
-        <circle cx={16} cy={15} r={3} fill="rgba(var(--sky-rgb),.2)" stroke="currentColor" />
+        <circle cx={16} cy={15} r={3} fill="rgba(168,200,232,.2)" stroke="currentColor" />
         <path d="M15 15l.8.8 1.6-1.6" />
       </svg>
     ),
-    accent: "rgba(var(--sky-rgb),.55)",
-    bg: "rgba(var(--sky-rgb),.04)",
+    accent: "rgba(168,200,232,.55)",
+    bg: "rgba(168,200,232,.04)",
   },
   {
     title: "NDA workflow",
@@ -98,8 +97,8 @@ const BENTO_CARDS: BentoCard[] = [
         <path d="M15 16c1.5-1 3-.5 3 1s-1.5 2-3 1" />
       </svg>
     ),
-    accent: "rgba(var(--peach-rgb),.55)",
-    bg: "rgba(var(--peach-rgb),.04)",
+    accent: "rgba(244,197,168,.55)",
+    bg: "rgba(244,197,168,.04)",
   },
   {
     title: "Deal timeline",
@@ -119,8 +118,8 @@ const BENTO_CARDS: BentoCard[] = [
         <path d="M11 7v4l3 2" />
       </svg>
     ),
-    accent: "rgba(var(--mint-rgb),.55)",
-    bg: "rgba(var(--mint-rgb),.04)",
+    accent: "rgba(167,229,211,.55)",
+    bg: "rgba(167,229,211,.04)",
   },
   {
     title: "Broker-free guidance",
@@ -141,8 +140,8 @@ const BENTO_CARDS: BentoCard[] = [
         <path d="M2 12l10 5 10-5" />
       </svg>
     ),
-    accent: "rgba(var(--lavender-rgb),.55)",
-    bg: "rgba(var(--lavender-rgb),.04)",
+    accent: "rgba(200,184,224,.55)",
+    bg: "rgba(200,184,224,.04)",
   },
 ]
 
@@ -264,7 +263,7 @@ export function BentoSection() {
           width: 400,
           height: 400,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(var(--mint-rgb),.05) 0%, transparent 65%)",
+          background: "radial-gradient(circle, rgba(167,229,211,.05) 0%, transparent 65%)",
           pointerEvents: "none",
         }}
       />
@@ -276,7 +275,7 @@ export function BentoSection() {
           width: 500,
           height: 500,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(var(--lavender-rgb),.05) 0%, transparent 65%)",
+          background: "radial-gradient(circle, rgba(200,184,224,.05) 0%, transparent 65%)",
           pointerEvents: "none",
         }}
       />

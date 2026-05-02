@@ -1,5 +1,5 @@
-import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
+import { ScortaLanding } from "@/components/scorta/LandingPage"
 
 export default function Home() {
-  return <ExitIQApp />
+  return <ScortaLanding />
 }
