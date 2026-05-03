@@ -111,46 +111,37 @@ function scrollTo(id: string) {
 // ── ExitIQ Overlay ────────────────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   return (
+    /* Backdrop */
     <div
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 2000,
-        overflowY: "auto",
-        transform: "translateZ(0)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         animation: "fadeIn 0.2s ease",
       }}
     >
-      <button
-        onClick={onClose}
+      {/* Floating card */}
+      <div
         style={{
-          position: "absolute",
-          top: 22,
-          left: 22,
-          zIndex: 2100,
-          height: 34,
-          padding: "0 14px",
-          background: "rgba(245,245,245,0.1)",
-          color: "rgba(245,245,245,0.85)",
-          border: "1px solid rgba(245,245,245,0.18)",
-          borderRadius: 9999,
-          fontFamily: inter,
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: "pointer",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
+          position: "relative",
+          width: "100%",
+          maxWidth: 1160,
+          height: "90vh",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
+          animation: "slideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
         }}
       >
-        <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
-          <path d="M8 1L3 6l5 5" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Back to Scorta
-      </button>
-      <ExitIQApp />
+        <ExitIQApp onClose={onClose} />
+      </div>
     </div>
   )
 }

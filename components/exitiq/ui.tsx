@@ -260,7 +260,7 @@ export function Ripple({ x, y, onDone }: RippleProps) {
 }
 
 // ── ConfidenceMeter ───────────────────────────────────────────────────────────
-export function ConfidenceMeter({ value }: { value: number }) {
+export function ConfidenceMeter({ value, active = false }: { value: number; active?: boolean }) {
   const disp = useSpring(value, 0.06, 0.82)
   const r = 36
   const circ = 2 * Math.PI * r
@@ -277,6 +277,16 @@ export function ConfidenceMeter({ value }: { value: number }) {
             ? "Pattern matched"
             : "High confidence"
 
+  const ringOpacity = active ? 0.55 : disp > 0 ? 0.22 : 0.1
+
+  // ── Ring position — adjust these two values to move the rings ────────────────
+  // The SVG circle centre sits at pixel (44, 44) inside the 88×88 container.
+  // ringTop / ringLeft are the top-left corner of each ring div (88×88).
+  // To centre a ring on a point (cx, cy): ringTop = cy - 44, ringLeft = cx - 44.
+  const ringTop = 0   // ← change me (px from top of the 88×88 container)
+  const ringLeft = 0  // ← change me (px from left of the 88×88 container)
+  // ─────────────────────────────────────────────────────────────────────────────
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div
@@ -292,7 +302,27 @@ export function ConfidenceMeter({ value }: { value: number }) {
         AI Confidence
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <svg width={88} height={88} viewBox="0 0 88 88">
+        {/* SVG + pulsing rings container */}
+        <div style={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
+          {/* Radiating rings — position controlled by ringTop / ringLeft above */}
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                top: ringTop,
+                left: ringLeft,
+                width: 88,
+                height: 88,
+                borderRadius: "50%",
+                border: `1px solid rgba(167,229,211,${ringOpacity})`,
+                animation: `radarPulse ${2.2 + i * 0.55}s ${i * 0.5}s ease-out infinite`,
+                transition: "border-color .6s ease",
+                pointerEvents: "none",
+              }}
+            />
+          ))}
+          <svg width={88} height={88} viewBox="0 0 88 88" style={{ position: "relative", zIndex: 1 }}>
           <circle cx={44} cy={44} r={r} fill="none" stroke="var(--s1)" strokeWidth={5} />
           <circle
             cx={44}
@@ -323,6 +353,7 @@ export function ConfidenceMeter({ value }: { value: number }) {
             {Math.round(disp)}%
           </text>
         </svg>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div
             style={{

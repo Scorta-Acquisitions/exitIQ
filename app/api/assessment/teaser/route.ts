@@ -89,21 +89,23 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      await db
-        .insert(assessmentReports)
-        .values({
+      // assessment_reports.session_id has no unique constraint — update first,
+      // insert only if no row exists yet.
+      const updated = await db
+        .update(assessmentReports)
+        .set({ teaserJson: object })
+        .where(eq(assessmentReports.sessionId, sessionId))
+        .returning({ id: assessmentReports.id })
+
+      if (updated.length === 0) {
+        await db.insert(assessmentReports).values({
           sessionId,
           reportMd: "",
           teaserJson: object,
           modelUsed: HAIKU_MODEL,
           generationMs: null,
         })
-        .onConflictDoUpdate({
-          target: assessmentReports.sessionId,
-          set: {
-            teaserJson: object,
-          },
-        })
+      }
     } catch (err) {
       logger.error("teaser.save_failed", {
         sessionId,

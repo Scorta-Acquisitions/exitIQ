@@ -130,8 +130,19 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
             alignItems: "center",
             justifyContent: "center",
             animation: "fadeIn .5s ease",
+            overflow: "hidden",
           }}
         >
+          {/* Shimmer sweeps the full square */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%)",
+              animation: "shimmer 2.2s ease-in-out infinite",
+              pointerEvents: "none",
+            }}
+          />
           <div
             style={{
               display: "flex",
@@ -172,15 +183,6 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
             >
               {estimatedCount} of {N} estimated
             </div>
-            <div
-              style={{
-                position: "absolute",
-                inset: -24,
-                background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%)",
-                animation: "shimmer 2.2s ease-in-out infinite",
-                pointerEvents: "none",
-              }}
-            />
           </div>
         </div>
       )}

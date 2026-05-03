@@ -523,22 +523,30 @@ function Q6State({
 }) {
   const [query, setQuery] = React.useState("")
   const [open, setOpen] = React.useState(false)
+  const [rect, setRect] = React.useState<DOMRect | null>(null)
+  const inputRef = React.useRef<HTMLInputElement>(null)
   const filtered = US_STATES.filter((s) => s.toLowerCase().startsWith(query.toLowerCase()))
   const isHot = (s: string) => HOT_STATES.includes(s)
+
+  function openDropdown() {
+    if (inputRef.current) setRect(inputRef.current.getBoundingClientRect())
+    setOpen(true)
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What state is your business in?</QHead>
       <div style={{ position: "relative" }}>
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search state…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
-            setOpen(true)
+            openDropdown()
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={openDropdown}
           style={{
             width: "100%",
             height: 48,
@@ -555,14 +563,14 @@ function Q6State({
           onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(167,229,211,.35)")}
           onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--inp-border)")}
         />
-        {open && filtered.length > 0 && (
+        {open && filtered.length > 0 && rect && (
           <div
             style={{
-              position: "absolute",
-              top: "calc(100% + 6px)",
-              left: 0,
-              right: 0,
-              zIndex: 50,
+              position: "fixed",
+              top: rect.bottom + 6,
+              left: rect.left,
+              width: rect.width,
+              zIndex: 9999,
               background: "var(--dd-bg)",
               backdropFilter: "blur(24px)",
               border: "1px solid var(--b2)",

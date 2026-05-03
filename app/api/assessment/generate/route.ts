@@ -39,13 +39,10 @@ export async function POST(req: Request) {
     return Response.json({ error: "not_found" }, { status: 404 })
   }
 
-  // Validate all 4 stages + gate are present
+  // Require at minimum stage1 + gate; stages 2–4 are optional (Phase 1 only collects stage1 + gate)
   const missing: string[] = []
   if (!session.stage1) missing.push("stage1")
   if (!session.gate) missing.push("gate")
-  if (!session.stage2) missing.push("stage2")
-  if (!session.stage3) missing.push("stage3")
-  if (!session.stage4) missing.push("stage4")
 
   if (missing.length > 0) {
     logger.warn("generate.incomplete_session", { sessionId, missing: missing.join(",") })

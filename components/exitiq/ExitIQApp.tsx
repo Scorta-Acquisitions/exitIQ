@@ -2,7 +2,7 @@
 "use client"
 
 import React from "react"
-import { fetchReport, persistSession } from "@/lib/assessment/api"
+import { fetchReport, persistSession, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
 import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
 import { generateSessionId, loadSession } from "@/lib/assessment/session"
@@ -10,7 +10,6 @@ import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
 import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
-import { BentoSection } from "./bento"
 import { DashboardPanel } from "./dashboard"
 import { EmailGateModal, PreviewCard } from "./preview"
 import { QuestionPanel } from "./questions"
@@ -26,7 +25,7 @@ const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
   "10+ years": 15,
 }
 
-export function ExitIQApp() {
+export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [step, setStep] = React.useState(0)
   const [answers, setAnswers] = React.useState<Record<string, string>>({})
   const [processing, setProcessing] = React.useState(false)
@@ -39,6 +38,7 @@ export function ExitIQApp() {
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
   const [currentSessionId, setCurrentSessionId] = React.useState<string | null>(null)
   const [reportReady, setReportReady] = React.useState(false)
+  const [teaserData, setTeaserData] = React.useState<TeaserResult | null>(null)
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
@@ -71,7 +71,8 @@ export function ExitIQApp() {
       if (attempts >= 12) return
       attempts++
       const result = await fetchReport(currentSessionId)
-      if (result?.status === "ready") {
+      if (result?.status === "ready" && result.teaserJson) {
+        setTeaserData(result.teaserJson)
         setReportReady(true)
         return
       }
@@ -135,8 +136,33 @@ export function ExitIQApp() {
     setSubmitted(false)
     setCurrentSessionId(null)
     setReportReady(false)
+    setTeaserData(null)
     glRef.current?.setConf(0)
   }, [])
+
+  // ── Escape key closes the form ───────────────────────────────────────────────
+  React.useEffect(() => {
+    if (!onClose) return
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [onClose])
+
+  // ── Back navigation ──────────────────────────────────────────────────────────
+  const handleBack = React.useCallback(() => {
+    if (submitted) {
+      setSubmitted(false)
+      return
+    }
+    if (step === 0) {
+      onClose?.()
+      return
+    }
+    setStep((s) => s - 1)
+    setInsight(null)
+    setTransitioning(false)
+    setProcessing(false)
+  }, [step, submitted, onClose])
 
   const handleUnlock = () => setShowModal(true)
 
@@ -156,7 +182,7 @@ export function ExitIQApp() {
       sessionId: sid,
       stage1: {
         industry: answers.industry ?? "",
-        years: YEAR_TO_NUMBER[answers.years] ?? 5,
+        years: (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
         revenue: answers.revenue ?? "",
         sde: answers.sde ?? "",
         employees: answers.employees ?? "",
@@ -169,16 +195,19 @@ export function ExitIQApp() {
         tag,
       },
       completedAt: Date.now(),
+    }).then(async () => {
+      const teaser = await requestTeaser(sid)
+      if (teaser) setTeaserData(teaser)
     })
   }
 
   return (
-    <>
-      {/* WebGL canvas — fixed behind everything */}
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {/* WebGL canvas — absolute so it fills the card container, not the viewport */}
       <canvas
         ref={canvasRef}
         style={{
-          position: "fixed",
+          position: "absolute",
           inset: 0,
           zIndex: 0,
           width: "100%",
@@ -187,12 +216,13 @@ export function ExitIQApp() {
         }}
       />
 
-      {/* App root */}
+      {/* App root — scrollable within the card */}
       <div
         style={{
           position: "relative",
           zIndex: 1,
-          minHeight: "100vh",
+          height: "100%",
+          overflowY: "auto",
           display: "flex",
           flexDirection: "column",
           opacity: mounted ? 1 : 0,
@@ -205,7 +235,7 @@ export function ExitIQApp() {
         {/* Processing flash */}
         <div
           style={{
-            position: "fixed",
+            position: "absolute",
             inset: 0,
             pointerEvents: "none",
             zIndex: 40,
@@ -224,62 +254,54 @@ export function ExitIQApp() {
           style={{
             margin: "14px 20px 0",
             padding: "0 24px",
-            height: 58,
-            display: "flex",
+            height: 52,
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            justifyContent: "space-between",
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 20,
-              fontWeight: 300,
-              color: "var(--t1)",
-              letterSpacing: "-.3px",
-            }}
-          >
-            Scorta
-          </div>
-          <div style={{ display: "flex", gap: 28 }}>
-            {["How it works", "Coming soon", "For sellers"].map((l) => (
-              <div
-                key={l}
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "var(--t3)",
-                  cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  transition: "color .15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
-              >
-                {l}
-              </div>
-            ))}
-          </div>
           <button
+            onClick={handleBack}
             style={{
-              height: 36,
-              padding: "0 18px",
+              justifySelf: "start",
+              height: 32,
+              padding: "0 14px",
               background: "var(--s1)",
-              color: "var(--t2)",
-              fontSize: 14,
+              color: "var(--t3)",
+              fontSize: 13,
               fontWeight: 500,
               borderRadius: 9999,
               border: "1px solid var(--b2)",
               cursor: "pointer",
               fontFamily: "Inter, sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               transition: "all .15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s1)")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
           >
-            Start ExitIQ
+            <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+              <path d="M7 1.5L3 5.5l4 4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Back
           </button>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: ".96px",
+              textTransform: "uppercase",
+              color: "rgba(167,229,211,.65)",
+              fontFamily: "Inter, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ExitIQ Liquid Engine
+          </div>
+          <div />
         </nav>
 
         {/* ── Hero layout (2 columns) ── */}
@@ -294,7 +316,6 @@ export function ExitIQApp() {
             margin: "0 auto",
             width: "100%",
             alignItems: "start",
-            minHeight: "calc(100vh - 100px)",
           }}
         >
           {/* ── Left column ── */}
@@ -303,7 +324,7 @@ export function ExitIQApp() {
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
               <SignalOrb phase={stepCount} size={ORB_SIZE} active={processing || !!recalcMsg} />
               <div>
-                <div
+                {/* <div
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
@@ -315,7 +336,7 @@ export function ExitIQApp() {
                   }}
                 >
                   ExitIQ Liquid Engine
-                </div>
+                </div> */}
                 <h1
                   style={{
                     fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -368,7 +389,9 @@ export function ExitIQApp() {
                 <PreviewCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              <PostSubmitCard onReset={reset} reportReady={reportReady} />
+              teaserData
+                ? <TeaserCard teaser={teaserData} onReset={reset} />
+                : <PostSubmitCard onReset={reset} reportReady={reportReady} />
             )}
 
             {/* AI Insight */}
@@ -401,39 +424,181 @@ export function ExitIQApp() {
           {/* ── Right column: Dashboard ── */}
           <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />
         </div>
+      </div>
+    </div>
+  )
+}
 
-        {/* ── Bento section ── */}
-        <BentoSection />
+// ── Teaser card — shown immediately when AI returns the teaser ────────────────
+function TeaserCard({ teaser, onReset }: { teaser: TeaserResult; onReset: () => void }) {
+  return (
+    <div
+      className="glass-panel"
+      style={{
+        padding: 28,
+        display: "flex",
+        flexDirection: "column",
+        gap: 18,
+        animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <ScanLine />
 
-        {/* ── Footer ── */}
-        <footer
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
           style={{
-            background: "var(--footer-bg)",
-            borderTop: "1px solid var(--footer-border)",
-            padding: "28px 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            transition: "background .5s ease",
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: "#10b981",
+            boxShadow: "0 0 12px rgba(16,185,129,.9)",
+            animation: "liveBlink 2s infinite",
+          }}
+        />
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: ".96px",
+            textTransform: "uppercase",
+            color: "rgba(16,185,129,.8)",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          ExitIQ Teaser Report
+        </div>
+      </div>
+
+      {/* Headline */}
+      <h2
+        style={{
+          fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+          fontSize: 22,
+          fontWeight: 300,
+          color: "var(--t1)",
+          letterSpacing: "-.3px",
+          lineHeight: 1.25,
+          margin: 0,
+        }}
+      >
+        {teaser.headline}
+      </h2>
+
+      {/* Valuation range */}
+      <div
+        style={{
+          background: "rgba(16,185,129,.06)",
+          border: "1px solid rgba(16,185,129,.18)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ fontSize: 12, color: "var(--t3)", fontFamily: "Inter, sans-serif" }}>
+          Estimated valuation range
+        </div>
+        <div
+          style={{
+            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+            fontSize: 22,
+            fontWeight: 300,
+            color: "#10b981",
+            letterSpacing: "-.2px",
+          }}
+        >
+          {teaser.valuationRange}
+        </div>
+      </div>
+
+      {/* Strength / Risk */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div
+          style={{
+            background: "rgba(16,185,129,.04)",
+            border: "1px solid rgba(16,185,129,.14)",
+            borderRadius: 10,
+            padding: "11px 14px",
           }}
         >
           <div
             style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 16,
-              fontWeight: 300,
-              color: "var(--t3)",
-              letterSpacing: "-.1px",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: ".8px",
+              textTransform: "uppercase",
+              color: "rgba(16,185,129,.65)",
+              fontFamily: "Inter, sans-serif",
+              marginBottom: 5,
             }}
           >
-            Scorta
+            Top Strength
           </div>
-          <div style={{ fontSize: 12, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
-            © 2025 Scorta. For informational purposes only. Not financial advice.
+          <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
+            {teaser.topStrength}
           </div>
-        </footer>
+        </div>
+        <div
+          style={{
+            background: "rgba(245,158,11,.04)",
+            border: "1px solid rgba(245,158,11,.14)",
+            borderRadius: 10,
+            padding: "11px 14px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: ".8px",
+              textTransform: "uppercase",
+              color: "rgba(245,158,11,.65)",
+              fontFamily: "Inter, sans-serif",
+              marginBottom: 5,
+            }}
+          >
+            Key Risk
+          </div>
+          <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
+            {teaser.topRisk}
+          </div>
+        </div>
       </div>
-    </>
+
+      <div
+        style={{
+          fontSize: 12,
+          color: "var(--t4)",
+          fontFamily: "Inter, sans-serif",
+          lineHeight: 1.5,
+        }}
+      >
+        Full report with buyer risk scan and 90-day exit plan has been sent to your inbox.
+      </div>
+
+      <button
+        onClick={onReset}
+        style={{
+          alignSelf: "flex-start",
+          height: 38,
+          padding: "0 18px",
+          background: "var(--s1)",
+          border: "1px solid var(--b2)",
+          borderRadius: 9999,
+          color: "var(--t2)",
+          fontSize: 13,
+          fontWeight: 500,
+          cursor: "pointer",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Restart assessment
+      </button>
+    </div>
   )
 }
 
