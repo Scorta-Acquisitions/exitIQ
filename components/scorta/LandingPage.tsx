@@ -377,7 +377,7 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
         </div>
 
         {/* Main content */}
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 320px"), gap: 0, minHeight: rv(isMobile, "auto", 340) }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 320px"), gap: 0, minHeight: rv<string | number>(isMobile, "auto", 340) }}>
           {/* Left */}
           <div style={{ padding: rv(isMobile, "20px 16px 20px", "28px 28px 24px"), borderRight: isMobile ? "none" : "1px solid rgba(245,245,245,0.06)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: "rgba(167,229,211,0.65)", fontFamily: inter, marginBottom: 14 }}>
