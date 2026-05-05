@@ -2,18 +2,19 @@
 "use client"
 
 import React from "react"
-import { fetchReport, persistSession, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
+import { persistSession, requestGenerate, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
 import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
 import { generateSessionId, loadSession } from "@/lib/assessment/session"
 import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
-import { calcDerived, type Derived, fmtMoney } from "@/lib/exitiq/calculations"
+import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
 import { DashboardPanel } from "./dashboard"
 import { EmailGateModal, GateTeaserCard, PreviewCard } from "./preview"
 import { QuestionPanel } from "./questions"
-import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
+import { FullReportCard, ReportGeneratingCard } from "./report"
+import { AIInsight, Ripple, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
@@ -36,9 +37,10 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [submitted, setSubmitted] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
-  const [currentSessionId, setCurrentSessionId] = React.useState<string | null>(null)
-  const [reportReady, setReportReady] = React.useState(false)
   const [teaserData, setTeaserData] = React.useState<TeaserResult | null>(null)
+  const [reportMd, setReportMd] = React.useState("")
+  const [reportStreaming, setReportStreaming] = React.useState(false)
+  const [gateFirstName, setGateFirstName] = React.useState("")
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
@@ -60,28 +62,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     glRef.current?.setConf(derived.confidence / 100)
   }, [derived.confidence])
 
-  // ── Report polling — 5s interval, max 12 retries (~60s) ─────────────────────
-  React.useEffect(() => {
-    if (!submitted || !currentSessionId || reportReady) return
-
-    let attempts = 0
-    let timer: ReturnType<typeof setTimeout>
-
-    const poll = async () => {
-      if (attempts >= 12) return
-      attempts++
-      const result = await fetchReport(currentSessionId)
-      if (result?.status === "ready" && result.teaserJson) {
-        setTeaserData(result.teaserJson)
-        setReportReady(true)
-        return
-      }
-      timer = setTimeout(poll, 5000)
-    }
-
-    timer = setTimeout(poll, 5000)
-    return () => clearTimeout(timer)
-  }, [submitted, currentSessionId, reportReady])
 
   // ── Answer handler ───────────────────────────────────────────────────────────
   const handleAnswer = React.useCallback(
@@ -134,9 +114,10 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     setProcessing(false)
     setShowModal(false)
     setSubmitted(false)
-    setCurrentSessionId(null)
-    setReportReady(false)
     setTeaserData(null)
+    setReportMd("")
+    setReportStreaming(false)
+    setGateFirstName("")
     glRef.current?.setConf(0)
   }, [])
 
@@ -174,7 +155,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     const session = loadSession()
     const sid = session.sessionId ?? generateSessionId()
 
-    setCurrentSessionId(sid)
+    setGateFirstName(data.firstName)
     setShowModal(false)
     setSubmitted(true)
 
@@ -187,7 +168,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         sde: answers.sde ?? "",
         employees: answers.employees ?? "",
         state: answers.state ?? "",
-        // Extended Stage 1 signals (new)
         ownerRole: answers.ownerRole ?? "",
         revenueTrend: answers.revenueTrend ?? "",
         customerConc: answers.customerConc ?? "",
@@ -201,9 +181,33 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         tag,
       },
       completedAt: Date.now(),
-    }).then(async () => {
-      const teaser = await requestTeaser(sid)
-      if (teaser) setTeaserData(teaser)
+    }).then(() => {
+      // Teaser: fast (Haiku, ~2–5s) — enriches preview card immediately
+      void requestTeaser(sid).then((teaser) => {
+        if (teaser) setTeaserData(teaser)
+      })
+
+      // Full report: stream from Sonnet (~20–40s) — shown below teaser when complete
+      setReportStreaming(true)
+      void requestGenerate(sid).then(async (res) => {
+        if (!res?.body) {
+          setReportStreaming(false)
+          return
+        }
+        const reader = res.body.getReader()
+        const dec = new TextDecoder()
+        let acc = ""
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            acc += dec.decode(value, { stream: true })
+          }
+          setReportMd(acc)
+        } finally {
+          setReportStreaming(false)
+        }
+      })
     })
   }
 
@@ -396,13 +400,19 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                 <GateTeaserCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              // Post-gate: always show the full detailed report; enrich with AI content as it arrives
-              <PreviewCard
-                derived={derived}
-                answers={answers}
-                onUnlock={() => {}}
-                teaserData={teaserData}
-              />
+              // Post-gate: teaser preview immediately, then full Sonnet report when ready
+              <>
+                <PreviewCard
+                  derived={derived}
+                  answers={answers}
+                  onUnlock={() => {}}
+                  teaserData={teaserData}
+                />
+                {reportStreaming && <ReportGeneratingCard />}
+                {!reportStreaming && reportMd && (
+                  <FullReportCard reportMd={reportMd} firstName={gateFirstName} />
+                )}
+              </>
             )}
 
             {/* AI Insight */}
