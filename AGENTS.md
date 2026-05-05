@@ -136,7 +136,7 @@ These are hard project standards enforced on every PR regardless of diff content
 | G11 | Icon-only interactive elements must have `aria-label` | 🔴 |
 | G12 | Interactive elements minimum `h-10 w-10` (44px touch target) | 🔴 |
 
----
+--- hello
 
 ## §H — Rendering Rules
 
