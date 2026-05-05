@@ -1,8 +1,8 @@
 // use client: contains interactive state (useState for overlay, FAQ accordion, announcement bar) and event handlers
 "use client"
 
-import React from "react"
 import Link from "next/link"
+import React from "react"
 import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -109,6 +109,30 @@ function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
 }
 
+// ── Responsive utilities ──────────────────────────────────────────────────────
+const MOBILE_BP = 768
+
+function useWindowWidth(): number {
+  // Start at 1200 (desktop) to avoid SSR/hydration mismatch; effect corrects on mount
+  const [w, setW] = React.useState(1200)
+  React.useEffect(() => {
+    setW(window.innerWidth)
+    const fn = () => setW(window.innerWidth)
+    window.addEventListener("resize", fn, { passive: true })
+    return () => window.removeEventListener("resize", fn)
+  }, [])
+  return w
+}
+
+function useIsMobile() {
+  return useWindowWidth() < MOBILE_BP
+}
+
+// Pick the mobile or desktop value based on the isMobile flag
+function rv<T>(isMobile: boolean, mobile: T, desktop: T): T {
+  return isMobile ? mobile : desktop
+}
+
 // ── ExitIQ Overlay ────────────────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   return (
@@ -149,34 +173,37 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
 
 // ── Announcement Bar ──────────────────────────────────────────────────────────
 function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
+  const isMobile = useIsMobile()
   return (
     <div
       style={{
         background: C.primary,
         color: "rgba(245,245,245,0.85)",
-        padding: "10px 48px",
+        padding: rv(isMobile, "10px 40px 10px 16px", "10px 48px"),
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 16,
+        gap: rv(isMobile, 8, 16),
         position: "relative",
         zIndex: 101,
       }}
     >
-      <div
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: "50%",
-          background: C.gradMint,
-          boxShadow: `0 0 8px ${C.gradMint}`,
-          flexShrink: 0,
-        }}
-      />
+      {!isMobile && (
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: C.gradMint,
+            boxShadow: `0 0 8px ${C.gradMint}`,
+            flexShrink: 0,
+          }}
+        />
+      )}
       <span
         style={{
           fontFamily: inter,
-          fontSize: 13,
+          fontSize: rv(isMobile, 12, 13),
           fontWeight: 500,
           letterSpacing: "0.1px",
           textAlign: "center",
@@ -189,7 +216,7 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
         onClick={onDismiss}
         style={{
           position: "absolute",
-          right: 20,
+          right: 12,
           background: "none",
           border: "none",
           color: "rgba(245,245,245,0.45)",
@@ -207,6 +234,7 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
 
 // ── Top Navigation ────────────────────────────────────────────────────────────
 function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
+  const isMobile = useIsMobile()
   return (
     <nav
       style={{
@@ -216,7 +244,7 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 48px",
+        padding: rv(isMobile, "0 16px", "0 48px"),
         position: "sticky",
         top: hasBar ? 37 : 0,
         zIndex: 100,
@@ -227,43 +255,51 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
       >
         Scorta
       </div>
-      <div style={{ display: "flex", gap: 32 }}>
-        {[
-          { label: "Features", id: "features" },
-          { label: "How it works", id: "how-it-works" },
-          { label: "For sellers", id: "for-sellers" },
-          { label: "Vision", id: "vision" },
-        ].map(({ label, id }) => (
-          <button
-            key={id}
-            onClick={() => scrollTo(id)}
-            style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}
-          >
-            {label}
-          </button>
-        ))}
-        <Link href="/about" style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, textDecoration: "none" }}>
-          About
-        </Link>
-      </div>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <button style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</button>
+
+      {/* Desktop nav links — hidden on mobile */}
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 32 }}>
+          {[
+            { label: "Features", id: "features" },
+            { label: "How it works", id: "how-it-works" },
+            { label: "For sellers", id: "for-sellers" },
+            { label: "Vision", id: "vision" },
+          ].map(({ label, id }) => (
+            <button
+              key={id}
+              onClick={() => scrollTo(id)}
+              style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}
+            >
+              {label}
+            </button>
+          ))}
+          <Link href="/about" style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, textDecoration: "none" }}>
+            About
+          </Link>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: rv(isMobile, 8, 12), alignItems: "center" }}>
+        {!isMobile && (
+          <button style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</button>
+        )}
         <button
           onClick={onStart}
-          style={pillPrimary}
+          style={{ ...pillPrimary, height: rv(isMobile, 36, 40), padding: rv(isMobile, "0 16px", "0 20px"), fontSize: rv(isMobile, 14, 15) }}
           onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
           onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
         >
-          Try free
+          {isMobile ? "Try free" : "Try free"}
         </button>
       </div>
     </nav>
   )
 }
 
-// ── ExitIQ Preview Card (unchanged from original) ─────────────────────────────
+// ── ExitIQ Preview Card ───────────────────────────────────────────────────────
 function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
   const [hovered, setHovered] = React.useState(false)
+  const isMobile = useIsMobile()
 
   return (
     <div style={{ position: "relative", marginTop: 16 }}>
@@ -291,7 +327,7 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
           position: "relative",
           maxWidth: 920,
           margin: "0 auto",
-          borderRadius: 20,
+          borderRadius: rv(isMobile, 14, 20),
           overflow: "hidden",
           background: "#0c0a09",
           border: hovered ? "1px solid rgba(167,229,211,0.35)" : "1px solid rgba(245,245,245,0.1)",
@@ -308,7 +344,7 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
         <div
           style={{
             height: 52,
-            padding: "0 20px",
+            padding: rv(isMobile, "0 14px", "0 20px"),
             borderBottom: "1px solid rgba(245,245,245,0.07)",
             display: "flex",
             alignItems: "center",
@@ -319,13 +355,15 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
           <span style={{ fontFamily: garamond, fontSize: 17, fontWeight: 300, color: "rgba(245,245,245,0.9)", letterSpacing: "-0.2px" }}>
             Scorta
           </span>
-          <div style={{ display: "flex", gap: 20 }}>
-            {["How it works", "For sellers"].map((l) => (
-              <span key={l} style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.35)" }}>
-                {l}
-              </span>
-            ))}
-          </div>
+          {!isMobile && (
+            <div style={{ display: "flex", gap: 20 }}>
+              {["How it works", "For sellers"].map((l) => (
+                <span key={l} style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.35)" }}>
+                  {l}
+                </span>
+              ))}
+            </div>
+          )}
           <div
             style={{
               height: 30, padding: "0 14px", background: "rgba(245,245,245,0.08)",
@@ -339,13 +377,13 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
         </div>
 
         {/* Main content */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 0, minHeight: 340 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 320px"), gap: 0, minHeight: rv(isMobile, "auto", 340) }}>
           {/* Left */}
-          <div style={{ padding: "28px 28px 24px", borderRight: "1px solid rgba(245,245,245,0.06)" }}>
+          <div style={{ padding: rv(isMobile, "20px 16px 20px", "28px 28px 24px"), borderRight: isMobile ? "none" : "1px solid rgba(245,245,245,0.06)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: "rgba(167,229,211,0.65)", fontFamily: inter, marginBottom: 14 }}>
               ExitIQ Liquid Engine
             </div>
-            <h2 style={{ fontFamily: garamond, fontSize: 28, fontWeight: 300, color: "rgba(245,245,245,0.92)", lineHeight: 1.08, letterSpacing: "-0.6px", marginBottom: 10 }}>
+            <h2 style={{ fontFamily: garamond, fontSize: rv(isMobile, 22, 28), fontWeight: 300, color: "rgba(245,245,245,0.92)", lineHeight: 1.08, letterSpacing: "-0.6px", marginBottom: 10 }}>
               See what buyers would pay — before you ever talk to a broker.
             </h2>
             <p style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: "rgba(245,245,245,0.42)", lineHeight: 1.6, letterSpacing: "0.1px", marginBottom: 24 }}>
@@ -355,7 +393,7 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
               <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.35)", marginBottom: 8 }}>
                 Question 1 of 6
               </div>
-              <div style={{ fontFamily: garamond, fontSize: 18, fontWeight: 300, color: "rgba(245,245,245,0.85)", marginBottom: 14, lineHeight: 1.3, letterSpacing: "-0.2px" }}>
+              <div style={{ fontFamily: garamond, fontSize: rv(isMobile, 16, 18), fontWeight: 300, color: "rgba(245,245,245,0.85)", marginBottom: 14, lineHeight: 1.3, letterSpacing: "-0.2px" }}>
                 What industry is your business in?
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -379,48 +417,52 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
             </div>
           </div>
 
-          {/* Right — dashboard */}
-          <div style={{ padding: "20px 18px", display: "flex", flexDirection: "column", gap: 10, background: "rgba(245,245,245,0.015)" }}>
-            <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
-              <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 6 }}>Exit Readiness Score</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ flex: 1, height: 4, background: "rgba(245,245,245,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                  <div style={{ width: "67%", height: "100%", background: "linear-gradient(90deg, rgba(167,229,211,0.7), rgba(167,229,211,0.4))", borderRadius: 2 }} />
+          {/* Right — dashboard (hidden on mobile to keep card compact) */}
+          {!isMobile && (
+            <div style={{ padding: "20px 18px", display: "flex", flexDirection: "column", gap: 10, background: "rgba(245,245,245,0.015)" }}>
+              <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
+                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 6 }}>Exit Readiness Score</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1, height: 4, background: "rgba(245,245,245,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: "67%", height: "100%", background: "linear-gradient(90deg, rgba(167,229,211,0.7), rgba(167,229,211,0.4))", borderRadius: 2 }} />
+                  </div>
+                  <span style={{ fontFamily: garamond, fontSize: 16, fontWeight: 300, color: "#a7e5d3", letterSpacing: "-0.1px" }}>67%</span>
                 </div>
-                <span style={{ fontFamily: garamond, fontSize: 16, fontWeight: 300, color: "#a7e5d3", letterSpacing: "-0.1px" }}>67%</span>
+              </div>
+              <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
+                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 5 }}>Est. Valuation Range</div>
+                <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "rgba(245,245,245,0.88)", letterSpacing: "-0.3px" }}>$1.2M – $2.4M</div>
+                <div style={{ fontFamily: inter, fontSize: 10, color: "#10b981", fontWeight: 500, marginTop: 2 }}>3.1× SDE multiple</div>
+              </div>
+              <div style={{ background: "rgba(244,197,168,0.06)", border: "1px solid rgba(244,197,168,0.15)", borderRadius: 12, padding: "13px 14px" }}>
+                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(244,197,168,0.45)", marginBottom: 5 }}>Broker Fee Exposure</div>
+                <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "#f4c5a8", letterSpacing: "-0.3px" }}>$96K – $192K</div>
+                <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(244,197,168,0.45)", fontWeight: 400, marginTop: 2 }}>8–10% of deal value</div>
+              </div>
+              <div style={{ background: "rgba(200,184,224,0.06)", border: "1px solid rgba(200,184,224,0.15)", borderRadius: 12, padding: "13px 14px" }}>
+                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(200,184,224,0.45)", marginBottom: 5 }}>SBA Financeability</div>
+                <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: "rgba(245,245,245,0.65)", lineHeight: 1.4 }}>Likely qualifies for SBA 7(a)</div>
+                <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(200,184,224,0.45)", marginTop: 2 }}>DSCR within lender range</div>
+              </div>
+              <div style={{ background: "rgba(245,245,245,0.03)", border: "1px solid rgba(245,245,245,0.07)", borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 500, color: "rgba(245,245,245,0.3)" }}>90-day roadmap</span>
+                <span style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(245,245,245,0.22)" }}>Locked</span>
               </div>
             </div>
-            <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
-              <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 5 }}>Est. Valuation Range</div>
-              <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "rgba(245,245,245,0.88)", letterSpacing: "-0.3px" }}>$1.2M – $2.4M</div>
-              <div style={{ fontFamily: inter, fontSize: 10, color: "#10b981", fontWeight: 500, marginTop: 2 }}>3.1× SDE multiple</div>
-            </div>
-            <div style={{ background: "rgba(244,197,168,0.06)", border: "1px solid rgba(244,197,168,0.15)", borderRadius: 12, padding: "13px 14px" }}>
-              <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(244,197,168,0.45)", marginBottom: 5 }}>Broker Fee Exposure</div>
-              <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "#f4c5a8", letterSpacing: "-0.3px" }}>$96K – $192K</div>
-              <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(244,197,168,0.45)", fontWeight: 400, marginTop: 2 }}>8–10% of deal value</div>
-            </div>
-            <div style={{ background: "rgba(200,184,224,0.06)", border: "1px solid rgba(200,184,224,0.15)", borderRadius: 12, padding: "13px 14px" }}>
-              <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(200,184,224,0.45)", marginBottom: 5 }}>SBA Financeability</div>
-              <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: "rgba(245,245,245,0.65)", lineHeight: 1.4 }}>Likely qualifies for SBA 7(a)</div>
-              <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(200,184,224,0.45)", marginTop: 2 }}>DSCR within lender range</div>
-            </div>
-            <div style={{ background: "rgba(245,245,245,0.03)", border: "1px solid rgba(245,245,245,0.07)", borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 500, color: "rgba(245,245,245,0.3)" }}>90-day roadmap</span>
-              <span style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(245,245,245,0.22)" }}>Locked</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Click CTA */}
-        <div style={{ borderTop: "1px solid rgba(245,245,245,0.07)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(245,245,245,0.02)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.8)", animation: "liveBlink 2s infinite" }} />
-            <span style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.55)", letterSpacing: "0.1px" }}>
-              Free assessment · No login · No broker call
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 14, fontWeight: 500, color: hovered ? "rgba(167,229,211,0.9)" : "rgba(245,245,245,0.7)", transition: "color 0.2s" }}>
+        <div style={{ borderTop: "1px solid rgba(245,245,245,0.07)", padding: rv(isMobile, "14px 16px", "16px 24px"), display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(245,245,245,0.02)", gap: 12 }}>
+          {!isMobile && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.8)", animation: "liveBlink 2s infinite" }} />
+              <span style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.55)", letterSpacing: "0.1px" }}>
+                Free assessment · No login · No broker call
+              </span>
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 500, color: hovered ? "rgba(167,229,211,0.9)" : "rgba(245,245,245,0.7)", transition: "color 0.2s", marginLeft: isMobile ? "auto" : undefined }}>
             Start your assessment
             <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
               <path d="M3 7h8M7.5 4l3.5 3-3.5 3" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
@@ -430,7 +472,7 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
       </div>
 
       <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, textAlign: "center", marginTop: 16, letterSpacing: "0.1px" }}>
-        Click anywhere on the card to try ExitIQ live
+        {isMobile ? "Tap the card to try ExitIQ live" : "Click anywhere on the card to try ExitIQ live"}
       </p>
     </div>
   )
@@ -438,12 +480,13 @@ function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
 
 // ── Hero Section ──────────────────────────────────────────────────────────────
 function HeroSection({ onStart }: { onStart: () => void }) {
+  const isMobile = useIsMobile()
   return (
-    <section style={{ padding: "88px 48px 64px", textAlign: "center", position: "relative", overflow: "visible" }}>
+    <section style={{ padding: rv(isMobile, "48px 20px 40px", "88px 48px 64px"), textAlign: "center", position: "relative", overflow: "visible" }}>
       <div
         style={{
           position: "absolute", top: "-5%", left: "50%", transform: "translateX(-50%)",
-          width: 900, height: 480,
+          width: rv(isMobile, "100%", 900), height: rv(isMobile, 320, 480),
           background:
             "radial-gradient(ellipse at 30% 35%, rgba(167,229,211,0.32) 0%, transparent 52%)," +
             "radial-gradient(ellipse at 72% 28%, rgba(244,197,168,0.28) 0%, transparent 48%)," +
@@ -455,19 +498,19 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
           <span style={badge()}>AI Exit Intelligence for Main Street Businesses</span>
         </div>
-        <h1 style={{ ...displayStyle(60), maxWidth: 820, margin: "0 auto 24px", lineHeight: 1.04 }}>
+        <h1 style={{ ...displayStyle(rv(isMobile, 36, 60)), maxWidth: rv(isMobile, "100%", 820), margin: "0 auto 24px", lineHeight: rv(isMobile, 1.12, 1.04) }}>
           Know if your business is ready to sell — before buyers find the problems.
         </h1>
-        <p style={{ fontFamily: inter, fontSize: 18, fontWeight: 400, lineHeight: 1.55, letterSpacing: "0.15px", color: C.muted, maxWidth: 620, margin: "0 auto 16px" }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 18), fontWeight: 400, lineHeight: 1.55, letterSpacing: "0.15px", color: C.muted, maxWidth: 620, margin: "0 auto 16px" }}>
           Scorta helps small-business owners understand what their business may be worth, what could reduce its value, and what to fix before going to market.
         </p>
-        <p style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, lineHeight: 1.6, letterSpacing: "0.15px", color: C.mutedSoft, maxWidth: 580, margin: "0 auto 40px" }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, lineHeight: 1.6, letterSpacing: "0.15px", color: C.mutedSoft, maxWidth: 580, margin: "0 auto 40px" }}>
           Take the free ExitIQ assessment to get a valuation range, Exit Readiness Score, SBA financeability view, broker-fee impact, and personalized roadmap showing what buyers, lenders, and advisors would want to see before a deal.
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
+        <div style={{ display: "flex", flexDirection: rv(isMobile, "column", "row"), gap: 12, justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
           <button
             onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: "0 28px", fontSize: 16 }}
+            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
             onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
           >
@@ -475,7 +518,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
           </button>
           <button
             onClick={() => scrollTo("features")}
-            style={{ ...pillOutline, height: 48, padding: "0 27px", fontSize: 16 }}
+            style={{ ...pillOutline, height: 48, padding: rv(isMobile, "0 20px", "0 27px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
           >
             See what Scorta analyzes
           </button>
@@ -491,6 +534,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
 
 // ── Value Cards Strip ─────────────────────────────────────────────────────────
 function ValueCardsStrip() {
+  const isMobile = useIsMobile()
   const cards = [
     {
       orb: C.gradMint,
@@ -519,14 +563,15 @@ function ValueCardsStrip() {
   ]
 
   return (
-    <div style={{ background: C.surfaceCard, borderTop: `1px solid ${C.hairline}`, borderBottom: `1px solid ${C.hairline}`, padding: "52px 48px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1 }}>
+    <div style={{ background: C.surfaceCard, borderTop: `1px solid ${C.hairline}`, borderBottom: `1px solid ${C.hairline}`, padding: rv(isMobile, "36px 20px", "52px 48px") }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "repeat(2, 1fr)", "repeat(4, 1fr)"), gap: rv(isMobile, 0, 1) }}>
         {cards.map(({ orb, title, desc, num }, idx) => (
           <div
             key={title}
             style={{
-              padding: "28px 28px",
-              borderRight: idx < cards.length - 1 ? `1px solid ${C.hairline}` : "none",
+              padding: rv(isMobile, "20px 16px", "28px 28px"),
+              borderRight: !isMobile && idx < cards.length - 1 ? `1px solid ${C.hairline}` : "none",
+              borderBottom: isMobile && idx < cards.length - 2 ? `1px solid ${C.hairline}` : "none",
               position: "relative",
               overflow: "hidden",
             }}
@@ -541,10 +586,10 @@ function ValueCardsStrip() {
             <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", color: C.mutedSoft, marginBottom: 16 }}>
               {num}
             </div>
-            <div style={{ fontFamily: inter, fontSize: 16, fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
+            <div style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
               {title}
             </div>
-            <div style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
+            <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
               {desc}
             </div>
           </div>
@@ -556,6 +601,7 @@ function ValueCardsStrip() {
 
 // ── Problem Section (dark) ────────────────────────────────────────────────────
 function ProblemSection() {
+  const isMobile = useIsMobile()
   const questions = [
     "What is my business actually worth?",
     "Would serious buyers trust my numbers?",
@@ -570,26 +616,26 @@ function ProblemSection() {
   return (
     <section
       id="problem"
-      style={{ background: C.dark, padding: "96px 48px", position: "relative", overflow: "hidden", ...dotGrid() }}
+      style={{ background: C.dark, padding: rv(isMobile, "56px 20px", "96px 48px"), position: "relative", overflow: "hidden", ...dotGrid() }}
     >
       {/* Mint orb */}
       <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 500, height: 500, background: "radial-gradient(ellipse at 50% 50%, rgba(167,229,211,0.1) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: "-10%", left: "5%", width: 400, height: 400, background: "radial-gradient(ellipse at 50% 50%, rgba(200,184,224,0.07) 0%, transparent 60%)", pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
         {/* Left */}
         <div>
           <span style={badge(true)}>The hidden cost of being unprepared</span>
-          <h2 style={{ ...displayStyle(42, true), marginTop: 24, marginBottom: 24, lineHeight: 1.1 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 32, 42), true), marginTop: 24, marginBottom: 24, lineHeight: 1.1 }}>
             Most owners do not know their business is not buyer-ready until it is too late.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
             Selling a small business is not just about finding a buyer. It is about proving that the business is transferable, financeable, and worth the price.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
             Buyers want clean financials, clear operations, low owner dependence, reliable employees, strong margins, stable customers, assignable leases, and a story they can believe.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.onDarkMuted, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDarkMuted, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             Most owners only discover these requirements after the process begins. By then, missing documents, messy books, customer concentration, or owner-dependence risk can lead to delays, lower offers, and failed diligence.
           </p>
         </div>
@@ -622,7 +668,7 @@ function ProblemSection() {
                     marginTop: 6,
                   }}
                 />
-                <span style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.onDark, lineHeight: 1.5, letterSpacing: "0.1px" }}>
+                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.5, letterSpacing: "0.1px" }}>
                   {q}
                 </span>
               </div>
@@ -641,6 +687,7 @@ function ProblemSection() {
 
 // ── What Scorta Gives You ─────────────────────────────────────────────────────
 function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
+  const isMobile = useIsMobile()
   const products = [
     {
       num: "01", orb: C.gradMint,
@@ -675,29 +722,29 @@ function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
   ]
 
   return (
-    <section id="features" style={{ padding: "96px 48px", background: C.canvas }}>
+    <section id="features" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ maxWidth: 700, marginBottom: 64 }}>
+        <div style={{ maxWidth: 700, marginBottom: rv(isMobile, 40, 64) }}>
           <span style={badge()}>What Scorta gives you</span>
-          <h2 style={{ ...displayStyle(44), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 32, 44)), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
             A smarter way to prepare your business for its most important transaction.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 12 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 12 }}>
             Scorta turns fragmented business information into a clear exit-readiness profile. Instead of guessing what your company is worth or waiting for buyers to uncover weaknesses, our AI analyzes the factors that influence valuation, buyer confidence, and deal completion.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             The result is a practical, owner-friendly roadmap showing where your business stands today, what could increase or reduce value, and what to prepare before you ever list, negotiate, or enter diligence.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(3, 1fr)"), gap: 20 }}>
           {products.map(({ num, orb, title, desc }) => (
             <div
               key={title}
               style={{
                 background: C.surfaceCard,
                 borderRadius: 16,
-                padding: "28px 26px 32px",
+                padding: rv(isMobile, "22px 20px 26px", "28px 26px 32px"),
                 border: `1px solid ${C.hairline}`,
                 position: "relative",
                 overflow: "hidden",
@@ -713,10 +760,10 @@ function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
               <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.96px", color: C.mutedSoft, marginBottom: 16 }}>
                 {num}
               </div>
-              <div style={{ fontFamily: inter, fontSize: 17, fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
+              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 17), fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
                 {title}
               </div>
-              <div style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
+              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
                 {desc}
               </div>
             </div>
@@ -726,7 +773,7 @@ function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
         <div style={{ marginTop: 48, textAlign: "center" }}>
           <button
             onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: "0 28px", fontSize: 16 }}
+            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
             onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
           >
@@ -743,6 +790,7 @@ function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
 
 // ── How ExitIQ Works ──────────────────────────────────────────────────────────
 function HowExitIQWorks({ onStart }: { onStart: () => void }) {
+  const isMobile = useIsMobile()
   const steps = [
     {
       num: "01",
@@ -767,26 +815,26 @@ function HowExitIQWorks({ onStart }: { onStart: () => void }) {
   ]
 
   return (
-    <section id="how-it-works" style={{ padding: "96px 48px", background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
+    <section id="how-it-works" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 72 }}>
+        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 40, 72) }}>
           <span style={badge()}>Free AI assessment</span>
-          <h2 style={{ ...displayStyle(44), marginTop: 20, marginBottom: 16, lineHeight: 1.08 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 32, 44)), marginTop: 20, marginBottom: 16, lineHeight: 1.08 }}>
             From business details to exit intelligence in minutes.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, color: C.muted, lineHeight: 1.55, maxWidth: 480, margin: "0 auto" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), color: C.muted, lineHeight: 1.55, maxWidth: 480, margin: "0 auto" }}>
             Built for owners who want clarity before making a life-changing decision.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(2, 1fr)"), gap: 20 }}>
           {steps.map(({ num, title, desc }) => (
             <div
               key={num}
               style={{
                 background: C.surfaceCard,
                 borderRadius: 16,
-                padding: "32px",
+                padding: rv(isMobile, "24px 20px", "32px"),
                 border: `1px solid ${C.hairline}`,
                 display: "flex",
                 flexDirection: "column",
@@ -813,11 +861,11 @@ function HowExitIQWorks({ onStart }: { onStart: () => void }) {
                 >
                   {num}
                 </div>
-                <div style={{ fontFamily: inter, fontSize: 17, fontWeight: 500, color: C.ink, lineHeight: 1.3 }}>
+                <div style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 17), fontWeight: 500, color: C.ink, lineHeight: 1.3 }}>
                   {title}
                 </div>
               </div>
-              <div style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px" }}>
+              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px" }}>
                 {desc}
               </div>
             </div>
@@ -827,7 +875,7 @@ function HowExitIQWorks({ onStart }: { onStart: () => void }) {
         <div style={{ marginTop: 48, textAlign: "center" }}>
           <button
             onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: "0 28px", fontSize: 16 }}
+            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
             onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
           >
@@ -841,6 +889,7 @@ function HowExitIQWorks({ onStart }: { onStart: () => void }) {
 
 // ── What Buyers Care About (dark terminal) ────────────────────────────────────
 function WhatBuyersCareAbout() {
+  const isMobile = useIsMobile()
   const criteria = [
     { label: "Financials", desc: "Are revenue, expenses, profit, and add-backs clear enough to trust?", orb: C.gradMint },
     { label: "Owner Dependence", desc: "Can the business run without the owner being involved in every decision?", orb: C.gradPeach },
@@ -852,20 +901,22 @@ function WhatBuyersCareAbout() {
     { label: "Financing Eligibility", desc: "Would a lender understand and support the acquisition structure?", orb: C.gradLavender },
   ]
 
+  const cols = isMobile ? 2 : 4
+
   return (
     <section
       id="what-buyers-see"
-      style={{ background: C.dark, padding: "96px 48px", position: "relative", overflow: "hidden", ...dotGrid() }}
+      style={{ background: C.dark, padding: rv(isMobile, "56px 20px", "96px 48px"), position: "relative", overflow: "hidden", ...dotGrid() }}
     >
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 800, height: 500, background: "radial-gradient(ellipse at 40% 50%, rgba(168,200,232,0.07) 0%, transparent 55%), radial-gradient(ellipse at 65% 40%, rgba(200,184,224,0.06) 0%, transparent 50%)", pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
+        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 36, 64) }}>
           <span style={badge(true)}>What buyers see</span>
-          <h2 style={{ ...displayStyle(44, true), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 44), true), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
             Buyers are not just buying your revenue. They are buying proof.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6, maxWidth: 600, margin: "0 auto" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6, maxWidth: 600, margin: "0 auto" }}>
             A profitable business can still be difficult to sell if buyers cannot understand the numbers, trust the operations, or see how the company runs without the current owner.
           </p>
         </div>
@@ -875,19 +926,19 @@ function WhatBuyersCareAbout() {
           style={{
             background: "rgba(245,245,245,0.02)",
             border: `1px solid ${C.darkBorder}`,
-            borderRadius: 20,
+            borderRadius: rv(isMobile, 14, 20),
             overflow: "hidden",
           }}
         >
           {/* Terminal header */}
-          <div style={{ padding: "14px 24px", borderBottom: `1px solid ${C.darkBorder}`, display: "flex", alignItems: "center", gap: 10, background: "rgba(245,245,245,0.025)" }}>
+          <div style={{ padding: rv(isMobile, "12px 16px", "14px 24px"), borderBottom: `1px solid ${C.darkBorder}`, display: "flex", alignItems: "center", gap: 10, background: "rgba(245,245,245,0.025)", flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 6 }}>
               {[C.gradRose, C.gradPeach, C.gradMint].map((c, i) => (
                 <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: `${c}60`, border: `1px solid ${c}40` }} />
               ))}
             </div>
-            <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.9px", textTransform: "uppercase", color: C.onDarkMuted, marginLeft: 8 }}>
-              Buyer Due Diligence Scan · 8 evaluation criteria
+            <span style={{ fontFamily: inter, fontSize: rv(isMobile, 10, 11), fontWeight: 600, letterSpacing: "0.9px", textTransform: "uppercase", color: C.onDarkMuted, marginLeft: 8 }}>
+              {isMobile ? "Due Diligence · 8 criteria" : "Buyer Due Diligence Scan · 8 evaluation criteria"}
             </span>
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gradMint, boxShadow: `0 0 6px ${C.gradMint}` }} />
@@ -895,15 +946,17 @@ function WhatBuyersCareAbout() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
             {criteria.map(({ label, desc, orb }, idx) => {
-              const isLastRow = idx >= 4
-              const isLastCol = idx % 4 === 3
+              const totalRows = criteria.length / cols
+              const currentRow = Math.floor(idx / cols)
+              const isLastRow = currentRow === totalRows - 1
+              const isLastCol = idx % cols === cols - 1
               return (
                 <div
                   key={label}
                   style={{
-                    padding: "24px 22px",
+                    padding: rv(isMobile, "18px 14px", "24px 22px"),
                     borderRight: isLastCol ? "none" : `1px solid ${C.darkBorder}`,
                     borderBottom: isLastRow ? "none" : `1px solid ${C.darkBorder}`,
                     position: "relative",
@@ -914,10 +967,10 @@ function WhatBuyersCareAbout() {
                   <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, letterSpacing: "0.7px", textTransform: "uppercase", color: `${orb}80`, marginBottom: 8 }}>
                     {String(idx + 1).padStart(2, "0")}
                   </div>
-                  <div style={{ fontFamily: inter, fontSize: 14, fontWeight: 600, color: C.onDark, marginBottom: 8, lineHeight: 1.3 }}>
+                  <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 600, color: C.onDark, marginBottom: 8, lineHeight: 1.3 }}>
                     {label}
                   </div>
-                  <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6 }}>
+                  <div style={{ fontFamily: inter, fontSize: rv(isMobile, 12, 13), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6 }}>
                     {desc}
                   </div>
                 </div>
@@ -926,7 +979,7 @@ function WhatBuyersCareAbout() {
           </div>
         </div>
 
-        <p style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.onDarkMuted, textAlign: "center", marginTop: 28, lineHeight: 1.6 }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDarkMuted, textAlign: "center", marginTop: 28, lineHeight: 1.6 }}>
           Scorta helps you prepare around every factor that drives buyer confidence — long before the conversation starts.
         </p>
       </div>
@@ -936,19 +989,20 @@ function WhatBuyersCareAbout() {
 
 // ── Cost of Waiting ───────────────────────────────────────────────────────────
 function CostOfWaiting({ onStart }: { onStart: () => void }) {
+  const isMobile = useIsMobile()
   return (
-    <section id="cost-of-waiting" style={{ padding: "96px 48px", background: C.canvas, position: "relative", overflow: "hidden" }}>
+    <section id="cost-of-waiting" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 800, height: 500, background: "radial-gradient(ellipse at 40% 50%, rgba(244,197,168,0.2) 0%, transparent 55%), radial-gradient(ellipse at 65% 40%, rgba(232,184,196,0.18) 0%, transparent 50%)", pointerEvents: "none", filter: "blur(8px)" }} />
 
       <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
         <span style={badge()}>The cost of waiting</span>
-        <h2 style={{ ...displayStyle(48), marginTop: 24, marginBottom: 28, lineHeight: 1.07 }}>
+        <h2 style={{ ...displayStyle(rv(isMobile, 32, 48)), marginTop: 24, marginBottom: 28, lineHeight: 1.07 }}>
           The best time to prepare your business for sale is before you need to sell.
         </h2>
-        <p style={{ fontFamily: inter, fontSize: 17, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
           If you wait until you are ready to exit, your options may already be limited. The issues that hurt valuation are often fixable — but only if you find them early. Messy books, unclear roles, weak documentation, customer concentration, and owner dependence can take months or years to improve.
         </p>
-        <p style={{ fontFamily: inter, fontSize: 17, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 40 }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 40 }}>
           Scorta helps you see those issues now, while you still have time to increase transferability, strengthen buyer confidence, and protect the value you have built.
         </p>
         <div
@@ -956,18 +1010,18 @@ function CostOfWaiting({ onStart }: { onStart: () => void }) {
             background: C.surfaceCard,
             border: `1px solid ${C.hairlineStrong}`,
             borderRadius: 16,
-            padding: "28px 36px",
+            padding: rv(isMobile, "20px 20px", "28px 36px"),
             marginBottom: 44,
             position: "relative",
           }}
         >
-          <p style={{ fontFamily: garamond, fontSize: 26, fontWeight: 300, color: C.ink, lineHeight: 1.2, letterSpacing: "-0.3px", margin: 0 }}>
+          <p style={{ fontFamily: garamond, fontSize: rv(isMobile, 20, 26), fontWeight: 300, color: C.ink, lineHeight: 1.2, letterSpacing: "-0.3px", margin: 0 }}>
             "Do not wait until diligence to learn what your business should have been preparing all along."
           </p>
         </div>
         <button
           onClick={onStart}
-          style={{ ...pillPrimary, height: 48, padding: "0 28px", fontSize: 16 }}
+          style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
           onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
         >
@@ -983,6 +1037,7 @@ function CostOfWaiting({ onStart }: { onStart: () => void }) {
 
 // ── Who It's For ──────────────────────────────────────────────────────────────
 function WhoItsFor() {
+  const isMobile = useIsMobile()
   const profiles = [
     {
       title: "Owners considering retirement",
@@ -1017,36 +1072,36 @@ function WhoItsFor() {
   ]
 
   return (
-    <section id="for-sellers" style={{ padding: "96px 48px", background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
+    <section id="for-sellers" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ maxWidth: 700, marginBottom: 64 }}>
+        <div style={{ maxWidth: 700, marginBottom: rv(isMobile, 36, 64) }}>
           <span style={badge()}>Built for owners with something valuable to protect</span>
-          <h2 style={{ ...displayStyle(44), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 44)), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
             For business owners who want clarity before making a life-changing decision.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             Scorta is designed for owners who are not necessarily ready to sell tomorrow, but know their business may be their largest asset — and want to understand how prepared it really is.
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(3, 1fr)"), gap: 20 }}>
           {profiles.map(({ title, desc, orb }) => (
             <div
               key={title}
               style={{
                 background: C.surfaceCard,
                 borderRadius: 16,
-                padding: "28px 26px",
+                padding: rv(isMobile, "22px 20px", "28px 26px"),
                 border: `1px solid ${C.hairline}`,
                 position: "relative",
                 overflow: "hidden",
               }}
             >
               <div style={{ position: "absolute", top: -20, left: -20, width: 80, height: 80, background: `radial-gradient(circle at 50% 50%, ${orb}40 0%, transparent 65%)`, pointerEvents: "none" }} />
-              <div style={{ fontFamily: inter, fontSize: 16, fontWeight: 600, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
+              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 600, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
                 {title}
               </div>
-              <div style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
+              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
                 {desc}
               </div>
             </div>
@@ -1059,6 +1114,7 @@ function WhoItsFor() {
 
 // ── Broker Leverage Section ───────────────────────────────────────────────────
 function BrokerLeverageSection() {
+  const isMobile = useIsMobile()
   const bullets = [
     "Know what your business may be worth before relying on someone else's opinion.",
     "Understand the risks that could reduce buyer confidence.",
@@ -1068,17 +1124,17 @@ function BrokerLeverageSection() {
   ]
 
   return (
-    <section style={{ padding: "96px 48px", background: C.canvas, borderTop: `1px solid ${C.hairline}` }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, borderTop: `1px solid ${C.hairline}` }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 36, 80), alignItems: "center" }}>
         <div>
           <span style={badge()}>Before you hire anyone</span>
-          <h2 style={{ ...displayStyle(40), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40)), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
             Go into every broker, buyer, lender, or advisor conversation with more leverage.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
             Scorta is not a public listing site or a broker directory. It is the intelligence layer that helps you understand your business before the market does. Whether you eventually work with a broker, sell privately, bring in an advisor, or wait another year, Scorta helps you know where you stand first.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             When you understand your valuation, readiness gaps, financing risks, and buyer concerns upfront, you can make better decisions, avoid unnecessary confusion, and protect more of the outcome.
           </p>
         </div>
@@ -1087,7 +1143,7 @@ function BrokerLeverageSection() {
           style={{
             background: C.surfaceCard,
             borderRadius: 20,
-            padding: "36px",
+            padding: rv(isMobile, "24px 20px", "36px"),
             border: `1px solid ${C.hairline}`,
             position: "relative",
             overflow: "hidden",
@@ -1104,7 +1160,7 @@ function BrokerLeverageSection() {
                   <circle cx={8} cy={8} r={7} stroke={C.hairlineStrong} strokeWidth={1} />
                   <path d="M5 8l2.5 2.5L11 5.5" stroke={C.muted} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
+                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
                   {b}
                 </span>
               </div>
@@ -1118,6 +1174,7 @@ function BrokerLeverageSection() {
 
 // ── Value Proposition ─────────────────────────────────────────────────────────
 function ValuePropositionSection() {
+  const isMobile = useIsMobile()
   const bullets = [
     "Improve buyer confidence before going to market.",
     "Reduce diligence friction by preparing key documents early.",
@@ -1130,20 +1187,20 @@ function ValuePropositionSection() {
   ]
 
   return (
-    <section style={{ padding: "96px 48px", background: C.dark, position: "relative", overflow: "hidden", ...dotGrid() }}>
+    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.dark, position: "relative", overflow: "hidden", ...dotGrid() }}>
       <div style={{ position: "absolute", top: "20%", right: "10%", width: 400, height: 400, background: `radial-gradient(ellipse at 50% 50%, ${C.gradLavender}12 0%, transparent 60%)`, pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: "10%", left: "5%", width: 350, height: 350, background: `radial-gradient(ellipse at 50% 50%, ${C.gradMint}10 0%, transparent 60%)`, pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
         <div>
           <span style={badge(true)}>Why it matters</span>
-          <h2 style={{ ...displayStyle(40, true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40), true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
             Better-prepared businesses can command stronger buyer confidence — and stronger outcomes.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
             Buyers do not only pay for profit. They pay for trust, transferability, clean operations, and confidence that the business can continue performing after the owner exits. When those signals are missing, buyers hesitate, lenders slow down, advisors ask more questions, and valuation pressure increases.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             Scorta helps owners improve the areas that matter most before the business goes to market — giving them a better shot at faster conversations, fewer surprises, and higher-quality offers.
           </p>
         </div>
@@ -1156,7 +1213,7 @@ function ValuePropositionSection() {
             {bullets.map((b, i) => (
               <div key={i} style={{ padding: "13px 0", borderBottom: i < bullets.length - 1 ? `1px solid ${C.darkBorder}` : "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gradLavender, boxShadow: `0 0 5px ${C.gradLavender}80`, flexShrink: 0, marginTop: 6 }} />
-                <span style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
+                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
                   {b}
                 </span>
               </div>
@@ -1170,6 +1227,7 @@ function ValuePropositionSection() {
 
 // ── Platform Vision ───────────────────────────────────────────────────────────
 function PlatformVisionSection() {
+  const isMobile = useIsMobile()
   const vision = [
     "AI-powered business valuation and readiness analysis.",
     "Buyer-ready company profiles and data rooms.",
@@ -1182,19 +1240,19 @@ function PlatformVisionSection() {
   ]
 
   return (
-    <section id="vision" style={{ padding: "96px 48px", background: C.darkElevated, position: "relative", overflow: "hidden", ...dotGrid() }}>
+    <section id="vision" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.darkElevated, position: "relative", overflow: "hidden", ...dotGrid() }}>
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 900, height: 600, background: `radial-gradient(ellipse at 40% 50%, ${C.gradMint}08 0%, transparent 55%), radial-gradient(ellipse at 65% 45%, ${C.gradSky}07 0%, transparent 50%)`, pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
         <div>
           <span style={badge(true)}>The future of Main Street exits</span>
-          <h2 style={{ ...displayStyle(40, true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40), true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
             Scorta is building the operating system for small-business ownership transfer.
           </h2>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
             Small-business exits are still managed through spreadsheets, PDFs, email chains, fragmented advisors, outdated listing sites, and slow manual workflows. Scorta brings intelligence, structure, and automation to the process — starting with exit readiness.
           </p>
-          <p style={{ fontFamily: inter, fontSize: 16, fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
+          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
             Our long-term platform will help owners prepare, package, list, manage buyer intake, coordinate diligence, evaluate financing, and move toward a cleaner transaction from one AI-native command center. ExitIQ is the first step.
           </p>
         </div>
@@ -1209,7 +1267,7 @@ function PlatformVisionSection() {
                 <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.6px", color: C.onDarkMuted, marginTop: 2, flexShrink: 0, minWidth: 24 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
+                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
                   {v}
                 </span>
               </div>
@@ -1224,6 +1282,7 @@ function PlatformVisionSection() {
 // ── FAQ Section ───────────────────────────────────────────────────────────────
 function FAQSection() {
   const [open, setOpen] = React.useState<number | null>(null)
+  const isMobile = useIsMobile()
 
   const faqs = [
     {
@@ -1257,11 +1316,11 @@ function FAQSection() {
   ]
 
   return (
-    <section id="faq" style={{ padding: "96px 48px", background: C.surfaceCard, borderTop: `1px solid ${C.hairline}` }}>
+    <section id="faq" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.surfaceCard, borderTop: `1px solid ${C.hairline}` }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
+        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 36, 64) }}>
           <span style={badge()}>FAQ</span>
-          <h2 style={{ ...displayStyle(40), marginTop: 20, lineHeight: 1.1 }}>
+          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40)), marginTop: 20, lineHeight: 1.1 }}>
             Common questions
           </h2>
         </div>
@@ -1285,7 +1344,7 @@ function FAQSection() {
                   textAlign: "left",
                 }}
               >
-                <span style={{ fontFamily: inter, fontSize: 16, fontWeight: 500, color: C.ink, lineHeight: 1.4, flex: 1 }}>
+                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 500, color: C.ink, lineHeight: 1.4, flex: 1 }}>
                   {q}
                 </span>
                 <div
@@ -1310,7 +1369,7 @@ function FAQSection() {
               </button>
               {open === i && (
                 <div style={{ paddingBottom: 24, animation: "slideUp 0.2s ease" }}>
-                  <p style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", margin: 0 }}>
+                  <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", margin: 0 }}>
                     {a}
                   </p>
                 </div>
@@ -1326,24 +1385,25 @@ function FAQSection() {
 
 // ── Final CTA Section ─────────────────────────────────────────────────────────
 function FinalCTASection({ onStart }: { onStart: () => void }) {
+  const isMobile = useIsMobile()
   return (
-    <section style={{ padding: "96px 48px", background: C.canvas, position: "relative", overflow: "hidden", textAlign: "center" }}>
+    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, position: "relative", overflow: "hidden", textAlign: "center" }}>
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 800, height: 500, background: `radial-gradient(ellipse at 35% 50%, ${C.gradSky}28 0%, transparent 55%), radial-gradient(ellipse at 68% 48%, ${C.gradMint}25 0%, transparent 50%), radial-gradient(ellipse at 52% 70%, ${C.gradPeach}20 0%, transparent 50%)`, pointerEvents: "none", filter: "blur(6px)" }} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto" }}>
-        <h2 style={{ ...displayStyle(48), marginBottom: 24, lineHeight: 1.07 }}>
+        <h2 style={{ ...displayStyle(rv(isMobile, 32, 48)), marginBottom: 24, lineHeight: 1.07 }}>
           Your business may be your biggest asset. Know how ready it is.
         </h2>
-        <p style={{ fontFamily: inter, fontSize: 17, fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px", marginBottom: 12 }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px", marginBottom: 12 }}>
           Take the free ExitIQ assessment and get a clear view of your valuation range, exit readiness, buyer risks, SBA financeability, and next steps.
         </p>
-        <p style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.mutedSoft, marginBottom: 36 }}>
+        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 500, color: C.mutedSoft, marginBottom: 36 }}>
           Valuation. Readiness. Buyer risks. Financing insight. Exit roadmap.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
           <button
             onClick={onStart}
-            style={{ ...pillPrimary, height: 52, padding: "0 32px", fontSize: 17 }}
+            style={{ ...pillPrimary, height: rv(isMobile, 48, 52), padding: rv(isMobile, "0 20px", "0 32px"), fontSize: rv(isMobile, 16, 17), width: isMobile ? "100%" : "auto", justifyContent: "center" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
             onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
           >
@@ -1360,6 +1420,7 @@ function FinalCTASection({ onStart }: { onStart: () => void }) {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 function FooterSection() {
+  const isMobile = useIsMobile()
   const cols = [
     { heading: "Platform", links: ["ExitIQ Assessment", "Valuation Range", "Exit Readiness Score", "SBA Financeability", "Document Checklist"] },
     { heading: "Company", links: ["About Scorta", "How it works", "For sellers", "Platform vision"] },
@@ -1367,9 +1428,9 @@ function FooterSection() {
   ]
 
   return (
-    <footer style={{ background: C.canvas, borderTop: `1px solid ${C.hairline}`, padding: "64px 48px 40px" }}>
+    <footer style={{ background: C.canvas, borderTop: `1px solid ${C.hairline}`, padding: rv(isMobile, "40px 20px 32px", "64px 48px 40px") }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 56 }}>
+        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "2fr 1fr 1fr 1fr"), gap: rv(isMobile, 32, 48), marginBottom: rv(isMobile, 36, 56) }}>
           <div>
             <div style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", marginBottom: 14 }}>
               Scorta
@@ -1399,7 +1460,7 @@ function FooterSection() {
             </div>
           ))}
         </div>
-        <div style={{ borderTop: `1px solid ${C.hairline}`, paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ borderTop: `1px solid ${C.hairline}`, paddingTop: 24, display: "flex", flexDirection: rv(isMobile, "column", "row"), justifyContent: "space-between", alignItems: rv(isMobile, "flex-start", "center"), gap: rv(isMobile, 8, 0) }}>
           <span style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>
             © 2025 Scorta. For informational purposes only. Not financial advice.
           </span>
