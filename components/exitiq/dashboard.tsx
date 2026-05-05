@@ -5,6 +5,7 @@ import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
 import { BUYER_CARDS } from "@/lib/exitiq/data"
 import { ConfidenceMeter, Divider, LiveBadge, useSpring } from "./ui"
+//hello
 
 // ── Odometer number ───────────────────────────────────────────────────────────
 function OdometerNum({
