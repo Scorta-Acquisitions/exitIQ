@@ -486,7 +486,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
       <div
         style={{
           position: "absolute", top: "-5%", left: "50%", transform: "translateX(-50%)",
-          width: rv(isMobile, "100%", 900), height: rv(isMobile, 320, 480),
+          width: rv<string | number>(isMobile, "100%", 900), height: rv(isMobile, 320, 480),
           background:
             "radial-gradient(ellipse at 30% 35%, rgba(167,229,211,0.32) 0%, transparent 52%)," +
             "radial-gradient(ellipse at 72% 28%, rgba(244,197,168,0.28) 0%, transparent 48%)," +
@@ -498,7 +498,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
           <span style={badge()}>AI Exit Intelligence for Main Street Businesses</span>
         </div>
-        <h1 style={{ ...displayStyle(rv(isMobile, 36, 60)), maxWidth: rv(isMobile, "100%", 820), margin: "0 auto 24px", lineHeight: rv(isMobile, 1.12, 1.04) }}>
+        <h1 style={{ ...displayStyle(rv(isMobile, 36, 60)), maxWidth: rv<string | number>(isMobile, "100%", 820), margin: "0 auto 24px", lineHeight: rv(isMobile, 1.12, 1.04) }}>
           Know if your business is ready to sell — before buyers find the problems.
         </h1>
         <p style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 18), fontWeight: 400, lineHeight: 1.55, letterSpacing: "0.15px", color: C.muted, maxWidth: 620, margin: "0 auto 16px" }}>
