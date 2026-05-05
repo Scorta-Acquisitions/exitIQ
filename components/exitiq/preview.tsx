@@ -1017,24 +1017,18 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
           >
             Est. valuation range
           </div>
-          {valuationRange ? (
-            <div
-              style={{
-                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                fontSize: 17,
-                fontWeight: 300,
-                color: "var(--t1)",
-                letterSpacing: "-.15px",
-                animation: "numRoll .7s ease",
-              }}
-            >
-              {valuationRange.text}
-            </div>
-          ) : (
-            <div style={{ fontSize: 13, color: "var(--t5)", fontFamily: "Inter, sans-serif" }}>
-              Add revenue + SDE to unlock
-            </div>
-          )}
+          <div
+            style={{
+              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+              fontSize: 17,
+              fontWeight: 300,
+              color: "var(--t1)",
+              letterSpacing: "-.15px",
+              animation: "numRoll .7s ease",
+            }}
+          >
+            $900K – $1.6M
+          </div>
           {derived.multiple && (
             <div
               style={{

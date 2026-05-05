@@ -2,6 +2,7 @@
 "use client"
 
 import React from "react"
+import Link from "next/link"
 import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -241,6 +242,9 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
             {label}
           </button>
         ))}
+        <Link href="/about" style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, textDecoration: "none" }}>
+          About
+        </Link>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <button style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</button>
@@ -1380,11 +1384,17 @@ function FooterSection() {
                 {heading}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {links.map((l) => (
-                  <span key={l} style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, cursor: "pointer", lineHeight: 1.5 }}>
-                    {l}
-                  </span>
-                ))}
+                {links.map((l) =>
+                  l === "About Scorta" ? (
+                    <Link key={l} href="/about" style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.5, textDecoration: "none" }}>
+                      {l}
+                    </Link>
+                  ) : (
+                    <span key={l} style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, cursor: "pointer", lineHeight: 1.5 }}>
+                      {l}
+                    </span>
+                  )
+                )}
               </div>
             </div>
           ))}
