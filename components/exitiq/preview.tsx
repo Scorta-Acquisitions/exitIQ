@@ -856,6 +856,191 @@ function SectionDivider({ label }: { label: string }) {
   )
 }
 
+// ── Unlock CTA ────────────────────────────────────────────────────────────────
+function UnlockCTA({ onUnlock, label = "Unlock my full ExitIQ report — free →", subtext = "Takes 30 seconds. No broker call required." }: { onUnlock: () => void; label?: string; subtext?: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <button
+        onClick={onUnlock}
+        style={{
+          height: 50,
+          borderRadius: 9999,
+          position: "relative",
+          overflow: "hidden",
+          background: "var(--btn-bg)",
+          color: "var(--btn-fg)",
+          fontSize: 15,
+          fontWeight: 500,
+          border: "none",
+          cursor: "pointer",
+          fontFamily: "Inter, sans-serif",
+          letterSpacing: "-.1px",
+          transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
+          boxShadow: "0 0 40px rgba(0,0,0,.12)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.025)"
+          e.currentTarget.style.boxShadow = "0 0 55px rgba(0,0,0,.18)"
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)"
+          e.currentTarget.style.boxShadow = "0 0 40px rgba(0,0,0,.12)"
+        }}
+      >
+        {label}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(105deg,transparent 35%,rgba(255,255,255,.15) 50%,transparent 65%)",
+            animation: "shimmer 2.8s ease-in-out infinite",
+            pointerEvents: "none",
+          }}
+        />
+      </button>
+      <div style={{ textAlign: "center", fontSize: 12, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
+        {subtext}
+      </div>
+    </div>
+  )
+}
+
+// ── Bottom Unlock CTA — editorial close, visually distinct from top pill ──────
+function BottomUnlockCTA({ onUnlock, label = "Unlock my full report →" }: { onUnlock: () => void; label?: string }) {
+  const unlocks = [
+    "Buyer objection map — addressed before your first call",
+    "90-day exit prep plan — specific to this profile",
+    "SBA financing snapshot — know who can actually buy",
+  ]
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(167,229,211,.18)",
+        borderRadius: 16,
+        padding: "22px 22px 18px",
+        background: "rgba(16,185,129,.04)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(135deg,transparent 25%,rgba(167,229,211,.04) 50%,transparent 75%)",
+          animation: "shimmer 4s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div>
+        <h3
+          style={{
+            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+            fontSize: 21,
+            fontWeight: 300,
+            color: "var(--t1)",
+            letterSpacing: "-.25px",
+            lineHeight: 1.22,
+            margin: "0 0 6px",
+          }}
+        >
+          Buyers will see all of this before you see their offer.
+        </h3>
+        <p
+          style={{
+            fontSize: 12.5,
+            color: "var(--t3)",
+            lineHeight: 1.62,
+            fontFamily: "Inter, sans-serif",
+            margin: 0,
+          }}
+        >
+          Every gap in your full report is a negotiating lever against you. See it first.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {unlocks.map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <div
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: "#10b981",
+                flexShrink: 0,
+                opacity: 0.75,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11.5,
+                color: "var(--t3)",
+                fontFamily: "Inter, sans-serif",
+                lineHeight: 1.45,
+              }}
+            >
+              {item}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <button
+          onClick={onUnlock}
+          style={{
+            flex: 1,
+            height: 44,
+            borderRadius: 9999,
+            position: "relative",
+            overflow: "hidden",
+            background: "transparent",
+            color: "#a7e5d3",
+            fontSize: 13.5,
+            fontWeight: 500,
+            border: "1px solid rgba(167,229,211,.38)",
+            cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
+            letterSpacing: "-.05px",
+            transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(167,229,211,.08)"
+            e.currentTarget.style.borderColor = "rgba(167,229,211,.6)"
+            e.currentTarget.style.boxShadow = "0 0 22px rgba(167,229,211,.1)"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent"
+            e.currentTarget.style.borderColor = "rgba(167,229,211,.38)"
+            e.currentTarget.style.boxShadow = "none"
+          }}
+        >
+          {label}
+        </button>
+        <div
+          style={{
+            fontSize: 10.5,
+            color: "var(--t4)",
+            fontFamily: "Inter, sans-serif",
+            lineHeight: 1.55,
+            flexShrink: 0,
+            textAlign: "right",
+          }}
+        >
+          Free.
+          <br />
+          30 seconds.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── GateTeaserCard — shown at step 10 BEFORE email submission ────────────────
 interface GateTeaserCardProps {
   derived: Derived
@@ -993,6 +1178,8 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
           unlock your full diagnostic below.
         </p>
       </div>
+
+      <UnlockCTA onUnlock={onUnlock} />
 
       {/* Key metrics grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -1232,57 +1419,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
         Most owners only learn these issues after talking to buyers. ExitIQ surfaces them before you list.
       </div>
 
-      {/* CTA */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <button
-          onClick={onUnlock}
-          style={{
-            height: 50,
-            borderRadius: 9999,
-            position: "relative",
-            overflow: "hidden",
-            background: "var(--btn-bg)",
-            color: "var(--btn-fg)",
-            fontSize: 15,
-            fontWeight: 500,
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "Inter, sans-serif",
-            letterSpacing: "-.1px",
-            transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
-            boxShadow: "0 0 40px rgba(0,0,0,.12)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.025)"
-            e.currentTarget.style.boxShadow = "0 0 55px rgba(0,0,0,.18)"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)"
-            e.currentTarget.style.boxShadow = "0 0 40px rgba(0,0,0,.12)"
-          }}
-        >
-          Unlock my full ExitIQ report — free →
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(105deg,transparent 35%,rgba(255,255,255,.15) 50%,transparent 65%)",
-              animation: "shimmer 2.8s ease-in-out infinite",
-              pointerEvents: "none",
-            }}
-          />
-        </button>
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: 12,
-            color: "var(--t4)",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Takes 30 seconds. No broker call required.
-        </div>
-      </div>
+      <BottomUnlockCTA onUnlock={onUnlock} label="Unlock my full report →" />
     </div>
   )
 }
@@ -1426,6 +1563,8 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
           unlocks 4 proprietary scores, a buyer objection map, and your 90-day exit prep plan.
         </p>
       </div>
+
+      <UnlockCTA onUnlock={onUnlock} label="Get my full report — free →" subtext="No broker call. No sales pitch. Straight signal." />
 
       <SectionDivider label="Valuation signal" />
 
@@ -1781,57 +1920,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
       <UnlockList />
 
       {/* ── SECTION 7: CTA ───────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <button
-          onClick={onUnlock}
-          style={{
-            height: 52,
-            borderRadius: 9999,
-            position: "relative",
-            overflow: "hidden",
-            background: "var(--btn-bg)",
-            color: "var(--btn-fg)",
-            fontSize: 15,
-            fontWeight: 500,
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "Inter, sans-serif",
-            letterSpacing: "-.1px",
-            transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
-            boxShadow: "0 0 40px rgba(0,0,0,.12)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.025)"
-            e.currentTarget.style.boxShadow = "0 0 55px rgba(0,0,0,.18)"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)"
-            e.currentTarget.style.boxShadow = "0 0 40px rgba(0,0,0,.12)"
-          }}
-        >
-          Get my full report — free →
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(105deg,transparent 35%,rgba(255,255,255,.15) 50%,transparent 65%)",
-              animation: "shimmer 2.8s ease-in-out infinite",
-              pointerEvents: "none",
-            }}
-          />
-        </button>
-        <div
-          style={{
-            textAlign: "center",
-            fontSize: 12,
-            color: "var(--t4)",
-            fontFamily: "Inter, sans-serif",
-            lineHeight: 1.5,
-          }}
-        >
-          No broker call. No sales pitch. Straight signal.
-        </div>
-      </div>
+      <BottomUnlockCTA onUnlock={onUnlock} label="Get my full report →" />
     </div>
   )
 }
