@@ -67,6 +67,15 @@ const pillPrimary: React.CSSProperties = {
   textDecoration: "none",
 }
 
+// Liquid glass — cream-theme values from tailwind.css, inlined for this light-mode page
+const glassLight: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  backdropFilter: "blur(24px) saturate(160%)",
+  WebkitBackdropFilter: "blur(24px) saturate(160%)",
+  border: "1px solid rgba(255,255,255,0.90)",
+  boxShadow: "0 8px 32px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,.03)",
+}
+
 // ── ExitIQ Overlay ────────────────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   return (
@@ -197,8 +206,7 @@ function FounderCard({
   return (
     <div
       style={{
-        background: C.surfaceCard,
-        border: `1px solid ${C.hairline}`,
+        ...glassLight,
         borderRadius: 20,
         padding: "40px 40px 36px",
         display: "flex",
@@ -274,10 +282,11 @@ function LinkedInIcon() {
 function StatBadge({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ textAlign: "center" }}>
+      <div style={{ width: 24, height: 2, background: C.gradMint, margin: "0 auto 18px", borderRadius: 1 }} />
       <div style={{ fontFamily: garamond, fontSize: 44, fontWeight: 300, color: C.ink, letterSpacing: "-1.2px", lineHeight: 1 }}>
         {value}
       </div>
-      <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: C.muted, marginTop: 6, letterSpacing: "0.2px" }}>
+      <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: C.muted, marginTop: 8, letterSpacing: "0.2px", lineHeight: 1.5 }}>
         {label}
       </div>
     </div>
@@ -290,37 +299,47 @@ function HeroSection() {
     <section
       style={{
         padding: "96px 48px 80px",
-        background: C.canvas,
+        background: C.surfaceCard,
         position: "relative",
         overflow: "hidden",
         textAlign: "center",
       }}
     >
-      {/* Ambient gradient orbs */}
+      {/* Ambient gradient orbs — larger and more vivid so colour bleeds through the glass panel */}
       <div
         style={{
           position: "absolute",
-          top: "30%",
+          top: "38%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 900,
-          height: 500,
+          width: 1200,
+          height: 700,
           background:
-            `radial-gradient(ellipse at 30% 50%, ${C.gradMint}30 0%, transparent 55%),` +
-            `radial-gradient(ellipse at 72% 48%, ${C.gradLavender}28 0%, transparent 50%),` +
-            `radial-gradient(ellipse at 52% 75%, ${C.gradPeach}20 0%, transparent 50%)`,
+            `radial-gradient(ellipse at 28% 50%, ${C.gradMint}70 0%, transparent 52%),` +
+            `radial-gradient(ellipse at 74% 46%, ${C.gradLavender}66 0%, transparent 48%),` +
+            `radial-gradient(ellipse at 50% 80%, ${C.gradPeach}55 0%, transparent 50%)`,
           pointerEvents: "none",
-          filter: "blur(8px)",
+          filter: "blur(6px)",
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto" }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 760,
+          margin: "0 auto",
+          ...glassLight,
+          borderRadius: 28,
+          padding: "52px 64px 56px",
+        }}
+      >
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
             padding: "4px 10px",
-            background: C.surfaceStrong,
+            background: "rgba(255,255,255,0.60)",
             borderRadius: 9999,
             fontFamily: inter,
             fontSize: 12,
@@ -335,9 +354,9 @@ function HeroSection() {
         </div>
 
         <h1 style={{ ...displayStyle(60), lineHeight: 1.04, marginBottom: 24 }}>
-          Built for the deals
+          Your business,
           <br />
-          brokers won't touch.
+          made acquisition-ready.
         </h1>
 
         <p
@@ -348,11 +367,11 @@ function HeroSection() {
             color: C.body,
             lineHeight: 1.68,
             letterSpacing: "0.1px",
-            maxWidth: 580,
+            maxWidth: 560,
             margin: "0 auto",
           }}
         >
-          We're Scorta — an AI-native brokerage making Main Street businesses sellable. Two founders who watched the system fail sellers, and decided to rebuild it.
+          We go further than any broker — AI-powered exit prep, deal packaging, and SBA-ready financials that turn your business into an asset buyers compete for. Flat fee. No commission.
         </p>
       </div>
     </section>
@@ -426,7 +445,7 @@ function OriginSection() {
                 fontFamily: inter,
                 fontSize: 16,
                 fontWeight: 400,
-                color: i === 0 ? C.onDarkBody : "rgba(245,245,245,0.42)",
+                color: i === 0 ? C.onDark : "rgba(245,245,245,0.60)",
                 lineHeight: 1.75,
                 letterSpacing: "0.1px",
                 margin: 0,
@@ -468,8 +487,24 @@ function FoundersSection() {
   ]
 
   return (
-    <section style={{ padding: "96px 48px", background: C.canvas }}>
-      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+    <section style={{ padding: "96px 48px", background: C.surfaceCard, position: "relative", overflow: "hidden" }}>
+      {/* Subtle orbs give the glass cards something to blur against */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 1100,
+          height: 650,
+          background:
+            `radial-gradient(ellipse at 18% 42%, ${C.gradLavender}30 0%, transparent 50%),` +
+            `radial-gradient(ellipse at 82% 58%, ${C.gradSky}26 0%, transparent 50%)`,
+          pointerEvents: "none",
+          filter: "blur(12px)",
+        }}
+      />
+      <div style={{ maxWidth: 1040, margin: "0 auto", position: "relative", zIndex: 1 }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <div
             style={{
@@ -489,7 +524,7 @@ function FoundersSection() {
           >
             The team
           </div>
-          <h2 style={{ ...displayStyle(44), lineHeight: 1.1 }}>Two people, one obsession.</h2>
+          <h2 style={{ ...displayStyle(44), lineHeight: 1.1 }}>Two operators, one conviction.</h2>
         </div>
 
         <div
@@ -514,12 +549,31 @@ function TractionSection() {
     <section
       style={{
         padding: "80px 48px",
-        background: C.surfaceStrong,
+        background: C.surfaceCard,
         borderTop: `1px solid ${C.hairline}`,
         borderBottom: `1px solid ${C.hairline}`,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+      {/* Ambient gradient — mirrors HeroSection treatment */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 900,
+          height: 500,
+          background:
+            `radial-gradient(ellipse at 28% 52%, ${C.gradMint}28 0%, transparent 55%),` +
+            `radial-gradient(ellipse at 74% 48%, ${C.gradPeach}22 0%, transparent 50%)`,
+          pointerEvents: "none",
+          filter: "blur(10px)",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
         <div
           style={{
             fontFamily: inter,
@@ -528,24 +582,26 @@ function TractionSection() {
             letterSpacing: "0.96px",
             textTransform: "uppercase",
             color: C.mutedSoft,
-            marginBottom: 48,
+            marginBottom: 52,
           }}
         >
-          Early traction
+          Traction
         </div>
 
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 40,
-            marginBottom: 48,
+            ...glassLight,
+            borderRadius: 24,
+            padding: "40px 48px",
+            marginBottom: 52,
           }}
         >
-          <StatBadge value="3" label="Paying customers" />
-          <StatBadge value="$11K" label="Revenue collected" />
-          <StatBadge value="167%" label="MoM revenue growth" />
-          <StatBadge value="100%" label="Inbound — zero ads" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40 }}>
+            <StatBadge value="50+" label="Exit assessments completed" />
+            <StatBadge value="3+" label="Businesses in active exit process" />
+            <StatBadge value="3 yrs" label="Buy-side M&A deal experience" />
+            <StatBadge value="100%" label="Referral & inbound only" />
+          </div>
         </div>
 
         <p
@@ -554,12 +610,12 @@ function TractionSection() {
             fontSize: 15,
             fontWeight: 400,
             color: C.body,
-            lineHeight: 1.7,
+            lineHeight: 1.75,
             maxWidth: 560,
             margin: "0 auto",
           }}
         >
-          Every customer found us because they Googled "how do I sell my business" and didn't want to give up 10%. That's the market we're building for.
+          Our sellers find us at their most uncertain moment — not knowing what their business is worth, who would buy it, or whether their financials will hold up in diligence. ExitIQ gives them the clarity to move forward with confidence.
         </p>
       </div>
     </section>
@@ -586,14 +642,14 @@ function MissionSection() {
           width: 800,
           height: 500,
           background:
-            `radial-gradient(ellipse at 35% 50%, ${C.gradSky}28 0%, transparent 55%),` +
-            `radial-gradient(ellipse at 68% 48%, ${C.gradMint}25 0%, transparent 50%)`,
+            `radial-gradient(ellipse at 32% 50%, ${C.gradSky}50 0%, transparent 55%),` +
+            `radial-gradient(ellipse at 70% 48%, ${C.gradMint}46 0%, transparent 50%)`,
           pointerEvents: "none",
-          filter: "blur(6px)",
+          filter: "blur(8px)",
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", textAlign: "center", ...glassLight, borderRadius: 28, padding: "60px 64px 56px" }}>
         <h2 style={{ ...displayStyle(48), lineHeight: 1.07, marginBottom: 24 }}>
           Making every Main Street
           <br />
