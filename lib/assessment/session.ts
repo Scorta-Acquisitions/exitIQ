@@ -50,6 +50,7 @@ export interface AssessmentSession {
   stage3?: Partial<Stage3Answers>
   stage4?: Partial<Stage4Answers>
   completedAt?: number
+  partial?: { answers: Record<string, string>; step: number }
 }
 
 export const SESSION_KEY = "scorta-session-v2"
@@ -99,5 +100,22 @@ export function clearSession(): void {
   if (typeof window === "undefined") return
   try {
     localStorage.removeItem(SESSION_KEY)
+  } catch {}
+}
+
+export function savePartialProgress(answers: Record<string, string>, step: number): void {
+  saveSession({ partial: { answers, step } })
+}
+
+export function loadPartialProgress(): { answers: Record<string, string>; step: number } | null {
+  return loadSession().partial ?? null
+}
+
+export function clearPartialProgress(): void {
+  const existing = loadSession()
+  delete (existing as Partial<AssessmentSession>).partial
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(existing))
   } catch {}
 }

@@ -5,7 +5,13 @@ import React from "react"
 import { persistSession, requestGenerate, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
 import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
-import { generateSessionId, loadSession } from "@/lib/assessment/session"
+import {
+  clearPartialProgress,
+  generateSessionId,
+  loadPartialProgress,
+  loadSession,
+  savePartialProgress,
+} from "@/lib/assessment/session"
 import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
 import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
@@ -14,7 +20,7 @@ import { DashboardPanel } from "./dashboard"
 import { EmailGateModal, GateTeaserCard, PreviewCard } from "./preview"
 import { QuestionPanel } from "./questions"
 import { FullReportCard, ReportGeneratingCard } from "./report"
-import { AIInsight, Ripple, SignalOrb } from "./ui"
+import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
@@ -24,6 +30,142 @@ const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
   "2 – 5 years": 3,
   "5 – 10 years": 7,
   "10+ years": 15,
+}
+
+function ExitConfirmDialog({ onStay, onExit }: { onStay: () => void; onExit: () => void }) {
+  const stayRef = React.useRef<HTMLButtonElement>(null)
+
+  React.useEffect(() => {
+    stayRef.current?.focus()
+  }, [])
+
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onStay() }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [onStay])
+
+  return (
+    <div
+      onClick={onStay}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 210,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exit-dialog-title"
+        style={{
+          maxWidth: 440,
+          width: "calc(100% - 48px)",
+          padding: "32px 32px 28px",
+          borderRadius: 16,
+          animation: "slideUp 0.22s ease",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <ScanLine />
+        <div style={{ marginBottom: 16 }}>
+          <svg width={28} height={28} viewBox="0 0 28 28" fill="none">
+            <path
+              d="M14 3L2.5 24h23L14 3z"
+              stroke="rgba(251,191,36,.7)"
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              fill="rgba(251,191,36,.08)"
+            />
+            <line x1="14" y1="10.5" x2="14" y2="17.5" stroke="rgba(251,191,36,.8)" strokeWidth={1.5} strokeLinecap="round" />
+            <circle cx="14" cy="21" r="1.2" fill="rgba(251,191,36,.8)" />
+          </svg>
+        </div>
+        <h2
+          id="exit-dialog-title"
+          style={{
+            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+            fontSize: 26,
+            fontWeight: 400,
+            color: "var(--t1)",
+            margin: "0 0 10px",
+            letterSpacing: "-0.5px",
+          }}
+        >
+          Leave assessment?
+        </h2>
+        <p
+          style={{
+            fontSize: 14,
+            color: "var(--t3)",
+            lineHeight: 1.65,
+            fontFamily: "Inter, sans-serif",
+            margin: "0 0 28px",
+          }}
+        >
+          Your progress has been saved. You can return anytime to continue where you left off.
+        </p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button
+            ref={stayRef}
+            onClick={onStay}
+            style={{
+              height: 38,
+              padding: "0 20px",
+              background: "var(--s1)",
+              color: "var(--t2)",
+              fontSize: 13,
+              fontWeight: 500,
+              borderRadius: 9999,
+              border: "1px solid var(--b2)",
+              cursor: "pointer",
+              fontFamily: "Inter, sans-serif",
+              transition: "all .15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t2)")}
+          >
+            Stay
+          </button>
+          <button
+            onClick={onExit}
+            style={{
+              height: 38,
+              padding: "0 20px",
+              background: "rgba(239,68,68,.1)",
+              color: "rgba(252,165,165,.9)",
+              fontSize: 13,
+              fontWeight: 500,
+              borderRadius: 9999,
+              border: "1px solid rgba(239,68,68,.3)",
+              cursor: "pointer",
+              fontFamily: "Inter, sans-serif",
+              transition: "all .15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(239,68,68,.18)"
+              e.currentTarget.style.color = "rgba(252,165,165,1)"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(239,68,68,.1)"
+              e.currentTarget.style.color = "rgba(252,165,165,.9)"
+            }}
+          >
+            Exit
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
@@ -41,6 +183,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [reportMd, setReportMd] = React.useState("")
   const [reportStreaming, setReportStreaming] = React.useState(false)
   const [gateFirstName, setGateFirstName] = React.useState("")
+  const [showExitConfirm, setShowExitConfirm] = React.useState(false)
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
@@ -48,7 +191,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const derived = React.useMemo(() => calcDerived(answers), [answers])
   const stepCount = step < 10 ? step : 10
 
-  // ── WebGL init ───────────────────────────────────────────────────────────────
+  // ── WebGL init ────────────────────────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!canvasRef.current) return
     const gl = setupWebGL(canvasRef.current)
@@ -57,13 +200,23 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     return gl.cleanup
   }, [])
 
-  // ── Confidence → WebGL uniform ───────────────────────────────────────────────
+  // ── Confidence → WebGL uniform ─────────────────────────────────────────────────────────────────────────
   React.useEffect(() => {
     glRef.current?.setConf(derived.confidence / 100)
   }, [derived.confidence])
 
+  // ── Restore partial progress from a previous mid-assessment exit ───────────────────────────
+  React.useEffect(() => {
+    const partial = loadPartialProgress()
+    const session = loadSession()
+    if (partial && !session.completedAt && partial.step > 0) {
+      setAnswers(partial.answers)
+      setStep(partial.step)
+    }
+  }, [])
 
-  // ── Answer handler ───────────────────────────────────────────────────────────
+
+  // ── Answer handler ────────────────────────────────────────────────────────────────────────────
   const handleAnswer = React.useCallback(
     (value: string, e: React.MouseEvent) => {
       if (transitioning) return
@@ -121,15 +274,28 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     glRef.current?.setConf(0)
   }, [])
 
-  // ── Escape key closes the form ───────────────────────────────────────────────
+  const handleCloseRequest = React.useCallback(() => {
+    if (submitted) {
+      onClose?.()
+      return
+    }
+    savePartialProgress(answers, step)
+    setShowExitConfirm(true)
+  }, [submitted, answers, step, onClose])
+
+  // ── Escape key: context-aware dismiss ───────────────────────────────────────────────────────────
   React.useEffect(() => {
-    if (!onClose) return
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (showExitConfirm) return // ExitConfirmDialog handles its own Escape
+      if (showModal) { setShowModal(false); return }
+      handleCloseRequest()
+    }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [onClose])
+  }, [showExitConfirm, showModal, handleCloseRequest])
 
-  // ── Back navigation ──────────────────────────────────────────────────────────
+  // ── Back navigation ──────────────────────────────────────────────────────────────────────────
   const handleBack = React.useCallback(() => {
     if (submitted) {
       setSubmitted(false)
@@ -158,6 +324,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     setGateFirstName(data.firstName)
     setShowModal(false)
     setSubmitted(true)
+    clearPartialProgress()
 
     void persistSession({
       sessionId: sid,
@@ -258,6 +425,14 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         {/* Email modal */}
         {showModal && <EmailGateModal derived={derived} onClose={() => setShowModal(false)} onSubmit={handleSubmit} />}
 
+        {/* Exit confirmation dialog */}
+        {showExitConfirm && (
+          <ExitConfirmDialog
+            onStay={() => setShowExitConfirm(false)}
+            onExit={() => { setShowExitConfirm(false); onClose?.() }}
+          />
+        )}
+
         {/* ── Nav ── */}
         <nav
           className="glass"
@@ -311,7 +486,32 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           >
             ExitIQ Liquid Engine
           </div>
-          <div />
+          <div style={{ justifySelf: "end" }}>
+            <button
+              onClick={handleCloseRequest}
+              aria-label="Close assessment"
+              style={{
+                width: 32,
+                height: 32,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "var(--s1)",
+                color: "var(--t3)",
+                borderRadius: 9999,
+                border: "1px solid var(--b2)",
+                cursor: "pointer",
+                transition: "all .15s",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
+            >
+              <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
+                <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
         </nav>
 
         {/* ── Hero layout (2 columns) ── */}
@@ -449,6 +649,5 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     </div>
   )
 }
-
 
 
