@@ -310,9 +310,10 @@ function SignalsZone({ derived }: { derived: Derived }) {
 // ── Zone 3: Still needed ──────────────────────────────────────────────────────
 function StillNeededZone({ step }: { step: number }) {
   const needs: { label: string; desc: string }[] = []
-  if (step < 4) needs.push({ label: "Owner dependency", desc: "Buyers will discount for this" })
-  if (step < 3) needs.push({ label: "Customer concentration", desc: "Key risk for buyer confidence" })
-  if (step < 5) needs.push({ label: "Financial documentation", desc: "Required for SBA financing" })
+  if (step < 2) needs.push({ label: "Owner dependency", desc: "Buyers will discount for this" })
+  if (step < 6) needs.push({ label: "Customer concentration", desc: "Key risk for buyer confidence" })
+  if (step < 4) needs.push({ label: "Financial documentation", desc: "Required for SBA financing" })
+  if (step < 9) needs.push({ label: "Recurring revenue profile", desc: "Directly impacts your multiple" })
   needs.push({ label: "Legal / lease risk", desc: "Locked in full report" })
 
   if (needs.length === 0) return null
@@ -363,7 +364,7 @@ function StillNeededZone({ step }: { step: number }) {
           </div>
         ))}
       </div>
-      {step < 6 && (
+      {step < 10 && (
         <div
           style={{
             background: "rgba(16,185,129,.05)",

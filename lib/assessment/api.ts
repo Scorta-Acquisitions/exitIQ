@@ -44,9 +44,23 @@ export async function persistSession(patch: SessionPatch): Promise<void> {
 export type TeaserResult = {
   headline: string
   valuationRange: string
+  multipleContext: string
+  buyerPoolPrimary: string
+  strength1Title: string
+  strength1Desc: string
+  strength2Title: string
+  strength2Desc: string
+  risk1Title: string
+  risk1Desc: string
+  risk2Title: string
+  risk2Desc: string
+  revenueTrendSignal: "Bullish" | "Positive" | "Neutral" | "Softening" | "Bearish"
+  teamSignal: "Scales without owner" | "Manageable depth" | "Transition risk" | "Key-man risk"
+  recurringSignal: "Strong" | "Moderate-strong" | "Moderate" | "Low"
+  brokerFeeNarrative: string
   topStrength: string
   topRisk: string
-  leadQuality: "hot_seller" | "warm_explorer" | "nurture" | "burned_by_broker"
+  segmentTag: "hot_seller" | "warm_explorer" | "nurture" | "burned_by_broker"
 }
 
 export type ReportResult = {

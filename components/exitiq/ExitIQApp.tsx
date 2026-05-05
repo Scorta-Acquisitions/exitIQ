@@ -7,11 +7,11 @@ import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
 import { generateSessionId, loadSession } from "@/lib/assessment/session"
 import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
-import { calcDerived } from "@/lib/exitiq/calculations"
+import { calcDerived, type Derived, fmtMoney } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
 import { DashboardPanel } from "./dashboard"
-import { EmailGateModal, PreviewCard } from "./preview"
+import { EmailGateModal, GateTeaserCard, PreviewCard } from "./preview"
 import { QuestionPanel } from "./questions"
 import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
@@ -44,7 +44,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const glRef = React.useRef<WebGLControls | null>(null)
 
   const derived = React.useMemo(() => calcDerived(answers), [answers])
-  const stepCount = step < 6 ? step : 6
+  const stepCount = step < 10 ? step : 10
 
   // ── WebGL init ───────────────────────────────────────────────────────────────
   React.useEffect(() => {
@@ -115,8 +115,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
       }, 660)
 
       setTimeout(() => {
-        if (step >= 5) {
-          setStep(6)
+        if (step >= 9) {
+          setStep(10)
         } else {
           setStep((s) => s + 1)
         }
@@ -187,7 +187,13 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         sde: answers.sde ?? "",
         employees: answers.employees ?? "",
         state: answers.state ?? "",
-      },
+        // Extended Stage 1 signals (new)
+        ownerRole: answers.ownerRole ?? "",
+        revenueTrend: answers.revenueTrend ?? "",
+        customerConc: answers.customerConc ?? "",
+        keyMan: answers.keyMan ?? "",
+        recurringRev: answers.recurringRev ?? "",
+      } as Parameters<typeof persistSession>[0]["stage1"],
       gate: {
         firstName: data.firstName,
         email: data.email,
@@ -377,28 +383,33 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                   fontFamily: "Inter, sans-serif",
                 }}
               >
-                No login. No broker call. Start with six quick signals.
+                No login. No broker call. Three-part assessment, under two minutes.
               </p>
             </div>
 
-            {/* ── Question or Preview ── */}
+            {/* ── Question → Gate Teaser → [email gate] → Detailed AI Report ── */}
             {!submitted ? (
-              step < 6 ? (
+              step < 10 ? (
                 <QuestionPanel step={step} onAnswer={handleAnswer} processing={processing} disabled={transitioning} />
               ) : (
-                <PreviewCard derived={derived} answers={answers} onUnlock={handleUnlock} />
+                // Pre-gate: blurred teaser that motivates email submission
+                <GateTeaserCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              teaserData
-                ? <TeaserCard teaser={teaserData} onReset={reset} />
-                : <PostSubmitCard onReset={reset} reportReady={reportReady} />
+              // Post-gate: always show the full detailed report; enrich with AI content as it arrives
+              <PreviewCard
+                derived={derived}
+                answers={answers}
+                onUnlock={() => {}}
+                teaserData={teaserData}
+              />
             )}
 
             {/* AI Insight */}
             {insight && !submitted && <AIInsight key={insight} text={insight} />}
 
             {/* Answer trail chips */}
-            {Object.keys(answers).length > 0 && !submitted && step < 6 && (
+            {Object.keys(answers).length > 0 && !submitted && step < 10 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, animation: "fadeIn .4s ease" }}>
                 {Object.values(answers).map((a, i) => (
                   <div
@@ -429,263 +440,5 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   )
 }
 
-// ── Teaser card — shown immediately when AI returns the teaser ────────────────
-function TeaserCard({ teaser, onReset }: { teaser: TeaserResult; onReset: () => void }) {
-  return (
-    <div
-      className="glass-panel"
-      style={{
-        padding: 28,
-        display: "flex",
-        flexDirection: "column",
-        gap: 18,
-        animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <ScanLine />
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: "#10b981",
-            boxShadow: "0 0 12px rgba(16,185,129,.9)",
-            animation: "liveBlink 2s infinite",
-          }}
-        />
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: ".96px",
-            textTransform: "uppercase",
-            color: "rgba(16,185,129,.8)",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          ExitIQ Teaser Report
-        </div>
-      </div>
 
-      {/* Headline */}
-      <h2
-        style={{
-          fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-          fontSize: 22,
-          fontWeight: 300,
-          color: "var(--t1)",
-          letterSpacing: "-.3px",
-          lineHeight: 1.25,
-          margin: 0,
-        }}
-      >
-        {teaser.headline}
-      </h2>
-
-      {/* Valuation range */}
-      <div
-        style={{
-          background: "rgba(16,185,129,.06)",
-          border: "1px solid rgba(16,185,129,.18)",
-          borderRadius: 12,
-          padding: "12px 16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ fontSize: 12, color: "var(--t3)", fontFamily: "Inter, sans-serif" }}>
-          Estimated valuation range
-        </div>
-        <div
-          style={{
-            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-            fontSize: 22,
-            fontWeight: 300,
-            color: "#10b981",
-            letterSpacing: "-.2px",
-          }}
-        >
-          {teaser.valuationRange}
-        </div>
-      </div>
-
-      {/* Strength / Risk */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div
-          style={{
-            background: "rgba(16,185,129,.04)",
-            border: "1px solid rgba(16,185,129,.14)",
-            borderRadius: 10,
-            padding: "11px 14px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: ".8px",
-              textTransform: "uppercase",
-              color: "rgba(16,185,129,.65)",
-              fontFamily: "Inter, sans-serif",
-              marginBottom: 5,
-            }}
-          >
-            Top Strength
-          </div>
-          <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
-            {teaser.topStrength}
-          </div>
-        </div>
-        <div
-          style={{
-            background: "rgba(245,158,11,.04)",
-            border: "1px solid rgba(245,158,11,.14)",
-            borderRadius: 10,
-            padding: "11px 14px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: ".8px",
-              textTransform: "uppercase",
-              color: "rgba(245,158,11,.65)",
-              fontFamily: "Inter, sans-serif",
-              marginBottom: 5,
-            }}
-          >
-            Key Risk
-          </div>
-          <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
-            {teaser.topRisk}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          fontSize: 12,
-          color: "var(--t4)",
-          fontFamily: "Inter, sans-serif",
-          lineHeight: 1.5,
-        }}
-      >
-        Full report with buyer risk scan and 90-day exit plan has been sent to your inbox.
-      </div>
-
-      <button
-        onClick={onReset}
-        style={{
-          alignSelf: "flex-start",
-          height: 38,
-          padding: "0 18px",
-          background: "var(--s1)",
-          border: "1px solid var(--b2)",
-          borderRadius: 9999,
-          color: "var(--t2)",
-          fontSize: 13,
-          fontWeight: 500,
-          cursor: "pointer",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Restart assessment
-      </button>
-    </div>
-  )
-}
-
-// ── Post-submit confirmation card ─────────────────────────────────────────────
-function PostSubmitCard({ onReset, reportReady }: { onReset: () => void; reportReady: boolean }) {
-  return (
-    <div
-      className="glass-panel"
-      style={{
-        padding: 32,
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <ScanLine />
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: reportReady ? "#10b981" : "#f59e0b",
-            boxShadow: reportReady ? "0 0 12px rgba(16,185,129,.9)" : "0 0 12px rgba(245,158,11,.9)",
-            animation: "liveBlink 2s infinite",
-          }}
-        />
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: ".96px",
-            textTransform: "uppercase",
-            color: reportReady ? "rgba(16,185,129,.8)" : "rgba(245,158,11,.8)",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          {reportReady ? "Report ready" : "Report generating"}
-        </div>
-      </div>
-      <h2
-        style={{
-          fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-          fontSize: 28,
-          fontWeight: 300,
-          color: "var(--t1)",
-          letterSpacing: "-.4px",
-          lineHeight: 1.2,
-          margin: 0,
-        }}
-      >
-        {reportReady ? "Your ExitIQ Report is ready." : "Your full ExitIQ Report is on its way."}
-      </h2>
-      <p
-        style={{
-          fontSize: 14,
-          color: "var(--t3)",
-          lineHeight: 1.65,
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-        }}
-      >
-        {reportReady
-          ? "Check your inbox — your valuation breakdown, buyer risk scan, and 90-day exit prep plan have been sent."
-          : "Check your inbox for your valuation breakdown, buyer risk scan, and personalized 90-day exit prep plan. In the meantime, Scorta is preparing your full assessment."}
-      </p>
-      <button
-        onClick={onReset}
-        style={{
-          alignSelf: "flex-start",
-          height: 40,
-          padding: "0 20px",
-          background: "var(--s1)",
-          border: "1px solid var(--b2)",
-          borderRadius: 9999,
-          color: "var(--t2)",
-          fontSize: 14,
-          fontWeight: 500,
-          cursor: "pointer",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Restart assessment
-      </button>
-    </div>
-  )
-}

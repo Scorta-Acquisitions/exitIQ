@@ -369,39 +369,180 @@ Tailored to: ${lbl(BROKER_LABELS, s4.brokerStatus)}, timeline ${lbl(SELLING_TIME
 }
 
 // ─── buildTeaserPrompt ────────────────────────────────────────────────────────
-// Passed to Haiku via generateObject. Stage 1 + gate data only.
+// Passed to Haiku via generateObject. Extended Stage 1 + gate data.
 // Valuation range and segmentTag are pre-computed and injected as ground truth
 // so Haiku writes copy, not math.
 export function buildTeaserPrompt(session: Partial<AssessmentSession>): string {
   const s1 = session.stage1 ?? {}
+  const s1x = s1 as Record<string, unknown>
   const gate = session.gate ?? {}
 
   const industry = findIndustry(s1.industry ?? "other")
   const [teaserLow, teaserHigh] = getTeaserRange(s1)
-  const teaserRangeStr = `${fmt(teaserLow)} – ${fmt(teaserHigh)}`
+
+  // Apply signal adjustments to tighten the teaser range
+  let adjLow = teaserLow
+  let adjHigh = teaserHigh
+
+  const trendMulti: Record<string, number> = { growing_fast: 1.14, growing: 1.07, flat: 1.0, declining_slight: 0.89, declining_fast: 0.76 }
+  const roleMulti: Record<string, number> = { passive: 1.10, mostly_hands_off: 1.04, partial: 0.97, operator: 0.88 }
+  const concMulti: Record<string, number> = { diversified: 1.08, moderate: 1.02, concentrated: 0.92, high_risk: 0.80 }
+  const keyManMulti: Record<string, number> = { "1": 0.84, "2": 0.92, "3": 1.0, "4": 1.06, "5": 1.12 }
+  const recurMulti: Record<string, number> = { high: 1.13, medium_high: 1.07, medium: 1.0, low: 0.90 }
+
+  const adj =
+    (trendMulti[String(s1x.revenueTrend ?? "")] ?? 1.0) *
+    (roleMulti[String(s1x.ownerRole ?? "")] ?? 1.0) *
+    (concMulti[String(s1x.customerConc ?? "")] ?? 1.0) *
+    (keyManMulti[String(s1x.keyMan ?? "")] ?? 1.0) *
+    (recurMulti[String(s1x.recurringRev ?? "")] ?? 1.0)
+
+  const midPoint = ((teaserLow + teaserHigh) / 2) * adj
+  const halfSpread = (teaserHigh - teaserLow) / 2 * 0.45
+  adjLow = Math.round(midPoint - halfSpread)
+  adjHigh = Math.round(midPoint + halfSpread)
+
+  const teaserRangeStr = `${fmt(adjLow)} – ${fmt(adjHigh)}`
   const segmentTag = gate.tag ?? "nurture"
 
-  return `You are a sell-side M&A advisor generating a teaser card for a business owner who just completed a quick snapshot assessment.
+  const OWNER_ROLE_LABELS: Record<string, string> = {
+    operator: "Day-to-day operator — runs everything",
+    partial: "Partially involved — manages team, holds key relationships",
+    mostly_hands_off: "Mostly hands-off — strong team in place",
+    passive: "Silent/investor role — fully passive",
+  }
+  const REVENUE_TREND_LABELS_EXT: Record<string, string> = {
+    growing_fast: "Growing 20%+ annually",
+    growing: "Growing 5–20% annually",
+    flat: "Flat — within ±5%",
+    declining_slight: "Declining 5–20%",
+    declining_fast: "Declining 20%+",
+  }
+  const CUSTOMER_CONC_LABELS_EXT: Record<string, string> = {
+    diversified: "Top customer under 10% of revenue — highly diversified",
+    moderate: "Top customer 10–25% — well diversified",
+    concentrated: "Top customer 25–50% — manageable concentration",
+    high_risk: "Top customer over 50% — high concentration risk",
+  }
+  const KEY_MAN_LABELS: Record<string, string> = {
+    "1": "1 — Everything runs through owner",
+    "2": "2 — Most key relationships are owner's",
+    "3": "3 — Balanced between owner and team",
+    "4": "4 — Team handles most operations",
+    "5": "5 — Fully team-driven operations",
+  }
+  const RECURRING_LABELS_EXT: Record<string, string> = {
+    high: "Over 75% recurring / contracted",
+    medium_high: "50–75% recurring",
+    medium: "25–50% mixed model",
+    low: "Under 25% — mostly transactional",
+  }
 
-PRE-CALCULATED VALUES — use exactly as provided, do not recalculate:
-  valuationRange: "${teaserRangeStr}"
-  segmentTag:     "${segmentTag}"
+  const brokerFeeLow = Math.round(adjLow * 0.08)
+  const brokerFeeHigh = Math.round(adjHigh * 0.10)
+  const fmtFee = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M` : `$${Math.round(n / 1_000)}K`
+  const brokerFeeRangeStr = `${fmtFee(brokerFeeLow)}–${fmtFee(brokerFeeHigh)}`
+  const multipleContextStr = `${(((adjLow + adjHigh) / 2) / (SDE_MIDPOINTS[s1.sde ?? "500_1m"] ?? 750_000)).toFixed(1)}× SDE · ${industry.label} benchmark ${industry.sdeMultiple[0]}–${industry.sdeMultiple[1]}×`
 
-BUSINESS SNAPSHOT:
-  Industry:   ${industry.label}  (SDE multiple benchmark: ${industry.sdeMultiple[0]}x – ${industry.sdeMultiple[1]}x)
-  Revenue:    ${lbl(REVENUE_LABELS, s1.revenue)}
-  SDE:        ${lbl(REVENUE_LABELS, s1.sde)}
-  Employees:  ${lbl(EMPLOYEE_LABELS, s1.employees)}
-  Years:      ${s1.years ?? "Not specified"}
-  State:      ${s1.state ?? "Not specified"}
-  Timeline:   ${lbl(SELLING_TIMELINE_LABELS, gate.sellingTimeline)}
+  return `You are a senior sell-side M&A advisor generating a detailed diagnostic teaser report for a business owner who just completed a comprehensive 10-signal assessment.
 
-INSTRUCTIONS:
-Generate a 5-field teaser object. Be specific to this exact business — no generic language.
+PRE-CALCULATED VALUES — use exactly as provided, do not recalculate or modify:
+  valuationRange:   "${teaserRangeStr}"
+  multipleContext:  "${multipleContextStr}"
+  brokerFeeRange:   "${brokerFeeRangeStr}"
+  segmentTag:       "${segmentTag}"
 
-  headline       One sentence (max 15 words) that captures the exit opportunity. Lead with the industry and a compelling angle, e.g., "Established HVAC business in Texas with recurring contracts and SBA-eligible valuation."
-  valuationRange Use exactly: "${teaserRangeStr}"
-  topStrength    The single most attractive attribute for buyers — one sentence grounded in the snapshot data above.
-  topRisk        The single most important issue to address before going to market — one sentence, specific and direct.
-  segmentTag     Use exactly: "${segmentTag}"`
+BUSINESS PROFILE (10 signals collected):
+  Industry:           ${industry.label}  (SDE multiple benchmark: ${industry.sdeMultiple[0]}x – ${industry.sdeMultiple[1]}x)
+  Years in business:  ${s1.years ?? "Not specified"}
+  Owner role:         ${OWNER_ROLE_LABELS[String(s1x.ownerRole ?? "")] ?? "Not specified"}
+  Annual revenue:     ${lbl(REVENUE_LABELS, s1.revenue)}
+  Annual SDE:         ${lbl(REVENUE_LABELS, s1.sde)}
+  Revenue trend:      ${REVENUE_TREND_LABELS_EXT[String(s1x.revenueTrend ?? "")] ?? "Not specified"}
+  Customer risk:      ${CUSTOMER_CONC_LABELS_EXT[String(s1x.customerConc ?? "")] ?? "Not specified"}
+  Employees:          ${lbl(EMPLOYEE_LABELS, s1.employees)}
+  Independence (1–5): ${KEY_MAN_LABELS[String(s1x.keyMan ?? "")] ?? "Not specified"}
+  Recurring revenue:  ${RECURRING_LABELS_EXT[String(s1x.recurringRev ?? "")] ?? "Not specified"}
+  Timeline:           ${lbl(SELLING_TIMELINE_LABELS, gate.sellingTimeline)}
+
+CRITICAL RULES:
+1. Every sentence must reference a specific signal value from the profile above — no generic M&A language.
+2. Quantify dollar or multiple impact wherever possible (e.g. "typically compresses the multiple by 0.5–1×").
+3. Tone: direct, advisor-level, as if you personally reviewed this business.
+4. Use exactly the valuationRange and multipleContext strings provided — do not recalculate.
+
+GENERATE ALL FIELDS:
+
+  headline
+    One sentence, max 18 words. Lead with the industry and the single most compelling signal.
+    Example: "Growing home services business with 75%+ recurring revenue and fully team-driven operations — SBA-eligible."
+
+  valuationRange
+    Use exactly: "${teaserRangeStr}"
+
+  multipleContext
+    Use exactly: "${multipleContextStr}"
+
+  buyerPoolPrimary
+    One sentence naming the most likely buyer type and why this profile attracts them.
+    Example: "PE-backed rollups are the primary buyer — recurring revenue and team depth match their exact acquisition thesis."
+
+  strength1Title
+    2–4 word title of the single most buyer-attractive attribute from the 10 signals.
+
+  strength1Desc
+    2–3 sentences: (1) name the specific signal and what buyers see, (2) explain the multiple or dollar implication, (3) how this expands or improves deal outcomes.
+
+  strength2Title
+    2–4 word title of the second strongest attribute from the signals.
+
+  strength2Desc
+    2–3 sentences. Same format as strength1Desc. Must reference a different signal than strength1.
+
+  risk1Title
+    2–4 word title of the single most important buyer concern from this profile.
+
+  risk1Desc
+    2–3 sentences: (1) what buyers will flag or discount for, (2) the specific dollar/multiple impact, (3) the single most effective mitigation before listing. Be direct — do not soften.
+
+  risk2Title
+    2–4 word title of the second most significant buyer concern.
+
+  risk2Desc
+    2–3 sentences. Same format as risk1Desc. Must reference a different risk signal than risk1.
+
+  revenueTrendSignal
+    Choose exactly one based on the revenue trend signal:
+    - "Bullish"    → growing 20%+ annually
+    - "Positive"   → growing 5–20% annually
+    - "Neutral"    → flat within ±5%
+    - "Softening"  → declining 5–20%
+    - "Bearish"    → declining 20%+
+
+  teamSignal
+    Choose exactly one based on employee count and independence score:
+    - "Scales without owner"  → 16+ employees OR independence 4–5
+    - "Manageable depth"      → 6–15 employees OR independence 3
+    - "Transition risk"       → 2–5 employees OR independence 2
+    - "Key-man risk"          → solo OR independence 1
+
+  recurringSignal
+    Choose exactly one based on recurring revenue:
+    - "Strong"          → over 75%
+    - "Moderate-strong" → 50–75%
+    - "Moderate"        → 25–50%
+    - "Low"             → under 25%
+
+  brokerFeeNarrative
+    One sentence using the pre-calculated brokerFeeRange: "Scorta replaces this with a flat fee — sellers keep ${brokerFeeRangeStr} more at close."
+    Use exactly "${brokerFeeRangeStr}" for the number.
+
+  topStrength
+    One sentence summary of the top strength (used in compact display). Reference the specific signal value.
+
+  topRisk
+    One sentence summary of the top risk with dollar/multiple implication. Be direct.
+
+  segmentTag
+    Use exactly: "${segmentTag}"`
 }
