@@ -44,9 +44,44 @@ export async function persistSession(patch: SessionPatch): Promise<void> {
 export type TeaserResult = {
   headline: string
   valuationRange: string
+  multipleContext: string
+  buyerPoolPrimary: string
+  strength1Title: string
+  strength1Desc: string
+  strength2Title: string
+  strength2Desc: string
+  risk1Title: string
+  risk1Desc: string
+  risk2Title: string
+  risk2Desc: string
+  revenueTrendSignal: "Bullish" | "Positive" | "Neutral" | "Softening" | "Bearish"
+  teamSignal: "Scales without owner" | "Manageable depth" | "Transition risk" | "Key-man risk"
+  recurringSignal: "Strong" | "Moderate-strong" | "Moderate" | "Low"
+  brokerFeeNarrative: string
   topStrength: string
   topRisk: string
   segmentTag: "hot_seller" | "warm_explorer" | "nurture" | "burned_by_broker"
+}
+
+export type ReportResult = {
+  status: "pending" | "ready"
+  reportMd: string | null
+  teaserJson: TeaserResult | null
+  createdAt: string | null
+}
+
+/**
+ * Polls `GET /api/assessment/report/[sessionId]` once and returns the result.
+ * Returns `null` on any network or server error.
+ */
+export async function fetchReport(sessionId: string): Promise<ReportResult | null> {
+  try {
+    const res = await fetch(`/api/assessment/report/${encodeURIComponent(sessionId)}`)
+    if (!res.ok) return null
+    return (await res.json()) as ReportResult
+  } catch {
+    return null
+  }
 }
 
 /**

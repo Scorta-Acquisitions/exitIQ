@@ -2,18 +2,31 @@
 "use client"
 
 import React from "react"
+import { persistSession, requestGenerate, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
+import { computeTag } from "@/lib/assessment/segmentation"
+import type { SegmentTag } from "@/lib/assessment/session"
+import { generateSessionId, loadSession } from "@/lib/assessment/session"
+import { TIMELINE_LABEL_TO_SLUG } from "@/lib/assessment/transform"
 import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
-import { BentoSection } from "./bento"
 import { DashboardPanel } from "./dashboard"
-import { EmailGateModal, PreviewCard } from "./preview"
+import { EmailGateModal, GateTeaserCard, PreviewCard } from "./preview"
 import { QuestionPanel } from "./questions"
-import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
+import { FullReportCard, ReportGeneratingCard } from "./report"
+import { AIInsight, Ripple, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
-export function ExitIQApp() {
+// Maps frontend year-bucket labels to representative year numbers for Stage1Answers.years
+const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
+  "Under 2 years": 1,
+  "2 – 5 years": 3,
+  "5 – 10 years": 7,
+  "10+ years": 15,
+}
+
+export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [step, setStep] = React.useState(0)
   const [answers, setAnswers] = React.useState<Record<string, string>>({})
   const [processing, setProcessing] = React.useState(false)
@@ -24,12 +37,16 @@ export function ExitIQApp() {
   const [submitted, setSubmitted] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
+  const [teaserData, setTeaserData] = React.useState<TeaserResult | null>(null)
+  const [reportMd, setReportMd] = React.useState("")
+  const [reportStreaming, setReportStreaming] = React.useState(false)
+  const [gateFirstName, setGateFirstName] = React.useState("")
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
 
   const derived = React.useMemo(() => calcDerived(answers), [answers])
-  const stepCount = step < 6 ? step : 6
+  const stepCount = step < 10 ? step : 10
 
   // ── WebGL init ───────────────────────────────────────────────────────────────
   React.useEffect(() => {
@@ -44,6 +61,7 @@ export function ExitIQApp() {
   React.useEffect(() => {
     glRef.current?.setConf(derived.confidence / 100)
   }, [derived.confidence])
+
 
   // ── Answer handler ───────────────────────────────────────────────────────────
   const handleAnswer = React.useCallback(
@@ -77,8 +95,8 @@ export function ExitIQApp() {
       }, 660)
 
       setTimeout(() => {
-        if (step >= 5) {
-          setStep(6)
+        if (step >= 9) {
+          setStep(10)
         } else {
           setStep((s) => s + 1)
         }
@@ -96,22 +114,110 @@ export function ExitIQApp() {
     setProcessing(false)
     setShowModal(false)
     setSubmitted(false)
+    setTeaserData(null)
+    setReportMd("")
+    setReportStreaming(false)
+    setGateFirstName("")
     glRef.current?.setConf(0)
   }, [])
 
+  // ── Escape key closes the form ───────────────────────────────────────────────
+  React.useEffect(() => {
+    if (!onClose) return
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [onClose])
+
+  // ── Back navigation ──────────────────────────────────────────────────────────
+  const handleBack = React.useCallback(() => {
+    if (submitted) {
+      setSubmitted(false)
+      return
+    }
+    if (step === 0) {
+      onClose?.()
+      return
+    }
+    setStep((s) => s - 1)
+    setInsight(null)
+    setTransitioning(false)
+    setProcessing(false)
+  }, [step, submitted, onClose])
+
   const handleUnlock = () => setShowModal(true)
-  const handleSubmit = (_data: { firstName: string; email: string; timeline: string }) => {
+
+  const handleSubmit = (data: { firstName: string; email: string; timeline: string }) => {
+    const timelineSlug = TIMELINE_LABEL_TO_SLUG[data.timeline] ?? "curious"
+    const tag = computeTag(timelineSlug) as SegmentTag
+
+    const YEAR_TO_NUMBER = YEAR_LABEL_TO_NUMBER
+    const session = loadSession()
+    const sid = session.sessionId ?? generateSessionId()
+
+    setGateFirstName(data.firstName)
     setShowModal(false)
     setSubmitted(true)
+
+    void persistSession({
+      sessionId: sid,
+      stage1: {
+        industry: answers.industry ?? "",
+        years: (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
+        revenue: answers.revenue ?? "",
+        sde: answers.sde ?? "",
+        employees: answers.employees ?? "",
+        state: answers.state ?? "",
+        ownerRole: answers.ownerRole ?? "",
+        revenueTrend: answers.revenueTrend ?? "",
+        customerConc: answers.customerConc ?? "",
+        keyMan: answers.keyMan ?? "",
+        recurringRev: answers.recurringRev ?? "",
+      } as Parameters<typeof persistSession>[0]["stage1"],
+      gate: {
+        firstName: data.firstName,
+        email: data.email,
+        sellingTimeline: timelineSlug,
+        tag,
+      },
+      completedAt: Date.now(),
+    }).then(() => {
+      // Teaser: fast (Haiku, ~2–5s) — enriches preview card immediately
+      void requestTeaser(sid).then((teaser) => {
+        if (teaser) setTeaserData(teaser)
+      })
+
+      // Full report: stream from Sonnet (~20–40s) — shown below teaser when complete
+      setReportStreaming(true)
+      void requestGenerate(sid).then(async (res) => {
+        if (!res?.body) {
+          setReportStreaming(false)
+          return
+        }
+        const reader = res.body.getReader()
+        const dec = new TextDecoder()
+        let acc = ""
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            acc += dec.decode(value, { stream: true })
+          }
+          setReportMd(acc)
+        } finally {
+          setReportStreaming(false)
+        }
+      })
+    })
   }
 
   return (
-    <>
-      {/* WebGL canvas — fixed behind everything */}
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {/* WebGL canvas — absolute so it fills the card container, not the viewport */}
       <canvas
         ref={canvasRef}
         style={{
-          position: "fixed",
+          position: "absolute",
           inset: 0,
           zIndex: 0,
           width: "100%",
@@ -120,12 +226,13 @@ export function ExitIQApp() {
         }}
       />
 
-      {/* App root */}
+      {/* App root — scrollable within the card */}
       <div
         style={{
           position: "relative",
           zIndex: 1,
-          minHeight: "100vh",
+          height: "100%",
+          overflowY: "auto",
           display: "flex",
           flexDirection: "column",
           opacity: mounted ? 1 : 0,
@@ -138,7 +245,7 @@ export function ExitIQApp() {
         {/* Processing flash */}
         <div
           style={{
-            position: "fixed",
+            position: "absolute",
             inset: 0,
             pointerEvents: "none",
             zIndex: 40,
@@ -157,62 +264,54 @@ export function ExitIQApp() {
           style={{
             margin: "14px 20px 0",
             padding: "0 24px",
-            height: 58,
-            display: "flex",
+            height: 52,
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            justifyContent: "space-between",
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 20,
-              fontWeight: 300,
-              color: "var(--t1)",
-              letterSpacing: "-.3px",
-            }}
-          >
-            Scorta
-          </div>
-          <div style={{ display: "flex", gap: 28 }}>
-            {["How it works", "Coming soon", "For sellers"].map((l) => (
-              <div
-                key={l}
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "var(--t3)",
-                  cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  transition: "color .15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
-              >
-                {l}
-              </div>
-            ))}
-          </div>
           <button
+            onClick={handleBack}
             style={{
-              height: 36,
-              padding: "0 18px",
+              justifySelf: "start",
+              height: 32,
+              padding: "0 14px",
               background: "var(--s1)",
-              color: "var(--t2)",
-              fontSize: 14,
+              color: "var(--t3)",
+              fontSize: 13,
               fontWeight: 500,
               borderRadius: 9999,
               border: "1px solid var(--b2)",
               cursor: "pointer",
               fontFamily: "Inter, sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               transition: "all .15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s1)")}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--t1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
           >
-            Start ExitIQ
+            <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+              <path d="M7 1.5L3 5.5l4 4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Back
           </button>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: ".96px",
+              textTransform: "uppercase",
+              color: "rgba(167,229,211,.65)",
+              fontFamily: "Inter, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ExitIQ Liquid Engine
+          </div>
+          <div />
         </nav>
 
         {/* ── Hero layout (2 columns) ── */}
@@ -227,7 +326,6 @@ export function ExitIQApp() {
             margin: "0 auto",
             width: "100%",
             alignItems: "start",
-            minHeight: "calc(100vh - 100px)",
           }}
         >
           {/* ── Left column ── */}
@@ -236,7 +334,7 @@ export function ExitIQApp() {
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
               <SignalOrb phase={stepCount} size={ORB_SIZE} active={processing || !!recalcMsg} />
               <div>
-                <div
+                {/* <div
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
@@ -248,7 +346,7 @@ export function ExitIQApp() {
                   }}
                 >
                   ExitIQ Liquid Engine
-                </div>
+                </div> */}
                 <h1
                   style={{
                     fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -289,26 +387,39 @@ export function ExitIQApp() {
                   fontFamily: "Inter, sans-serif",
                 }}
               >
-                No login. No broker call. Start with six quick signals.
+                No login. No broker call. Three-part assessment, under two minutes.
               </p>
             </div>
 
-            {/* ── Question or Preview ── */}
+            {/* ── Question → Gate Teaser → [email gate] → Detailed AI Report ── */}
             {!submitted ? (
-              step < 6 ? (
+              step < 10 ? (
                 <QuestionPanel step={step} onAnswer={handleAnswer} processing={processing} disabled={transitioning} />
               ) : (
-                <PreviewCard derived={derived} answers={answers} onUnlock={handleUnlock} />
+                // Pre-gate: blurred teaser that motivates email submission
+                <GateTeaserCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              <PostSubmitCard onReset={reset} />
+              // Post-gate: teaser preview immediately, then full Sonnet report when ready
+              <>
+                <PreviewCard
+                  derived={derived}
+                  answers={answers}
+                  onUnlock={() => {}}
+                  teaserData={teaserData}
+                />
+                {reportStreaming && <ReportGeneratingCard />}
+                {!reportStreaming && reportMd && (
+                  <FullReportCard reportMd={reportMd} firstName={gateFirstName} />
+                )}
+              </>
             )}
 
             {/* AI Insight */}
             {insight && !submitted && <AIInsight key={insight} text={insight} />}
 
             {/* Answer trail chips */}
-            {Object.keys(answers).length > 0 && !submitted && step < 6 && (
+            {Object.keys(answers).length > 0 && !submitted && step < 10 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, animation: "fadeIn .4s ease" }}>
                 {Object.values(answers).map((a, i) => (
                   <div
@@ -334,125 +445,10 @@ export function ExitIQApp() {
           {/* ── Right column: Dashboard ── */}
           <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />
         </div>
-
-        {/* ── Bento section ── */}
-        <BentoSection />
-
-        {/* ── Footer ── */}
-        <footer
-          style={{
-            background: "var(--footer-bg)",
-            borderTop: "1px solid var(--footer-border)",
-            padding: "28px 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            transition: "background .5s ease",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 16,
-              fontWeight: 300,
-              color: "var(--t3)",
-              letterSpacing: "-.1px",
-            }}
-          >
-            Scorta
-          </div>
-          <div style={{ fontSize: 12, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
-            © 2025 Scorta. For informational purposes only. Not financial advice.
-          </div>
-        </footer>
       </div>
-    </>
-  )
-}
-
-// ── Post-submit confirmation card ─────────────────────────────────────────────
-function PostSubmitCard({ onReset }: { onReset: () => void }) {
-  return (
-    <div
-      className="glass-panel"
-      style={{
-        padding: 32,
-        display: "flex",
-        flexDirection: "column",
-        gap: 20,
-        animation: "slideUp .6s cubic-bezier(.34,1.2,.64,1)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <ScanLine />
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: "#10b981",
-            boxShadow: "0 0 12px rgba(16,185,129,.9)",
-            animation: "liveBlink 2s infinite",
-          }}
-        />
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: ".96px",
-            textTransform: "uppercase",
-            color: "rgba(16,185,129,.8)",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Report queued
-        </div>
-      </div>
-      <h2
-        style={{
-          fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-          fontSize: 28,
-          fontWeight: 300,
-          color: "var(--t1)",
-          letterSpacing: "-.4px",
-          lineHeight: 1.2,
-          margin: 0,
-        }}
-      >
-        Your full ExitIQ Report is on its way.
-      </h2>
-      <p
-        style={{
-          fontSize: 14,
-          color: "var(--t3)",
-          lineHeight: 1.65,
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-        }}
-      >
-        Check your inbox for your valuation breakdown, buyer risk scan, and personalized 90-day exit prep plan. In the
-        meantime, Scorta is preparing your full assessment.
-      </p>
-      <button
-        onClick={onReset}
-        style={{
-          alignSelf: "flex-start",
-          height: 40,
-          padding: "0 20px",
-          background: "var(--s1)",
-          border: "1px solid var(--b2)",
-          borderRadius: 9999,
-          color: "var(--t2)",
-          fontSize: 14,
-          fontWeight: 500,
-          cursor: "pointer",
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Restart assessment
-      </button>
     </div>
   )
 }
+
+
+

@@ -1,3 +1,5 @@
+import "./drizzle-env"
+
 /**
  * Database workflow:
  *   pnpm db:generate   — generate a migration file after editing schema

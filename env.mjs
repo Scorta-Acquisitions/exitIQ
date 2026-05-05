@@ -13,6 +13,8 @@ export const env = createEnv({
     SUPABASE_SERVICE_SECRET_KEY: z.string().min(1),
     // AI
     ANTHROPIC_API_KEY: z.string().min(1),
+    // Email — optional until Resend is configured
+    RESEND_API_KEY: z.string().min(1).optional(),
   },
   client: {
     // Supabase — safe for browser
@@ -27,5 +29,6 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
   },
 })

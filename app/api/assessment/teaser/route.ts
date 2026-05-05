@@ -8,6 +8,7 @@ import { buildTeaserPrompt } from "@/lib/ai/prompts"
 import type { AssessmentSession } from "@/lib/assessment/session"
 import { db } from "@/lib/db"
 import { assessmentReports, assessmentSessions } from "@/lib/db/schema"
+import { logger, timed } from "@/lib/logger"
 
 const teaserBodySchema = z.object({
   sessionId: z.string().min(1),
@@ -16,6 +17,20 @@ const teaserBodySchema = z.object({
 const teaserOutputSchema = z.object({
   headline: z.string(),
   valuationRange: z.string(),
+  multipleContext: z.string(),
+  buyerPoolPrimary: z.string(),
+  strength1Title: z.string(),
+  strength1Desc: z.string(),
+  strength2Title: z.string(),
+  strength2Desc: z.string(),
+  risk1Title: z.string(),
+  risk1Desc: z.string(),
+  risk2Title: z.string(),
+  risk2Desc: z.string(),
+  revenueTrendSignal: z.enum(["Bullish", "Positive", "Neutral", "Softening", "Bearish"]),
+  teamSignal: z.enum(["Scales without owner", "Manageable depth", "Transition risk", "Key-man risk"]),
+  recurringSignal: z.enum(["Strong", "Moderate-strong", "Moderate", "Low"]),
+  brokerFeeNarrative: z.string(),
   topStrength: z.string(),
   topRisk: z.string(),
   segmentTag: z.enum(["hot_seller", "warm_explorer", "nurture", "burned_by_broker"]),
@@ -42,6 +57,7 @@ export async function POST(req: Request) {
   })
 
   if (!session) {
+    logger.warn("teaser.not_found", { sessionId })
     return Response.json({ error: "not_found" }, { status: 404 })
   }
 
@@ -51,6 +67,7 @@ export async function POST(req: Request) {
   if (!session.gate) missing.push("gate")
 
   if (missing.length > 0) {
+    logger.warn("teaser.incomplete_session", { sessionId, missing: missing.join(",") })
     return Response.json({ error: "incomplete_session", missing }, { status: 422 })
   }
 
@@ -67,35 +84,48 @@ export async function POST(req: Request) {
 
   const prompt = buildTeaserPrompt(assessmentSession)
 
-  const genResult = await (
-    generateObject as (opts: {
-      model: unknown
-      schema: unknown
-      prompt: string
-    }) => Promise<{ object: z.infer<typeof teaserOutputSchema> }>
-  )({
-    model: anthropic(HAIKU_MODEL),
-    schema: teaserOutputSchema,
-    prompt,
-  })
-  const { object } = genResult
+  const { object } = await timed(
+    "ai.teaser",
+    () =>
+      (
+        generateObject as (opts: {
+          model: unknown
+          schema: unknown
+          prompt: string
+        }) => Promise<{ object: z.infer<typeof teaserOutputSchema> }>
+      )({
+        model: anthropic(HAIKU_MODEL),
+        schema: teaserOutputSchema,
+        prompt,
+      }),
+    { sessionId, model: HAIKU_MODEL }
+  )
 
   after(async () => {
-    await db
-      .insert(assessmentReports)
-      .values({
-        sessionId,
-        reportMd: "",
-        teaserJson: object,
-        modelUsed: HAIKU_MODEL,
-        generationMs: null,
-      })
-      .onConflictDoUpdate({
-        target: assessmentReports.sessionId,
-        set: {
+    try {
+      // assessment_reports.session_id has no unique constraint — update first,
+      // insert only if no row exists yet.
+      const updated = await db
+        .update(assessmentReports)
+        .set({ teaserJson: object })
+        .where(eq(assessmentReports.sessionId, sessionId))
+        .returning({ id: assessmentReports.id })
+
+      if (updated.length === 0) {
+        await db.insert(assessmentReports).values({
+          sessionId,
+          reportMd: "",
           teaserJson: object,
-        },
+          modelUsed: HAIKU_MODEL,
+          generationMs: null,
+        })
+      }
+    } catch (err) {
+      logger.error("teaser.save_failed", {
+        sessionId,
+        error: err instanceof Error ? err.message : String(err),
       })
+    }
   })
 
   return Response.json(object)

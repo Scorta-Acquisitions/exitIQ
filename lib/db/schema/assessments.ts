@@ -19,7 +19,8 @@ export const assessmentSessions = pgTable("assessment_sessions", {
   stage2: jsonb("stage2").$type<Stage2Answers>(),
   stage3: jsonb("stage3").$type<Stage3Answers>(),
   stage4: jsonb("stage4").$type<Stage4Answers>(),
-  segmentTag: text("segment_tag").$type<SegmentTag>(),
+  // Renamed from segmentTag; DB column stays "segment_tag" — no migration needed.
+  leadQuality: text("segment_tag").$type<SegmentTag>(),
   score: integer("score"),
   sbaEligible: boolean("sba_eligible"),
 })
@@ -39,3 +40,11 @@ export const assessmentReports = pgTable(
   },
   (t) => [index("assessment_reports_session_id_idx").on(t.sessionId)]
 )
+
+export const waitlist = pgTable("waitlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  role: text("role"), // 'seller' | 'buyer' | 'advisor' | 'both'
+  source: text("source"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+})

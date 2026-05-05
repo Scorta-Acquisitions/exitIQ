@@ -4,15 +4,19 @@ import { z } from "zod"
 import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { computeScore } from "@/lib/assessment/scoring"
 import type { GateAnswers, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
+import { mapStage1ForScoring } from "@/lib/assessment/transform"
 import { db } from "@/lib/db"
 import { assessmentSessions } from "@/lib/db/schema"
+import { sendWelcomeEmail } from "@/lib/email"
+import { logger } from "@/lib/logger"
 
 const sessionBodySchema = z.object({
   sessionId: z.string().min(1),
   stage1: z
     .object({
       industry: z.string().optional(),
-      years: z.number().optional(),
+      // years may come in as a number (from client mapping) or string (legacy)
+      years: z.union([z.number(), z.string()]).optional(),
       revenue: z.string().optional(),
       sde: z.string().optional(),
       employees: z.string().optional(),
@@ -77,10 +81,13 @@ export async function POST(req: Request) {
   let sbaEligible: boolean | undefined
 
   if (data.completedAt !== undefined) {
+    // Translate frontend labels to scoring slugs without altering stored stage1
+    const scoringStage1 = data.stage1 ? mapStage1ForScoring(data.stage1 as Partial<Stage1Answers>) : {}
+
     const scoreResult = computeScore({
       sessionId: data.sessionId,
       createdAt: Date.now(),
-      stage1: data.stage1,
+      stage1: scoringStage1,
       gate: data.gate,
       stage2: data.stage2,
       stage3: data.stage3,
@@ -88,47 +95,72 @@ export async function POST(req: Request) {
     })
     score = scoreResult.composite
 
-    const sbaSnapshot = computeSBASnapshot(data.stage1 ?? {})
+    const sbaSnapshot = computeSBASnapshot(scoringStage1)
     sbaEligible = sbaSnapshot.eligible
   }
 
   const completedAtDate = data.completedAt !== undefined ? new Date(data.completedAt) : undefined
 
-  // Cast partial types to full types for Drizzle (jsonb columns store whatever shape is provided)
+  // Cast partial types — JSONB columns store whatever shape is provided
   const s1 = data.stage1 as Stage1Answers | undefined
   const gateData = data.gate as GateAnswers | undefined
   const s2 = data.stage2 as Stage2Answers | undefined
   const s3 = data.stage3 as Stage3Answers | undefined
   const s4 = data.stage4 as Stage4Answers | undefined
 
+  const isCompletion = data.completedAt !== undefined
+
+  logger.info("session.upsert", {
+    sessionId: data.sessionId,
+    isCompletion,
+    score: score ?? undefined,
+    sbaEligible: sbaEligible ?? undefined,
+    leadQuality: gateData?.tag ?? undefined,
+  })
+
   after(async () => {
-    await db
-      .insert(assessmentSessions)
-      .values({
+    try {
+      await db
+        .insert(assessmentSessions)
+        .values({
+          sessionId: data.sessionId,
+          stage1: s1 ?? null,
+          gate: gateData ?? null,
+          stage2: s2 ?? null,
+          stage3: s3 ?? null,
+          stage4: s4 ?? null,
+          leadQuality: gateData?.tag ?? null,
+          score: score ?? null,
+          sbaEligible: sbaEligible ?? null,
+          completedAt: completedAtDate ?? null,
+        })
+        .onConflictDoUpdate({
+          target: assessmentSessions.sessionId,
+          set: {
+            ...(s1 !== undefined ? { stage1: s1 } : {}),
+            ...(gateData !== undefined ? { gate: gateData, leadQuality: gateData.tag } : {}),
+            ...(s2 !== undefined ? { stage2: s2 } : {}),
+            ...(s3 !== undefined ? { stage3: s3 } : {}),
+            ...(s4 !== undefined ? { stage4: s4 } : {}),
+            ...(score !== undefined ? { score } : {}),
+            ...(sbaEligible !== undefined ? { sbaEligible } : {}),
+            ...(completedAtDate !== undefined ? { completedAt: completedAtDate } : {}),
+          },
+        })
+    } catch (err) {
+      logger.error("session.save_failed", {
         sessionId: data.sessionId,
-        stage1: s1 ?? null,
-        gate: gateData ?? null,
-        stage2: s2 ?? null,
-        stage3: s3 ?? null,
-        stage4: s4 ?? null,
-        segmentTag: gateData?.tag ?? null,
-        score: score ?? null,
-        sbaEligible: sbaEligible ?? null,
-        completedAt: completedAtDate ?? null,
+        error: err instanceof Error ? err.message : String(err),
       })
-      .onConflictDoUpdate({
-        target: assessmentSessions.sessionId,
-        set: {
-          ...(s1 !== undefined ? { stage1: s1 } : {}),
-          ...(gateData !== undefined ? { gate: gateData, segmentTag: gateData.tag } : {}),
-          ...(s2 !== undefined ? { stage2: s2 } : {}),
-          ...(s3 !== undefined ? { stage3: s3 } : {}),
-          ...(s4 !== undefined ? { stage4: s4 } : {}),
-          ...(score !== undefined ? { score } : {}),
-          ...(sbaEligible !== undefined ? { sbaEligible } : {}),
-          ...(completedAtDate !== undefined ? { completedAt: completedAtDate } : {}),
-        },
+    }
+
+    if (isCompletion && gateData) {
+      await sendWelcomeEmail({
+        gate: gateData,
+        stage1: s1,
+        leadQuality: gateData.tag ?? "nurture",
       })
+    }
   })
 
   return Response.json({ sessionId: data.sessionId, score: score ?? null, sbaEligible: sbaEligible ?? null })

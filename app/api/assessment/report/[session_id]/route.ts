@@ -12,10 +12,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ ses
   })
 
   if (!row) {
-    return Response.json({ error: "not_found" }, { status: 404 })
+    return Response.json({ status: "pending", reportMd: null, teaserJson: null, createdAt: null })
   }
 
   return Response.json({
+    status: "ready",
     reportMd: row.reportMd,
     teaserJson: row.teaserJson,
     createdAt: row.createdAt,

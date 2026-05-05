@@ -4,7 +4,7 @@
 import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
 import { BUYER_CARDS } from "@/lib/exitiq/data"
-import { ConfidenceMeter, Divider, LiveBadge, RadarRings, ScanLine, useSpring } from "./ui"
+import { ConfidenceMeter, Divider, LiveBadge, useSpring } from "./ui"
 
 // ── Odometer number ───────────────────────────────────────────────────────────
 function OdometerNum({
@@ -66,10 +66,12 @@ function DiagnosisZone({
   derived,
   processing,
   recalcMsg,
+  step,
 }: {
   derived: Derived
   processing: boolean
   recalcMsg: string | null
+  step: number
 }) {
   const { confidence } = derived
   const label =
@@ -86,7 +88,7 @@ function DiagnosisZone({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <ZoneLabel accent="rgba(167,229,211,.5)">Current Diagnosis</ZoneLabel>
-      <ConfidenceMeter value={confidence} />
+      <ConfidenceMeter value={confidence} active={processing || step >= 3} />
       <div style={{ minHeight: 18 }}>
         {processing || recalcMsg ? (
           <div
@@ -308,9 +310,10 @@ function SignalsZone({ derived }: { derived: Derived }) {
 // ── Zone 3: Still needed ──────────────────────────────────────────────────────
 function StillNeededZone({ step }: { step: number }) {
   const needs: { label: string; desc: string }[] = []
-  if (step < 4) needs.push({ label: "Owner dependency", desc: "Buyers will discount for this" })
-  if (step < 3) needs.push({ label: "Customer concentration", desc: "Key risk for buyer confidence" })
-  if (step < 5) needs.push({ label: "Financial documentation", desc: "Required for SBA financing" })
+  if (step < 2) needs.push({ label: "Owner dependency", desc: "Buyers will discount for this" })
+  if (step < 6) needs.push({ label: "Customer concentration", desc: "Key risk for buyer confidence" })
+  if (step < 4) needs.push({ label: "Financial documentation", desc: "Required for SBA financing" })
+  if (step < 9) needs.push({ label: "Recurring revenue profile", desc: "Directly impacts your multiple" })
   needs.push({ label: "Legal / lease risk", desc: "Locked in full report" })
 
   if (needs.length === 0) return null
@@ -361,7 +364,7 @@ function StillNeededZone({ step }: { step: number }) {
           </div>
         ))}
       </div>
-      {step < 6 && (
+      {step < 10 && (
         <div
           style={{
             background: "rgba(16,185,129,.05)",
@@ -475,21 +478,6 @@ export function DashboardPanel({ step, derived, processing, recalcMsg }: Dashboa
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
       <div
-        style={{
-          position: "absolute",
-          top: "28%",
-          left: "50%",
-          transform: "translate(-50%,-50%)",
-          width: 160,
-          height: 160,
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      >
-        <RadarRings active={processing || step >= 3} />
-      </div>
-
-      <div
         className="glass-panel"
         style={{
           padding: 22,
@@ -502,9 +490,8 @@ export function DashboardPanel({ step, derived, processing, recalcMsg }: Dashboa
           animation: "panelGlow 5s ease-in-out infinite",
         }}
       >
-        <ScanLine speed={4} />
         <LiveBadge />
-        <DiagnosisZone derived={derived} processing={processing} recalcMsg={recalcMsg} />
+        <DiagnosisZone derived={derived} processing={processing} recalcMsg={recalcMsg} step={step} />
         <Divider />
         <SignalsZone derived={derived} />
         {step > 0 && (
