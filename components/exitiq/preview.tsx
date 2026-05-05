@@ -139,7 +139,7 @@ function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean })
               position: "absolute",
               inset: 0,
               background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%)",
-              animation: "shimmer 2.2s ease-in-out infinite",
+              animation: "shimmer 3.2s ease-in-out infinite",
               pointerEvents: "none",
             }}
           />
@@ -322,8 +322,6 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
         overflow: "hidden",
       }}
     >
-      <ScanLine speed={5} />
-
       {/* Header */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -648,7 +646,7 @@ export function PreviewCard({ derived, answers, onUnlock }: PreviewCardProps) {
             e.currentTarget.style.boxShadow = "0 0 40px rgba(0,0,0,.12)"
           }}
         >
-          Unlock my full valuation + buyer report →
+          Unlock my preliminary valuation report →
           <div
             style={{
               position: "absolute",

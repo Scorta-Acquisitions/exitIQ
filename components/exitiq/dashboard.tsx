@@ -4,7 +4,7 @@
 import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
 import { BUYER_CARDS } from "@/lib/exitiq/data"
-import { ConfidenceMeter, Divider, LiveBadge, ScanLine, useSpring } from "./ui"
+import { ConfidenceMeter, Divider, LiveBadge, useSpring } from "./ui"
 
 // ── Odometer number ───────────────────────────────────────────────────────────
 function OdometerNum({
@@ -489,7 +489,6 @@ export function DashboardPanel({ step, derived, processing, recalcMsg }: Dashboa
           animation: "panelGlow 5s ease-in-out infinite",
         }}
       >
-        <ScanLine speed={4} />
         <LiveBadge />
         <DiagnosisZone derived={derived} processing={processing} recalcMsg={recalcMsg} step={step} />
         <Divider />

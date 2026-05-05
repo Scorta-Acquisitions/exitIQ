@@ -305,7 +305,7 @@ export function ConfidenceMeter({ value, active = false }: { value: number; acti
         {/* SVG + pulsing rings container */}
         <div style={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
           {/* Radiating rings — position controlled by ringTop / ringLeft above */}
-          {[0, 1].map((i) => (
+          {[0, 1, 2].map((i) => (
             <div
               key={i}
               style={{
