@@ -94,7 +94,7 @@ Only check sections triggered by Step 1. §G is always checked on every PR.
 ## §E — Design Token Rules
 
 | ID | Trigger | Flag | Severity |
-|---|---|---|---|
+|---|---|---|--- |
 | E1 | Hex color in `style={{}}` or className e.g. `text-[#3b82f6]` | Use Tailwind token only — no hardcoded hex | 🔴 |
 | E2 | Arbitrary Tailwind value `p-[13px]`, `mt-[7px]`, etc. | Use nearest 4px-grid token (`p-3`=12px, `p-4`=16px) | 🔴 |
 | E3 | Color class without `dark:` variant | All color utilities need `dark:` pairing | 🔴 |
