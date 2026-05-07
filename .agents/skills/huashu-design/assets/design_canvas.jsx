@@ -26,9 +26,9 @@
 
 const canvasStyles = {
   container: {
-    minHeight: '100vh',
-    background: '#F5F5F0',
-    padding: '40px 60px',
+    minHeight: "100vh",
+    background: "#F5F5F0",
+    padding: "40px 60px",
     fontFamily: '-apple-system, "SF Pro Text", "PingFang SC", sans-serif',
   },
   header: {
@@ -39,77 +39,77 @@ const canvasStyles = {
     fontSize: 36,
     fontWeight: 600,
     marginBottom: 12,
-    color: '#1A1A1A',
-    letterSpacing: '-0.02em',
+    color: "#1A1A1A",
+    letterSpacing: "-0.02em",
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     lineHeight: 1.5,
   },
   grid: {
-    display: 'grid',
+    display: "grid",
     gap: 32,
   },
   cell: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     gap: 12,
   },
   cellHeader: {
-    display: 'flex',
-    alignItems: 'baseline',
+    display: "flex",
+    alignItems: "baseline",
     gap: 12,
     paddingBottom: 8,
-    borderBottom: '1px solid #E0E0DA',
+    borderBottom: "1px solid #E0E0DA",
   },
   label: {
     fontSize: 14,
     fontWeight: 600,
-    color: '#1A1A1A',
-    letterSpacing: '-0.01em',
+    color: "#1A1A1A",
+    letterSpacing: "-0.01em",
   },
   description: {
     fontSize: 13,
-    color: '#888',
+    color: "#888",
   },
   frame: {
-    background: '#fff',
+    background: "#fff",
     borderRadius: 4,
-    border: '1px solid #E0E0DA',
-    overflow: 'hidden',
-    position: 'relative',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-    cursor: 'pointer',
+    border: "1px solid #E0E0DA",
+    overflow: "hidden",
+    position: "relative",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    cursor: "pointer",
   },
   frameInner: {
-    position: 'relative',
-    width: '100%',
+    position: "relative",
+    width: "100%",
   },
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     left: 12,
-    background: 'rgba(0, 0, 0, 0.7)',
-    color: '#fff',
-    padding: '3px 8px',
+    background: "rgba(0, 0, 0, 0.7)",
+    color: "#fff",
+    padding: "3px 8px",
     borderRadius: 4,
     fontSize: 11,
     fontWeight: 500,
-    letterSpacing: '0.5px',
-    textTransform: 'uppercase',
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
     zIndex: 10,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
-};
+}
 
 function DesignCanvas({ title, subtitle, columns = 3, children }) {
-  const [expanded, setExpanded] = React.useState(null);
+  const [expanded, setExpanded] = React.useState(null)
 
   const gridStyle = {
     ...canvasStyles.grid,
     gridTemplateColumns: `repeat(${columns}, 1fr)`,
-  };
+  }
 
   return (
     <div style={canvasStyles.container}>
@@ -136,26 +136,26 @@ function DesignCanvas({ title, subtitle, columns = 3, children }) {
         <div
           onClick={() => setExpanded(null)}
           style={{
-            position: 'fixed',
+            position: "fixed",
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
+            background: "rgba(0, 0, 0, 0.75)",
             zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             padding: 40,
-            cursor: 'zoom-out',
+            cursor: "zoom-out",
           }}
         >
           <div
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#fff',
+              background: "#fff",
               borderRadius: 8,
-              overflow: 'hidden',
-              maxWidth: '90vw',
-              maxHeight: '90vh',
-              position: 'relative',
+              overflow: "hidden",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              position: "relative",
             }}
           >
             {React.Children.toArray(children)[expanded]}
@@ -163,16 +163,16 @@ function DesignCanvas({ title, subtitle, columns = 3, children }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-function Variation({ label, description, number, children, _index, _expanded, _onToggle, aspectRatio = '4 / 3' }) {
-  const displayNumber = number || String(_index + 1).padStart(2, '0');
+function Variation({ label, description, number, children, _index, _expanded, _onToggle, aspectRatio = "4 / 3" }) {
+  const displayNumber = number || String(_index + 1).padStart(2, "0")
 
   return (
     <div style={canvasStyles.cell}>
       <div style={canvasStyles.cellHeader}>
-        <span style={{ ...canvasStyles.label, color: '#999', fontFamily: 'ui-monospace, monospace', fontSize: 12 }}>
+        <span style={{ ...canvasStyles.label, color: "#999", fontFamily: "ui-monospace, monospace", fontSize: 12 }}>
           {displayNumber}
         </span>
         <span style={canvasStyles.label}>{label}</span>
@@ -185,21 +185,19 @@ function Variation({ label, description, number, children, _index, _expanded, _o
           ...canvasStyles.frame,
           aspectRatio,
         }}
-        onMouseEnter={e => {
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"
         }}
-        onMouseLeave={e => {
-          e.currentTarget.style.boxShadow = 'none';
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = "none"
         }}
       >
-        <div style={canvasStyles.frameInner}>
-          {children}
-        </div>
+        <div style={canvasStyles.frameInner}>{children}</div>
       </div>
     </div>
-  );
+  )
 }
 
-if (typeof window !== 'undefined') {
-  Object.assign(window, { DesignCanvas, Variation });
+if (typeof window !== "undefined") {
+  Object.assign(window, { DesignCanvas, Variation })
 }

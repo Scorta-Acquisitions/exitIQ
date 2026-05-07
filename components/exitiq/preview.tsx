@@ -837,14 +837,86 @@ function UnlockList() {
 const QUESTION_META: { key: string; label: string; format: (v: string) => string }[] = [
   { key: "industry", label: "Industry", format: (v) => v || "—" },
   { key: "years", label: "Years in business", format: (v) => v || "—" },
-  { key: "ownerRole", label: "Owner role", format: (v) => (({ operator: "Day-to-day operator", partial: "Partially involved", mostly_hands_off: "Mostly hands-off", passive: "Silent / investor" } as Record<string, string>)[v] ?? v) || "—" },
+  {
+    key: "ownerRole",
+    label: "Owner role",
+    format: (v) =>
+      ((
+        ({
+          operator: "Day-to-day operator",
+          partial: "Partially involved",
+          mostly_hands_off: "Mostly hands-off",
+          passive: "Silent / investor",
+        }) as Record<string, string>
+      )[v] ??
+        v) ||
+      "—",
+  },
   { key: "revenue", label: "Annual revenue", format: (v) => v || "—" },
   { key: "sde", label: "Annual SDE", format: (v) => v || "—" },
-  { key: "revenueTrend", label: "Revenue trend", format: (v) => (({ growing_fast: "Growing 20%+", growing: "Growing 5–20%", flat: "Flat / Stable", declining_slight: "Declining 5–20%", declining_fast: "Declining 20%+" } as Record<string, string>)[v] ?? v) || "—" },
-  { key: "customerConc", label: "Customer concentration", format: (v) => (({ diversified: "Top customer <10%", moderate: "10–25% from top", concentrated: "25–50% from top", high_risk: "50%+ from top" } as Record<string, string>)[v] ?? v) || "—" },
+  {
+    key: "revenueTrend",
+    label: "Revenue trend",
+    format: (v) =>
+      ((
+        ({
+          growing_fast: "Growing 20%+",
+          growing: "Growing 5–20%",
+          flat: "Flat / Stable",
+          declining_slight: "Declining 5–20%",
+          declining_fast: "Declining 20%+",
+        }) as Record<string, string>
+      )[v] ??
+        v) ||
+      "—",
+  },
+  {
+    key: "customerConc",
+    label: "Customer concentration",
+    format: (v) =>
+      ((
+        ({
+          diversified: "Top customer <10%",
+          moderate: "10–25% from top",
+          concentrated: "25–50% from top",
+          high_risk: "50%+ from top",
+        }) as Record<string, string>
+      )[v] ??
+        v) ||
+      "—",
+  },
   { key: "employees", label: "Team size", format: (v) => v || "—" },
-  { key: "keyMan", label: "Key-man independence", format: (v) => (({ "1": "1/5 — Everything through me", "2": "2/5 — Most key relationships mine", "3": "3/5 — Shared control", "4": "4/5 — Mostly independent", "5": "5/5 — Fully independent" } as Record<string, string>)[v] ?? v) || "—" },
-  { key: "recurringRev", label: "Recurring revenue", format: (v) => (({ high: "Over 75% recurring", medium_high: "50–75% recurring", medium: "25–50% recurring", low: "Under 25% recurring" } as Record<string, string>)[v] ?? v) || "—" },
+  {
+    key: "keyMan",
+    label: "Key-man independence",
+    format: (v) =>
+      ((
+        ({
+          "1": "1/5 — Everything through me",
+          "2": "2/5 — Most key relationships mine",
+          "3": "3/5 — Shared control",
+          "4": "4/5 — Mostly independent",
+          "5": "5/5 — Fully independent",
+        }) as Record<string, string>
+      )[v] ??
+        v) ||
+      "—",
+  },
+  {
+    key: "recurringRev",
+    label: "Recurring revenue",
+    format: (v) =>
+      ((
+        ({
+          high: "Over 75% recurring",
+          medium_high: "50–75% recurring",
+          medium: "25–50% recurring",
+          low: "Under 25% recurring",
+        }) as Record<string, string>
+      )[v] ??
+        v) ||
+      "—",
+  },
 ]
 
 function AnswersSummary({ answers }: { answers: Record<string, string> }) {
@@ -953,7 +1025,15 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 // ── Unlock CTA ────────────────────────────────────────────────────────────────
-function UnlockCTA({ onUnlock, label = "Unlock my preliminary ExitIQ report — free →", subtext = "Takes 30 seconds. No broker call required." }: { onUnlock: () => void; label?: string; subtext?: string }) {
+function UnlockCTA({
+  onUnlock,
+  label = "Unlock my preliminary ExitIQ report — free →",
+  subtext = "Takes 30 seconds. No broker call required.",
+}: {
+  onUnlock: () => void
+  label?: string
+  subtext?: string
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <button
@@ -1171,9 +1251,7 @@ function LockedRow({ label, sub, delay = 0 }: { label: string; sub?: string; del
             {label}
           </div>
           {sub && (
-            <div style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif", marginTop: 1 }}>
-              {sub}
-            </div>
+            <div style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif", marginTop: 1 }}>{sub}</div>
           )}
         </div>
       </div>
@@ -1270,8 +1348,8 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
             fontFamily: "Inter, sans-serif",
           }}
         >
-          Based on {industry.toLowerCase()} market data. {estimatedDims} dimensions estimated —
-          unlock your full diagnostic below.
+          Based on {industry.toLowerCase()} market data. {estimatedDims} dimensions estimated — unlock your full
+          diagnostic below.
         </p>
       </div>
 
@@ -1491,11 +1569,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
             sub="Whether your business qualifies for SBA loans"
             delay={160}
           />
-          <LockedRow
-            label="Broker-free sale roadmap"
-            sub="Step-by-step guidance from listing to close"
-            delay={240}
-          />
+          <LockedRow label="Broker-free sale roadmap" sub="Step-by-step guidance from listing to close" delay={240} />
         </div>
       </div>
 
@@ -1590,10 +1664,12 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
   const recurPillLabel = teaserData?.recurringSignal ?? recur.pill.replace("🔁 ", "")
 
   // Buyer pool: prefer AI
-  const buyerPoolText = teaserData?.buyerPoolPrimary ?? (industry?.buyerLead ?? "Multiple buyer types")
+  const buyerPoolText = teaserData?.buyerPoolPrimary ?? industry?.buyerLead ?? "Multiple buyer types"
 
   // Multiple context: prefer AI
-  const multipleContextText = teaserData?.multipleContext ?? (multiple ? `${multiple} SDE multiple · ${industryLabel} benchmark ${industryMultRange}` : null)
+  const multipleContextText =
+    teaserData?.multipleContext ??
+    (multiple ? `${multiple} SDE multiple · ${industryLabel} benchmark ${industryMultRange}` : null)
 
   const estimatedDims = radarScores.filter((s) => s > 0).length
 
@@ -1664,7 +1740,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
         </p>
       </div>
 
-      <UnlockCTA onUnlock={onUnlock} label="Get my full report — free →" subtext="No broker call. No sales pitch. Straight signal." />
+      <UnlockCTA
+        onUnlock={onUnlock}
+        label="Get my full report — free →"
+        subtext="No broker call. No sales pitch. Straight signal."
+      />
 
       <SectionDivider label="Valuation signal" />
 

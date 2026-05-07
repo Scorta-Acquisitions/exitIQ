@@ -283,8 +283,8 @@ export function ConfidenceMeter({ value, active = false }: { value: number; acti
   // The SVG circle centre sits at pixel (44, 44) inside the 88×88 container.
   // ringTop / ringLeft are the top-left corner of each ring div (88×88).
   // To centre a ring on a point (cx, cy): ringTop = cy - 44, ringLeft = cx - 44.
-  const ringTop = 0   // ← change me (px from top of the 88×88 container)
-  const ringLeft = 0  // ← change me (px from left of the 88×88 container)
+  const ringTop = 0 // ← change me (px from top of the 88×88 container)
+  const ringLeft = 0 // ← change me (px from left of the 88×88 container)
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
@@ -323,36 +323,36 @@ export function ConfidenceMeter({ value, active = false }: { value: number; acti
             />
           ))}
           <svg width={88} height={88} viewBox="0 0 88 88" style={{ position: "relative", zIndex: 1 }}>
-          <circle cx={44} cy={44} r={r} fill="none" stroke="var(--s1)" strokeWidth={5} />
-          <circle
-            cx={44}
-            cy={44}
-            r={r}
-            fill="none"
-            stroke={color}
-            strokeWidth={5}
-            strokeLinecap="round"
-            strokeDasharray={circ}
-            strokeDashoffset={offset}
-            transform="rotate(-90 44 44)"
-            style={{
-              transition: "stroke-dashoffset 1.4s cubic-bezier(.34,1.1,.64,1), stroke .8s ease",
-              filter: `drop-shadow(0 0 8px ${color})`,
-            }}
-          />
-          <text
-            x={44}
-            y={44}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="var(--t1)"
-            fontSize={15}
-            fontWeight={500}
-            fontFamily="Inter"
-          >
-            {Math.round(disp)}%
-          </text>
-        </svg>
+            <circle cx={44} cy={44} r={r} fill="none" stroke="var(--s1)" strokeWidth={5} />
+            <circle
+              cx={44}
+              cy={44}
+              r={r}
+              fill="none"
+              stroke={color}
+              strokeWidth={5}
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              strokeDashoffset={offset}
+              transform="rotate(-90 44 44)"
+              style={{
+                transition: "stroke-dashoffset 1.4s cubic-bezier(.34,1.1,.64,1), stroke .8s ease",
+                filter: `drop-shadow(0 0 8px ${color})`,
+              }}
+            />
+            <text
+              x={44}
+              y={44}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="var(--t1)"
+              fontSize={15}
+              fontWeight={500}
+              fontFamily="Inter"
+            >
+              {Math.round(disp)}%
+            </text>
+          </svg>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div

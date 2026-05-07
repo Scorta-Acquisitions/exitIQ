@@ -40,7 +40,9 @@ function ExitConfirmDialog({ onStay, onExit }: { onStay: () => void; onExit: () 
   }, [])
 
   React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onStay() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onStay()
+    }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [onStay])
@@ -86,7 +88,15 @@ function ExitConfirmDialog({ onStay, onExit }: { onStay: () => void; onExit: () 
               strokeLinejoin="round"
               fill="rgba(251,191,36,.08)"
             />
-            <line x1="14" y1="10.5" x2="14" y2="17.5" stroke="rgba(251,191,36,.8)" strokeWidth={1.5} strokeLinecap="round" />
+            <line
+              x1="14"
+              y1="10.5"
+              x2="14"
+              y2="17.5"
+              stroke="rgba(251,191,36,.8)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+            />
             <circle cx="14" cy="21" r="1.2" fill="rgba(251,191,36,.8)" />
           </svg>
         </div>
@@ -215,7 +225,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     }
   }, [])
 
-
   // ── Answer handler ────────────────────────────────────────────────────────────────────────────
   const handleAnswer = React.useCallback(
     (value: string, e: React.MouseEvent) => {
@@ -288,7 +297,10 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return
       if (showExitConfirm) return // ExitConfirmDialog handles its own Escape
-      if (showModal) { setShowModal(false); return }
+      if (showModal) {
+        setShowModal(false)
+        return
+      }
       handleCloseRequest()
     }
     window.addEventListener("keydown", handler)
@@ -429,7 +441,10 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         {showExitConfirm && (
           <ExitConfirmDialog
             onStay={() => setShowExitConfirm(false)}
-            onExit={() => { setShowExitConfirm(false); onClose?.() }}
+            onExit={() => {
+              setShowExitConfirm(false)
+              onClose?.()
+            }}
           />
         )}
 
@@ -469,7 +484,13 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             onMouseLeave={(e) => (e.currentTarget.style.color = "var(--t3)")}
           >
             <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
-              <path d="M7 1.5L3 5.5l4 4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M7 1.5L3 5.5l4 4"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Back
           </button>
@@ -602,16 +623,9 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             ) : (
               // Post-gate: teaser preview immediately, then full Sonnet report when ready
               <>
-                <PreviewCard
-                  derived={derived}
-                  answers={answers}
-                  onUnlock={() => {}}
-                  teaserData={teaserData}
-                />
+                <PreviewCard derived={derived} answers={answers} onUnlock={() => {}} teaserData={teaserData} />
                 {reportStreaming && <ReportGeneratingCard />}
-                {!reportStreaming && reportMd && (
-                  <FullReportCard reportMd={reportMd} firstName={gateFirstName} />
-                )}
+                {!reportStreaming && reportMd && <FullReportCard reportMd={reportMd} firstName={gateFirstName} />}
               </>
             )}
 
@@ -702,5 +716,3 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     </div>
   )
 }
-
-

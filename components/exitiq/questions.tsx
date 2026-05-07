@@ -50,11 +50,7 @@ function StepLabel({ step }: { step: number }) {
               padding: "0 9px",
               borderRadius: 9999,
               background:
-                p.phase < phase
-                  ? "rgba(16,185,129,.18)"
-                  : p.phase === phase
-                    ? "rgba(16,185,129,.12)"
-                    : "var(--s1)",
+                p.phase < phase ? "rgba(16,185,129,.18)" : p.phase === phase ? "rgba(16,185,129,.12)" : "var(--s1)",
               border: `1px solid ${p.phase <= phase ? "rgba(16,185,129,.35)" : "var(--b3)"}`,
               display: "flex",
               alignItems: "center",
@@ -64,7 +60,13 @@ function StepLabel({ step }: { step: number }) {
           >
             {p.phase < phase && (
               <svg width={8} height={8} viewBox="0 0 8 8" fill="none">
-                <path d="M1.5 4l2 2 3-3" stroke="#10b981" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M1.5 4l2 2 3-3"
+                  stroke="#10b981"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             )}
             <span
@@ -74,11 +76,7 @@ function StepLabel({ step }: { step: number }) {
                 letterSpacing: ".7px",
                 textTransform: "uppercase",
                 color:
-                  p.phase < phase
-                    ? "rgba(16,185,129,.7)"
-                    : p.phase === phase
-                      ? "rgba(16,185,129,.9)"
-                      : "var(--t4)",
+                  p.phase < phase ? "rgba(16,185,129,.7)" : p.phase === phase ? "rgba(16,185,129,.9)" : "var(--t4)",
                 fontFamily: "Inter, sans-serif",
               }}
             >
@@ -98,12 +96,7 @@ function StepLabel({ step }: { step: number }) {
                 flex: 1,
                 height: 2,
                 borderRadius: 9999,
-                background:
-                  i < stepInPhase
-                    ? "#10b981"
-                    : i === stepInPhase
-                      ? "rgba(16,185,129,.38)"
-                      : "var(--s1)",
+                background: i < stepInPhase ? "#10b981" : i === stepInPhase ? "rgba(16,185,129,.38)" : "var(--s1)",
                 boxShadow: i < stepInPhase ? "0 0 6px rgba(16,185,129,.55)" : "none",
                 transition: "background .6s ease, box-shadow .6s ease",
               }}
@@ -287,7 +280,9 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <QHead>How long have you been in business?</QHead>
-      <QSub>Longevity is one of the strongest buyer confidence signals — it shows the business can survive cycles.</QSub>
+      <QSub>
+        Longevity is one of the strongest buyer confidence signals — it shows the business can survive cycles.
+      </QSub>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <div
@@ -301,13 +296,17 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           >
             {val === 25 ? "25+ years" : `${val} ${val === 1 ? "year" : "years"}`}
           </div>
-          <div style={{ fontSize: 12, fontWeight: 500, color: "rgba(167,229,211,.7)", fontFamily: "Inter, sans-serif" }}>
+          <div
+            style={{ fontSize: 12, fontWeight: 500, color: "rgba(167,229,211,.7)", fontFamily: "Inter, sans-serif" }}
+          >
             {currentOpt?.label}
           </div>
         </div>
 
         <div style={{ position: "relative", height: 40, display: "flex", alignItems: "center" }}>
-          <div style={{ position: "absolute", left: 0, right: 0, height: 4, borderRadius: 9999, background: "var(--s1)" }} />
+          <div
+            style={{ position: "absolute", left: 0, right: 0, height: 4, borderRadius: 9999, background: "var(--s1)" }}
+          />
           <div
             style={{
               position: "absolute",
@@ -358,8 +357,7 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           {([1, 5, 10, 15, 25] as const).map((yr, i) => {
             const pctTick = (yr - 1) / 24
             const label = yr === 25 ? "25yr+" : `${yr}yr`
-            const transform =
-              i === 0 ? "translateX(0%)" : i === 4 ? "translateX(-100%)" : "translateX(-50%)"
+            const transform = i === 0 ? "translateX(0%)" : i === 4 ? "translateX(-100%)" : "translateX(-50%)"
             return (
               <div
                 key={yr}
@@ -417,7 +415,13 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
 }
 
 // ── Q3: Owner role ────────────────────────────────────────────────────────────
-function Q3OwnerRole({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
+function Q3OwnerRole({
+  onAnswer,
+  disabled,
+}: {
+  onAnswer: (v: string, e: React.MouseEvent) => void
+  disabled: boolean
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What's your role in the day-to-day?</QHead>
@@ -575,7 +579,13 @@ function Q5SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
 }
 
 // ── Q6: Revenue trend ─────────────────────────────────────────────────────────
-function Q6RevenueTrend({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
+function Q6RevenueTrend({
+  onAnswer,
+  disabled,
+}: {
+  onAnswer: (v: string, e: React.MouseEvent) => void
+  disabled: boolean
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>Over the last 3 years, your revenue has…</QHead>
@@ -592,7 +602,13 @@ function Q6RevenueTrend({ onAnswer, disabled }: { onAnswer: (v: string, e: React
 }
 
 // ── Q7: Customer concentration ────────────────────────────────────────────────
-function Q7CustomerConc({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
+function Q7CustomerConc({
+  onAnswer,
+  disabled,
+}: {
+  onAnswer: (v: string, e: React.MouseEvent) => void
+  disabled: boolean
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What percentage of revenue comes from your top customer?</QHead>
@@ -719,7 +735,10 @@ function Q9KeyMan({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mouse
               padding: "13px 18px",
               textAlign: "left",
               cursor: disabled ? "default" : "pointer",
-              background: hover === value ? `rgba(${scaleColors[i] === "#10b981" ? "16,185,129" : "168,168,168"},.08)` : "var(--s2)",
+              background:
+                hover === value
+                  ? `rgba(${scaleColors[i] === "#10b981" ? "16,185,129" : "168,168,168"},.08)`
+                  : "var(--s2)",
               border: `1px solid ${hover === value ? `${scaleColors[i]}55` : "var(--b3)"}`,
               borderRadius: 12,
               transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
@@ -777,7 +796,13 @@ function Q9KeyMan({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mouse
 }
 
 // ── Q10: Recurring revenue ────────────────────────────────────────────────────
-function Q10RecurringRev({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEvent) => void; disabled: boolean }) {
+function Q10RecurringRev({
+  onAnswer,
+  disabled,
+}: {
+  onAnswer: (v: string, e: React.MouseEvent) => void
+  disabled: boolean
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <QHead>What percentage of your revenue is recurring or contracted?</QHead>

@@ -131,7 +131,14 @@ function TopNav({ onStart }: { onStart: () => void }) {
     >
       <Link
         href="/"
-        style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", textDecoration: "none" }}
+        style={{
+          fontFamily: garamond,
+          fontSize: 22,
+          fontWeight: 300,
+          color: C.ink,
+          letterSpacing: "-0.3px",
+          textDecoration: "none",
+        }}
       >
         Scorta
       </Link>
@@ -144,7 +151,13 @@ function TopNav({ onStart }: { onStart: () => void }) {
           <Link
             key={label}
             href={href}
-            style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: label === "About" ? C.ink : C.body, textDecoration: "none" }}
+            style={{
+              fontFamily: inter,
+              fontSize: 15,
+              fontWeight: 500,
+              color: label === "About" ? C.ink : C.body,
+              textDecoration: "none",
+            }}
           >
             {label}
           </Link>
@@ -178,13 +191,7 @@ function PhotoAvatar({ src, name }: { src: string; name: string }) {
         position: "relative",
       }}
     >
-      <Image
-        src={src}
-        alt={name}
-        fill
-        sizes="88px"
-        style={{ objectFit: "cover", objectPosition: "center top" }}
-      />
+      <Image src={src} alt={name} fill sizes="88px" style={{ objectFit: "cover", objectPosition: "center top" }} />
     </div>
   )
 }
@@ -217,10 +224,28 @@ function FounderCard({
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <PhotoAvatar src={photo} name={name} />
         <div>
-          <div style={{ fontFamily: garamond, fontSize: 26, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", lineHeight: 1.1 }}>
+          <div
+            style={{
+              fontFamily: garamond,
+              fontSize: 26,
+              fontWeight: 300,
+              color: C.ink,
+              letterSpacing: "-0.3px",
+              lineHeight: 1.1,
+            }}
+          >
             {name}
           </div>
-          <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: C.muted, marginTop: 4, letterSpacing: "0.2px" }}>
+          <div
+            style={{
+              fontFamily: inter,
+              fontSize: 13,
+              fontWeight: 500,
+              color: C.muted,
+              marginTop: 4,
+              letterSpacing: "0.2px",
+            }}
+          >
             {title}
           </div>
         </div>
@@ -230,7 +255,15 @@ function FounderCard({
         {bio.map((line, i) => (
           <p
             key={i}
-            style={{ fontFamily: inter, fontSize: 15, fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.1px", margin: 0 }}
+            style={{
+              fontFamily: inter,
+              fontSize: 15,
+              fontWeight: 400,
+              color: C.body,
+              lineHeight: 1.7,
+              letterSpacing: "0.1px",
+              margin: 0,
+            }}
           >
             {line}
           </p>
@@ -283,10 +316,29 @@ function StatBadge({ value, label }: { value: string; label: string }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ width: 24, height: 2, background: C.gradMint, margin: "0 auto 18px", borderRadius: 1 }} />
-      <div style={{ fontFamily: garamond, fontSize: 44, fontWeight: 300, color: C.ink, letterSpacing: "-1.2px", lineHeight: 1 }}>
+      <div
+        style={{
+          fontFamily: garamond,
+          fontSize: 44,
+          fontWeight: 300,
+          color: C.ink,
+          letterSpacing: "-1.2px",
+          lineHeight: 1,
+        }}
+      >
         {value}
       </div>
-      <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: C.muted, marginTop: 8, letterSpacing: "0.2px", lineHeight: 1.5 }}>
+      <div
+        style={{
+          fontFamily: inter,
+          fontSize: 13,
+          fontWeight: 500,
+          color: C.muted,
+          marginTop: 8,
+          letterSpacing: "0.2px",
+          lineHeight: 1.5,
+        }}
+      >
         {label}
       </div>
     </div>
@@ -371,7 +423,8 @@ function HeroSection() {
             margin: "0 auto",
           }}
         >
-          We go further than any broker — AI-powered exit prep, deal packaging, and SBA-ready financials that turn your business into an asset buyers compete for. Flat fee. No commission.
+          We go further than any broker — AI-powered exit prep, deal packaging, and SBA-ready financials that turn your
+          business into an asset buyers compete for. Flat fee. No commission.
         </p>
       </div>
     </section>
@@ -615,7 +668,9 @@ function TractionSection() {
             margin: "0 auto",
           }}
         >
-          Our sellers find us at their most uncertain moment — not knowing what their business is worth, who would buy it, or whether their financials will hold up in diligence. ExitIQ gives them the clarity to move forward with confidence.
+          Our sellers find us at their most uncertain moment — not knowing what their business is worth, who would buy
+          it, or whether their financials will hold up in diligence. ExitIQ gives them the clarity to move forward with
+          confidence.
         </p>
       </div>
     </section>
@@ -649,7 +704,18 @@ function MissionSection() {
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", textAlign: "center", ...glassLight, borderRadius: 28, padding: "60px 64px 56px" }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 700,
+          margin: "0 auto",
+          textAlign: "center",
+          ...glassLight,
+          borderRadius: 28,
+          padding: "60px 64px 56px",
+        }}
+      >
         <h2 style={{ ...displayStyle(48), lineHeight: 1.07, marginBottom: 24 }}>
           Making every Main Street
           <br />
@@ -666,7 +732,8 @@ function MissionSection() {
             marginBottom: 40,
           }}
         >
-          2.9 million businesses. 10,000 new exits entering the market every day. Most will never sell — not because there's no buyer, but because no one built the infrastructure to get them ready. That's what we're building.
+          2.9 million businesses. 10,000 new exits entering the market every day. Most will never sell — not because
+          there's no buyer, but because no one built the infrastructure to get them ready. That's what we're building.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -708,8 +775,26 @@ function MissionSection() {
 function FooterSection() {
   return (
     <footer style={{ background: C.canvas, borderTop: `1px solid ${C.hairline}`, padding: "48px 48px 32px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", textDecoration: "none" }}>
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Link
+          href="/"
+          style={{
+            fontFamily: garamond,
+            fontSize: 20,
+            fontWeight: 300,
+            color: C.ink,
+            letterSpacing: "-0.3px",
+            textDecoration: "none",
+          }}
+        >
           Scorta
         </Link>
         <span style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>

@@ -11,49 +11,49 @@
 
 const androidFrameStyles = {
   wrapper: {
-    display: 'inline-block',
+    display: "inline-block",
     padding: 10,
-    background: '#1a1a1a',
+    background: "#1a1a1a",
     borderRadius: 44,
-    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
-    position: 'relative',
+    boxShadow: "0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)",
+    position: "relative",
   },
   screen: {
-    position: 'relative',
+    position: "relative",
     borderRadius: 36,
-    overflow: 'hidden',
-    background: '#fff',
+    overflow: "hidden",
+    background: "#fff",
   },
   statusBar: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     height: 32,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 24px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 24px",
     fontSize: 14,
     fontWeight: 500,
-    fontFamily: 'Roboto, -apple-system, sans-serif',
+    fontFamily: "Roboto, -apple-system, sans-serif",
     zIndex: 20,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
   punchHole: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
-    left: '50%',
-    transform: 'translateX(-50%)',
+    left: "50%",
+    transform: "translateX(-50%)",
     width: 14,
     height: 14,
-    background: '#000',
-    borderRadius: '50%',
+    background: "#000",
+    borderRadius: "50%",
     zIndex: 30,
   },
   statusIcons: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 6,
   },
   batteryText: {
@@ -62,52 +62,54 @@ const androidFrameStyles = {
     marginLeft: 2,
   },
   content: {
-    position: 'absolute',
+    position: "absolute",
     top: 32,
     left: 0,
     right: 0,
     bottom: 24,
-    overflow: 'auto',
+    overflow: "auto",
   },
   navBar: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     height: 24,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 60,
     zIndex: 10,
   },
   navButton: {
     width: 36,
     height: 4,
-    background: 'rgba(0,0,0,0.3)',
+    background: "rgba(0,0,0,0.3)",
     borderRadius: 999,
   },
-};
+}
 
 function AndroidFrame({
   children,
   width = 412,
   height = 892,
-  time = '9:41',
+  time = "9:41",
   battery = 100,
   darkMode = false,
-  navStyle = 'gesture',
+  navStyle = "gesture",
 }) {
-  const textColor = darkMode ? '#fff' : '#1a1a1a';
+  const textColor = darkMode ? "#fff" : "#1a1a1a"
 
   return (
     <div style={androidFrameStyles.wrapper}>
-      <div style={{
-        ...androidFrameStyles.screen,
-        width,
-        height,
-        background: darkMode ? '#000' : '#fff',
-      }}>
+      <div
+        style={{
+          ...androidFrameStyles.screen,
+          width,
+          height,
+          background: darkMode ? "#000" : "#fff",
+        }}
+      >
         <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
           <span>{time}</span>
           <div style={androidFrameStyles.statusIcons}>
@@ -122,20 +124,24 @@ function AndroidFrame({
               <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
               <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
             </svg>
-            <div style={{
-              width: 22,
-              height: 10,
-              border: '1.5px solid currentColor',
-              borderRadius: 2,
-              padding: 1,
-              position: 'relative',
-            }}>
-              <div style={{
-                width: `${battery}%`,
-                height: '100%',
-                background: 'currentColor',
-                borderRadius: 1,
-              }} />
+            <div
+              style={{
+                width: 22,
+                height: 10,
+                border: "1.5px solid currentColor",
+                borderRadius: 2,
+                padding: 1,
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  width: `${battery}%`,
+                  height: "100%",
+                  background: "currentColor",
+                  borderRadius: 1,
+                }}
+              />
             </div>
             <span style={androidFrameStyles.batteryText}>{battery}%</span>
           </div>
@@ -143,22 +149,22 @@ function AndroidFrame({
 
         <div style={androidFrameStyles.punchHole} />
 
-        <div style={androidFrameStyles.content}>
-          {children}
-        </div>
+        <div style={androidFrameStyles.content}>{children}</div>
 
-        {navStyle === 'gesture' && (
+        {navStyle === "gesture" && (
           <div style={androidFrameStyles.navBar}>
-            <div style={{
-              ...androidFrameStyles.navButton,
-              width: 100,
-              height: 4,
-              background: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
-            }} />
+            <div
+              style={{
+                ...androidFrameStyles.navButton,
+                width: 100,
+                height: 4,
+                background: darkMode ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+              }}
+            />
           </div>
         )}
 
-        {navStyle === 'buttons' && (
+        {navStyle === "buttons" && (
           <div style={androidFrameStyles.navBar}>
             <span style={{ color: textColor, fontSize: 20 }}>◁</span>
             <span style={{ color: textColor, fontSize: 16 }}>○</span>
@@ -167,9 +173,9 @@ function AndroidFrame({
         )}
       </div>
     </div>
-  );
+  )
 }
 
-if (typeof window !== 'undefined') {
-  window.AndroidFrame = AndroidFrame;
+if (typeof window !== "undefined") {
+  window.AndroidFrame = AndroidFrame
 }
