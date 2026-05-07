@@ -620,24 +620,77 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
 
             {/* Answer trail chips */}
             {Object.keys(answers).length > 0 && !submitted && step < 10 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, animation: "fadeIn .4s ease" }}>
-                {Object.values(answers).map((a, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: "var(--t3)",
-                      background: "var(--s2)",
-                      border: "1px solid var(--b3)",
-                      borderRadius: 9999,
-                      padding: "3px 10px",
-                      fontFamily: "Inter, sans-serif",
-                    }}
-                  >
-                    {a}
-                  </div>
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, animation: "fadeIn .4s ease" }}>
+                <div
+                  style={{
+                    fontSize: 9.5,
+                    color: "var(--t5)",
+                    fontFamily: "Inter, sans-serif",
+                    letterSpacing: ".4px",
+                  }}
+                >
+                  tap any answer to revise
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {ANSWER_KEYS.filter((k) => !!answers[k]).map((key) => {
+                    const targetStep = ANSWER_KEYS.indexOf(key)
+                    const disabled = processing || transitioning
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => !disabled && setStep(targetStep)}
+                        title="Edit this answer"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 11,
+                          fontWeight: 500,
+                          color: "var(--t3)",
+                          background: "var(--s2)",
+                          border: "1px solid var(--b3)",
+                          borderRadius: 9999,
+                          padding: "3px 10px",
+                          fontFamily: "Inter, sans-serif",
+                          cursor: disabled ? "default" : "pointer",
+                          transition: "border-color .15s, color .15s",
+                          outline: "none",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!disabled) {
+                            e.currentTarget.style.borderColor = "rgba(167,229,211,.45)"
+                            e.currentTarget.style.color = "var(--t2)"
+                            const icon = e.currentTarget.querySelector<SVGSVGElement>(".chip-edit-icon")
+                            if (icon) icon.style.opacity = "0.65"
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "var(--b3)"
+                          e.currentTarget.style.color = "var(--t3)"
+                          const icon = e.currentTarget.querySelector<SVGSVGElement>(".chip-edit-icon")
+                          if (icon) icon.style.opacity = "0.28"
+                        }}
+                      >
+                        {answers[key]}
+                        <svg
+                          className="chip-edit-icon"
+                          width={9}
+                          height={9}
+                          viewBox="0 0 9 9"
+                          fill="none"
+                          style={{ opacity: 0.28, flexShrink: 0, transition: "opacity .15s" }}
+                        >
+                          <path
+                            d="M1.5 7L6 2.5a1 1 0 0 1 1.5 1.5L3 8.5H1.5V7Z"
+                            stroke="currentColor"
+                            strokeWidth={1}
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
