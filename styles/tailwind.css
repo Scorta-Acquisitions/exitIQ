@@ -60,7 +60,7 @@
 
 /* ── Reset ─────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; min-height: 100%; overflow-x: hidden; }
+html, body { width: 100%; min-height: 100%; overflow-x: clip; }
 body {
   font-family: 'Inter', var(--font-inter, sans-serif);
   -webkit-font-smoothing: antialiased;

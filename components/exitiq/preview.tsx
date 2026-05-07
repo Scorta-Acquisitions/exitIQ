@@ -833,6 +833,102 @@ function UnlockList() {
   )
 }
 
+// ── Answers summary ───────────────────────────────────────────────────────────
+const QUESTION_META: { key: string; label: string; format: (v: string) => string }[] = [
+  { key: "industry", label: "Industry", format: (v) => v || "—" },
+  { key: "years", label: "Years in business", format: (v) => v || "—" },
+  { key: "ownerRole", label: "Owner role", format: (v) => (({ operator: "Day-to-day operator", partial: "Partially involved", mostly_hands_off: "Mostly hands-off", passive: "Silent / investor" } as Record<string, string>)[v] ?? v) || "—" },
+  { key: "revenue", label: "Annual revenue", format: (v) => v || "—" },
+  { key: "sde", label: "Annual SDE", format: (v) => v || "—" },
+  { key: "revenueTrend", label: "Revenue trend", format: (v) => (({ growing_fast: "Growing 20%+", growing: "Growing 5–20%", flat: "Flat / Stable", declining_slight: "Declining 5–20%", declining_fast: "Declining 20%+" } as Record<string, string>)[v] ?? v) || "—" },
+  { key: "customerConc", label: "Customer concentration", format: (v) => (({ diversified: "Top customer <10%", moderate: "10–25% from top", concentrated: "25–50% from top", high_risk: "50%+ from top" } as Record<string, string>)[v] ?? v) || "—" },
+  { key: "employees", label: "Team size", format: (v) => v || "—" },
+  { key: "keyMan", label: "Key-man independence", format: (v) => (({ "1": "1/5 — Everything through me", "2": "2/5 — Most key relationships mine", "3": "3/5 — Shared control", "4": "4/5 — Mostly independent", "5": "5/5 — Fully independent" } as Record<string, string>)[v] ?? v) || "—" },
+  { key: "recurringRev", label: "Recurring revenue", format: (v) => (({ high: "Over 75% recurring", medium_high: "50–75% recurring", medium: "25–50% recurring", low: "Under 25% recurring" } as Record<string, string>)[v] ?? v) || "—" },
+]
+
+function AnswersSummary({ answers }: { answers: Record<string, string> }) {
+  const answered = QUESTION_META.filter((q) => !!answers[q.key])
+  if (answered.length === 0) return null
+
+  return (
+    <div
+      style={{
+        background: "var(--s2)",
+        border: "1px solid var(--b3)",
+        borderRadius: 14,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "11px 16px",
+          borderBottom: "1px solid var(--b3)",
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+        }}
+      >
+        <svg width={11} height={11} viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+          <circle cx={5.5} cy={5.5} r={4.5} stroke="var(--t3)" strokeWidth={1} />
+          <path d="M3.5 5.5h4M5.5 3.5v4" stroke="var(--t3)" strokeWidth={1} strokeLinecap="round" />
+        </svg>
+        <div
+          style={{
+            fontSize: 9.5,
+            fontWeight: 700,
+            letterSpacing: ".8px",
+            textTransform: "uppercase",
+            color: "var(--t4)",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          Your responses — {answered.length} of {QUESTION_META.length} answered
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {answered.map((q, i) => (
+          <div
+            key={q.key}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "9px 16px",
+              borderBottom: i < answered.length - 1 ? "1px solid var(--b3)" : "none",
+              animation: `slideUp .35s ${i * 40}ms ease both`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11.5,
+                color: "var(--t4)",
+                fontFamily: "Inter, sans-serif",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {q.label}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: "var(--t2)",
+                fontFamily: "Inter, sans-serif",
+                textAlign: "right",
+              }}
+            >
+              {q.format(answers[q.key] ?? "")}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Divider ───────────────────────────────────────────────────────────────────
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -857,7 +953,7 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 // ── Unlock CTA ────────────────────────────────────────────────────────────────
-function UnlockCTA({ onUnlock, label = "Unlock my full ExitIQ report — free →", subtext = "Takes 30 seconds. No broker call required." }: { onUnlock: () => void; label?: string; subtext?: string }) {
+function UnlockCTA({ onUnlock, label = "Unlock my preliminary ExitIQ report — free →", subtext = "Takes 30 seconds. No broker call required." }: { onUnlock: () => void; label?: string; subtext?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <button
@@ -1402,6 +1498,10 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
           />
         </div>
       </div>
+
+      <SectionDivider label="Your responses" />
+
+      <AnswersSummary answers={answers} />
 
       {/* Pain callout */}
       <div
@@ -2067,7 +2167,7 @@ export function EmailGateModal({ derived, onClose, onSubmit }: EmailGateModalPro
               margin: 0,
             }}
           >
-            Unlock your full ExitIQ Report.
+            Unlock your ExitIQ Report.
           </h3>
           <p
             style={{

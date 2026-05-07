@@ -185,7 +185,6 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
         justifyContent: "center",
         gap: rv(isMobile, 8, 16),
         position: "relative",
-        zIndex: 101,
       }}
     >
       {!isMobile && (
@@ -233,7 +232,7 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
 }
 
 // ── Top Navigation ────────────────────────────────────────────────────────────
-function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
+function TopNav({ onStart }: { onStart: () => void }) {
   const isMobile = useIsMobile()
   return (
     <nav
@@ -245,15 +244,39 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
         alignItems: "center",
         justifyContent: "space-between",
         padding: rv(isMobile, "0 16px", "0 48px"),
-        position: "sticky",
-        top: hasBar ? 37 : 0,
         zIndex: 100,
       }}
     >
-      <div
-        style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", cursor: "default" }}
-      >
-        Scorta
+      <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="24" height="24" style={{ flexShrink: 0 }}>
+          <defs>
+            <radialGradient id="nav-orb" cx="38%" cy="36%" r="58%" fx="38%" fy="36%">
+              <stop offset="0%"   stopColor="#a7e5d3" stopOpacity="0.97"/>
+              <stop offset="40%"  stopColor="#c8b8e0" stopOpacity="0.80"/>
+              <stop offset="68%"  stopColor="#a8c8e8" stopOpacity="0.52"/>
+              <stop offset="100%" stopColor="#a8c8e8" stopOpacity="0.12"/>
+            </radialGradient>
+            <filter id="nav-f1" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.4"/>
+            </filter>
+            <filter id="nav-f2" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="0.9"/>
+            </filter>
+            <filter id="nav-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx="16" cy="16" r="16" fill="#0c0a09"/>
+          <circle cx="16" cy="16" r="14.5" fill="none" stroke="#a7e5d3" strokeWidth="1.5" strokeOpacity="0.14" filter="url(#nav-glow)"/>
+          <circle cx="16" cy="16" r="13" fill="url(#nav-orb)"/>
+          <ellipse cx="12.5" cy="10.5" rx="4.2" ry="2.4" fill="white" fillOpacity="0.58" filter="url(#nav-f1)"/>
+          <circle cx="21" cy="10.5" r="1.6" fill="white" fillOpacity="0.36" filter="url(#nav-f2)"/>
+          <circle cx="21.5" cy="21.5" r="0.9" fill="white" fillOpacity="0.22" filter="url(#nav-f2)"/>
+        </svg>
+        <span style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px" }}>
+          Scorta
+        </span>
       </div>
 
       {/* Desktop nav links — hidden on mobile */}
@@ -289,7 +312,7 @@ function TopNav({ onStart, hasBar }: { onStart: () => void; hasBar: boolean }) {
           onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
           onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
         >
-          {isMobile ? "Try free" : "Try free"}
+          {isMobile ? "Try ExitIQ" : "Try ExitIQ"}
         </button>
       </div>
     </nav>
@@ -1477,17 +1500,58 @@ function FooterSection() {
 export function ScortaLanding() {
   const [appOpen, setAppOpen] = React.useState(false)
   const [announcementVisible, setAnnouncementVisible] = React.useState(true)
+  const barWrapRef = React.useRef<HTMLDivElement>(null)
 
   const open = () => setAppOpen(true)
+
+  React.useEffect(() => {
+    if (!announcementVisible) return
+    const el = barWrapRef.current
+    if (!el) return
+    const barHeight = el.offsetHeight || 37
+    const HIDE_AT = 80
+    const SHOW_AT = 50
+    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
+    // Stamp explicit starting values with no transition, then force a reflow
+    // so the browser commits them as the "from" state before we enable transitions.
+    el.style.transition = "none"
+    el.style.height = barHeight + "px"
+    el.style.opacity = "1"
+    void el.offsetHeight // force reflow
+    el.style.transition = TRANSITION
+    let hidden = false
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!hidden && y > HIDE_AT) {
+        hidden = true
+        el.style.transition = TRANSITION
+        el.style.height = "0px"
+        el.style.opacity = "0"
+      } else if (hidden && y < SHOW_AT) {
+        hidden = false
+        el.style.transition = TRANSITION
+        el.style.height = barHeight + "px"
+        el.style.opacity = "1"
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [announcementVisible])
 
   return (
     <>
       <style>{`html { scroll-behavior: smooth; }`}</style>
       {appOpen && <ExitIQOverlay onClose={() => setAppOpen(false)} />}
 
+      <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+        {announcementVisible && (
+          <div ref={barWrapRef} style={{ overflow: "hidden", background: C.primary }}>
+            <AnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />
+          </div>
+        )}
+        <TopNav onStart={open} />
+      </div>
       <div style={{ background: C.canvas, color: C.ink, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
-        {announcementVisible && <AnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />}
-        <TopNav onStart={open} hasBar={announcementVisible} />
         <HeroSection onStart={open} />
         <ValueCardsStrip />
         <ProblemSection />
