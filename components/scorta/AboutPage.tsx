@@ -597,24 +597,19 @@ function AMission() {
 function ATimeline() {
   const events = [
     {
-      y: "2024",
+      y: "2024–2025",
       t: "The thesis",
-      d: "A founder watches their parent try to sell a 22-year HVAC business. Three brokers, sixty-something PDFs, no buyer. The cost of being unbrokered becomes obvious.",
+      d: "Suyash spends two years running a PE firm acquiring Main Street businesses. Deal after deal falls apart in diligence — not because the businesses weren't good, but because sellers were never told what buyers actually need to see. The problem becomes obvious.",
     },
     {
-      y: "Q4 2024",
-      t: "First version",
-      d: "A spreadsheet that scored a business across the four readiness dimensions buyers actually grade on. Friends in the trades start asking for it.",
+      y: "Late 2025",
+      t: "Building",
+      d: "The assessment framework takes shape. Four readiness dimensions mapped to how buyers actually grade businesses: financial clarity, owner dependency, operational documentation, and SBA financability. Puneet engineers the AI layer.",
     },
     {
-      y: "Q1 2025",
-      t: "ExitIQ ships",
-      d: "The assessment becomes a real product. Built around a thesis: every Main Street owner deserves to know what their business is worth — for free, in three minutes.",
-    },
-    {
-      y: "Q2 2025",
-      t: "The Boardroom",
-      d: "Buyer simulation goes live. Owners stop being surprised by buyer behavior because they've already seen the offers, the structure, and the objections.",
+      y: "March 2026",
+      t: "ExitIQ launches",
+      d: "Scorta ships publicly. Free, no login, three minutes. Every Main Street owner finally has access to an honest read on what their business is worth and what's in the way of a clean sale.",
     },
     {
       y: "Now",
@@ -741,7 +736,7 @@ function AFounders() {
       photo: "/suyash.jpeg",
       name: "Suyash Agrawal",
       role: "Co-founder, CEO",
-      bio: "Three years running a micro-PE fund acquiring Main Street businesses. Saw the brokerage problem from the inside — deals collapsing in diligence because sellers had never been told what buyers actually look for. Scorta is the firm he wished existed when he was on the buy side.",
+      bio: "Two years running a PE firm acquiring Main Street businesses. Watched deal after deal fall apart — sellers unprepared, books messy, financials that couldn't pass SBA underwriting. Nobody was telling owners what buyers actually needed to see. Scorta is the firm he wished existed when he was on the buy side.",
       li: "https://www.linkedin.com/in/suyash-agrawal-20/",
       grad: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 50%, #a8c8e8 80%, #0c0a09 100%)",
     },
@@ -974,7 +969,7 @@ function AFooter() {
           Scorta
         </Link>
         <span style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>
-          © 2025 Scorta. For informational purposes only. Not financial advice.
+          © 2026 Scorta. For informational purposes only. Not financial advice.
         </span>
       </div>
     </footer>

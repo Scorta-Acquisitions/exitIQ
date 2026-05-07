@@ -1103,7 +1103,7 @@ function SHero({ onOpen }: { onOpen: () => void }) {
               letterSpacing: ".16px",
             }}
           >
-            Scorta turns four questions about your business into a buyer-ready exit profile — with valuation, SBA
+            Scorta turns a few questions about your business into a buyer-ready exit profile — with valuation, SBA
             pre-screen, and a fix list. No 10% broker fee.
           </p>
           <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap", justifyContent: "center" }}>
@@ -2851,13 +2851,7 @@ function SFooter() {
     Company: [
       { l: "About", h: "/about" },
       { l: "Founders", h: "/about#founders" },
-      { l: "Contact", h: "mailto:hello@scorta.app" },
-    ],
-    Legal: [
-      { l: "Terms", h: "#" },
-      { l: "Privacy", h: "#" },
-      { l: "Security", h: "#" },
-      { l: "Disclosures", h: "#" },
+      { l: "Contact", h: "mailto:suyash@scorta.app" },
     ],
   }
 
@@ -2867,7 +2861,7 @@ function SFooter() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(240px, 1.4fr) repeat(3, minmax(140px, 1fr))",
+            gridTemplateColumns: "minmax(240px, 1.4fr) repeat(2, minmax(140px, 1fr))",
             gap: 32,
             marginBottom: 48,
           }}
