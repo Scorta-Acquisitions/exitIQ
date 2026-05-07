@@ -137,12 +137,7 @@ function renderMarkdown(md: string): React.ReactNode {
       )
     } else if (line === "---") {
       flushList()
-      nodes.push(
-        <div
-          key={k()}
-          style={{ height: 1, background: "var(--b3)", margin: "20px 0 12px" }}
-        />
-      )
+      nodes.push(<div key={k()} style={{ height: 1, background: "var(--b3)", margin: "20px 0 12px" }} />)
     } else if (line.startsWith("- ") || line.startsWith("• ")) {
       if (!listBuffer || listBuffer.type !== "ul") {
         flushList()
@@ -253,8 +248,8 @@ export function ReportGeneratingCard() {
             fontFamily: "Inter, sans-serif",
           }}
         >
-          Our senior advisor AI is reviewing your profile across valuation methodology, SBA eligibility, deal
-          structure, transferability, and buyer risk. Typically takes 20–40 seconds.
+          Our senior advisor AI is reviewing your profile across valuation methodology, SBA eligibility, deal structure,
+          transferability, and buyer risk. Typically takes 20–40 seconds.
         </p>
       </div>
 
@@ -301,8 +296,7 @@ export function ReportGeneratingCard() {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background:
-                        "linear-gradient(90deg,transparent 0%,rgba(167,229,211,.15) 50%,transparent 100%)",
+                      background: "linear-gradient(90deg,transparent 0%,rgba(167,229,211,.15) 50%,transparent 100%)",
                       animation: "shimmer 2s ease-in-out infinite",
                     }}
                   />
@@ -317,13 +311,7 @@ export function ReportGeneratingCard() {
 }
 
 // ── FullReportCard ────────────────────────────────────────────────────────────
-export function FullReportCard({
-  reportMd,
-  firstName,
-}: {
-  reportMd: string
-  firstName?: string
-}) {
+export function FullReportCard({ reportMd, firstName }: { reportMd: string; firstName?: string }) {
   return (
     <div
       className="glass-panel"
@@ -385,9 +373,7 @@ export function FullReportCard({
       </div>
 
       {/* Rendered report */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {renderMarkdown(reportMd)}
-      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>{renderMarkdown(reportMd)}</div>
 
       {/* Legal footer */}
       <div
@@ -403,8 +389,8 @@ export function FullReportCard({
           lineHeight: 1.55,
         }}
       >
-        For informational purposes only. Not financial or legal advice. Figures are estimates based on market
-        benchmarks and the information you provided.
+        For informational purposes only. Not financial or legal advice. Figures are estimates based on market benchmarks
+        and the information you provided.
       </div>
     </div>
   )

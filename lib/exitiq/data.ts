@@ -53,7 +53,12 @@ export interface SimpleOption {
 
 export const INDUSTRIES: Industry[] = [
   { label: "Restaurant / Food Service", multiple: [1.5, 3.0], color: "var(--peach)", buyerLead: "Operator buyers" },
-  { label: "Retail (Brick & Mortar)", multiple: [1.5, 2.5], color: "var(--lavender)", buyerLead: "Strategic acquirers" },
+  {
+    label: "Retail (Brick & Mortar)",
+    multiple: [1.5, 2.5],
+    color: "var(--lavender)",
+    buyerLead: "Strategic acquirers",
+  },
   { label: "E-commerce / DTC", multiple: [2.5, 4.5], color: "var(--sky)", buyerLead: "Strategic & PE buyers" },
   { label: "Home Services", multiple: [2.5, 4.5], color: "var(--mint)", buyerLead: "PE-backed rollups" },
   { label: "Healthcare / Medical", multiple: [3.0, 5.0], color: "var(--sky)", buyerLead: "DSO / group buyers" },
@@ -120,7 +125,11 @@ export const REVENUE_TREND_OPTIONS: SimpleOption[] = [
 ]
 
 export const CUSTOMER_CONC_OPTIONS: SimpleOption[] = [
-  { value: "diversified", label: "Top customer is <10% of revenue", sub: "Highly diversified — minimal concentration risk" },
+  {
+    value: "diversified",
+    label: "Top customer is <10% of revenue",
+    sub: "Highly diversified — minimal concentration risk",
+  },
   { value: "moderate", label: "10–25% from top customer", sub: "Well-diversified customer base" },
   { value: "concentrated", label: "25–50% from top customer", sub: "Manageable but buyers will flag this" },
   { value: "high_risk", label: "50%+ from top customer", sub: "High concentration — significant buyer discount" },
@@ -129,7 +138,11 @@ export const CUSTOMER_CONC_OPTIONS: SimpleOption[] = [
 export const KEY_MAN_OPTIONS: SimpleOption[] = [
   { value: "1", label: "1 — Everything runs through me", sub: "Buyers will apply a significant discount" },
   { value: "2", label: "2 — Most key relationships are mine", sub: "Some team depth, but I'm still the center" },
-  { value: "3", label: "3 — Shared between me and the team", sub: "Balanced — buyers will see manageable transition risk" },
+  {
+    value: "3",
+    label: "3 — Shared between me and the team",
+    sub: "Balanced — buyers will see manageable transition risk",
+  },
   { value: "4", label: "4 — Team handles most of it", sub: "Good depth — buyers view this as a strength" },
   { value: "5", label: "5 — Fully team-driven operations", sub: "Exceptional — commands a premium in the market" },
 ]
@@ -142,19 +155,69 @@ export const RECURRING_REV_OPTIONS: SimpleOption[] = [
 ]
 
 export const US_STATES: string[] = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-  "Wisconsin", "Wyoming",
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
+  "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode Island",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West Virginia",
+  "Wisconsin",
+  "Wyoming",
 ]
 
 export const HOT_STATES: string[] = [
-  "California", "Texas", "Florida", "New York", "Georgia", "Illinois",
-  "Colorado", "Arizona", "Washington", "North Carolina",
+  "California",
+  "Texas",
+  "Florida",
+  "New York",
+  "Georgia",
+  "Illinois",
+  "Colorado",
+  "Arizona",
+  "Washington",
+  "North Carolina",
 ]
 
 export const BUYER_CARDS: BuyerCard[] = [
@@ -200,7 +263,7 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
       "Services firms with transferable client relationships and documented workflows exit at 2.5–4× SDE.",
     "Financial Services":
       "RIA consolidation is at an all-time high. AUM retention and fee structure drive valuation — clean compliance record is non-negotiable.",
-    "Manufacturing":
+    Manufacturing:
       "Manufacturing businesses with proprietary processes attract PE and strategic buyers at 3–5× SDE. Recurring customers are key.",
     "Construction / Trades":
       "Licensed trades businesses are in high demand. Buyer focus is on backlog quality, bonding capacity, and crew retention.",
@@ -264,8 +327,7 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
       "20%+ growth is a powerful buyer signal. Growing businesses command multiple expansion — buyers are paying for future earnings, not just trailing SDE.",
     growing:
       "Steady growth in the 5–20% range is exactly what most buyers look for. This profile supports premium multiples and competitive deal processes.",
-    flat:
-      "Flat revenue is neutral. Buyers won't penalize stability, but they'll look harder at margin, retention, and operational moats.",
+    flat: "Flat revenue is neutral. Buyers won't penalize stability, but they'll look harder at margin, retention, and operational moats.",
     declining_slight:
       "Moderate decline narrows your buyer pool and compresses multiples. A clear explanation and operational plan are critical to maintaining valuation.",
     declining_fast:
@@ -330,14 +392,14 @@ export const RECALC_MESSAGES: Record<string, string> = {
 
 // 10 questions across 3 phases
 export const ANSWER_KEYS = [
-  "industry",     // Phase 1: Business Identity
+  "industry", // Phase 1: Business Identity
   "years",
   "ownerRole",
-  "revenue",      // Phase 2: Financial Snapshot
+  "revenue", // Phase 2: Financial Snapshot
   "sde",
   "revenueTrend",
   "customerConc",
-  "employees",    // Phase 3: Operational Profile
+  "employees", // Phase 3: Operational Profile
   "keyMan",
   "recurringRev",
 ] as const

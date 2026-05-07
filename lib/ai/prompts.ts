@@ -384,11 +384,17 @@ export function buildTeaserPrompt(session: Partial<AssessmentSession>): string {
   let adjLow = teaserLow
   let adjHigh = teaserHigh
 
-  const trendMulti: Record<string, number> = { growing_fast: 1.14, growing: 1.07, flat: 1.0, declining_slight: 0.89, declining_fast: 0.76 }
-  const roleMulti: Record<string, number> = { passive: 1.10, mostly_hands_off: 1.04, partial: 0.97, operator: 0.88 }
-  const concMulti: Record<string, number> = { diversified: 1.08, moderate: 1.02, concentrated: 0.92, high_risk: 0.80 }
+  const trendMulti: Record<string, number> = {
+    growing_fast: 1.14,
+    growing: 1.07,
+    flat: 1.0,
+    declining_slight: 0.89,
+    declining_fast: 0.76,
+  }
+  const roleMulti: Record<string, number> = { passive: 1.1, mostly_hands_off: 1.04, partial: 0.97, operator: 0.88 }
+  const concMulti: Record<string, number> = { diversified: 1.08, moderate: 1.02, concentrated: 0.92, high_risk: 0.8 }
   const keyManMulti: Record<string, number> = { "1": 0.84, "2": 0.92, "3": 1.0, "4": 1.06, "5": 1.12 }
-  const recurMulti: Record<string, number> = { high: 1.13, medium_high: 1.07, medium: 1.0, low: 0.90 }
+  const recurMulti: Record<string, number> = { high: 1.13, medium_high: 1.07, medium: 1.0, low: 0.9 }
 
   const adj =
     (trendMulti[String(s1x.revenueTrend ?? "")] ?? 1.0) *
@@ -398,7 +404,7 @@ export function buildTeaserPrompt(session: Partial<AssessmentSession>): string {
     (recurMulti[String(s1x.recurringRev ?? "")] ?? 1.0)
 
   const midPoint = ((teaserLow + teaserHigh) / 2) * adj
-  const halfSpread = (teaserHigh - teaserLow) / 2 * 0.45
+  const halfSpread = ((teaserHigh - teaserLow) / 2) * 0.45
   adjLow = Math.round(midPoint - halfSpread)
   adjHigh = Math.round(midPoint + halfSpread)
 
@@ -439,10 +445,11 @@ export function buildTeaserPrompt(session: Partial<AssessmentSession>): string {
   }
 
   const brokerFeeLow = Math.round(adjLow * 0.08)
-  const brokerFeeHigh = Math.round(adjHigh * 0.10)
-  const fmtFee = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M` : `$${Math.round(n / 1_000)}K`
+  const brokerFeeHigh = Math.round(adjHigh * 0.1)
+  const fmtFee = (n: number) =>
+    n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M` : `$${Math.round(n / 1_000)}K`
   const brokerFeeRangeStr = `${fmtFee(brokerFeeLow)}–${fmtFee(brokerFeeHigh)}`
-  const multipleContextStr = `${(((adjLow + adjHigh) / 2) / (SDE_MIDPOINTS[s1.sde ?? "500_1m"] ?? 750_000)).toFixed(1)}× SDE · ${industry.label} benchmark ${industry.sdeMultiple[0]}–${industry.sdeMultiple[1]}×`
+  const multipleContextStr = `${((adjLow + adjHigh) / 2 / (SDE_MIDPOINTS[s1.sde ?? "500_1m"] ?? 750_000)).toFixed(1)}× SDE · ${industry.label} benchmark ${industry.sdeMultiple[0]}–${industry.sdeMultiple[1]}×`
 
   return `You are a senior sell-side M&A advisor generating a detailed diagnostic teaser report for a business owner who just completed a comprehensive 10-signal assessment.
 

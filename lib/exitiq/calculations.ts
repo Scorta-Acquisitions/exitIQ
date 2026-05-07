@@ -1,11 +1,4 @@
-import {
-  CONFIDENCE_BY_STEP,
-  EMPLOYEE_OPTIONS,
-  HOT_STATES,
-  INDUSTRIES,
-  SDE_RANGES,
-  YEAR_OPTIONS,
-} from "./data"
+import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, SDE_RANGES, YEAR_OPTIONS } from "./data"
 import type { Industry } from "./data"
 
 export interface ValuationRange {
@@ -65,7 +58,7 @@ export function calcDerived(answers: Record<string, string>): Derived {
 
     // Owner role modifier
     const roleAdj: Record<string, number> = {
-      passive: 1.10,
+      passive: 1.1,
       mostly_hands_off: 1.04,
       partial: 0.97,
       operator: 0.88,
@@ -87,7 +80,7 @@ export function calcDerived(answers: Record<string, string>): Derived {
       diversified: 1.08,
       moderate: 1.02,
       concentrated: 0.92,
-      high_risk: 0.80,
+      high_risk: 0.8,
     }
     midMultiple *= concAdj[answers.customerConc ?? ""] ?? 1.0
 
@@ -106,7 +99,7 @@ export function calcDerived(answers: Record<string, string>): Derived {
       high: 1.13,
       medium_high: 1.07,
       medium: 1.0,
-      low: 0.90,
+      low: 0.9,
     }
     midMultiple *= recurAdj[answers.recurringRev ?? ""] ?? 1.0
 
@@ -131,7 +124,7 @@ export function calcDerived(answers: Record<string, string>): Derived {
   let brokerFee: BrokerFee | null = null
   if (valuationRange) {
     const feeLow = Math.round(valuationRange.low * 0.08)
-    const feeHigh = Math.round(valuationRange.high * 0.10)
+    const feeHigh = Math.round(valuationRange.high * 0.1)
     brokerFee = { low: feeLow, high: feeHigh, text: fmtRange(feeLow, feeHigh) }
   }
 
@@ -143,7 +136,13 @@ export function calcDerived(answers: Record<string, string>): Derived {
     industry ? 0.55 : 0,
     answers.revenue ? 0.45 : 0,
     empOption ? empOption.transferability : 0,
-    answers.recurringRev ? (answers.recurringRev === "high" ? 0.9 : answers.recurringRev === "medium_high" ? 0.75 : 0.5) : 0,
+    answers.recurringRev
+      ? answers.recurringRev === "high"
+        ? 0.9
+        : answers.recurringRev === "medium_high"
+          ? 0.75
+          : 0.5
+      : 0,
     answers.years ? (years ? years.buyerConfidence : 0) : 0,
   ]
 

@@ -11,114 +11,114 @@
 
 const browserWindowStyles = {
   window: {
-    display: 'inline-block',
-    background: '#fff',
+    display: "inline-block",
+    background: "#fff",
     borderRadius: 10,
-    overflow: 'hidden',
-    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+    overflow: "hidden",
+    boxShadow: "0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)",
   },
   chrome: {
-    background: '#dee1e6',
+    background: "#dee1e6",
     paddingTop: 10,
     paddingLeft: 10,
     paddingRight: 10,
-    userSelect: 'none',
+    userSelect: "none",
   },
   tabRow: {
-    display: 'flex',
-    alignItems: 'flex-end',
+    display: "flex",
+    alignItems: "flex-end",
     gap: 6,
-    position: 'relative',
+    position: "relative",
   },
   trafficLights: {
-    display: 'flex',
+    display: "flex",
     gap: 8,
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: 10,
     marginRight: 8,
   },
   light: {
     width: 12,
     height: 12,
-    borderRadius: '50%',
-    border: '0.5px solid rgba(0,0,0,0.15)',
+    borderRadius: "50%",
+    border: "0.5px solid rgba(0,0,0,0.15)",
   },
-  close: { background: '#ff5f57' },
-  minimize: { background: '#febc2e' },
-  maximize: { background: '#28c840' },
+  close: { background: "#ff5f57" },
+  minimize: { background: "#febc2e" },
+  maximize: { background: "#28c840" },
   tab: {
-    background: '#fff',
-    padding: '8px 30px 8px 14px',
+    background: "#fff",
+    padding: "8px 30px 8px 14px",
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     fontSize: 12,
-    color: '#222',
-    fontFamily: '-apple-system, sans-serif',
+    color: "#222",
+    fontFamily: "-apple-system, sans-serif",
     maxWidth: 220,
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 8,
-    position: 'relative',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    position: "relative",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   favicon: {
     width: 14,
     height: 14,
     borderRadius: 2,
-    background: '#999',
+    background: "#999",
     flexShrink: 0,
   },
   navBar: {
-    background: '#fff',
-    padding: '8px 14px',
-    display: 'flex',
-    alignItems: 'center',
+    background: "#fff",
+    padding: "8px 14px",
+    display: "flex",
+    alignItems: "center",
     gap: 10,
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: "1px solid #e5e7eb",
   },
   navButtons: {
-    display: 'flex',
+    display: "flex",
     gap: 4,
-    color: '#5f6368',
+    color: "#5f6368",
     fontSize: 16,
   },
   navButton: {
     width: 28,
     height: 28,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    cursor: 'pointer',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    cursor: "pointer",
   },
   urlBar: {
     flex: 1,
-    background: '#f1f3f4',
+    background: "#f1f3f4",
     borderRadius: 999,
-    padding: '7px 14px',
+    padding: "7px 14px",
     fontSize: 13,
-    color: '#333',
-    display: 'flex',
-    alignItems: 'center',
+    color: "#333",
+    display: "flex",
+    alignItems: "center",
     gap: 8,
-    fontFamily: '-apple-system, sans-serif',
+    fontFamily: "-apple-system, sans-serif",
   },
   lockIcon: {
-    color: '#5f6368',
+    color: "#5f6368",
     fontSize: 12,
   },
   content: {
-    position: 'relative',
-    overflow: 'auto',
-    background: '#fff',
+    position: "relative",
+    overflow: "auto",
+    background: "#fff",
   },
-};
+}
 
 function BrowserWindow({
-  title = 'New Tab',
-  url = 'https://example.com',
+  title = "New Tab",
+  url = "https://example.com",
   width = 1200,
   height = 800,
   showTrafficLights = true,
@@ -154,13 +154,11 @@ function BrowserWindow({
         </div>
       </div>
 
-      <div style={{ ...browserWindowStyles.content, width, height }}>
-        {children}
-      </div>
+      <div style={{ ...browserWindowStyles.content, width, height }}>{children}</div>
     </div>
-  );
+  )
 }
 
-if (typeof window !== 'undefined') {
-  window.BrowserWindow = BrowserWindow;
+if (typeof window !== "undefined") {
+  window.BrowserWindow = BrowserWindow
 }

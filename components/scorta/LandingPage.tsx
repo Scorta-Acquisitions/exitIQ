@@ -1,143 +1,790 @@
-// use client: contains interactive state (useState for overlay, FAQ accordion, announcement bar) and event handlers
+// use client: interactive nav scroll state, industry switcher, boardroom toggles, scroll-reveal observer
 "use client"
 
 import Link from "next/link"
 import React from "react"
 import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
 
-// ── Design tokens ────────────────────────────────────────────────────────────
+// ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   canvas: "#f5f5f5",
   canvasSoft: "#fafafa",
+  card: "#ffffff",
   ink: "#0c0a09",
-  primary: "#292524",
+  ink2: "#292524",
   body: "#4e4e4e",
   muted: "#777169",
   mutedSoft: "#a8a29e",
   hairline: "#e7e5e4",
   hairlineStrong: "#d6d3d1",
-  surfaceCard: "#ffffff",
-  surfaceStrong: "#f0efed",
-  onPrimary: "#ffffff",
-  gradMint: "#a7e5d3",
-  gradPeach: "#f4c5a8",
-  gradLavender: "#c8b8e0",
-  gradSky: "#a8c8e8",
-  gradRose: "#e8b8c4",
+  strong: "#f0efed",
+  mint: "#a7e5d3",
+  peach: "#f4c5a8",
+  lav: "#c8b8e0",
+  sky: "#a8c8e8",
   dark: "#0c0a09",
-  darkElevated: "#1c1917",
-  darkBorder: "rgba(245,245,245,0.08)",
-  darkBorderStrong: "rgba(245,245,245,0.14)",
-  onDark: "rgba(245,245,245,0.92)",
-  onDarkBody: "rgba(245,245,245,0.55)",
-  onDarkMuted: "rgba(245,245,245,0.32)",
+  onDark: "rgba(245,245,245,.95)",
+  onDarkBody: "rgba(245,245,245,.55)",
+  onDarkMuted: "rgba(245,245,245,.45)",
+  onDarkHair: "rgba(245,245,245,.08)",
 }
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
 
-// ── Shared style helpers ──────────────────────────────────────────────────────
-function displayStyle(size: number, dark = false): React.CSSProperties {
-  const sp = size >= 56 ? "-1.92px" : size >= 44 ? "-0.96px" : size >= 34 ? "-0.36px" : "-0.32px"
-  return {
-    fontFamily: garamond,
-    fontSize: size,
-    fontWeight: 300,
-    lineHeight: 1.05,
-    letterSpacing: sp,
-    color: dark ? C.onDark : C.ink,
-    margin: 0,
+// ─── Shared CSS (injected once) ───────────────────────────────────────────────
+const SHARED_CSS = `
+  /* Scroll-reveal */
+  .s-rv { opacity: 0; transform: translateY(22px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+  .s-rv.s-in { opacity: 1; transform: translateY(0); }
+  .s-d1 { transition-delay: .08s; }
+  .s-d2 { transition-delay: .16s; }
+  .s-d3 { transition-delay: .24s; }
+
+  /* Dark glass panel */
+  .s-glass {
+    background: rgba(245,245,245,.055);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(245,245,245,.12);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07);
   }
-}
 
-const pillPrimary: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  height: 40,
-  padding: "0 20px",
-  background: C.primary,
-  color: C.onPrimary,
-  borderRadius: 9999,
-  fontFamily: inter,
-  fontSize: 15,
-  fontWeight: 500,
-  border: "none",
-  cursor: "pointer",
-  letterSpacing: 0,
-}
+  /* Card hover lifts */
+  .s-ch  { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s; will-change: transform; }
+  .s-ch:hover  { transform: translateY(-4px); box-shadow: 0 18px 48px rgba(12,10,9,.08), 0 4px 14px rgba(12,10,9,.04); border-color: #d6d3d1 !important; }
+  .s-chd { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s; will-change: transform; }
+  .s-chd:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 40px rgba(167,229,211,.12); }
 
-const pillOutline: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  height: 40,
-  padding: "0 19px",
-  background: "transparent",
-  color: C.ink,
-  borderRadius: 9999,
-  fontFamily: inter,
-  fontSize: 15,
-  fontWeight: 500,
-  border: `1px solid ${C.hairlineStrong}`,
-  cursor: "pointer",
-}
+  /* Marquee */
+  .s-mq  { display: flex; gap: 64px; width: max-content; animation: sTickerSlide 40s linear infinite; }
+  .s-mqf { -webkit-mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); }
 
-function badge(dark = false): React.CSSProperties {
-  return {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "4px 10px",
-    background: dark ? "rgba(245,245,245,0.07)" : C.surfaceStrong,
-    borderRadius: 9999,
-    fontFamily: inter,
-    fontSize: 12,
-    fontWeight: 600,
-    letterSpacing: "0.96px",
-    textTransform: "uppercase",
-    color: dark ? C.onDarkMuted : C.muted,
-    border: dark ? `1px solid ${C.darkBorder}` : "none",
-  }
-}
+  /* Animated SVG arc */
+  .s-carc { transition: stroke-dashoffset 1.4s cubic-bezier(.34,1.1,.64,1); }
 
-function dotGrid(): React.CSSProperties {
-  return {
-    backgroundImage: "radial-gradient(circle, rgba(245,245,245,0.055) 1px, transparent 1px)",
-    backgroundSize: "28px 28px",
-  }
-}
+  /* Keyframes */
+  @keyframes sOrbBreathe  { 0%,100%{transform:scale(1);opacity:.85}    50%{transform:scale(1.07);opacity:1} }
+  @keyframes sOrbGlow     { 0%,100%{box-shadow:0 0 40px 12px rgba(167,229,211,.18),0 0 80px 30px rgba(200,184,224,.1)} 50%{box-shadow:0 0 60px 22px rgba(167,229,211,.32),0 0 120px 50px rgba(200,184,224,.18)} }
+  @keyframes sChipFloat   { from{opacity:0;transform:translateY(14px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes sSlideUp     { from{opacity:0;transform:translateY(18px)}  to{opacity:1;transform:translateY(0)} }
+  @keyframes sSlideRight  { from{opacity:0;transform:translateX(22px)}  to{opacity:1;transform:translateX(0)} }
+  @keyframes sFadeIn      { from{opacity:0}                              to{opacity:1} }
+  @keyframes sScanDown    { 0%{top:0;opacity:.7}                         100%{top:100%;opacity:0} }
+  @keyframes sLiveBlink   { 0%,100%{opacity:1}                           50%{opacity:.3} }
+  @keyframes sDotBounce   { 0%,80%,100%{transform:translateY(0)}        40%{transform:translateY(-5px)} }
+  @keyframes sOrbFloat1   { 0%,100%{transform:translate(0,0) scale(1)}  33%{transform:translate(-12px,-22px) scale(1.05)} 66%{transform:translate(10px,12px) scale(.96)} }
+  @keyframes sOrbFloat2   { 0%,100%{transform:translate(0,0) scale(1)}  50%{transform:translate(20px,-18px) scale(1.04)} }
+  @keyframes sOrbFloat3   { 0%,100%{transform:translate(0,0)}           50%{transform:translate(-16px,18px)} }
+  @keyframes sDrift       { 0%,100%{transform:translate(-50%,-50%)}     50%{transform:translate(-50%,calc(-50% - 10px))} }
+  @keyframes sTickerSlide { from{transform:translateX(0)}               to{transform:translateX(-50%)} }
+  @keyframes sRingSpin    { from{transform:rotate(0)}                    to{transform:rotate(360deg)} }
+  @keyframes sNumRoll     { from{opacity:0;transform:translateY(-10px)}  to{opacity:1;transform:translateY(0)} }
+`
 
-function scrollTo(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-}
-
-// ── Responsive utilities ──────────────────────────────────────────────────────
-const MOBILE_BP = 768
-
-function useWindowWidth(): number {
-  // Start at 1200 (desktop) to avoid SSR/hydration mismatch; effect corrects on mount
-  const [w, setW] = React.useState(1200)
+// ─── Scroll-reveal hook ───────────────────────────────────────────────────────
+function useReveal() {
   React.useEffect(() => {
-    setW(window.innerWidth)
-    const fn = () => setW(window.innerWidth)
-    window.addEventListener("resize", fn, { passive: true })
-    return () => window.removeEventListener("resize", fn)
+    const els = document.querySelectorAll(".s-rv")
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("s-in")
+            io.unobserve(e.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -60px 0px" }
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
   }, [])
-  return w
 }
 
-function useIsMobile() {
-  return useWindowWidth() < MOBILE_BP
+// ─── Count-up hook ────────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1100) {
+  const [val, setVal] = React.useState(0)
+  React.useEffect(() => {
+    setVal(0)
+    let raf: number
+    let start: number | undefined
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const t = Math.min(1, (ts - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setVal(target * eased)
+      if (t < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+  return val
 }
 
-// Pick the mobile or desktop value based on the isMobile flag
-function rv<T>(isMobile: boolean, mobile: T, desktop: T): T {
-  return isMobile ? mobile : desktop
+// ─── Spring hook (for confidence arc) ────────────────────────────────────────
+function useSpring(target: number) {
+  const [val, setVal] = React.useState(target)
+  const ref = React.useRef({ cur: target, vel: 0, raf: 0 })
+  React.useEffect(() => {
+    const tick = () => {
+      const { cur, vel } = ref.current
+      const force = (target - cur) * 0.09
+      const newVel = (vel + force) * 0.78
+      const newCur = cur + newVel
+      ref.current = { cur: newCur, vel: newVel, raf: 0 }
+      setVal(Math.round(newCur * 10) / 10)
+      if (Math.abs(target - newCur) > 0.3) ref.current.raf = requestAnimationFrame(tick)
+    }
+    cancelAnimationFrame(ref.current.raf)
+    ref.current.raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(ref.current.raf)
+  }, [target])
+  return val
 }
 
-// ── ExitIQ Overlay ────────────────────────────────────────────────────────────
-function ExitIQOverlay({ onClose }: { onClose: () => void }) {
+// ─── WebGL fluid background for teaser card ───────────────────────────────────
+type WebGLControls = { setConf: (v: number) => void; cleanup: () => void }
+function setupTeaserWebGL(canvas: HTMLCanvasElement): WebGLControls {
+  const gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" })
+  if (!gl) return { setConf: () => {}, cleanup: () => {} }
+
+  const vs = `attribute vec2 p; void main(){gl_Position=vec4(p,0,1);}`
+  const fs = `precision mediump float;
+    uniform float T; uniform vec2 R; uniform float C;
+    float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+      return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+    float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=p*2.1+vec2(3.7,1.9);a*=.5;}return v;}
+    void main(){
+      vec2 uv=gl_FragCoord.xy/R,st=vec2(uv.x*R.x/R.y,uv.y),t=vec2(T*.08,T*.06);
+      vec2 q=vec2(fbm(st*1.5+t),fbm(st*1.5+vec2(5.2,1.3)+t*.9));
+      vec2 r=vec2(fbm(st+2.*q+vec2(1.7,9.2)+t*.7),fbm(st+2.*q+vec2(8.3,2.8)+t*.6));
+      float f=fbm(st+2.8*r+t*.4);
+      vec3 base=vec3(.047,.039,.035);
+      vec3 col=mix(base,vec3(.10,.32,.26),smoothstep(.2,.75,f)*.7);
+      col=mix(col,vec3(.22,.17,.38),smoothstep(.45,.9,f)*.55);
+      col=mix(col,vec3(.10,.22,.40),smoothstep(.6,1.,f)*.45);
+      col=mix(col,col+vec3(.06,.02,-.04)*C,C);
+      col*=1.+C*.18;
+      vec2 vg=uv*2.-1.; col*=1.-dot(vg,vg)*(.45-.18*C);
+      gl_FragColor=vec4(col,1.);
+    }`
+
+  const mkShader = (type: number, src: string) => {
+    const s = gl.createShader(type)!
+    gl.shaderSource(s, src)
+    gl.compileShader(s)
+    return s
+  }
+  const prog = gl.createProgram()!
+  gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, vs))
+  gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, fs))
+  gl.linkProgram(prog)
+  gl.useProgram(prog)
+  const buf = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  const loc = gl.getAttribLocation(prog, "p")
+  gl.enableVertexAttribArray(loc)
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+  const uT = gl.getUniformLocation(prog, "T")!
+  const uR = gl.getUniformLocation(prog, "R")!
+  const uC = gl.getUniformLocation(prog, "C")!
+  gl.uniform1f(uC, 0)
+
+  const resize = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    canvas.width = canvas.offsetWidth * dpr
+    canvas.height = canvas.offsetHeight * dpr
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.uniform2f(uR, canvas.width, canvas.height)
+  }
+  resize()
+  const ro = new ResizeObserver(resize)
+  ro.observe(canvas)
+  const t0 = performance.now()
+  let raf: number
+  const loop = () => {
+    gl.uniform1f(uT, (performance.now() - t0) / 1000)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    raf = requestAnimationFrame(loop)
+  }
+  loop()
+  return {
+    setConf: (v: number) => gl.uniform1f(uC, Math.min(Math.max(v, 0), 1)),
+    cleanup: () => {
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    },
+  }
+}
+
+// ─── Teaser data ──────────────────────────────────────────────────────────────
+const TEASER_QUESTIONS = [
+  { q: "What kind of business do you own?", chips: ["HVAC", "Plumbing", "Landscaping", "Auto Repair", "Cleaning", "Other"] },
+  { q: "What is your annual revenue?", chips: ["Under $500K", "$500K – $1M", "$1M – $3M", "$3M – $7M", "$7M+"] },
+  { q: "How long have you been operating?", chips: ["Under 5 years", "5 – 10 years", "10 – 20 years", "20+ years"] },
+  { q: "What is your owner earnings (SDE) margin?", chips: ["Under 10%", "10 – 20%", "20 – 30%", "30%+"] },
+]
+
+const TEASER_INSIGHTS = [
+  [
+    "HVAC commands 2.6× SDE on average. SBA buyers active in this band.",
+    "Plumbing rolls up well — strategic acquirers actively consolidating.",
+    "Landscaping buyers prize recurring contracts. Recurring share matters.",
+    "Auto repair: location and licenses drive multiple compression.",
+    "Cleaning is a hot rollup category right now.",
+    "Diversified profile — multiple frameworks apply.",
+  ],
+  [
+    "Sub-$500K narrows the buyer pool. Individual searchers dominate this band.",
+    "Sweet spot for SBA-backed searchers. Active demand.",
+    "$1–3M is the densest deal band on Main Street. Strong buyer competition.",
+    "Lower middle-market: PE-backed acquirers are now in scope.",
+    "Strategic buyers and rollups compete actively in this range.",
+  ],
+  [
+    "Early-stage may discount value. Growth story becomes the lead asset.",
+    "5–10 years shows operational proof. Buyers will model retention.",
+    "Operational maturity — a meaningful multiple driver.",
+    "20+ years signals durable demand. Premium multiples likely.",
+  ],
+  [
+    "Sub-10% SDE margin — buyers will model an operational upside story.",
+    "10–20% SDE puts you in the competitive band for SBA exits.",
+    "Above 20% signals premium quality. Top-tier buyers prioritize this.",
+    "Exceptional margins — premium exit multiples in scope.",
+  ],
+]
+
+const TEASER_DASH = [
+  { conf: 0, val: null as string | null, fee: null as string | null, mult: null as string | null },
+  { conf: 24, val: null, fee: null, mult: "2 – 4×" },
+  { conf: 50, val: "$760K – $1.9M", fee: "~$84K", mult: "2.8×" },
+  { conf: 74, val: "$1.1M – $2.4M", fee: "~$152K", mult: "3.2×" },
+  { conf: 91, val: "$1.4M – $2.1M", fee: "$176K", mult: "3.5×" },
+]
+
+// ─── Teaser sub-components ────────────────────────────────────────────────────
+function TeaserSignalOrb({ phase }: { phase: number }) {
+  const grads = [
+    "radial-gradient(circle at 38% 36%, rgba(167,229,211,.95) 0%, rgba(200,184,224,.65) 42%, rgba(168,200,232,.3) 68%, transparent 85%)",
+    "radial-gradient(circle at 40% 34%, rgba(167,229,211,1) 0%, rgba(200,184,224,.8) 40%, rgba(244,197,168,.35) 68%, transparent 85%)",
+    "radial-gradient(circle at 37% 38%, rgba(168,200,232,.95) 0%, rgba(167,229,211,.7) 42%, rgba(200,184,224,.35) 68%, transparent 85%)",
+    "radial-gradient(circle at 40% 36%, rgba(200,184,224,.95) 0%, rgba(168,200,232,.8) 40%, rgba(167,229,211,.35) 68%, transparent 85%)",
+    "radial-gradient(circle at 38% 36%, rgba(167,229,211,1) 0%, rgba(200,184,224,.9) 35%, rgba(168,200,232,.55) 65%, transparent 82%)",
+  ]
   return (
-    /* Backdrop */
     <div
+      style={{
+        width: 96,
+        height: 96,
+        borderRadius: "50%",
+        background: grads[phase % grads.length],
+        animation: "sOrbBreathe 3.2s ease-in-out infinite, sOrbGlow 3.2s ease-in-out infinite",
+        flexShrink: 0,
+        position: "relative",
+        transition: "background 1.2s ease",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "16%",
+          left: "20%",
+          width: "26%",
+          height: "16%",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,.55)",
+          filter: "blur(3px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "24%",
+          left: "58%",
+          width: "12%",
+          height: "12%",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,.35)",
+          filter: "blur(2px)",
+        }}
+      />
+    </div>
+  )
+}
+
+function TeaserConfMeter({ value }: { value: number }) {
+  const disp = useSpring(value)
+  const r = 28
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - Math.min(disp, 100) / 100)
+  const color = disp > 70 ? C.mint : disp > 40 ? C.lav : C.sky
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ ...eyebrowOnDark, fontSize: 10 }}>AI Confidence</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <svg width={70} height={70} viewBox="0 0 70 70">
+          <circle cx={35} cy={35} r={r} fill="none" stroke="rgba(245,245,245,.08)" strokeWidth={4.5} />
+          <circle
+            cx={35}
+            cy={35}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={4.5}
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            transform="rotate(-90 35 35)"
+            className="s-carc"
+            style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+          />
+          <text
+            x={35}
+            y={35}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="rgba(245,245,245,.9)"
+            fontSize={13}
+            fontWeight={500}
+            fontFamily={inter}
+          >
+            {Math.round(disp)}%
+          </text>
+        </svg>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <div style={{ fontFamily: inter, fontSize: 11, color: "rgba(245,245,245,.45)", lineHeight: 1.4 }}>
+            {value === 0 ? "Awaiting input" : value < 40 ? "Calibrating…" : value < 70 ? "Pattern matched" : "High confidence"}
+          </div>
+          <div style={{ display: "flex", gap: 4 }}>
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: i < Math.floor(value / 20) ? color : "rgba(245,245,245,.12)",
+                  boxShadow: i < Math.floor(value / 20) ? `0 0 6px ${color}` : "none",
+                  transition: "background .6s, box-shadow .6s",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── ExitIQ teaser card (design from design files) ────────────────────────────
+function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = React.useState(0)
+  const [answers, setAnswers] = React.useState<string[]>([])
+  const [trans, setTrans] = React.useState(false)
+  const [proc, setProc] = React.useState(false)
+  const [insight, setInsight] = React.useState<string | null>(null)
+  const [done, setDone] = React.useState(false)
+  const canvasRef = React.useRef<HTMLCanvasElement>(null)
+  const glRef = React.useRef<WebGLControls | null>(null)
+
+  const dash = TEASER_DASH[phase]!
+
+  React.useEffect(() => {
+    if (!canvasRef.current) return
+    glRef.current = setupTeaserWebGL(canvasRef.current)
+    return () => glRef.current?.cleanup()
+  }, [])
+
+  React.useEffect(() => {
+    glRef.current?.setConf(TEASER_DASH[phase]!.conf / 100)
+  }, [phase])
+
+  const handleAnswer = (chip: string) => {
+    if (trans) return
+    setTrans(true)
+    setProc(true)
+    setAnswers((p) => [...p, chip])
+    const idx = TEASER_QUESTIONS[phase]!.chips.indexOf(chip)
+    const text = TEASER_INSIGHTS[phase]?.[idx] ?? TEASER_INSIGHTS[phase]?.[0] ?? ""
+    setTimeout(() => {
+      setProc(false)
+      setInsight(text)
+    }, 600)
+    setTimeout(() => {
+      if (phase + 1 >= TEASER_QUESTIONS.length) setDone(true)
+      else setPhase((p) => p + 1)
+      setTrans(false)
+    }, 1250)
+  }
+
+  const currentQ = phase < TEASER_QUESTIONS.length ? TEASER_QUESTIONS[phase]! : null
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        borderRadius: 24,
+        overflow: "hidden",
+        boxShadow: "0 30px 80px rgba(12,10,9,.18), 0 8px 24px rgba(12,10,9,.08)",
+      }}
+    >
+      {/* WebGL fluid background */}
+      <canvas
+        ref={canvasRef}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
+      />
+
+      {/* Header bar */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 20px",
+          borderBottom: "1px solid rgba(245,245,245,.08)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: C.mint,
+              boxShadow: "0 0 10px rgba(167,229,211,.9)",
+              animation: "sLiveBlink 2s infinite",
+            }}
+          />
+          <div style={{ ...eyebrow(true), fontSize: 10 }}>ExitIQ — Live Valuation Engine</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {TEASER_QUESTIONS.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: 18,
+                height: 2,
+                borderRadius: 9999,
+                background: i < phase || done ? C.mint : i === phase ? "rgba(167,229,211,.5)" : "rgba(245,245,245,.12)",
+                transition: "background .5s",
+                boxShadow: i < phase || done ? "0 0 6px rgba(167,229,211,.6)" : "none",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Main grid */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "grid",
+          gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,.85fr)",
+          gap: 0,
+          minHeight: 380,
+        }}
+      >
+        {/* Left: question + chips */}
+        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <TeaserSignalOrb phase={phase} />
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 4 }}>
+                Step {Math.min(phase + 1, TEASER_QUESTIONS.length)} / {TEASER_QUESTIONS.length}
+              </div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 24,
+                  fontWeight: 300,
+                  color: "rgba(245,245,245,.95)",
+                  letterSpacing: "-.3px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {done ? "Your valuation is ready." : currentQ?.q}
+              </div>
+            </div>
+          </div>
+
+          {!done ? (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                opacity: trans ? 0.55 : 1,
+                transition: "opacity .25s",
+              }}
+            >
+              {currentQ?.chips.map((c, i) => (
+                <button
+                  key={c + phase}
+                  onClick={() => handleAnswer(c)}
+                  style={{
+                    padding: "10px 16px",
+                    background: "rgba(245,245,245,.07)",
+                    border: "1px solid rgba(245,245,245,.13)",
+                    borderRadius: 9999,
+                    color: "rgba(245,245,245,.82)",
+                    fontFamily: inter,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all .22s cubic-bezier(.34,1.56,.64,1)",
+                    animation: `sChipFloat .55s ${i * 60}ms cubic-bezier(.34,1.3,.64,1) both`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(167,229,211,.14)"
+                    e.currentTarget.style.borderColor = "rgba(167,229,211,.45)"
+                    e.currentTarget.style.color = C.mint
+                    e.currentTarget.style.transform = "translateY(-2px)"
+                    e.currentTarget.style.boxShadow = "0 0 18px rgba(167,229,211,.18)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(245,245,245,.07)"
+                    e.currentTarget.style.borderColor = "rgba(245,245,245,.13)"
+                    e.currentTarget.style.color = "rgba(245,245,245,.82)"
+                    e.currentTarget.style.transform = "translateY(0)"
+                    e.currentTarget.style.boxShadow = "none"
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <p style={{ fontFamily: inter, fontSize: 14, color: "rgba(245,245,245,.55)", lineHeight: 1.6, maxWidth: 420 }}>
+                We&apos;ve matched your business to live M&A market data and deal comps. Your full Gap Report includes
+                buyer offer scenarios, SBA pre-screen, and a 90-day fix list.
+              </p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  onClick={onComplete}
+                  style={{
+                    ...btnLight,
+                    height: 44,
+                    padding: "0 22px",
+                    fontSize: 15,
+                    cursor: "pointer",
+                    border: "none",
+                  }}
+                >
+                  Get my full report
+                </button>
+              </div>
+            </div>
+          )}
+
+          {proc && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, animation: "sFadeIn .3s" }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      background: C.mint,
+                      animation: `sDotBounce .9s ${i * 0.18}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              <span style={{ fontFamily: inter, fontSize: 12, color: "rgba(167,229,211,.7)", fontWeight: 500 }}>
+                Mapping to comps…
+              </span>
+            </div>
+          )}
+
+          {insight && !proc && (
+            <div
+              key={insight}
+              style={{
+                background: "rgba(167,229,211,.06)",
+                border: "1px solid rgba(167,229,211,.22)",
+                borderRadius: 12,
+                padding: "12px 14px",
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+                animation: "sSlideRight .5s cubic-bezier(.34,1.2,.64,1)",
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: C.mint,
+                  flexShrink: 0,
+                  marginTop: 5,
+                  animation: "sLiveBlink 2.4s infinite",
+                }}
+              />
+              <div style={{ fontFamily: inter, fontSize: 13, color: "rgba(245,245,245,.72)", lineHeight: 1.55 }}>
+                {insight}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: dashboard */}
+        <div
+          style={{
+            padding: "28px 24px",
+            borderLeft: "1px solid rgba(245,245,245,.08)",
+            background: "rgba(0,0,0,.18)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+            position: "relative",
+          }}
+        >
+          {/* Scan line */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "linear-gradient(90deg,transparent,rgba(167,229,211,.35),transparent)",
+              animation: "sScanDown 4s linear infinite",
+              pointerEvents: "none",
+            }}
+          />
+
+          <TeaserConfMeter value={dash.conf} />
+
+          <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
+
+          <div>
+            <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Estimated Value</div>
+            <div
+              key={dash.val ?? "empty-val"}
+              style={{
+                fontFamily: garamond,
+                fontSize: 26,
+                fontWeight: 300,
+                letterSpacing: "-.4px",
+                color: dash.val ? "rgba(245,245,245,.95)" : "rgba(245,245,245,.2)",
+                lineHeight: 1,
+                animation: dash.val ? "sNumRoll .55s cubic-bezier(.34,1.3,.64,1)" : "none",
+              }}
+            >
+              {dash.val ?? "—"}
+            </div>
+            {dash.mult && (
+              <div
+                key={dash.mult}
+                style={{
+                  fontFamily: inter,
+                  fontSize: 12,
+                  color: C.mint,
+                  fontWeight: 500,
+                  marginTop: 4,
+                  animation: "sSlideUp .4s",
+                }}
+              >
+                {dash.mult} SDE multiple
+              </div>
+            )}
+          </div>
+
+          <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
+
+          <div>
+            <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Broker fee eliminated</div>
+            <div
+              key={dash.fee ?? "empty-fee"}
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 6,
+                animation: dash.fee ? "sNumRoll .5s cubic-bezier(.34,1.3,.64,1)" : "none",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 26,
+                  fontWeight: 300,
+                  letterSpacing: "-.4px",
+                  color: dash.fee ? C.mint : "rgba(245,245,245,.2)",
+                }}
+              >
+                {dash.fee ?? "—"}
+              </span>
+              {dash.fee && (
+                <span style={{ fontFamily: inter, fontSize: 11, color: "rgba(167,229,211,.6)" }}>saved</span>
+              )}
+            </div>
+            {dash.fee && (
+              <div style={{ fontFamily: inter, fontSize: 11, color: "rgba(245,245,245,.3)", marginTop: 4 }}>
+                vs. 8–12% traditional broker fee
+              </div>
+            )}
+          </div>
+
+          {answers.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
+              <div style={{ height: 1, background: "rgba(245,245,245,.07)", marginBottom: 6 }} />
+              <div style={{ ...eyebrowOnDark, fontSize: 10 }}>Signal profile</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {answers.map((a, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "rgba(245,245,245,.6)",
+                      background: "rgba(245,245,245,.06)",
+                      border: "1px solid rgba(245,245,245,.1)",
+                      borderRadius: 9999,
+                      padding: "3px 9px",
+                      animation: "sChipFloat .4s",
+                    }}
+                  >
+                    {a}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── ExitIQ overlay (full app) ────────────────────────────────────────────────
+function ExitIQOverlay({ onClose }: { onClose: () => void }) {
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handler)
+    document.body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", handler)
+      document.body.style.overflow = ""
+    }
+  }, [onClose])
+
+  return (
+    <div
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
@@ -149,11 +796,11 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
         background: "rgba(0,0,0,0.55)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        animation: "fadeIn 0.2s ease",
+        animation: "sFadeIn 0.2s ease",
       }}
     >
-      {/* Floating card */}
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           position: "relative",
           width: "100%",
@@ -162,7 +809,7 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
           borderRadius: 20,
           overflow: "hidden",
           boxShadow: "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
+          animation: "sSlideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
         }}
       >
         <ExitIQApp onClose={onClose} />
@@ -171,1324 +818,2137 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Announcement Bar ──────────────────────────────────────────────────────────
-function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
-  const isMobile = useIsMobile()
-  return (
-    <div
-      style={{
-        background: C.primary,
-        color: "rgba(245,245,245,0.85)",
-        padding: rv(isMobile, "10px 40px 10px 16px", "10px 48px"),
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: rv(isMobile, 8, 16),
-        position: "relative",
-      }}
-    >
-      {!isMobile && (
-        <div
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: C.gradMint,
-            boxShadow: `0 0 8px ${C.gradMint}`,
-            flexShrink: 0,
-          }}
-        />
-      )}
-      <span
-        style={{
-          fontFamily: inter,
-          fontSize: rv(isMobile, 12, 13),
-          fontWeight: 500,
-          letterSpacing: "0.1px",
-          textAlign: "center",
-        }}
-      >
-        Most owners discover deal-killing issues too late.{" "}
-        <span style={{ color: C.gradMint }}>Scorta surfaces them before buyers do.</span>
-      </span>
-      <button
-        onClick={onDismiss}
-        style={{
-          position: "absolute",
-          right: 12,
-          background: "none",
-          border: "none",
-          color: "rgba(245,245,245,0.45)",
-          cursor: "pointer",
-          fontSize: 18,
-          lineHeight: 1,
-          padding: "0 4px",
-        }}
-      >
-        ×
-      </button>
-    </div>
-  )
+// ─── Style helpers ────────────────────────────────────────────────────────────
+const eyebrow = (dark = false): React.CSSProperties => ({
+  fontFamily: inter,
+  fontSize: 12,
+  fontWeight: 600,
+  letterSpacing: ".96px",
+  textTransform: "uppercase" as const,
+  color: dark ? "rgba(167,229,211,.85)" : C.muted,
+})
+
+const eyebrowOnDark: React.CSSProperties = {
+  fontFamily: inter,
+  fontSize: 12,
+  fontWeight: 600,
+  letterSpacing: ".96px",
+  textTransform: "uppercase",
+  color: C.onDarkMuted,
 }
 
-// ── Top Navigation ────────────────────────────────────────────────────────────
-function TopNav({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
+const btnPrimary: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  height: 44,
+  padding: "0 22px",
+  borderRadius: 9999,
+  border: "none",
+  cursor: "pointer",
+  background: C.ink2,
+  color: "#fff",
+  fontFamily: inter,
+  fontSize: 15,
+  fontWeight: 500,
+  textDecoration: "none",
+  transition: "background .18s, transform .18s",
+}
+
+const btnOutline: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  height: 44,
+  padding: "0 21px",
+  borderRadius: 9999,
+  cursor: "pointer",
+  background: "transparent",
+  color: C.ink,
+  border: `1px solid ${C.hairlineStrong}`,
+  fontFamily: inter,
+  fontSize: 15,
+  fontWeight: 500,
+  textDecoration: "none",
+  transition: "background .18s",
+}
+
+const btnLight: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  height: 44,
+  padding: "0 22px",
+  borderRadius: 9999,
+  border: "none",
+  cursor: "pointer",
+  background: "rgba(245,245,245,.95)",
+  color: C.ink,
+  fontFamily: inter,
+  fontSize: 15,
+  fontWeight: 500,
+  transition: "transform .18s, box-shadow .18s",
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function SNav({ onOpen }: { onOpen: () => void }) {
+  const [scrolled, setScrolled] = React.useState(false)
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    window.addEventListener("scroll", onScroll)
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const links = [
+    { l: "How it works", href: "#how" },
+    { l: "Products", href: "#products" },
+{ l: "About", href: "/about" },
+  ]
+
   return (
     <nav
       style={{
-        height: 64,
-        background: C.canvas,
-        borderBottom: `1px solid ${C.hairline}`,
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
-        padding: rv(isMobile, "0 16px", "0 48px"),
-        zIndex: 100,
+        height: 64,
+        padding: "0 24px",
+        background: scrolled ? "rgba(245,245,245,.85)" : "transparent",
+        borderBottom: scrolled ? `1px solid ${C.hairline}` : "1px solid transparent",
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
+        transition: "background .25s, border-color .25s",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="24" height="24" style={{ flexShrink: 0 }}>
-          <defs>
-            <radialGradient id="nav-orb" cx="38%" cy="36%" r="58%" fx="38%" fy="36%">
-              <stop offset="0%"   stopColor="#a7e5d3" stopOpacity="0.97"/>
-              <stop offset="40%"  stopColor="#c8b8e0" stopOpacity="0.80"/>
-              <stop offset="68%"  stopColor="#a8c8e8" stopOpacity="0.52"/>
-              <stop offset="100%" stopColor="#a8c8e8" stopOpacity="0.12"/>
-            </radialGradient>
-            <filter id="nav-f1" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="1.4"/>
-            </filter>
-            <filter id="nav-f2" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur stdDeviation="0.9"/>
-            </filter>
-            <filter id="nav-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <circle cx="16" cy="16" r="16" fill="#0c0a09"/>
-          <circle cx="16" cy="16" r="14.5" fill="none" stroke="#a7e5d3" strokeWidth="1.5" strokeOpacity="0.14" filter="url(#nav-glow)"/>
-          <circle cx="16" cy="16" r="13" fill="url(#nav-orb)"/>
-          <ellipse cx="12.5" cy="10.5" rx="4.2" ry="2.4" fill="white" fillOpacity="0.58" filter="url(#nav-f1)"/>
-          <circle cx="21" cy="10.5" r="1.6" fill="white" fillOpacity="0.36" filter="url(#nav-f2)"/>
-          <circle cx="21.5" cy="21.5" r="0.9" fill="white" fillOpacity="0.22" filter="url(#nav-f2)"/>
-        </svg>
-        <span style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px" }}>
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+        <div
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+            boxShadow: "0 0 12px rgba(167,229,211,.4)",
+            flexShrink: 0,
+          }}
+        />
+        <Link
+          href="/"
+          style={{
+            fontFamily: garamond,
+            fontSize: 22,
+            fontWeight: 400,
+            color: C.ink,
+            letterSpacing: "-.4px",
+            textDecoration: "none",
+          }}
+        >
           Scorta
-        </span>
+        </Link>
       </div>
 
-      {/* Desktop nav links — hidden on mobile */}
-      {!isMobile && (
-        <div style={{ display: "flex", gap: 32 }}>
-          {[
-            { label: "Features", id: "features" },
-            { label: "How it works", id: "how-it-works" },
-            { label: "For sellers", id: "for-sellers" },
-            { label: "Vision", id: "vision" },
-          ].map(({ label, id }) => (
-            <button
-              key={id}
-              onClick={() => scrollTo(id)}
-              style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}
+      {/* Links */}
+      <div style={{ display: "flex", gap: 26, flex: 1 }}>
+        {links.map(({ l, href }) =>
+          href.startsWith("/") ? (
+            <Link
+              key={l}
+              href={href}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: C.body,
+                opacity: 0.85,
+                textDecoration: "none",
+                transition: "opacity .15s",
+              }}
             >
-              {label}
-            </button>
-          ))}
-          <Link href="/about" style={{ fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, textDecoration: "none" }}>
-            About
-          </Link>
-        </div>
-      )}
-
-      <div style={{ display: "flex", gap: rv(isMobile, 8, 12), alignItems: "center" }}>
-        {!isMobile && (
-          <button style={{ background: "none", border: "none", padding: 0, fontFamily: inter, fontSize: 15, fontWeight: 500, color: C.body, cursor: "pointer" }}>Sign in</button>
+              {l}
+            </Link>
+          ) : (
+            <a
+              key={l}
+              href={href}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: C.body,
+                opacity: 0.85,
+                textDecoration: "none",
+                transition: "opacity .15s",
+              }}
+            >
+              {l}
+            </a>
+          )
         )}
-        <button
-          onClick={onStart}
-          style={{ ...pillPrimary, height: rv(isMobile, 36, 40), padding: rv(isMobile, "0 16px", "0 20px"), fontSize: rv(isMobile, 14, 15) }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-          onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
+      </div>
+
+      {/* CTAs */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <a
+          href="#exitiq"
+          style={{
+            fontFamily: inter,
+            fontSize: 14,
+            fontWeight: 500,
+            color: C.body,
+            opacity: 0.7,
+            textDecoration: "none",
+          }}
         >
-          {isMobile ? "Try ExitIQ" : "Try ExitIQ"}
+          Sign in
+        </a>
+        <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
+          Try ExitIQ
         </button>
       </div>
     </nav>
   )
 }
 
-// ── ExitIQ Preview Card ───────────────────────────────────────────────────────
-function ExitIQPreviewCard({ onOpen }: { onOpen: () => void }) {
-  const [hovered, setHovered] = React.useState(false)
-  const isMobile = useIsMobile()
-
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function SHero({ onOpen }: { onOpen: () => void }) {
   return (
-    <div style={{ position: "relative", marginTop: 16 }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: "-60px",
-          background:
-            "radial-gradient(ellipse at 25% 40%, rgba(167,229,211,0.45) 0%, transparent 55%)," +
-            "radial-gradient(ellipse at 75% 35%, rgba(244,197,168,0.38) 0%, transparent 50%)," +
-            "radial-gradient(ellipse at 50% 80%, rgba(200,184,224,0.3) 0%, transparent 50%)",
-          pointerEvents: "none",
-          borderRadius: "50%",
-          filter: "blur(20px)",
-        }}
-      />
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onOpen}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen()}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          position: "relative",
-          maxWidth: 920,
-          margin: "0 auto",
-          borderRadius: rv(isMobile, 14, 20),
-          overflow: "hidden",
-          background: "#0c0a09",
-          border: hovered ? "1px solid rgba(167,229,211,0.35)" : "1px solid rgba(245,245,245,0.1)",
-          boxShadow: hovered
-            ? "0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(167,229,211,0.12), 0 0 60px rgba(167,229,211,0.08)"
-            : "0 24px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(245,245,245,0.04)",
-          cursor: "pointer",
-          transform: hovered ? "scale(1.008) translateY(-2px)" : "scale(1) translateY(0)",
-          transition: "all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)",
-          userSelect: "none",
-        }}
-      >
-        {/* Fake nav */}
+    <section id="exitiq" style={{ position: "relative", overflow: "hidden", padding: "88px 24px 108px" }}>
+      {/* Atmospheric orbs */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
         <div
           style={{
-            height: 52,
-            padding: rv(isMobile, "0 14px", "0 20px"),
-            borderBottom: "1px solid rgba(245,245,245,0.07)",
+            position: "absolute",
+            width: 540,
+            height: 540,
+            top: -180,
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 40% 40%, rgba(167,229,211,.45) 0%, rgba(200,184,224,.28) 45%, transparent 72%)",
+            filter: "blur(40px)",
+            animation: "sOrbFloat1 14s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 360,
+            height: 360,
+            top: "15%",
+            left: "-4%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(244,197,168,.4) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            animation: "sOrbFloat2 18s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 300,
+            height: 300,
+            top: "8%",
+            right: "-2%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(168,200,232,.42) 0%, transparent 70%)",
+            filter: "blur(36px)",
+            animation: "sOrbFloat3 16s ease-in-out infinite",
+          }}
+        />
+      </div>
+
+      <div style={{ position: "relative", maxWidth: 1180, margin: "0 auto" }}>
+        {/* Editorial headline */}
+        <div
+          className="s-rv"
+          style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "space-between",
-            background: "rgba(245,245,245,0.03)",
+            textAlign: "center",
+            gap: 22,
+            marginBottom: 56,
           }}
         >
-          <span style={{ fontFamily: garamond, fontSize: 17, fontWeight: 300, color: "rgba(245,245,245,0.9)", letterSpacing: "-0.2px" }}>
-            Scorta
-          </span>
-          {!isMobile && (
-            <div style={{ display: "flex", gap: 20 }}>
-              {["How it works", "For sellers"].map((l) => (
-                <span key={l} style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.35)" }}>
-                  {l}
-                </span>
-              ))}
-            </div>
-          )}
-          <div
+          <div style={eyebrow()}>An AI-native broker for Main Street</div>
+          <h1
             style={{
-              height: 30, padding: "0 14px", background: "rgba(245,245,245,0.08)",
-              border: "1px solid rgba(245,245,245,0.12)", borderRadius: 9999,
-              fontFamily: inter, fontSize: 12, fontWeight: 500, color: "rgba(245,245,245,0.6)",
-              display: "flex", alignItems: "center",
+              fontFamily: garamond,
+              fontSize: "clamp(44px, 7vw, 88px)",
+              fontWeight: 300,
+              letterSpacing: "-1.92px",
+              lineHeight: 1.02,
+              color: C.ink,
+              maxWidth: 920,
+              margin: 0,
             }}
           >
-            Start ExitIQ
+            Don&apos;t list and pray. <em style={{ fontStyle: "italic", color: "#1c1917" }}>Sell with proof.</em>
+          </h1>
+          <p
+            style={{
+              fontFamily: inter,
+              fontSize: 18,
+              lineHeight: 1.55,
+              color: C.body,
+              maxWidth: 580,
+              margin: 0,
+              letterSpacing: ".16px",
+            }}
+          >
+            Scorta turns a few questions about your business into a buyer-ready exit profile — with valuation, SBA
+            pre-screen, and a fix list. No 10% broker fee.
+          </p>
+          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap", justifyContent: "center" }}>
+            <button onClick={onOpen} style={btnPrimary}>
+              Start ExitIQ — free →
+            </button>
+            <a href="#how" style={btnOutline}>
+              See how it works
+            </a>
+          </div>
+          <div style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginTop: 2 }}>
+            Free assessment. No login. ~3 minutes.
           </div>
         </div>
 
-        {/* Main content */}
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 320px"), gap: 0, minHeight: rv<string | number>(isMobile, "auto", 340) }}>
-          {/* Left */}
-          <div style={{ padding: rv(isMobile, "20px 16px 20px", "28px 28px 24px"), borderRight: isMobile ? "none" : "1px solid rgba(245,245,245,0.06)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: "rgba(167,229,211,0.65)", fontFamily: inter, marginBottom: 14 }}>
-              ExitIQ Liquid Engine
+        {/* ExitIQ centerpiece */}
+        <div className="s-rv s-d2" style={{ maxWidth: 1080, margin: "0 auto", position: "relative" }}>
+          {/* Animated conic-gradient ring */}
+          <div
+            style={{
+              position: "absolute",
+              inset: -2,
+              borderRadius: 26,
+              padding: 2,
+              background:
+                "conic-gradient(from 0deg, rgba(167,229,211,.6), rgba(200,184,224,.6), rgba(168,200,232,.6), rgba(244,197,168,.6), rgba(167,229,211,.6))",
+              filter: "blur(.5px)",
+              animation: "sRingSpin 14s linear infinite",
+              opacity: 0.6,
+              pointerEvents: "none",
+              WebkitMask: "linear-gradient(#000,#000) content-box, linear-gradient(#000,#000)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
+          />
+          <div style={{ position: "relative", cursor: "pointer" }} onClick={onOpen}>
+            <ExitIQTeaser onComplete={onOpen} />
+            <div style={{ position: "absolute", inset: 0, zIndex: 10 }} />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: -36,
+              textAlign: "center",
+              fontFamily: inter,
+              fontSize: 12,
+              color: C.mutedSoft,
+              letterSpacing: ".2px",
+            }}
+          >
+            ↓ Try the assessment — values are illustrative
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Industry marquee ─────────────────────────────────────────────────────────
+function SIndustryMarquee() {
+  const items = [
+    "HVAC",
+    "Plumbing",
+    "Roofing",
+    "Landscaping",
+    "Auto repair",
+    "Cleaning",
+    "Pest control",
+    "Electrical",
+    "Restoration",
+    "Concrete",
+    "Locksmith",
+    "Tree care",
+  ]
+  const repeated = [...items, ...items]
+  return (
+    <section style={{ padding: "64px 0 32px", background: C.canvas }}>
+      <div className="s-rv" style={{ textAlign: "center", marginBottom: 28 }}>
+        <span style={{ fontFamily: inter, fontSize: 13, color: C.muted }}>
+          Built for the trades on every Main Street.
+        </span>
+      </div>
+      <div className="s-mqf" style={{ overflow: "hidden" }}>
+        <div className="s-mq">
+          {repeated.map((it, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                fontFamily: garamond,
+                fontWeight: 300,
+                fontSize: 28,
+                color: C.ink2,
+                letterSpacing: "-.4px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: C.mint,
+                  flexShrink: 0,
+                }}
+              />
+              {it}
             </div>
-            <h2 style={{ fontFamily: garamond, fontSize: rv(isMobile, 22, 28), fontWeight: 300, color: "rgba(245,245,245,0.92)", lineHeight: 1.08, letterSpacing: "-0.6px", marginBottom: 10 }}>
-              See what buyers would pay — before you ever talk to a broker.
-            </h2>
-            <p style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: "rgba(245,245,245,0.42)", lineHeight: 1.6, letterSpacing: "0.1px", marginBottom: 24 }}>
-              ExitIQ analyzes your valuation range, likely buyer pool, broker-fee exposure, and deal risks through an AI-guided assessment.
-            </p>
-            <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.09)", borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
-              <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.35)", marginBottom: 8 }}>
-                Question 1 of 6
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Signals Band (dark) ──────────────────────────────────────────────────────
+function SSignalsBand() {
+  const chips = [
+    { t: "Owner dependence", x: 6, y: 12 },
+    { t: "Customer concentration", x: 72, y: 8 },
+    { t: "Recurring revenue", x: 16, y: 38 },
+    { t: "Add-back quality", x: 82, y: 36 },
+    { t: "SBA eligibility", x: 4, y: 62 },
+    { t: "Lease term", x: 76, y: 64 },
+    { t: "SOPs documented", x: 18, y: 84 },
+    { t: "Licenses", x: 80, y: 88 },
+    { t: "Tax returns", x: 38, y: 4 },
+    { t: "P&L quality", x: 58, y: 92 },
+    { t: "Employee retention", x: 30, y: 72 },
+    { t: "Tech stack", x: 64, y: 26 },
+  ]
+
+  return (
+    <section
+      style={{
+        background: C.dark,
+        color: C.onDark,
+        padding: "120px 24px",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Atmospheric glow */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            width: 600,
+            height: 600,
+            top: "-30%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(167,229,211,.18) 0%, rgba(200,184,224,.08) 50%, transparent 75%)",
+            filter: "blur(60px)",
+            animation: "sOrbFloat1 20s ease-in-out infinite",
+          }}
+        />
+      </div>
+
+      <div style={{ position: "relative", maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 56px" }}>
+          <div style={{ ...eyebrow(true), marginBottom: 16 }}>What buyers actually look at</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.onDark,
+            }}
+          >
+            Buyers see <em>signals,</em> not stories.
+          </h2>
+          <p style={{ fontFamily: inter, fontSize: 17, color: C.onDarkBody, marginTop: 18, lineHeight: 1.55 }}>
+            Twelve things kill 70% of small-business sales. Scorta finds yours, ranks them, and tells you what to fix —
+            before you ever talk to a buyer.
+          </p>
+        </div>
+
+        {/* Chip cloud */}
+        <div className="s-rv s-d2" style={{ position: "relative", height: 460, maxWidth: 1000, margin: "0 auto" }}>
+          {chips.map((c, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: `${c.x}%`,
+                top: `${c.y}%`,
+                padding: "8px 14px",
+                background: "rgba(245,245,245,.05)",
+                border: "1px solid rgba(245,245,245,.12)",
+                borderRadius: 9999,
+                color: "rgba(245,245,245,.78)",
+                fontSize: 13,
+                fontFamily: inter,
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                backdropFilter: "blur(6px)",
+                animation: `sDrift ${4 + (i % 5) * 0.6}s ease-in-out ${i * 0.13}s infinite`,
+              }}
+            >
+              {c.t}
+            </div>
+          ))}
+
+          {/* Center plate */}
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 280,
+              padding: "24px 22px",
+              background: "rgba(167,229,211,.05)",
+              border: "1px solid rgba(167,229,211,.3)",
+              borderRadius: 16,
+              textAlign: "center",
+              backdropFilter: "blur(20px)",
+              boxShadow: "0 0 60px rgba(167,229,211,.15)",
+            }}
+          >
+            <div style={{ ...eyebrow(true), fontSize: 10 }}>Scorta surfaces all 12</div>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 24,
+                fontWeight: 300,
+                color: C.onDark,
+                lineHeight: 1.2,
+                letterSpacing: "-.3px",
+                marginTop: 8,
+              }}
+            >
+              The signals buyers grade you on.
+            </div>
+            <div
+              style={{
+                marginTop: 14,
+                fontFamily: inter,
+                fontSize: 12,
+                color: "rgba(167,229,211,.7)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: C.mint,
+                  animation: "sLiveBlink 2s infinite",
+                }}
+              />
+              ExitIQ → Gap Report
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Speed Compare ────────────────────────────────────────────────────────────
+function SSpeedCompare() {
+  return (
+    <section id="how" style={{ padding: "96px 24px" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 64px" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>The Math</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.ink,
+            }}
+          >
+            <em>5×</em> faster. Zero broker commission.
+          </h2>
+          <p style={{ fontFamily: inter, fontSize: 17, color: C.body, marginTop: 18, lineHeight: 1.55 }}>
+            Traditional brokers list and pray. Scorta runs the deal, prices the deal, and qualifies the buyer — for a
+            fixed fee.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {/* Traditional broker card */}
+          <div
+            className="s-rv s-ch"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              background: C.canvasSoft,
+              border: `1px solid ${C.hairline}`,
+              borderRadius: 24,
+              padding: 28,
+              minHeight: 340,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+              <div style={eyebrow()}>Traditional broker</div>
+              <span style={{ fontFamily: inter, fontSize: 11, color: C.mutedSoft }}>industry avg.</span>
+            </div>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 64,
+                fontWeight: 300,
+                color: C.mutedSoft,
+                letterSpacing: "-1.5px",
+                lineHeight: 1,
+              }}
+            >
+              186 days
+            </div>
+            <div style={{ fontFamily: inter, fontSize: 14, color: C.muted, marginTop: 8 }}>median time on market</div>
+            <div style={{ height: 1, background: C.hairline, margin: "24px 0" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { l: "Commission", v: "8 – 12%" },
+                { l: "Fee on $1.5M sale", v: "$120K – $180K", warn: true },
+                { l: "Process", v: "PDFs + email" },
+                { l: "Listings that close", v: "20 – 30%", warn: true },
+              ].map((r, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: inter, fontSize: 13, color: C.muted }}>{r.l}</span>
+                  <span
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: r.warn ? "#dc2626" : C.ink2,
+                    }}
+                  >
+                    {r.v}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Scorta card */}
+          <div
+            className="s-rv s-d1 s-chd"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              background: C.dark,
+              color: C.onDark,
+              borderRadius: 24,
+              padding: 28,
+              minHeight: 340,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: 360,
+                height: 360,
+                top: -120,
+                right: -100,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(167,229,211,.35) 0%, rgba(200,184,224,.18) 50%, transparent 75%)",
+                filter: "blur(36px)",
+                pointerEvents: "none",
+              }}
+            />
+            <div style={{ position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+                <div style={eyebrow(true)}>Scorta</div>
+                <span
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 11,
+                    color: "rgba(167,229,211,.7)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      background: C.mint,
+                      animation: "sLiveBlink 2s infinite",
+                    }}
+                  />
+                  AI-native
+                </span>
               </div>
-              <div style={{ fontFamily: garamond, fontSize: rv(isMobile, 16, 18), fontWeight: 300, color: "rgba(245,245,245,0.85)", marginBottom: 14, lineHeight: 1.3, letterSpacing: "-0.2px" }}>
-                What industry is your business in?
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 64,
+                  fontWeight: 300,
+                  color: C.mint,
+                  letterSpacing: "-1.5px",
+                  lineHeight: 1,
+                }}
+              >
+                ~38 days
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {["Retail / E-commerce", "Food & Beverage", "Professional Services", "Healthcare"].map((opt, i) => (
-                  <div key={opt} style={{ padding: "7px 13px", borderRadius: 9999, fontFamily: inter, fontSize: 12, fontWeight: 500,
-                    color: i === 2 ? "rgba(167,229,211,0.85)" : "rgba(245,245,245,0.5)",
-                    background: i === 2 ? "rgba(167,229,211,0.1)" : "rgba(245,245,245,0.05)",
-                    border: `1px solid ${i === 2 ? "rgba(167,229,211,0.3)" : "rgba(245,245,245,0.1)"}`,
-                  }}>
-                    {opt}
+              <div style={{ fontFamily: inter, fontSize: 14, color: C.onDarkBody, marginTop: 8 }}>
+                from intake to LOI on average
+              </div>
+              <div style={{ height: 1, background: C.onDarkHair, margin: "24px 0" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[
+                  { l: "Commission", v: "0%" },
+                  { l: "Flat success fee", v: "~3%" },
+                  { l: "Process", v: "AI workflow + human approval" },
+                  { l: "Buyers qualified before LOI", v: "100%" },
+                ].map((r, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontFamily: inter, fontSize: 13, color: "rgba(245,245,245,.5)" }}>{r.l}</span>
+                    <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: "rgba(167,229,211,.95)" }}>
+                      {r.v}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {["Professional Services", "12 employees"].map((chip) => (
-                <div key={chip} style={{ padding: "3px 10px", borderRadius: 9999, fontFamily: inter, fontSize: 11, fontWeight: 500, color: "rgba(245,245,245,0.4)", background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)" }}>
-                  {chip}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — dashboard (hidden on mobile to keep card compact) */}
-          {!isMobile && (
-            <div style={{ padding: "20px 18px", display: "flex", flexDirection: "column", gap: 10, background: "rgba(245,245,245,0.015)" }}>
-              <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
-                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 6 }}>Exit Readiness Score</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ flex: 1, height: 4, background: "rgba(245,245,245,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ width: "67%", height: "100%", background: "linear-gradient(90deg, rgba(167,229,211,0.7), rgba(167,229,211,0.4))", borderRadius: 2 }} />
-                  </div>
-                  <span style={{ fontFamily: garamond, fontSize: 16, fontWeight: 300, color: "#a7e5d3", letterSpacing: "-0.1px" }}>67%</span>
-                </div>
-              </div>
-              <div style={{ background: "rgba(245,245,245,0.04)", border: "1px solid rgba(245,245,245,0.08)", borderRadius: 12, padding: "13px 14px" }}>
-                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(245,245,245,0.3)", marginBottom: 5 }}>Est. Valuation Range</div>
-                <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "rgba(245,245,245,0.88)", letterSpacing: "-0.3px" }}>$1.2M – $2.4M</div>
-                <div style={{ fontFamily: inter, fontSize: 10, color: "#10b981", fontWeight: 500, marginTop: 2 }}>3.1× SDE multiple</div>
-              </div>
-              <div style={{ background: "rgba(244,197,168,0.06)", border: "1px solid rgba(244,197,168,0.15)", borderRadius: 12, padding: "13px 14px" }}>
-                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(244,197,168,0.45)", marginBottom: 5 }}>Broker Fee Exposure</div>
-                <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 300, color: "#f4c5a8", letterSpacing: "-0.3px" }}>$96K – $192K</div>
-                <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(244,197,168,0.45)", fontWeight: 400, marginTop: 2 }}>8–10% of deal value</div>
-              </div>
-              <div style={{ background: "rgba(200,184,224,0.06)", border: "1px solid rgba(200,184,224,0.15)", borderRadius: 12, padding: "13px 14px" }}>
-                <div style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: "rgba(200,184,224,0.45)", marginBottom: 5 }}>SBA Financeability</div>
-                <div style={{ fontFamily: inter, fontSize: 13, fontWeight: 400, color: "rgba(245,245,245,0.65)", lineHeight: 1.4 }}>Likely qualifies for SBA 7(a)</div>
-                <div style={{ fontFamily: inter, fontSize: 10, color: "rgba(200,184,224,0.45)", marginTop: 2 }}>DSCR within lender range</div>
-              </div>
-              <div style={{ background: "rgba(245,245,245,0.03)", border: "1px solid rgba(245,245,245,0.07)", borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 500, color: "rgba(245,245,245,0.3)" }}>90-day roadmap</span>
-                <span style={{ fontFamily: inter, fontSize: 9, fontWeight: 600, letterSpacing: "0.6px", textTransform: "uppercase", color: "rgba(245,245,245,0.22)" }}>Locked</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Click CTA */}
-        <div style={{ borderTop: "1px solid rgba(245,245,245,0.07)", padding: rv(isMobile, "14px 16px", "16px 24px"), display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(245,245,245,0.02)", gap: 12 }}>
-          {!isMobile && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.8)", animation: "liveBlink 2s infinite" }} />
-              <span style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(245,245,245,0.55)", letterSpacing: "0.1px" }}>
-                Free assessment · No login · No broker call
-              </span>
-            </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 500, color: hovered ? "rgba(167,229,211,0.9)" : "rgba(245,245,245,0.7)", transition: "color 0.2s", marginLeft: isMobile ? "auto" : undefined }}>
-            Start your assessment
-            <svg width={14} height={14} viewBox="0 0 14 14" fill="none">
-              <path d="M3 7h8M7.5 4l3.5 3-3.5 3" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
           </div>
         </div>
-      </div>
-
-      <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, textAlign: "center", marginTop: 16, letterSpacing: "0.1px" }}>
-        {isMobile ? "Tap the card to try ExitIQ live" : "Click anywhere on the card to try ExitIQ live"}
-      </p>
-    </div>
-  )
-}
-
-// ── Hero Section ──────────────────────────────────────────────────────────────
-function HeroSection({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
-  return (
-    <section style={{ padding: rv(isMobile, "48px 20px 40px", "88px 48px 64px"), textAlign: "center", position: "relative", overflow: "visible" }}>
-      <div
-        style={{
-          position: "absolute", top: "-5%", left: "50%", transform: "translateX(-50%)",
-          width: rv<string | number>(isMobile, "100%", 900), height: rv(isMobile, 320, 480),
-          background:
-            "radial-gradient(ellipse at 30% 35%, rgba(167,229,211,0.32) 0%, transparent 52%)," +
-            "radial-gradient(ellipse at 72% 28%, rgba(244,197,168,0.28) 0%, transparent 48%)," +
-            "radial-gradient(ellipse at 50% 75%, rgba(200,184,224,0.22) 0%, transparent 50%)",
-          pointerEvents: "none", filter: "blur(8px)",
-        }}
-      />
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-          <span style={badge()}>AI Exit Intelligence for Main Street Businesses</span>
-        </div>
-        <h1 style={{ ...displayStyle(rv(isMobile, 36, 60)), maxWidth: rv<string | number>(isMobile, "100%", 820), margin: "0 auto 24px", lineHeight: rv(isMobile, 1.12, 1.04) }}>
-          Know if your business is ready to sell — before buyers find the problems.
-        </h1>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 18), fontWeight: 400, lineHeight: 1.55, letterSpacing: "0.15px", color: C.muted, maxWidth: 620, margin: "0 auto 16px" }}>
-          Scorta helps small-business owners understand what their business may be worth, what could reduce its value, and what to fix before going to market.
-        </p>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, lineHeight: 1.6, letterSpacing: "0.15px", color: C.mutedSoft, maxWidth: 580, margin: "0 auto 40px" }}>
-          Take the free ExitIQ assessment to get a valuation range, Exit Readiness Score, SBA financeability view, broker-fee impact, and personalized roadmap showing what buyers, lenders, and advisors would want to see before a deal.
-        </p>
-        <div style={{ display: "flex", flexDirection: rv(isMobile, "column", "row"), gap: 12, justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
-          <button
-            onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-          >
-            Start Free ExitIQ Assessment
-          </button>
-          <button
-            onClick={() => scrollTo("features")}
-            style={{ ...pillOutline, height: 48, padding: rv(isMobile, "0 20px", "0 27px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-          >
-            See what Scorta analyzes
-          </button>
-        </div>
-        <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginBottom: 72 }}>
-          Private assessment. No public listing. No broker commitment.
-        </p>
-        <ExitIQPreviewCard onOpen={onStart} />
       </div>
     </section>
   )
 }
 
-// ── Value Cards Strip ─────────────────────────────────────────────────────────
-function ValueCardsStrip() {
-  const isMobile = useIsMobile()
-  const cards = [
-    {
-      orb: C.gradMint,
-      title: "Valuation Clarity",
-      desc: "Understand your likely valuation range before you speak to buyers or brokers.",
-      num: "01",
+// ─── Industry Switcher ────────────────────────────────────────────────────────
+function SIndustrySwitcher() {
+  type TradeData = { mult: number; vlo: number; vhi: number; sde: number; days: number; note: string }
+  const data: Record<string, TradeData> = {
+    HVAC: {
+      mult: 2.6,
+      vlo: 1.4,
+      vhi: 2.1,
+      sde: 540,
+      days: 38,
+      note: "Strong searcher demand. Recurring service contracts add 0.4× multiple.",
     },
-    {
-      orb: C.gradPeach,
-      title: "Buyer Readiness",
-      desc: "See what serious buyers would question, request, or use to discount your price.",
-      num: "02",
+    Plumbing: {
+      mult: 2.4,
+      vlo: 0.88,
+      vhi: 1.6,
+      sde: 420,
+      days: 41,
+      note: "Strategic acquirers consolidating. License transfer is the #1 gating item.",
     },
-    {
-      orb: C.gradLavender,
-      title: "Financing Insight",
-      desc: "Learn whether your business may be attractive to SBA-financed acquisition buyers.",
-      num: "03",
+    Landscaping: {
+      mult: 2.1,
+      vlo: 0.64,
+      vhi: 1.2,
+      sde: 310,
+      days: 46,
+      note: "Recurring contracts vs one-off jobs is the value swing. Equipment value matters.",
     },
-    {
-      orb: C.gradSky,
-      title: "Exit Roadmap",
-      desc: "Get a personalized action plan to improve transferability and buyer confidence.",
-      num: "04",
+    Roofing: {
+      mult: 2.8,
+      vlo: 1.1,
+      vhi: 2.4,
+      sde: 580,
+      days: 36,
+      note: "PE-backed rollups very active. Storm exposure model affects risk pricing.",
     },
-  ]
-
-  return (
-    <div style={{ background: C.surfaceCard, borderTop: `1px solid ${C.hairline}`, borderBottom: `1px solid ${C.hairline}`, padding: rv(isMobile, "36px 20px", "52px 48px") }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "repeat(2, 1fr)", "repeat(4, 1fr)"), gap: rv(isMobile, 0, 1) }}>
-        {cards.map(({ orb, title, desc, num }, idx) => (
-          <div
-            key={title}
-            style={{
-              padding: rv(isMobile, "20px 16px", "28px 28px"),
-              borderRight: !isMobile && idx < cards.length - 1 ? `1px solid ${C.hairline}` : "none",
-              borderBottom: isMobile && idx < cards.length - 2 ? `1px solid ${C.hairline}` : "none",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute", top: -30, right: -30, width: 100, height: 100,
-                background: `radial-gradient(circle at 50% 50%, ${orb}50 0%, transparent 65%)`,
-                pointerEvents: "none",
-              }}
-            />
-            <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.8px", color: C.mutedSoft, marginBottom: 16 }}>
-              {num}
-            </div>
-            <div style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
-              {title}
-            </div>
-            <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
-              {desc}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Problem Section (dark) ────────────────────────────────────────────────────
-function ProblemSection() {
-  const isMobile = useIsMobile()
-  const questions = [
-    "What is my business actually worth?",
-    "Would serious buyers trust my numbers?",
-    "Could a buyer get financing for this acquisition?",
-    "What would cause buyers to discount my business?",
-    "What documents am I missing?",
-    "Is my business too dependent on me?",
-    "Should I sell now, wait, or fix key issues first?",
-    "How can I improve valuation before going to market?",
-  ]
+    "Auto repair": {
+      mult: 2.3,
+      vlo: 0.72,
+      vhi: 1.4,
+      sde: 380,
+      days: 49,
+      note: "Real estate ownership lifts the multiple. Specialty shops command premium.",
+    },
+    Cleaning: {
+      mult: 2.5,
+      vlo: 0.58,
+      vhi: 1.1,
+      sde: 280,
+      days: 44,
+      note: "B2B contract base preferred over residential. Recurring share drives multiple.",
+    },
+    "Pest control": {
+      mult: 3.1,
+      vlo: 1.3,
+      vhi: 2.2,
+      sde: 520,
+      days: 32,
+      note: "High recurring revenue makes this a hot rollup category.",
+    },
+    Electrical: {
+      mult: 2.7,
+      vlo: 1.1,
+      vhi: 1.9,
+      sde: 490,
+      days: 40,
+      note: "Master license transfer + commercial mix matters most.",
+    },
+  }
+  const keys = Object.keys(data)
+  const [active, setActive] = React.useState("HVAC")
+  const d = data[active]!
+  const sdeAnim = useCountUp(d.sde, 900)
+  const multAnim = useCountUp(d.mult, 900)
+  const vloAnim = useCountUp(d.vlo, 1000)
+  const vhiAnim = useCountUp(d.vhi, 1000)
+  const daysAnim = useCountUp(d.days, 1100)
+  const barW = (d.days / 186) * 100
+  const [barAnim, setBarAnim] = React.useState(0)
+  React.useEffect(() => {
+    setBarAnim(0)
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setBarAnim(barW)))
+    return () => cancelAnimationFrame(id)
+  }, [active, barW])
+  const fmtM = (n: number) => "$" + (n >= 1 ? n.toFixed(1) + "M" : Math.round(n * 1000) + "K")
 
   return (
     <section
-      id="problem"
-      style={{ background: C.dark, padding: rv(isMobile, "56px 20px", "96px 48px"), position: "relative", overflow: "hidden", ...dotGrid() }}
+      style={{
+        padding: "96px 24px",
+        background: C.canvasSoft,
+        borderTop: `1px solid ${C.hairline}`,
+        borderBottom: `1px solid ${C.hairline}`,
+      }}
     >
-      {/* Mint orb */}
-      <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 500, height: 500, background: "radial-gradient(ellipse at 50% 50%, rgba(167,229,211,0.1) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "-10%", left: "5%", width: 400, height: 400, background: "radial-gradient(ellipse at 50% 50%, rgba(200,184,224,0.07) 0%, transparent 60%)", pointerEvents: "none" }} />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
-        {/* Left */}
-        <div>
-          <span style={badge(true)}>The hidden cost of being unprepared</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 32, 42), true), marginTop: 24, marginBottom: 24, lineHeight: 1.1 }}>
-            Most owners do not know their business is not buyer-ready until it is too late.
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>Made for every Main Street owner</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.ink,
+            }}
+          >
+            Pick your trade. <em>See your number.</em>
           </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
-            Selling a small business is not just about finding a buyer. It is about proving that the business is transferable, financeable, and worth the price.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 20 }}>
-            Buyers want clean financials, clear operations, low owner dependence, reliable employees, strong margins, stable customers, assignable leases, and a story they can believe.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDarkMuted, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            Most owners only discover these requirements after the process begins. By then, missing documents, messy books, customer concentration, or owner-dependence risk can lead to delays, lower offers, and failed diligence.
-          </p>
         </div>
 
-        {/* Right — questions */}
-        <div>
-          <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: C.onDarkMuted, marginBottom: 20 }}>
-            Questions Scorta helps you answer
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {questions.map((q, i) => (
+        {/* Trade chips */}
+        <div
+          className="s-rv s-d1"
+          style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 32 }}
+        >
+          {keys.map((k) => (
+            <button
+              key={k}
+              onClick={() => setActive(k)}
+              style={{
+                padding: "10px 18px",
+                borderRadius: 9999,
+                background: active === k ? C.ink : "transparent",
+                color: active === k ? "#fff" : C.ink2,
+                border: `1px solid ${active === k ? C.ink : C.hairlineStrong}`,
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "background .2s, color .2s",
+              }}
+            >
+              {k}
+            </button>
+          ))}
+        </div>
+
+        {/* Live valuation card */}
+        <div
+          className="s-rv s-d2 s-ch"
+          style={{
+            position: "relative",
+            maxWidth: 920,
+            margin: "0 auto",
+            background: C.card,
+            border: `1px solid ${C.hairline}`,
+            borderRadius: 24,
+            padding: 32,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              width: 320,
+              height: 320,
+              top: -120,
+              right: -80,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(167,229,211,.35) 0%, rgba(200,184,224,.2) 50%, transparent 75%)",
+              filter: "blur(36px)",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+              gap: 28,
+            }}
+          >
+            <div>
+              <div style={{ ...eyebrow(), fontSize: 10 }}>Active trade</div>
               <div
-                key={i}
                 style={{
-                  padding: "14px 16px",
-                  borderBottom: `1px solid ${C.darkBorder}`,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 14,
+                  fontFamily: garamond,
+                  fontSize: 32,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.32px",
+                  marginTop: 8,
+                }}
+              >
+                {active}
+              </div>
+            </div>
+            <div>
+              <div style={{ ...eyebrow(), fontSize: 10 }}>Median SDE</div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 32,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.32px",
+                  marginTop: 8,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                ${Math.round(sdeAnim)}K
+              </div>
+            </div>
+            <div>
+              <div style={{ ...eyebrow(), fontSize: 10 }}>Multiple band</div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 32,
+                  fontWeight: 300,
+                  color: "#16a34a",
+                  letterSpacing: "-.32px",
+                  marginTop: 8,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {multAnim.toFixed(1)}×
+              </div>
+            </div>
+            <div>
+              <div style={{ ...eyebrow(), fontSize: 10 }}>Estimated value</div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 28,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.32px",
+                  marginTop: 8,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {fmtM(vloAnim)} – {fmtM(vhiAnim)}
+              </div>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <div style={{ ...eyebrow(), fontSize: 10, marginBottom: 10 }}>Time to LOI (Scorta avg)</div>
+              <div
+                style={{
+                  position: "relative",
+                  height: 8,
+                  background: C.strong,
+                  borderRadius: 9999,
+                  overflow: "hidden",
                 }}
               >
                 <div
                   style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: C.gradMint,
-                    boxShadow: `0 0 6px ${C.gradMint}80`,
-                    flexShrink: 0,
-                    marginTop: 6,
+                    position: "absolute",
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    width: barAnim + "%",
+                    background: "linear-gradient(90deg, #a7e5d3, #c8b8e0)",
+                    borderRadius: 9999,
+                    transition: "width 1.1s cubic-bezier(.2,.7,.2,1)",
                   }}
                 />
-                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.5, letterSpacing: "0.1px" }}>
-                  {q}
-                </span>
               </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(167,229,211,0.06)", border: "1px solid rgba(167,229,211,0.15)", borderRadius: 10 }}>
-            <span style={{ fontFamily: inter, fontSize: 13, fontWeight: 500, color: "rgba(167,229,211,0.7)", lineHeight: 1.5 }}>
-              Scorta surfaces these answers before buyers use them against you.
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── What Scorta Gives You ─────────────────────────────────────────────────────
-function WhatScortaGivesYou({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
-  const products = [
-    {
-      num: "01", orb: C.gradMint,
-      title: "AI Valuation Range",
-      desc: "See a directional valuation range based on industry, revenue, profit, business quality, and transferability signals.",
-    },
-    {
-      num: "02", orb: C.gradPeach,
-      title: "Exit Readiness Score",
-      desc: "Understand how prepared your business is for buyer conversations, diligence, and a future transaction.",
-    },
-    {
-      num: "03", orb: C.gradLavender,
-      title: "Buyer Risk Analysis",
-      desc: "Identify the issues buyers may use to discount value, delay the process, or walk away from the deal.",
-    },
-    {
-      num: "04", orb: C.gradSky,
-      title: "SBA Financeability View",
-      desc: "Learn whether your business may be attractive to acquisition buyers relying on SBA financing.",
-    },
-    {
-      num: "05", orb: C.gradRose,
-      title: "Document Readiness Checklist",
-      desc: "Know what financial, legal, operational, lease, employee, and customer information buyers may request.",
-    },
-    {
-      num: "06", orb: C.gradMint,
-      title: "Value Optimization Roadmap",
-      desc: "Get clear next steps to improve sellability, reduce friction, and prepare for a stronger exit.",
-    },
-  ]
-
-  return (
-    <section id="features" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ maxWidth: 700, marginBottom: rv(isMobile, 40, 64) }}>
-          <span style={badge()}>What Scorta gives you</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 32, 44)), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
-            A smarter way to prepare your business for its most important transaction.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 12 }}>
-            Scorta turns fragmented business information into a clear exit-readiness profile. Instead of guessing what your company is worth or waiting for buyers to uncover weaknesses, our AI analyzes the factors that influence valuation, buyer confidence, and deal completion.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            The result is a practical, owner-friendly roadmap showing where your business stands today, what could increase or reduce value, and what to prepare before you ever list, negotiate, or enter diligence.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(3, 1fr)"), gap: 20 }}>
-          {products.map(({ num, orb, title, desc }) => (
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                <span style={{ fontFamily: inter, fontSize: 12, color: C.muted, fontVariantNumeric: "tabular-nums" }}>
+                  {Math.round(daysAnim)} days
+                </span>
+                <span style={{ fontFamily: inter, fontSize: 12, color: C.mutedSoft }}>vs broker avg 186 days</span>
+              </div>
+            </div>
             <div
-              key={title}
               style={{
-                background: C.surfaceCard,
-                borderRadius: 16,
-                padding: rv(isMobile, "22px 20px 26px", "28px 26px 32px"),
+                gridColumn: "1 / -1",
+                background: C.canvas,
                 border: `1px solid ${C.hairline}`,
-                position: "relative",
-                overflow: "hidden",
+                borderRadius: 12,
+                padding: "14px 16px",
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
               }}
             >
               <div
                 style={{
-                  position: "absolute", top: -24, right: -24, width: 100, height: 100,
-                  background: `radial-gradient(circle at 50% 50%, ${orb}55 0%, transparent 65%)`,
-                  pointerEvents: "none",
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: C.mint,
+                  flexShrink: 0,
+                  marginTop: 6,
                 }}
               />
-              <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.96px", color: C.mutedSoft, marginBottom: 16 }}>
-                {num}
-              </div>
-              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 17), fontWeight: 500, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
-                {title}
-              </div>
-              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
-                {desc}
-              </div>
+              <span style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55 }}>{d.note}</span>
             </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 48, textAlign: "center" }}>
-          <button
-            onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-          >
-            Start Free ExitIQ Assessment
-          </button>
-          <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginTop: 12 }}>
-            Free assessment. No broker commitment. No public listing. Your information stays private.
-          </p>
+          </div>
         </div>
       </div>
     </section>
   )
 }
 
-// ── How ExitIQ Works ──────────────────────────────────────────────────────────
-function HowExitIQWorks({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
-  const steps = [
-    {
-      num: "01",
-      title: "Answer a few targeted questions",
-      desc: "Tell ExitIQ about your industry, revenue, profit, owner involvement, employees, customers, lease, documents, and exit timeline. You do not need perfect numbers — ExitIQ is designed to help you identify what is missing, what matters, and what could impact your future sale.",
+// ─── Boardroom ────────────────────────────────────────────────────────────────
+function SBoardroom() {
+  type Persona = { sub: string; offer: string; struct: string; loi: string; objections: string[]; color: string }
+  const personas: Record<string, Persona> = {
+    "The Searcher": {
+      sub: "Solo SBA buyer · Operates one business",
+      offer: "$1.65M",
+      struct: "90% SBA + 10% seller note",
+      loi: "High",
+      objections: ["Owner dependence", "Documentation gaps"],
+      color: C.mint,
     },
-    {
-      num: "02",
-      title: "Get your AI-powered readiness profile",
-      desc: "ExitIQ analyzes the signals buyers, lenders, and advisors care about most — valuation, transferability, financeability, documentation, and operational risk. The analysis runs instantly against real deal benchmarks.",
+    "The Strategic": {
+      sub: "Roll-up acquirer · Add-on for portfolio",
+      offer: "$1.95M",
+      struct: "All cash + 12-month earnout",
+      loi: "Medium",
+      objections: ["Customer concentration", "Pricing alignment"],
+      color: C.lav,
     },
-    {
-      num: "03",
-      title: "See what to fix before going to market",
-      desc: "Receive a personalized roadmap showing what could hurt value, what is missing, and where to focus before listing or speaking with buyers. Clear, prioritized, and actionable.",
+    "The Operator": {
+      sub: "Family office · Cash-flow focused",
+      offer: "$1.40M",
+      struct: "Cash + seller financing 30%",
+      loi: "High",
+      objections: ["Margin trend", "Recurring revenue %"],
+      color: C.sky,
     },
-    {
-      num: "04",
-      title: "Prepare for a stronger exit",
-      desc: "Use Scorta to build toward a cleaner, more confident, more buyer-ready transaction long before diligence begins. Return as you make improvements to track your readiness over time.",
-    },
-  ]
-
-  return (
-    <section id="how-it-works" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 40, 72) }}>
-          <span style={badge()}>Free AI assessment</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 32, 44)), marginTop: 20, marginBottom: 16, lineHeight: 1.08 }}>
-            From business details to exit intelligence in minutes.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), color: C.muted, lineHeight: 1.55, maxWidth: 480, margin: "0 auto" }}>
-            Built for owners who want clarity before making a life-changing decision.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(2, 1fr)"), gap: 20 }}>
-          {steps.map(({ num, title, desc }) => (
-            <div
-              key={num}
-              style={{
-                background: C.surfaceCard,
-                borderRadius: 16,
-                padding: rv(isMobile, "24px 20px", "32px"),
-                border: `1px solid ${C.hairline}`,
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    border: `1px solid ${C.hairlineStrong}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: inter,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: C.muted,
-                    letterSpacing: "0.5px",
-                    flexShrink: 0,
-                  }}
-                >
-                  {num}
-                </div>
-                <div style={{ fontFamily: inter, fontSize: rv(isMobile, 16, 17), fontWeight: 500, color: C.ink, lineHeight: 1.3 }}>
-                  {title}
-                </div>
-              </div>
-              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px" }}>
-                {desc}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 48, textAlign: "center" }}>
-          <button
-            onClick={onStart}
-            style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-          >
-            Start Free ExitIQ Assessment
-          </button>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── What Buyers Care About (dark terminal) ────────────────────────────────────
-function WhatBuyersCareAbout() {
-  const isMobile = useIsMobile()
-  const criteria = [
-    { label: "Financials", desc: "Are revenue, expenses, profit, and add-backs clear enough to trust?", orb: C.gradMint },
-    { label: "Owner Dependence", desc: "Can the business run without the owner being involved in every decision?", orb: C.gradPeach },
-    { label: "Customer Quality", desc: "Is revenue diversified, recurring, repeatable, or overly concentrated?", orb: C.gradLavender },
-    { label: "Employees", desc: "Are key people likely to stay after a transaction closes?", orb: C.gradSky },
-    { label: "Lease & Location", desc: "Can the buyer assume or renegotiate the lease without major risk?", orb: C.gradRose },
-    { label: "Growth Story", desc: "Are there believable ways for a buyer to grow the business after acquisition?", orb: C.gradMint },
-    { label: "Documentation", desc: "Are tax returns, P&Ls, payroll, contracts, and operational records ready?", orb: C.gradPeach },
-    { label: "Financing Eligibility", desc: "Would a lender understand and support the acquisition structure?", orb: C.gradLavender },
-  ]
-
-  const cols = isMobile ? 2 : 4
+  }
+  const keys = Object.keys(personas)
+  const [active, setActive] = React.useState(keys[0]!)
+  const p = personas[active]!
 
   return (
     <section
-      id="what-buyers-see"
-      style={{ background: C.dark, padding: rv(isMobile, "56px 20px", "96px 48px"), position: "relative", overflow: "hidden", ...dotGrid() }}
+      style={{
+        background: C.dark,
+        color: C.onDark,
+        padding: "120px 24px",
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 800, height: 500, background: "radial-gradient(ellipse at 40% 50%, rgba(168,200,232,0.07) 0%, transparent 55%), radial-gradient(ellipse at 65% 40%, rgba(200,184,224,0.06) 0%, transparent 50%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            width: 700,
+            height: 700,
+            top: "-30%",
+            left: "-10%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(200,184,224,.16) 0%, transparent 65%)",
+            filter: "blur(60px)",
+            animation: "sOrbFloat2 22s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 500,
+            height: 500,
+            bottom: "-20%",
+            right: "-10%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(167,229,211,.14) 0%, transparent 65%)",
+            filter: "blur(50px)",
+            animation: "sOrbFloat3 26s ease-in-out infinite",
+          }}
+        />
+      </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 36, 64) }}>
-          <span style={badge(true)}>What buyers see</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 44), true), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
-            Buyers are not just buying your revenue. They are buying proof.
+      <div style={{ position: "relative", maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto 48px" }}>
+          <div style={{ ...eyebrow(true), marginBottom: 16 }}>The Boardroom</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.onDark,
+            }}
+          >
+            Sit across the table from <em>three buyers.</em>
           </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6, maxWidth: 600, margin: "0 auto" }}>
-            A profitable business can still be difficult to sell if buyers cannot understand the numbers, trust the operations, or see how the company runs without the current owner.
+          <p style={{ fontFamily: inter, fontSize: 17, color: C.onDarkBody, marginTop: 18, lineHeight: 1.55 }}>
+            Before you hear &quot;no&quot; from a real one. Scorta simulates how each buyer type prices, structures, and
+            objects — so you walk into negotiation already prepared.
           </p>
         </div>
 
-        {/* Terminal-style grid */}
+        {/* Persona toggles */}
         <div
+          className="s-rv s-d1"
+          style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 28 }}
+        >
+          {keys.map((k) => (
+            <button
+              key={k}
+              onClick={() => setActive(k)}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 9999,
+                background: active === k ? "rgba(167,229,211,.14)" : "rgba(245,245,245,.05)",
+                color: active === k ? C.mint : "rgba(245,245,245,.7)",
+                border: `1px solid ${active === k ? "rgba(167,229,211,.45)" : "rgba(245,245,245,.13)"}`,
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "all .2s",
+              }}
+            >
+              {k}
+            </button>
+          ))}
+        </div>
+
+        {/* Persona panel — key forces remount on toggle so sFadeIn replays */}
+        <div
+          className="s-glass s-chd"
+          key={active}
           style={{
-            background: "rgba(245,245,245,0.02)",
-            border: `1px solid ${C.darkBorder}`,
-            borderRadius: rv(isMobile, 14, 20),
+            maxWidth: 920,
+            margin: "0 auto",
+            padding: 32,
+            position: "relative",
             overflow: "hidden",
+            animation: "sFadeIn .4s ease both",
           }}
         >
-          {/* Terminal header */}
-          <div style={{ padding: rv(isMobile, "12px 16px", "14px 24px"), borderBottom: `1px solid ${C.darkBorder}`, display: "flex", alignItems: "center", gap: 10, background: "rgba(245,245,245,0.025)", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {[C.gradRose, C.gradPeach, C.gradMint].map((c, i) => (
-                <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: `${c}60`, border: `1px solid ${c}40` }} />
-              ))}
-            </div>
-            <span style={{ fontFamily: inter, fontSize: rv(isMobile, 10, 11), fontWeight: 600, letterSpacing: "0.9px", textTransform: "uppercase", color: C.onDarkMuted, marginLeft: 8 }}>
-              {isMobile ? "Due Diligence · 8 criteria" : "Buyer Due Diligence Scan · 8 evaluation criteria"}
-            </span>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gradMint, boxShadow: `0 0 6px ${C.gradMint}` }} />
-              <span style={{ fontFamily: inter, fontSize: 11, color: "rgba(167,229,211,0.6)", fontWeight: 500 }}>Scorta analyzes all of these</span>
+          {/* Scan line */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "linear-gradient(90deg,transparent,rgba(167,229,211,.35),transparent)",
+              animation: "sScanDown 4s linear infinite",
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Avatar + name */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 18, marginBottom: 24 }}>
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                background: `radial-gradient(circle at 35% 35%, ${p.color} 0%, rgba(200,184,224,.6) 50%, transparent 80%)`,
+                flexShrink: 0,
+                animation: "sOrbBreathe 3.6s ease-in-out infinite, sOrbGlow 4s ease-in-out infinite",
+              }}
+            />
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 32,
+                  fontWeight: 300,
+                  color: C.onDark,
+                  letterSpacing: "-.4px",
+                }}
+              >
+                {active}
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 14, color: C.onDarkMuted, marginTop: 4 }}>{p.sub}</div>
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-            {criteria.map(({ label, desc, orb }, idx) => {
-              const totalRows = criteria.length / cols
-              const currentRow = Math.floor(idx / cols)
-              const isLastRow = currentRow === totalRows - 1
-              const isLastCol = idx % cols === cols - 1
-              return (
+          {/* Stats grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 24 }}>
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 8 }}>Estimated offer</div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 38,
+                  fontWeight: 300,
+                  color: p.color,
+                  letterSpacing: "-.5px",
+                  lineHeight: 1,
+                }}
+              >
+                {p.offer}
+              </div>
+            </div>
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 8 }}>Deal structure</div>
+              <div style={{ fontFamily: inter, fontSize: 16, color: C.onDark, lineHeight: 1.4 }}>{p.struct}</div>
+            </div>
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 8 }}>LOI likelihood</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div
-                  key={label}
                   style={{
-                    padding: rv(isMobile, "18px 14px", "24px 22px"),
-                    borderRight: isLastCol ? "none" : `1px solid ${C.darkBorder}`,
-                    borderBottom: isLastRow ? "none" : `1px solid ${C.darkBorder}`,
-                    position: "relative",
+                    flex: 1,
+                    height: 6,
+                    background: "rgba(245,245,245,.08)",
+                    borderRadius: 9999,
                     overflow: "hidden",
                   }}
                 >
-                  <div style={{ position: "absolute", top: -20, right: -20, width: 70, height: 70, background: `radial-gradient(circle at 50% 50%, ${orb}25 0%, transparent 65%)`, pointerEvents: "none" }} />
-                  <div style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, letterSpacing: "0.7px", textTransform: "uppercase", color: `${orb}80`, marginBottom: 8 }}>
-                    {String(idx + 1).padStart(2, "0")}
-                  </div>
-                  <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 600, color: C.onDark, marginBottom: 8, lineHeight: 1.3 }}>
-                    {label}
-                  </div>
-                  <div style={{ fontFamily: inter, fontSize: rv(isMobile, 12, 13), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.6 }}>
-                    {desc}
-                  </div>
+                  <div
+                    style={{
+                      width: p.loi === "High" ? "85%" : "60%",
+                      height: "100%",
+                      background: p.color,
+                      borderRadius: 9999,
+                      boxShadow: `0 0 12px ${p.color}`,
+                    }}
+                  />
                 </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDarkMuted, textAlign: "center", marginTop: 28, lineHeight: 1.6 }}>
-          Scorta helps you prepare around every factor that drives buyer confidence — long before the conversation starts.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-// ── Cost of Waiting ───────────────────────────────────────────────────────────
-function CostOfWaiting({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
-  return (
-    <section id="cost-of-waiting" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 800, height: 500, background: "radial-gradient(ellipse at 40% 50%, rgba(244,197,168,0.2) 0%, transparent 55%), radial-gradient(ellipse at 65% 40%, rgba(232,184,196,0.18) 0%, transparent 50%)", pointerEvents: "none", filter: "blur(8px)" }} />
-
-      <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
-        <span style={badge()}>The cost of waiting</span>
-        <h2 style={{ ...displayStyle(rv(isMobile, 32, 48)), marginTop: 24, marginBottom: 28, lineHeight: 1.07 }}>
-          The best time to prepare your business for sale is before you need to sell.
-        </h2>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
-          If you wait until you are ready to exit, your options may already be limited. The issues that hurt valuation are often fixable — but only if you find them early. Messy books, unclear roles, weak documentation, customer concentration, and owner dependence can take months or years to improve.
-        </p>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 40 }}>
-          Scorta helps you see those issues now, while you still have time to increase transferability, strengthen buyer confidence, and protect the value you have built.
-        </p>
-        <div
-          style={{
-            background: C.surfaceCard,
-            border: `1px solid ${C.hairlineStrong}`,
-            borderRadius: 16,
-            padding: rv(isMobile, "20px 20px", "28px 36px"),
-            marginBottom: 44,
-            position: "relative",
-          }}
-        >
-          <p style={{ fontFamily: garamond, fontSize: rv(isMobile, 20, 26), fontWeight: 300, color: C.ink, lineHeight: 1.2, letterSpacing: "-0.3px", margin: 0 }}>
-            "Do not wait until diligence to learn what your business should have been preparing all along."
-          </p>
-        </div>
-        <button
-          onClick={onStart}
-          style={{ ...pillPrimary, height: 48, padding: rv(isMobile, "0 20px", "0 28px"), fontSize: 16, width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-          onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-        >
-          Start Free ExitIQ Assessment
-        </button>
-        <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginTop: 12 }}>
-          Find out what your business may be worth, what buyers would flag, and what to fix.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-// ── Who It's For ──────────────────────────────────────────────────────────────
-function WhoItsFor() {
-  const isMobile = useIsMobile()
-  const profiles = [
-    {
-      title: "Owners considering retirement",
-      desc: "You want to understand what the business is worth and what needs to happen before your next chapter.",
-      orb: C.gradMint,
-    },
-    {
-      title: "Burned-out operators",
-      desc: "You are wondering whether to sell, step back, hire management, or make the business less dependent on you.",
-      orb: C.gradPeach,
-    },
-    {
-      title: "Owners approached by buyers",
-      desc: "Someone expressed interest, but you do not know how to respond, what to share, or what the business is worth.",
-      orb: C.gradLavender,
-    },
-    {
-      title: "Owners preparing years ahead",
-      desc: "You want to increase value, clean up risks, and make the business more transferable before going to market.",
-      orb: C.gradSky,
-    },
-    {
-      title: "Family-owned businesses",
-      desc: "You need clarity around succession, sale options, or whether the next generation actually wants to operate the company.",
-      orb: C.gradRose,
-    },
-    {
-      title: "Service business owners",
-      desc: "Your company generates strong cash flow, but buyers may care about owner dependence, contracts, margins, and repeatability.",
-      orb: C.gradMint,
-    },
-  ]
-
-  return (
-    <section id="for-sellers" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ maxWidth: 700, marginBottom: rv(isMobile, 36, 64) }}>
-          <span style={badge()}>Built for owners with something valuable to protect</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 44)), marginTop: 20, marginBottom: 20, lineHeight: 1.08 }}>
-            For business owners who want clarity before making a life-changing decision.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            Scorta is designed for owners who are not necessarily ready to sell tomorrow, but know their business may be their largest asset — and want to understand how prepared it really is.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "repeat(3, 1fr)"), gap: 20 }}>
-          {profiles.map(({ title, desc, orb }) => (
-            <div
-              key={title}
-              style={{
-                background: C.surfaceCard,
-                borderRadius: 16,
-                padding: rv(isMobile, "22px 20px", "28px 26px"),
-                border: `1px solid ${C.hairline}`,
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <div style={{ position: "absolute", top: -20, left: -20, width: 80, height: 80, background: `radial-gradient(circle at 50% 50%, ${orb}40 0%, transparent 65%)`, pointerEvents: "none" }} />
-              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 600, color: C.ink, marginBottom: 10, lineHeight: 1.3 }}>
-                {title}
-              </div>
-              <div style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.1px" }}>
-                {desc}
+                <span style={{ fontFamily: inter, fontSize: 13, color: p.color, fontWeight: 500 }}>{p.loi}</span>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── Broker Leverage Section ───────────────────────────────────────────────────
-function BrokerLeverageSection() {
-  const isMobile = useIsMobile()
-  const bullets = [
-    "Know what your business may be worth before relying on someone else's opinion.",
-    "Understand the risks that could reduce buyer confidence.",
-    "Prepare the documents buyers and lenders are likely to request.",
-    "Decide whether you are ready to sell now or should improve the business first.",
-    "Avoid entering the market unprepared and losing leverage from day one.",
-  ]
-
-  return (
-    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, borderTop: `1px solid ${C.hairline}` }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 36, 80), alignItems: "center" }}>
-        <div>
-          <span style={badge()}>Before you hire anyone</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40)), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
-            Go into every broker, buyer, lender, or advisor conversation with more leverage.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
-            Scorta is not a public listing site or a broker directory. It is the intelligence layer that helps you understand your business before the market does. Whether you eventually work with a broker, sell privately, bring in an advisor, or wait another year, Scorta helps you know where you stand first.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            When you understand your valuation, readiness gaps, financing risks, and buyer concerns upfront, you can make better decisions, avoid unnecessary confusion, and protect more of the outcome.
-          </p>
-        </div>
-
-        <div
-          style={{
-            background: C.surfaceCard,
-            borderRadius: 20,
-            padding: rv(isMobile, "24px 20px", "36px"),
-            border: `1px solid ${C.hairline}`,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div style={{ position: "absolute", top: -30, right: -30, width: 150, height: 150, background: `radial-gradient(circle at 50% 50%, ${C.gradSky}35 0%, transparent 65%)`, pointerEvents: "none" }} />
-          <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: C.mutedSoft, marginBottom: 24 }}>
-            Scorta gives you
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {bullets.map((b, i) => (
-              <div key={i} style={{ padding: "14px 0", borderBottom: i < bullets.length - 1 ? `1px solid ${C.hairline}` : "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                  <circle cx={8} cy={8} r={7} stroke={C.hairlineStrong} strokeWidth={1} />
-                  <path d="M5 8l2.5 2.5L11 5.5" stroke={C.muted} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 400, color: C.body, lineHeight: 1.6, letterSpacing: "0.1px" }}>
-                  {b}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
 
-// ── Value Proposition ─────────────────────────────────────────────────────────
-function ValuePropositionSection() {
-  const isMobile = useIsMobile()
-  const bullets = [
-    "Improve buyer confidence before going to market.",
-    "Reduce diligence friction by preparing key documents early.",
-    "Identify valuation risks before buyers use them against you.",
-    "Understand whether the business may be SBA-financeable.",
-    "See what operational changes could improve transferability.",
-    "Avoid wasting months in a process the business was not ready for.",
-    "Approach brokers, buyers, lenders, and advisors with more leverage.",
-    "Build toward a higher-value exit instead of reacting under pressure.",
-  ]
+          <div style={{ height: 1, background: "rgba(245,245,245,.08)", margin: "24px 0" }} />
 
-  return (
-    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.dark, position: "relative", overflow: "hidden", ...dotGrid() }}>
-      <div style={{ position: "absolute", top: "20%", right: "10%", width: 400, height: 400, background: `radial-gradient(ellipse at 50% 50%, ${C.gradLavender}12 0%, transparent 60%)`, pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "10%", left: "5%", width: 350, height: 350, background: `radial-gradient(ellipse at 50% 50%, ${C.gradMint}10 0%, transparent 60%)`, pointerEvents: "none" }} />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
-        <div>
-          <span style={badge(true)}>Why it matters</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40), true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
-            Better-prepared businesses can command stronger buyer confidence — and stronger outcomes.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
-            Buyers do not only pay for profit. They pay for trust, transferability, clean operations, and confidence that the business can continue performing after the owner exits. When those signals are missing, buyers hesitate, lenders slow down, advisors ask more questions, and valuation pressure increases.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            Scorta helps owners improve the areas that matter most before the business goes to market — giving them a better shot at faster conversations, fewer surprises, and higher-quality offers.
-          </p>
-        </div>
-
-        <div>
-          <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: C.onDarkMuted, marginBottom: 20 }}>
-            Scorta helps owners
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {bullets.map((b, i) => (
-              <div key={i} style={{ padding: "13px 0", borderBottom: i < bullets.length - 1 ? `1px solid ${C.darkBorder}` : "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gradLavender, boxShadow: `0 0 5px ${C.gradLavender}80`, flexShrink: 0, marginTop: 6 }} />
-                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
-                  {b}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── Platform Vision ───────────────────────────────────────────────────────────
-function PlatformVisionSection() {
-  const isMobile = useIsMobile()
-  const vision = [
-    "AI-powered business valuation and readiness analysis.",
-    "Buyer-ready company profiles and data rooms.",
-    "SBA and lender-readiness workflows.",
-    "Confidential listing preparation and distribution.",
-    "Buyer qualification and intake management.",
-    "Due diligence coordination.",
-    "Deal-risk detection.",
-    "Future buyer matching through verified Buyer Passports.",
-  ]
-
-  return (
-    <section id="vision" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.darkElevated, position: "relative", overflow: "hidden", ...dotGrid() }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 900, height: 600, background: `radial-gradient(ellipse at 40% 50%, ${C.gradMint}08 0%, transparent 55%), radial-gradient(ellipse at 65% 45%, ${C.gradSky}07 0%, transparent 50%)`, pointerEvents: "none" }} />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "1fr 1fr"), gap: rv(isMobile, 40, 80), alignItems: "start", position: "relative", zIndex: 1 }}>
-        <div>
-          <span style={badge(true)}>The future of Main Street exits</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40), true), marginTop: 24, marginBottom: 20, lineHeight: 1.1 }}>
-            Scorta is building the operating system for small-business ownership transfer.
-          </h2>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px", marginBottom: 16 }}>
-            Small-business exits are still managed through spreadsheets, PDFs, email chains, fragmented advisors, outdated listing sites, and slow manual workflows. Scorta brings intelligence, structure, and automation to the process — starting with exit readiness.
-          </p>
-          <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 400, color: C.onDarkBody, lineHeight: 1.7, letterSpacing: "0.15px" }}>
-            Our long-term platform will help owners prepare, package, list, manage buyer intake, coordinate diligence, evaluate financing, and move toward a cleaner transaction from one AI-native command center. ExitIQ is the first step.
-          </p>
-        </div>
-
-        <div>
-          <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, letterSpacing: "0.96px", textTransform: "uppercase", color: C.onDarkMuted, marginBottom: 20 }}>
-            Scorta is building toward
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {vision.map((v, i) => (
-              <div key={i} style={{ padding: "14px 0", borderBottom: i < vision.length - 1 ? `1px solid ${C.darkBorder}` : "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 600, letterSpacing: "0.6px", color: C.onDarkMuted, marginTop: 2, flexShrink: 0, minWidth: 24 }}>
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.onDark, lineHeight: 1.55, letterSpacing: "0.1px" }}>
-                  {v}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── FAQ Section ───────────────────────────────────────────────────────────────
-function FAQSection() {
-  const [open, setOpen] = React.useState<number | null>(null)
-  const isMobile = useIsMobile()
-
-  const faqs = [
-    {
-      q: "Is Scorta a broker?",
-      a: "No. Scorta is an AI-native exit intelligence platform. We help business owners understand valuation, readiness, buyer concerns, financing potential, and preparation steps before they go to market. Scorta does not require you to list your business or sign a broker agreement.",
-    },
-    {
-      q: "Do I need to be ready to sell right now?",
-      a: "No. Scorta is most useful before you are ready to sell. The earlier you understand what buyers and lenders would care about, the more time you have to improve the business, prepare documents, reduce risks, and potentially increase exit value.",
-    },
-    {
-      q: "What does the ExitIQ assessment include?",
-      a: "ExitIQ provides a directional valuation range, Exit Readiness Score, SBA financeability view, broker-fee impact, buyer-risk analysis, document-readiness checklist, and personalized roadmap for improving sellability.",
-    },
-    {
-      q: "Will my business be publicly listed?",
-      a: "No. Completing the ExitIQ assessment does not list your business publicly. The assessment is designed to help you understand your business privately before deciding if, when, or how to go to market.",
-    },
-    {
-      q: "How does Scorta help increase valuation?",
-      a: "Scorta identifies the factors that buyers may use to discount your business — such as messy financials, owner dependence, customer concentration, missing documents, weak growth story, or financing risk. By surfacing those issues early, Scorta helps you focus on the improvements that can increase buyer confidence and support a stronger exit.",
-    },
-    {
-      q: "Is this a formal appraisal?",
-      a: "No. ExitIQ provides a directional valuation and readiness analysis based on the information you provide. It is not a certified appraisal, legal advice, tax advice, or financial advice. It is designed to help owners understand where they stand and what to prepare before a future transaction.",
-    },
-    {
-      q: "Who is Scorta built for?",
-      a: "Scorta is built for small-business owners, especially owner-operated and family-owned businesses, who want to understand their valuation, prepare for a future exit, reduce buyer risk, and approach the sale process with more confidence and leverage.",
-    },
-  ]
-
-  return (
-    <section id="faq" style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.surfaceCard, borderTop: `1px solid ${C.hairline}` }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: rv(isMobile, 36, 64) }}>
-          <span style={badge()}>FAQ</span>
-          <h2 style={{ ...displayStyle(rv(isMobile, 30, 40)), marginTop: 20, lineHeight: 1.1 }}>
-            Common questions
-          </h2>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {faqs.map(({ q, a }, i) => (
-            <div key={i} style={{ borderTop: `1px solid ${C.hairline}` }}>
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                aria-expanded={open === i}
+          <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 12 }}>Objections you&apos;ll hear</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {p.objections.map((o, i) => (
+              <div
+                key={o}
                 style={{
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  padding: "20px 0",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: 20,
-                  cursor: "pointer",
-                  textAlign: "left",
+                  padding: "8px 14px",
+                  background: "rgba(245,245,245,.05)",
+                  border: "1px solid rgba(245,245,245,.13)",
+                  borderRadius: 9999,
+                  fontFamily: inter,
+                  fontSize: 13,
+                  color: "rgba(245,245,245,.78)",
+                  animation: `sChipFloat .5s ${i * 100}ms cubic-bezier(.34,1.3,.64,1) both`,
                 }}
               >
-                <span style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 16), fontWeight: 500, color: C.ink, lineHeight: 1.4, flex: 1 }}>
-                  {q}
-                </span>
+                {o}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Gap Report ───────────────────────────────────────────────────────────────
+function SGapReport() {
+  return (
+    <section style={{ padding: "96px 24px" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 56,
+            alignItems: "center",
+          }}
+        >
+          {/* Left copy */}
+          <div className="s-rv">
+            <div style={{ ...eyebrow(), marginBottom: 16 }}>The Gap Report</div>
+            <h2
+              style={{
+                fontFamily: garamond,
+                fontSize: "clamp(32px, 3.8vw, 48px)",
+                fontWeight: 300,
+                letterSpacing: "-.96px",
+                lineHeight: 1.1,
+                color: C.ink,
+              }}
+            >
+              Know <em>exactly</em> what to fix before you list.
+            </h2>
+            <p style={{ fontFamily: inter, fontSize: 17, color: C.body, marginTop: 18, lineHeight: 1.6 }}>
+              Your assessment becomes a 12-page Gap Report: valuation range, three buyer offer scenarios, SBA pre-screen
+              result, a 90-day fix list, and comparable closed deals.
+            </p>
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                "Valuation range with comp anchors",
+                "Three buyer offer scenarios",
+                "SBA pre-screen verdict",
+                "90-day & 12-month fix lists",
+              ].map((t, i) => (
+                <div
+                  key={t}
+                  className="s-rv"
+                  style={{ display: "flex", alignItems: "center", gap: 10, transitionDelay: `${0.1 + i * 0.06}s` }}
+                >
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: C.ink,
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg
+                      width={10}
+                      height={10}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                  <span style={{ fontFamily: inter, fontSize: 15, color: C.ink2 }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mock report card */}
+          <div className="s-rv s-d2" style={{ position: "relative" }}>
+            <div
+              style={{
+                position: "absolute",
+                inset: -20,
+                background:
+                  "radial-gradient(ellipse at center, rgba(167,229,211,.25) 0%, rgba(200,184,224,.15) 50%, transparent 75%)",
+                filter: "blur(40px)",
+                pointerEvents: "none",
+              }}
+            />
+            <div
+              className="s-ch"
+              style={{
+                position: "relative",
+                background: C.card,
+                border: `1px solid ${C.hairline}`,
+                borderRadius: 16,
+                padding: 24,
+                boxShadow: "0 30px 60px rgba(12,10,9,.08)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 18,
+                }}
+              >
+                <span style={{ ...eyebrow(), fontSize: 10 }}>Gap Report · Draft</span>
+                <span style={{ fontFamily: inter, fontSize: 11, color: C.mutedSoft }}>generated in 4m 12s</span>
+              </div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 22,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.32px",
+                  marginBottom: 4,
+                }}
+              >
+                Atlas HVAC, LLC
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 13, color: C.muted, marginBottom: 22 }}>
+                HVAC · Tampa, FL · 14 yrs
+              </div>
+
+              {/* Score bar */}
+              <div
+                style={{
+                  background: C.canvasSoft,
+                  border: `1px solid ${C.strong}`,
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 14,
+                }}
+              >
                 <div
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    border: `1px solid ${C.hairlineStrong}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s ease",
-                    marginTop: 1,
+                    fontFamily: inter,
+                    fontSize: 11,
+                    color: C.muted,
+                    letterSpacing: ".5px",
+                    textTransform: "uppercase",
+                    marginBottom: 6,
                   }}
                 >
-                  <svg width={12} height={12} viewBox="0 0 12 12" fill="none">
-                    <path d="M6 2v8M2 6h8" stroke={C.muted} strokeWidth={1.3} strokeLinecap="round" />
+                  ExitIQ score
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <div
+                    style={{
+                      fontFamily: garamond,
+                      fontSize: 44,
+                      fontWeight: 300,
+                      color: C.ink,
+                      letterSpacing: "-.8px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    72
+                  </div>
+                  <span style={{ fontFamily: inter, fontSize: 13, color: "#16a34a", fontWeight: 500 }}>
+                    ↑ readiness
+                  </span>
+                </div>
+                <div
+                  style={{
+                    position: "relative",
+                    height: 6,
+                    background: C.strong,
+                    borderRadius: 9999,
+                    marginTop: 10,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "72%",
+                      background: "linear-gradient(90deg, #a7e5d3, #c8b8e0)",
+                      borderRadius: 9999,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Valuation + SBA grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div
+                  style={{
+                    background: C.canvasSoft,
+                    border: `1px solid ${C.strong}`,
+                    borderRadius: 12,
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 11,
+                      color: C.muted,
+                      textTransform: "uppercase",
+                      letterSpacing: ".5px",
+                    }}
+                  >
+                    Valuation
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: garamond,
+                      fontSize: 22,
+                      fontWeight: 300,
+                      color: C.ink,
+                      marginTop: 6,
+                    }}
+                  >
+                    $1.4M – $2.1M
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: C.canvasSoft,
+                    border: `1px solid ${C.strong}`,
+                    borderRadius: 12,
+                    padding: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 11,
+                      color: C.muted,
+                      textTransform: "uppercase",
+                      letterSpacing: ".5px",
+                    }}
+                  >
+                    SBA pre-screen
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: "#16a34a",
+                      marginTop: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#16a34a" }} /> Likely as-is
+                  </div>
+                </div>
+              </div>
+
+              {/* Fix list */}
+              <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 11,
+                    color: C.muted,
+                    textTransform: "uppercase",
+                    letterSpacing: ".5px",
+                    marginBottom: 4,
+                  }}
+                >
+                  90-day fix list
+                </div>
+                {[
+                  "Document SOPs for top 5 routes",
+                  "Reduce Acme contract to <20% revenue",
+                  "Clean Q3–Q4 add-backs",
+                ].map((t, i) => (
+                  <div
+                    key={t}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 10px",
+                      background: C.canvasSoft,
+                      borderRadius: 8,
+                      animation: `sSlideRight .5s ${i * 100 + 200}ms cubic-bezier(.34,1.3,.64,1) both`,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 4,
+                        border: `1.5px solid ${C.hairlineStrong}`,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontFamily: inter, fontSize: 13, color: C.ink2 }}>{t}</span>
+                    <span style={{ marginLeft: "auto", fontFamily: inter, fontSize: 11, color: C.mutedSoft }}>
+                      +{[3, 6, 4][i]}% value
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Product Surfaces ─────────────────────────────────────────────────────────
+function SProductSurfaces() {
+  return (
+    <section
+      id="products"
+      style={{ padding: "96px 24px", background: C.canvasSoft, borderTop: `1px solid ${C.hairline}` }}
+    >
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>The transaction stack</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(32px, 4vw, 52px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.ink,
+            }}
+          >
+            We do the work the broker should have.
+          </h2>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {/* SBA Pre-Screen */}
+          <div
+            className="s-rv s-ch"
+            style={{
+              background: C.card,
+              border: `1px solid ${C.hairline}`,
+              borderRadius: 20,
+              padding: 28,
+              minHeight: 380,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{ ...eyebrow(), fontSize: 10, marginBottom: 16 }}>SBA Pre-Screen</div>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 26,
+                fontWeight: 300,
+                color: C.ink,
+                letterSpacing: "-.32px",
+                marginBottom: 12,
+              }}
+            >
+              Will it finance?
+            </div>
+            <p style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55, marginBottom: 20 }}>
+              Run the lender filter before a buyer ever submits. Eligibility, DSCR, add-back quality, gating items.
+            </p>
+            <div style={{ flex: 1 }} />
+            <div
+              style={{
+                background: C.canvasSoft,
+                border: `1px solid ${C.strong}`,
+                borderRadius: 12,
+                padding: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {[
+                { l: "Industry eligibility", v: "pass", d: 0 },
+                { l: "DSCR projection", v: "1.45×", d: 0.15 },
+                { l: "Add-back quality", v: "review", d: 0.3, warn: true },
+                { l: "Down payment", v: "10% OK", d: 0.45 },
+              ].map((r, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    animation: `sSlideRight .5s ${r.d}s both`,
+                  }}
+                >
+                  <span style={{ fontFamily: inter, fontSize: 13, color: C.muted }}>{r.l}</span>
+                  <span
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: r.warn ? "#dc2626" : "#16a34a",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: r.warn ? "#dc2626" : "#16a34a",
+                      }}
+                    />
+                    {r.v}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Document Vault */}
+          <div
+            className="s-rv s-d1 s-ch"
+            style={{
+              background: C.card,
+              border: `1px solid ${C.hairline}`,
+              borderRadius: 20,
+              padding: 28,
+              minHeight: 380,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <div style={{ ...eyebrow(), fontSize: 10, marginBottom: 16 }}>Document Vault</div>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 26,
+                fontWeight: 300,
+                color: C.ink,
+                letterSpacing: "-.32px",
+                marginBottom: 12,
+              }}
+            >
+              AI-organized data room.
+            </div>
+            <p style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55, marginBottom: 20 }}>
+              Drop files in. Scorta classifies, redacts, and stages them for buyer diligence and lender review.
+            </p>
+            <div style={{ flex: 1 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {[
+                { f: "2024-tax-return.pdf", tag: "Financial", c: C.mint },
+                { f: "master-lease.docx", tag: "Legal", c: C.lav },
+                { f: "P&L_Q3.xlsx", tag: "Financial", c: C.mint },
+                { f: "top-customers.csv", tag: "Operations", c: C.sky },
+              ].map((doc, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "8px 12px",
+                    background: C.canvasSoft,
+                    border: `1px solid ${C.strong}`,
+                    borderRadius: 10,
+                    animation: `sSlideRight .5s ${i * 100}ms both`,
+                  }}
+                >
+                  <svg
+                    width={16}
+                    height={16}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={C.muted}
+                    strokeWidth={1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
                   </svg>
+                  <span style={{ fontFamily: "monospace", fontSize: 13, color: C.ink2, flex: 1 }}>{doc.f}</span>
+                  <span
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 10,
+                      color: doc.c,
+                      fontWeight: 600,
+                      padding: "2px 8px",
+                      background: doc.c + "20",
+                      borderRadius: 9999,
+                      letterSpacing: ".5px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {doc.tag}
+                  </span>
                 </div>
-              </button>
-              {open === i && (
-                <div style={{ paddingBottom: 24, animation: "slideUp 0.2s ease" }}>
-                  <p style={{ fontFamily: inter, fontSize: rv(isMobile, 14, 15), fontWeight: 400, color: C.body, lineHeight: 1.7, letterSpacing: "0.15px", margin: 0 }}>
-                    {a}
-                  </p>
+              ))}
+            </div>
+          </div>
+
+          {/* War Room */}
+          <div
+            className="s-rv s-d2 s-ch"
+            style={{
+              background: C.card,
+              border: `1px solid ${C.hairline}`,
+              borderRadius: 20,
+              padding: 28,
+              minHeight: 380,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{ ...eyebrow(), fontSize: 10, marginBottom: 16 }}>The War Room</div>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 26,
+                fontWeight: 300,
+                color: C.ink,
+                letterSpacing: "-.32px",
+                marginBottom: 12,
+              }}
+            >
+              Run the deal in one place.
+            </div>
+            <p style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55, marginBottom: 20 }}>
+              NDA flow, buyer qualification, diligence Q&A, and human approval — every action logged.
+            </p>
+            <div style={{ flex: 1 }} />
+            <div
+              style={{
+                background: C.canvasSoft,
+                border: `1px solid ${C.strong}`,
+                borderRadius: 12,
+                padding: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {[
+                { n: "Searcher · Texas", stage: "NDA signed", color: C.mint },
+                { n: "PE · Charlotte", stage: "Diligence", color: C.lav },
+                { n: "Strategic · OH", stage: "LOI drafted", color: C.peach },
+              ].map((b, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    animation: `sSlideRight .5s ${i * 120}ms both`,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: `radial-gradient(circle at 35% 35%, ${b.color} 0%, rgba(200,184,224,.4) 60%, transparent 90%)`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontFamily: inter, fontSize: 13, color: C.ink2, flex: 1 }}>{b.n}</span>
+                  <span
+                    style={{
+                      fontFamily: inter,
+                      fontSize: 11,
+                      color: C.muted,
+                      padding: "2px 8px",
+                      background: C.strong,
+                      borderRadius: 9999,
+                    }}
+                  >
+                    {b.stage}
+                  </span>
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Roadmap ──────────────────────────────────────────────────────────────────
+function SRoadmap() {
+  const items = [
+    { t: "Lender Desk", d: "Multi-lender financeability scoring", s: "Beta" },
+    { t: "Negotiation Table", d: "LOI term modeling", s: "Q3" },
+    { t: "Buyer-Facing Site", d: "Per-deal NDA + data room", s: "Live" },
+    { t: "Closed Deal Index", d: "Main Street M&A reference data", s: "Coming" },
+    { t: "Buyer-Side Product", d: "Curated deal flow for searchers", s: "Q4" },
+    { t: "Transaction Infra", d: "Escrow, closing, license transfers", s: "2026" },
+  ]
+  return (
+    <section style={{ padding: "96px 24px" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>What we&apos;re building next</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(32px, 4vw, 48px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.ink,
+            }}
+          >
+            The transaction infrastructure for Main Street.
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          {items.map((it, i) => (
+            <div
+              key={it.t}
+              className="s-rv s-ch"
+              style={{
+                background: C.card,
+                border: `1px solid ${C.hairline}`,
+                borderRadius: 16,
+                padding: 22,
+                transitionDelay: `${i * 0.05}s`,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 14,
+                }}
+              >
+                <span style={{ ...eyebrow(), fontSize: 10 }}>{it.t}</span>
+                <span
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    padding: "3px 8px",
+                    background: it.s === "Live" ? C.mint : it.s === "Beta" ? C.lav : C.strong,
+                    color: it.s === "Live" || it.s === "Beta" ? C.ink : C.muted,
+                    borderRadius: 9999,
+                    letterSpacing: ".5px",
+                  }}
+                >
+                  {it.s}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 20,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.2px",
+                }}
+              >
+                {it.d}
+              </div>
             </div>
           ))}
-          <div style={{ borderTop: `1px solid ${C.hairline}` }} />
         </div>
       </div>
     </section>
   )
 }
 
-// ── Final CTA Section ─────────────────────────────────────────────────────────
-function FinalCTASection({ onStart }: { onStart: () => void }) {
-  const isMobile = useIsMobile()
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function SFinalCTA({ onOpen }: { onOpen: () => void }) {
   return (
-    <section style={{ padding: rv(isMobile, "56px 20px", "96px 48px"), background: C.canvas, position: "relative", overflow: "hidden", textAlign: "center" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 800, height: 500, background: `radial-gradient(ellipse at 35% 50%, ${C.gradSky}28 0%, transparent 55%), radial-gradient(ellipse at 68% 48%, ${C.gradMint}25 0%, transparent 50%), radial-gradient(ellipse at 52% 70%, ${C.gradPeach}20 0%, transparent 50%)`, pointerEvents: "none", filter: "blur(6px)" }} />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto" }}>
-        <h2 style={{ ...displayStyle(rv(isMobile, 32, 48)), marginBottom: 24, lineHeight: 1.07 }}>
-          Your business may be your biggest asset. Know how ready it is.
+    <section
+      id="pricing"
+      style={{
+        background: C.dark,
+        color: C.onDark,
+        padding: "120px 24px",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            width: 800,
+            height: 800,
+            top: "-40%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(167,229,211,.18) 0%, rgba(200,184,224,.1) 45%, transparent 70%)",
+            filter: "blur(60px)",
+            animation: "sOrbFloat1 18s ease-in-out infinite",
+          }}
+        />
+      </div>
+      <div className="s-rv" style={{ position: "relative", textAlign: "center", maxWidth: 740, margin: "0 auto" }}>
+        <div style={{ ...eyebrow(true), marginBottom: 18 }}>Three minutes. Free. No login.</div>
+        <h2
+          style={{
+            fontFamily: garamond,
+            fontSize: "clamp(40px, 6vw, 76px)",
+            fontWeight: 300,
+            letterSpacing: "-1.92px",
+            lineHeight: 1.02,
+            color: C.onDark,
+            marginBottom: 22,
+          }}
+        >
+          Find out what your business is <em>actually</em> worth.
         </h2>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 15, 17), fontWeight: 400, color: C.body, lineHeight: 1.65, letterSpacing: "0.15px", marginBottom: 12 }}>
-          Take the free ExitIQ assessment and get a clear view of your valuation range, exit readiness, buyer risks, SBA financeability, and next steps.
+        <p
+          style={{
+            fontFamily: inter,
+            fontSize: 17,
+            color: C.onDarkBody,
+            maxWidth: 540,
+            margin: "0 auto 28px",
+            lineHeight: 1.55,
+          }}
+        >
+          Start with ExitIQ. We&apos;ll generate your Gap Report and tell you the truth — even if you&apos;re not ready
+          to sell yet.
         </p>
-        <p style={{ fontFamily: inter, fontSize: rv(isMobile, 13, 14), fontWeight: 500, color: C.mutedSoft, marginBottom: 36 }}>
-          Valuation. Readiness. Buyer risks. Financing insight. Exit roadmap.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
-          <button
-            onClick={onStart}
-            style={{ ...pillPrimary, height: rv(isMobile, 48, 52), padding: rv(isMobile, "0 20px", "0 32px"), fontSize: rv(isMobile, 16, 17), width: isMobile ? "100%" : "auto", justifyContent: "center" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-          >
-            Get Your Free ExitIQ Score
-          </button>
-        </div>
-        <p style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>
-          Private, fast, and built for owners who want clarity before making their next move.
-        </p>
+        <button onClick={onOpen} style={{ ...btnLight, height: 52, fontSize: 16, padding: "12px 28px" }}>
+          Start ExitIQ — free →
+        </button>
       </div>
     </section>
   )
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
-function FooterSection() {
-  const isMobile = useIsMobile()
-  const cols = [
-    { heading: "Platform", links: ["ExitIQ Assessment", "Valuation Range", "Exit Readiness Score", "SBA Financeability", "Document Checklist"] },
-    { heading: "Company", links: ["About Scorta", "How it works", "For sellers", "Platform vision"] },
-    { heading: "Legal", links: ["Privacy policy", "Terms of service", "Disclaimer"] },
-  ]
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function SFooter() {
+  const cols: Record<string, { l: string; h: string }[]> = {
+    Product: [
+      { l: "ExitIQ", h: "#exitiq" },
+      { l: "The Boardroom", h: "#how" },
+      { l: "Gap Report", h: "#products" },
+      { l: "SBA Pre-Screen", h: "#products" },
+      { l: "Document Vault", h: "#products" },
+    ],
+    Company: [
+      { l: "About", h: "/about" },
+      { l: "Founders", h: "/about#founders" },
+      { l: "Contact", h: "mailto:suyash@scorta.app" },
+    ],
+  }
 
   return (
-    <footer style={{ background: C.canvas, borderTop: `1px solid ${C.hairline}`, padding: rv(isMobile, "40px 20px 32px", "64px 48px 40px") }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: rv(isMobile, "1fr", "2fr 1fr 1fr 1fr"), gap: rv(isMobile, 32, 48), marginBottom: rv(isMobile, 36, 56) }}>
+    <footer style={{ background: C.canvasSoft, borderTop: `1px solid ${C.hairline}`, padding: "64px 24px 32px" }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(240px, 1.4fr) repeat(2, minmax(140px, 1fr))",
+            gap: 32,
+            marginBottom: 48,
+          }}
+        >
+          {/* Brand */}
           <div>
-            <div style={{ fontFamily: garamond, fontSize: 22, fontWeight: 300, color: C.ink, letterSpacing: "-0.3px", marginBottom: 14 }}>
-              Scorta
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 22,
+                  fontWeight: 400,
+                  color: C.ink,
+                  letterSpacing: "-.4px",
+                }}
+              >
+                Scorta
+              </span>
             </div>
-            <p style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.muted, lineHeight: 1.65, maxWidth: 280 }}>
-              The AI-native exit intelligence platform for Main Street businesses. Helping owners turn their company into a buyer-ready asset — before they need to sell.
+            <p style={{ fontFamily: inter, fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 320 }}>
+              An AI-native broker for Main Street home-service businesses.
             </p>
           </div>
-          {cols.map(({ heading, links }) => (
+
+          {/* Link columns */}
+          {Object.entries(cols).map(([heading, links]) => (
             <div key={heading}>
-              <div style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", color: C.mutedSoft, marginBottom: 16 }}>
+              <div
+                style={{
+                  fontFamily: inter,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.ink,
+                  textTransform: "uppercase",
+                  letterSpacing: ".96px",
+                  marginBottom: 14,
+                }}
+              >
                 {heading}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {links.map((l) =>
-                  l === "About Scorta" ? (
-                    <Link key={l} href="/about" style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, lineHeight: 1.5, textDecoration: "none" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {links.map(({ l, h }) =>
+                  h.startsWith("/") ? (
+                    <Link
+                      key={l}
+                      href={h}
+                      style={{ fontFamily: inter, fontSize: 14, color: C.body, textDecoration: "none" }}
+                    >
                       {l}
                     </Link>
                   ) : (
-                    <span key={l} style={{ fontFamily: inter, fontSize: 14, fontWeight: 400, color: C.body, cursor: "pointer", lineHeight: 1.5 }}>
+                    <a
+                      key={l}
+                      href={h}
+                      style={{ fontFamily: inter, fontSize: 14, color: C.body, textDecoration: "none" }}
+                    >
                       {l}
-                    </span>
+                    </a>
                   )
                 )}
               </div>
             </div>
           ))}
         </div>
-        <div style={{ borderTop: `1px solid ${C.hairline}`, paddingTop: 24, display: "flex", flexDirection: rv(isMobile, "column", "row"), justifyContent: "space-between", alignItems: rv(isMobile, "flex-start", "center"), gap: rv(isMobile, 8, 0) }}>
-          <span style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>
-            © 2025 Scorta. For informational purposes only. Not financial advice.
-          </span>
-          <span style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft }}>
-            See what buyers will see before they see it.
+
+        <div
+          style={{
+            borderTop: `1px solid ${C.hairline}`,
+            paddingTop: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontFamily: inter, fontSize: 12, color: C.mutedSoft }}>© 2026 Scorta, Inc.</span>
+          <span style={{ fontFamily: inter, fontSize: 12, color: C.mutedSoft }}>
+            Scorta is not a registered broker-dealer or investment advisor.
           </span>
         </div>
       </div>
@@ -1496,76 +2956,37 @@ function FooterSection() {
   )
 }
 
-// ── Root Export ───────────────────────────────────────────────────────────────
+// ─── Root Export ──────────────────────────────────────────────────────────────
 export function ScortaLanding() {
-  const [appOpen, setAppOpen] = React.useState(false)
-  const [announcementVisible, setAnnouncementVisible] = React.useState(true)
-  const barWrapRef = React.useRef<HTMLDivElement>(null)
-
-  const open = () => setAppOpen(true)
-
-  React.useEffect(() => {
-    if (!announcementVisible) return
-    const el = barWrapRef.current
-    if (!el) return
-    const barHeight = el.offsetHeight || 37
-    const HIDE_AT = 80
-    const SHOW_AT = 50
-    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
-    // Stamp explicit starting values with no transition, then force a reflow
-    // so the browser commits them as the "from" state before we enable transitions.
-    el.style.transition = "none"
-    el.style.height = barHeight + "px"
-    el.style.opacity = "1"
-    void el.offsetHeight // force reflow
-    el.style.transition = TRANSITION
-    let hidden = false
-    const onScroll = () => {
-      const y = window.scrollY
-      if (!hidden && y > HIDE_AT) {
-        hidden = true
-        el.style.transition = TRANSITION
-        el.style.height = "0px"
-        el.style.opacity = "0"
-      } else if (hidden && y < SHOW_AT) {
-        hidden = false
-        el.style.transition = TRANSITION
-        el.style.height = barHeight + "px"
-        el.style.opacity = "1"
-      }
-    }
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [announcementVisible])
+  useReveal()
+  const [exitOpen, setExitOpen] = React.useState(false)
+  const handleOpen = () => setExitOpen(true)
 
   return (
     <>
-      <style>{`html { scroll-behavior: smooth; }`}</style>
-      {appOpen && <ExitIQOverlay onClose={() => setAppOpen(false)} />}
-
-      <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
-        {announcementVisible && (
-          <div ref={barWrapRef} style={{ overflow: "hidden", background: C.primary }}>
-            <AnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />
-          </div>
-        )}
-        <TopNav onStart={open} />
-      </div>
-      <div style={{ background: C.canvas, color: C.ink, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
-        <HeroSection onStart={open} />
-        <ValueCardsStrip />
-        <ProblemSection />
-        <WhatScortaGivesYou onStart={open} />
-        <HowExitIQWorks onStart={open} />
-        <WhatBuyersCareAbout />
-        <CostOfWaiting onStart={open} />
-        <WhoItsFor />
-        <BrokerLeverageSection />
-        <ValuePropositionSection />
-        <PlatformVisionSection />
-        <FAQSection />
-        <FinalCTASection onStart={open} />
-        <FooterSection />
+      <style dangerouslySetInnerHTML={{ __html: SHARED_CSS }} />
+      {exitOpen && <ExitIQOverlay onClose={() => setExitOpen(false)} />}
+      <div
+        style={{
+          background: C.canvas,
+          color: C.body,
+          fontFamily: inter,
+          minHeight: "100vh",
+          overflowX: "clip",
+        }}
+      >
+        <SNav onOpen={handleOpen} />
+        <SHero onOpen={handleOpen} />
+        <SIndustryMarquee />
+        <SSignalsBand />
+        <SSpeedCompare />
+        <SIndustrySwitcher />
+        <SBoardroom />
+        <SGapReport />
+        <SProductSurfaces />
+        <SRoadmap />
+        <SFinalCTA onOpen={handleOpen} />
+        <SFooter />
       </div>
     </>
   )
