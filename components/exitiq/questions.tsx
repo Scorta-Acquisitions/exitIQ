@@ -354,12 +354,29 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          {["1yr", "5yr", "10yr", "15yr", "25yr+"].map((l) => (
-            <div key={l} style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
-              {l}
-            </div>
-          ))}
+        <div style={{ position: "relative", height: 16 }}>
+          {([1, 5, 10, 15, 25] as const).map((yr, i) => {
+            const pctTick = (yr - 1) / 24
+            const label = yr === 25 ? "25yr+" : `${yr}yr`
+            const transform =
+              i === 0 ? "translateX(0%)" : i === 4 ? "translateX(-100%)" : "translateX(-50%)"
+            return (
+              <div
+                key={yr}
+                style={{
+                  position: "absolute",
+                  left: `${pctTick * 100}%`,
+                  fontSize: 10,
+                  color: "var(--t4)",
+                  fontFamily: "Inter, sans-serif",
+                  transform,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </div>
+            )
+          })}
         </div>
       </div>
 
