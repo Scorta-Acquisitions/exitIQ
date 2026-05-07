@@ -1,4 +1,4 @@
-// use client: interactive nav state (ExitIQ overlay toggle)
+// use client: sticky nav scroll state, scroll-reveal observer, count-up on scroll
 "use client"
 
 import React from "react"
@@ -6,80 +6,176 @@ import Image from "next/image"
 import Link from "next/link"
 import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
 
-// ── Design tokens (mirrors LandingPage.tsx) ───────────────────────────────────
+// ─── Design tokens (mirrors LandingPage.tsx) ──────────────────────────────────
 const C = {
   canvas: "#f5f5f5",
   canvasSoft: "#fafafa",
+  card: "#ffffff",
   ink: "#0c0a09",
-  primary: "#292524",
+  ink2: "#292524",
   body: "#4e4e4e",
   muted: "#777169",
   mutedSoft: "#a8a29e",
   hairline: "#e7e5e4",
   hairlineStrong: "#d6d3d1",
-  surfaceCard: "#ffffff",
-  surfaceStrong: "#f0efed",
-  onPrimary: "#ffffff",
-  gradMint: "#a7e5d3",
-  gradPeach: "#f4c5a8",
-  gradLavender: "#c8b8e0",
-  gradSky: "#a8c8e8",
-  gradRose: "#e8b8c4",
+  mint: "#a7e5d3",
+  peach: "#f4c5a8",
+  lav: "#c8b8e0",
+  sky: "#a8c8e8",
   dark: "#0c0a09",
-  darkElevated: "#1c1917",
-  darkBorder: "rgba(245,245,245,0.08)",
-  darkBorderStrong: "rgba(245,245,245,0.14)",
-  onDark: "rgba(245,245,245,0.92)",
-  onDarkBody: "rgba(245,245,245,0.55)",
-  onDarkMuted: "rgba(245,245,245,0.32)",
+  onDark: "rgba(245,245,245,.95)",
+  onDarkBody: "rgba(245,245,245,.55)",
+  onDarkMuted: "rgba(245,245,245,.45)",
 }
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
 
-function displayStyle(size: number, dark = false): React.CSSProperties {
-  const sp = size >= 56 ? "-1.92px" : size >= 44 ? "-0.96px" : size >= 34 ? "-0.36px" : "-0.32px"
-  return {
-    fontFamily: garamond,
-    fontSize: size,
-    fontWeight: 300,
-    lineHeight: 1.05,
-    letterSpacing: sp,
-    color: dark ? C.onDark : C.ink,
-    margin: 0,
-  }
+// ─── Shared CSS ───────────────────────────────────────────────────────────────
+const ABOUT_CSS = `
+  .a-rv { opacity: 0; transform: translateY(22px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+  .a-rv.a-in { opacity: 1; transform: translateY(0); }
+  .a-d1 { transition-delay: .08s; }
+  .a-d2 { transition-delay: .16s; }
+  .a-d3 { transition-delay: .24s; }
+  .a-d4 { transition-delay: .32s; }
+
+  .a-ch  { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s; will-change: transform; }
+  .a-ch:hover  { transform: translateY(-4px); box-shadow: 0 18px 48px rgba(12,10,9,.08), 0 4px 14px rgba(12,10,9,.04); border-color: #d6d3d1 !important; }
+  .a-chd { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s; will-change: transform; }
+  .a-chd:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 40px rgba(167,229,211,.12); }
+
+  @keyframes aOrbBreathe  { 0%,100%{transform:scale(1);opacity:.85} 50%{transform:scale(1.07);opacity:1} }
+  @keyframes aOrbGlow     { 0%,100%{box-shadow:0 0 40px 12px rgba(167,229,211,.18),0 0 80px 30px rgba(200,184,224,.1)} 50%{box-shadow:0 0 60px 22px rgba(167,229,211,.32),0 0 120px 50px rgba(200,184,224,.18)} }
+  @keyframes aOrbFloat1   { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-12px,-22px) scale(1.05)} 66%{transform:translate(10px,12px) scale(.96)} }
+  @keyframes aOrbFloat2   { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(20px,-18px) scale(1.04)} }
+  @keyframes aOrbFloat3   { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-16px,18px)} }
+  @keyframes aFadeIn      { from{opacity:0} to{opacity:1} }
+  @keyframes aSlideUp     { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+`
+
+// ─── Hooks ────────────────────────────────────────────────────────────────────
+function useReveal() {
+  React.useEffect(() => {
+    const els = document.querySelectorAll(".a-rv")
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("a-in")
+            io.unobserve(e.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -60px 0px" }
+    )
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
 }
 
-const pillPrimary: React.CSSProperties = {
+function useInView(threshold = 0.3) {
+  const ref = React.useRef<HTMLElement>(null)
+  const [seen, setSeen] = React.useState(false)
+  React.useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0]
+        if (e?.isIntersecting) {
+          setSeen(true)
+          io.disconnect()
+        }
+      },
+      { threshold }
+    )
+    if (ref.current) io.observe(ref.current)
+    return () => io.disconnect()
+  }, [threshold])
+  return { ref, seen }
+}
+
+function useCountUp(target: number, duration = 1800, active = true) {
+  const [val, setVal] = React.useState(0)
+  React.useEffect(() => {
+    if (!active) return
+    setVal(0)
+    let raf: number
+    let start: number | undefined
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const t = Math.min(1, (ts - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setVal(Math.round(target * eased))
+      if (t < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration, active])
+  return val
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const eyebrow = (dark = false): React.CSSProperties => ({
+  fontFamily: inter,
+  fontSize: 12,
+  fontWeight: 600,
+  letterSpacing: ".96px",
+  textTransform: "uppercase" as const,
+  color: dark ? "rgba(167,229,211,.85)" : C.muted,
+})
+
+const btnPrimary: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  height: 40,
-  padding: "0 20px",
-  background: C.primary,
-  color: C.onPrimary,
+  justifyContent: "center",
+  height: 44,
+  padding: "0 22px",
   borderRadius: 9999,
+  border: "none",
+  cursor: "pointer",
+  background: C.ink2,
+  color: "#fff",
   fontFamily: inter,
   fontSize: 15,
   fontWeight: 500,
+  textDecoration: "none",
+  transition: "background .18s",
+}
+
+const btnLight: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 52,
+  padding: "0 28px",
+  borderRadius: 9999,
   border: "none",
   cursor: "pointer",
-  letterSpacing: 0,
-  textDecoration: "none",
+  background: "rgba(245,245,245,.95)",
+  color: C.ink,
+  fontFamily: inter,
+  fontSize: 16,
+  fontWeight: 500,
+  transition: "transform .18s, box-shadow .18s",
 }
 
-// Liquid glass — cream-theme values from tailwind.css, inlined for this light-mode page
-const glassLight: React.CSSProperties = {
-  background: "rgba(255,255,255,0.72)",
-  backdropFilter: "blur(24px) saturate(160%)",
-  WebkitBackdropFilter: "blur(24px) saturate(160%)",
-  border: "1px solid rgba(255,255,255,0.90)",
-  boxShadow: "0 8px 32px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,1), inset 0 -1px 0 rgba(0,0,0,.03)",
-}
-
-// ── ExitIQ Overlay ────────────────────────────────────────────────────────────
+// ─── ExitIQ Overlay ───────────────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handler)
+    document.body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", handler)
+      document.body.style.overflow = ""
+    }
+  }, [onClose])
+
   return (
     <div
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
@@ -91,10 +187,11 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
         background: "rgba(0,0,0,0.55)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        animation: "fadeIn 0.2s ease",
+        animation: "aFadeIn 0.2s ease",
       }}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           position: "relative",
           width: "100%",
@@ -103,7 +200,7 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
           borderRadius: 20,
           overflow: "hidden",
           boxShadow: "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
+          animation: "aSlideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
         }}
       >
         <ExitIQApp onClose={onClose} />
@@ -112,190 +209,517 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Top Navigation ────────────────────────────────────────────────────────────
-function TopNav({ onStart }: { onStart: () => void }) {
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function ANav({ onOpen }: { onOpen: () => void }) {
+  const [scrolled, setScrolled] = React.useState(false)
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    window.addEventListener("scroll", onScroll)
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const links = [
+    { l: "How it works", href: "/#how" },
+    { l: "Products", href: "/#products" },
+    { l: "About", href: "/about" },
+  ]
+
   return (
     <nav
       style={{
-        height: 64,
-        background: C.canvas,
-        borderBottom: `1px solid ${C.hairline}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 48px",
         position: "sticky",
         top: 0,
         zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        height: 64,
+        padding: "0 24px",
+        background: scrolled ? "rgba(245,245,245,.85)" : "transparent",
+        borderBottom: scrolled ? `1px solid ${C.hairline}` : "1px solid transparent",
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
+        transition: "background .25s, border-color .25s",
       }}
     >
-      <Link
-        href="/"
-        style={{
-          fontFamily: garamond,
-          fontSize: 22,
-          fontWeight: 300,
-          color: C.ink,
-          letterSpacing: "-0.3px",
-          textDecoration: "none",
-        }}
-      >
-        Scorta
-      </Link>
-      <div style={{ display: "flex", gap: 32 }}>
-        {[
-          { label: "Features", href: "/#features" },
-          { label: "How it works", href: "/#how-it-works" },
-          { label: "About", href: "/about" },
-        ].map(({ label, href }) => (
-          <Link
-            key={label}
-            href={href}
-            style={{
-              fontFamily: inter,
-              fontSize: 15,
-              fontWeight: 500,
-              color: label === "About" ? C.ink : C.body,
-              textDecoration: "none",
-            }}
-          >
-            {label}
-          </Link>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <button
-          onClick={onStart}
-          style={pillPrimary}
-          onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-          onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+        <div
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+            boxShadow: "0 0 12px rgba(167,229,211,.4)",
+            flexShrink: 0,
+          }}
+        />
+        <Link
+          href="/"
+          style={{
+            fontFamily: garamond,
+            fontSize: 22,
+            fontWeight: 400,
+            color: C.ink,
+            letterSpacing: "-.4px",
+            textDecoration: "none",
+          }}
         >
-          Try free
+          Scorta
+        </Link>
+      </div>
+
+      <div style={{ display: "flex", gap: 26, flex: 1 }}>
+        {links.map(({ l, href }) =>
+          href.startsWith("/") && !href.startsWith("/#") ? (
+            <Link
+              key={l}
+              href={href}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: l === "About" ? C.ink : C.body,
+                opacity: l === "About" ? 1 : 0.85,
+                textDecoration: "none",
+                transition: "opacity .15s",
+              }}
+            >
+              {l}
+            </Link>
+          ) : (
+            <a
+              key={l}
+              href={href}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: C.body,
+                opacity: 0.85,
+                textDecoration: "none",
+                transition: "opacity .15s",
+              }}
+            >
+              {l}
+            </a>
+          )
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
+          Try ExitIQ
         </button>
       </div>
     </nav>
   )
 }
 
-// ── Photo Avatar ──────────────────────────────────────────────────────────────
-function PhotoAvatar({ src, name }: { src: string; name: string }) {
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function AHero() {
   return (
-    <div
-      style={{
-        width: 88,
-        height: 88,
-        borderRadius: "50%",
-        flexShrink: 0,
-        overflow: "hidden",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px rgba(0,0,0,0.06)",
-        position: "relative",
-      }}
-    >
-      <Image src={src} alt={name} fill sizes="88px" style={{ objectFit: "cover", objectPosition: "center top" }} />
-    </div>
+    <section style={{ position: "relative", overflow: "hidden", padding: "120px 24px 72px" }}>
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+        <div
+          style={{
+            position: "absolute",
+            width: 540,
+            height: 540,
+            top: -160,
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(circle at 40% 40%, rgba(167,229,211,.45) 0%, rgba(200,184,224,.28) 45%, transparent 72%)",
+            filter: "blur(40px)",
+            animation: "aOrbFloat1 14s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 320,
+            height: 320,
+            top: "20%",
+            left: "-2%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(244,197,168,.36) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            animation: "aOrbFloat2 18s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            width: 260,
+            height: 260,
+            top: "12%",
+            right: "-2%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(168,200,232,.4) 0%, transparent 70%)",
+            filter: "blur(36px)",
+            animation: "aOrbFloat3 16s ease-in-out infinite",
+          }}
+        />
+      </div>
+
+      <div
+        className="a-rv"
+        style={{ position: "relative", textAlign: "center", maxWidth: 880, margin: "0 auto" }}
+      >
+        <div style={{ ...eyebrow(), marginBottom: 18 }}>About Scorta</div>
+        <h1
+          style={{
+            fontFamily: garamond,
+            fontSize: "clamp(44px, 7vw, 84px)",
+            fontWeight: 300,
+            lineHeight: 1.04,
+            letterSpacing: "-1.92px",
+            color: C.ink,
+            margin: "0 0 24px",
+          }}
+        >
+          Main Street is for sale.
+          <br />
+          <em style={{ fontStyle: "italic" }}>The infrastructure isn&apos;t.</em>
+        </h1>
+        <p
+          style={{
+            fontFamily: inter,
+            fontSize: 19,
+            lineHeight: 1.55,
+            color: C.body,
+            maxWidth: 640,
+            margin: "0 auto",
+            letterSpacing: ".16px",
+          }}
+        >
+          Scorta is rebuilding the broker — for the millions of small home-service businesses whose owners are ready to
+          retire, and whose books were never built to be sold.
+        </p>
+      </div>
+    </section>
   )
 }
 
-// ── Founder Card ──────────────────────────────────────────────────────────────
-function FounderCard({
-  photo,
-  name,
-  title,
-  bio,
-  linkedIn,
-}: {
-  photo: string
-  name: string
-  title: string
-  bio: string[]
-  linkedIn: string
-}) {
+// ─── Numbers ──────────────────────────────────────────────────────────────────
+function Counter({ to, suf, seen }: { to: number; suf: string; seen: boolean }) {
+  const val = useCountUp(to, 1800, seen)
+  const fmt = to >= 1000 ? val.toLocaleString() : val.toString()
   return (
-    <div
-      style={{
-        ...glassLight,
-        borderRadius: 20,
-        padding: "40px 40px 36px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 24,
-      }}
+    <span style={{ fontVariantNumeric: "tabular-nums" }}>
+      {fmt}
+      {suf}
+    </span>
+  )
+}
+
+function ANumbers() {
+  const { ref, seen } = useInView(0.3)
+  const stats = [
+    {
+      v: 2900000,
+      suf: "+",
+      l: "Main Street businesses for sale this decade",
+      sub: "as boomer owners retire",
+      highlight: false,
+    },
+    { v: 75, suf: "%", l: "of small business listings never close", sub: "industry data, all bands", highlight: false },
+    {
+      v: 8,
+      suf: "–12%",
+      l: "commission a traditional broker keeps",
+      sub: "on a single transaction",
+      highlight: false,
+    },
+    { v: 0, suf: "%", l: "commission Scorta charges", sub: "flat success fee instead", highlight: true },
+  ]
+
+  return (
+    <section
+      ref={ref as React.RefObject<HTMLElement>}
+      style={{ background: C.dark, color: C.onDark, padding: "96px 24px", position: "relative", overflow: "hidden" }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-        <PhotoAvatar src={photo} name={name} />
-        <div>
-          <div
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div
+          style={{
+            position: "absolute",
+            width: 700,
+            height: 700,
+            top: "-30%",
+            right: "-10%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(167,229,211,.16) 0%, transparent 65%)",
+            filter: "blur(60px)",
+            animation: "aOrbFloat2 22s ease-in-out infinite",
+          }}
+        />
+      </div>
+      <div style={{ position: "relative", maxWidth: 1180, margin: "0 auto" }}>
+        <div className="a-rv" style={{ maxWidth: 720, margin: "0 auto 56px", textAlign: "center" }}>
+          <div style={{ ...eyebrow(true), marginBottom: 16 }}>The opportunity</div>
+          <h2
             style={{
               fontFamily: garamond,
-              fontSize: 26,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
               fontWeight: 300,
-              color: C.ink,
-              letterSpacing: "-0.3px",
-              lineHeight: 1.1,
-            }}
-          >
-            {name}
-          </div>
-          <div
-            style={{
-              fontFamily: inter,
-              fontSize: 13,
-              fontWeight: 500,
-              color: C.muted,
-              marginTop: 4,
-              letterSpacing: "0.2px",
-            }}
-          >
-            {title}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {bio.map((line, i) => (
-          <p
-            key={i}
-            style={{
-              fontFamily: inter,
-              fontSize: 15,
-              fontWeight: 400,
-              color: C.body,
-              lineHeight: 1.7,
-              letterSpacing: "0.1px",
+              letterSpacing: "-1.2px",
+              lineHeight: 1.06,
+              color: C.onDark,
               margin: 0,
             }}
           >
-            {line}
-          </p>
-        ))}
+            The biggest unbroked market in America.
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              className={`a-rv a-chd a-d${i + 1}`}
+              style={{
+                padding: 28,
+                borderRadius: 20,
+                background: s.highlight ? "rgba(167,229,211,.08)" : "rgba(245,245,245,.04)",
+                border: "1px solid " + (s.highlight ? "rgba(167,229,211,.3)" : "rgba(245,245,245,.1)"),
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontWeight: 300,
+                  lineHeight: 1,
+                  letterSpacing: "-1.5px",
+                  fontSize: "clamp(44px, 5vw, 60px)",
+                  color: s.highlight ? C.mint : C.onDark,
+                }}
+              >
+                <Counter to={s.v} suf={s.suf} seen={seen} />
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 14, color: "rgba(245,245,245,.85)", marginTop: 14, lineHeight: 1.4 }}>
+                {s.l}
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 12, color: "rgba(245,245,245,.4)", marginTop: 6 }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
       </div>
-
-      <a
-        href={linkedIn}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          fontFamily: inter,
-          fontSize: 13,
-          fontWeight: 500,
-          color: C.muted,
-          textDecoration: "none",
-          marginTop: 4,
-          transition: "color 0.15s ease",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = C.ink)}
-        onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
-      >
-        <LinkedInIcon />
-        LinkedIn
-      </a>
-    </div>
+    </section>
   )
 }
 
+// ─── Mission / Beliefs ────────────────────────────────────────────────────────
+function AMission() {
+  const beliefs = [
+    {
+      t: "Owners deserve clarity before they list.",
+      d: "Most owners discover their business is unsellable only after burning months. We fix that on day one.",
+      grad: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 60%, transparent 90%)",
+    },
+    {
+      t: "AI does the work the broker should have.",
+      d: "Document organization, buyer qualification, lender pre-screen, diligence. Software where it scales, humans where it counts.",
+      grad: "radial-gradient(circle at 35% 35%, #f4c5a8 0%, #e8b8c4 60%, transparent 90%)",
+    },
+    {
+      t: "Transparent process or no process.",
+      d: "Every action is logged, reviewable, and approved by a human before it touches a buyer.",
+      grad: "radial-gradient(circle at 35% 35%, #a8c8e8 0%, #c8b8e0 60%, transparent 90%)",
+    },
+  ]
+
+  return (
+    <section style={{ padding: "96px 24px", background: C.canvas }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="a-rv" style={{ maxWidth: 760, margin: "0 auto 56px", textAlign: "center" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>What we believe</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(34px, 4.5vw, 56px)",
+              fontWeight: 300,
+              letterSpacing: "-1.2px",
+              lineHeight: 1.06,
+              color: C.ink,
+              margin: 0,
+            }}
+          >
+            Selling a business should be <em style={{ fontStyle: "italic" }}>knowable.</em>
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {beliefs.map((b, i) => (
+            <div
+              key={i}
+              className={`a-rv a-ch a-d${i + 1}`}
+              style={{
+                background: C.card,
+                border: `1px solid ${C.hairline}`,
+                borderRadius: 20,
+                padding: 28,
+                minHeight: 240,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: b.grad,
+                  animation: "aOrbBreathe 4s ease-in-out infinite",
+                  flexShrink: 0,
+                }}
+              />
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 22,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.3px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {b.t}
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 14.5, color: C.body, lineHeight: 1.6 }}>{b.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+function ATimeline() {
+  const events = [
+    {
+      y: "2024",
+      t: "The thesis",
+      d: "A founder watches their parent try to sell a 22-year HVAC business. Three brokers, sixty-something PDFs, no buyer. The cost of being unbrokered becomes obvious.",
+    },
+    {
+      y: "Q4 2024",
+      t: "First version",
+      d: "A spreadsheet that scored a business across the four readiness dimensions buyers actually grade on. Friends in the trades start asking for it.",
+    },
+    {
+      y: "Q1 2025",
+      t: "ExitIQ ships",
+      d: "The assessment becomes a real product. Built around a thesis: every Main Street owner deserves to know what their business is worth — for free, in three minutes.",
+    },
+    {
+      y: "Q2 2025",
+      t: "The Boardroom",
+      d: "Buyer simulation goes live. Owners stop being surprised by buyer behavior because they've already seen the offers, the structure, and the objections.",
+    },
+    {
+      y: "Now",
+      t: "Active deals",
+      d: "Concierge-style transactions running on Scorta's AI workflow + human approval stack. The transaction infrastructure is being written one deal at a time.",
+    },
+  ]
+
+  return (
+    <section
+      style={{
+        padding: "96px 24px",
+        background: C.canvasSoft,
+        borderTop: `1px solid ${C.hairline}`,
+        borderBottom: `1px solid ${C.hairline}`,
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="a-rv" style={{ maxWidth: 720, margin: "0 auto 56px", textAlign: "center" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>The story so far</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(32px, 4.2vw, 52px)",
+              fontWeight: 300,
+              letterSpacing: "-1.2px",
+              lineHeight: 1.06,
+              color: C.ink,
+              margin: 0,
+            }}
+          >
+            From spreadsheet to <em style={{ fontStyle: "italic" }}>transaction layer.</em>
+          </h2>
+        </div>
+        <div style={{ position: "relative", maxWidth: 760, margin: "0 auto", paddingLeft: 40 }}>
+          <div
+            style={{
+              position: "absolute",
+              left: 14,
+              top: 6,
+              bottom: 6,
+              width: 1,
+              background: `linear-gradient(to bottom, transparent, ${C.hairlineStrong} 12%, ${C.hairlineStrong} 88%, transparent)`,
+            }}
+          />
+          {events.map((e, i) => (
+            <div
+              key={i}
+              className={`a-rv a-d${Math.min(i + 1, 4)}`}
+              style={{ position: "relative", paddingBottom: 36 }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: -32,
+                  top: 4,
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 60%, transparent 90%)",
+                  boxShadow: `0 0 0 4px ${C.canvasSoft}, 0 0 14px rgba(167,229,211,.55)`,
+                  animation: `aOrbBreathe ${3 + i * 0.3}s ease-in-out infinite`,
+                }}
+              />
+              <div
+                style={{
+                  display: "inline-block",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.mint,
+                  letterSpacing: ".96px",
+                  textTransform: "uppercase",
+                  padding: "4px 10px",
+                  background: C.dark,
+                  borderRadius: 9999,
+                  marginBottom: 10,
+                  fontFamily: inter,
+                }}
+              >
+                {e.y}
+              </div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 24,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.3px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {e.t}
+              </div>
+              <div style={{ fontFamily: inter, fontSize: 15, color: C.body, lineHeight: 1.6, marginTop: 8, maxWidth: 640 }}>
+                {e.d}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Founders ─────────────────────────────────────────────────────────────────
 function LinkedInIcon() {
   return (
     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -311,284 +735,158 @@ function LinkedInIcon() {
   )
 }
 
-// ── Stat Badge ────────────────────────────────────────────────────────────────
-function StatBadge({ value, label }: { value: string; label: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ width: 24, height: 2, background: C.gradMint, margin: "0 auto 18px", borderRadius: 1 }} />
-      <div
-        style={{
-          fontFamily: garamond,
-          fontSize: 44,
-          fontWeight: 300,
-          color: C.ink,
-          letterSpacing: "-1.2px",
-          lineHeight: 1,
-        }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          fontFamily: inter,
-          fontSize: 13,
-          fontWeight: 500,
-          color: C.muted,
-          marginTop: 8,
-          letterSpacing: "0.2px",
-          lineHeight: 1.5,
-        }}
-      >
-        {label}
-      </div>
-    </div>
-  )
-}
-
-// ── Hero Section ──────────────────────────────────────────────────────────────
-function HeroSection() {
-  return (
-    <section
-      style={{
-        padding: "96px 48px 80px",
-        background: C.surfaceCard,
-        position: "relative",
-        overflow: "hidden",
-        textAlign: "center",
-      }}
-    >
-      {/* Ambient gradient orbs — larger and more vivid so colour bleeds through the glass panel */}
-      <div
-        style={{
-          position: "absolute",
-          top: "38%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 1200,
-          height: 700,
-          background:
-            `radial-gradient(ellipse at 28% 50%, ${C.gradMint}70 0%, transparent 52%),` +
-            `radial-gradient(ellipse at 74% 46%, ${C.gradLavender}66 0%, transparent 48%),` +
-            `radial-gradient(ellipse at 50% 80%, ${C.gradPeach}55 0%, transparent 50%)`,
-          pointerEvents: "none",
-          filter: "blur(6px)",
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 760,
-          margin: "0 auto",
-          ...glassLight,
-          borderRadius: 28,
-          padding: "52px 64px 56px",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            padding: "4px 10px",
-            background: "rgba(255,255,255,0.60)",
-            borderRadius: 9999,
-            fontFamily: inter,
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.96px",
-            textTransform: "uppercase",
-            color: C.muted,
-            marginBottom: 28,
-          }}
-        >
-          About Scorta
-        </div>
-
-        <h1 style={{ ...displayStyle(60), lineHeight: 1.04, marginBottom: 24 }}>
-          Your business,
-          <br />
-          made acquisition-ready.
-        </h1>
-
-        <p
-          style={{
-            fontFamily: inter,
-            fontSize: 18,
-            fontWeight: 400,
-            color: C.body,
-            lineHeight: 1.68,
-            letterSpacing: "0.1px",
-            maxWidth: 560,
-            margin: "0 auto",
-          }}
-        >
-          We go further than any broker — AI-powered exit prep, deal packaging, and SBA-ready financials that turn your
-          business into an asset buyers compete for. Flat fee. No commission.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-// ── Origin Story ──────────────────────────────────────────────────────────────
-function OriginSection() {
-  return (
-    <section
-      style={{
-        padding: "80px 48px",
-        background: C.dark,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Dot grid */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: "radial-gradient(circle, rgba(245,245,245,0.04) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-          pointerEvents: "none",
-        }}
-      />
-      {/* Ambient glow */}
-      <div
-        style={{
-          position: "absolute",
-          top: "40%",
-          left: "60%",
-          width: 600,
-          height: 400,
-          background: `radial-gradient(ellipse, ${C.gradMint}12 0%, transparent 70%)`,
-          pointerEvents: "none",
-          filter: "blur(40px)",
-        }}
-      />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto" }}>
-        <div
-          style={{
-            fontFamily: inter,
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.96px",
-            textTransform: "uppercase",
-            color: C.onDarkMuted,
-            marginBottom: 32,
-          }}
-        >
-          The origin
-        </div>
-
-        <h2 style={{ ...displayStyle(44, true), lineHeight: 1.1, marginBottom: 40 }}>
-          "We watched deal after deal collapse — not because the business was bad, but because no one had prepared it."
-        </h2>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {[
-            "Suyash spent three years on the buy side, running a micro-PE fund focused on Main Street acquisitions. He saw the same pattern repeat: a good business, a motivated seller, and a deal that fell apart in diligence. Not because of the business — because of the paperwork. No clean financials. No addback schedule. No SBA package. The seller lost the deal and didn't know why.",
-            "The brokers weren't helping. The average broker won't even take a listing under $2M in revenue. They list and pray. They never tell the owner what's actually killing their deal value — because fixing it costs human time, and human time doesn't pencil on small transactions.",
-            "There are 2.9 million businesses like that. Ten thousand new ones enter the exit market every day as baby boomers retire. Most of them will never sell — not because there's no buyer, but because no one built the infrastructure to get them ready.",
-            "That's why we built Scorta. AI does the repeatable work — financials, CIM, buyer materials, SBA prep — so we can serve the $500K–$5M deal that a traditional broker won't touch. Sellers pay a flat fee instead of a 10% commission. And ExitIQ is the intake: a two-minute assessment that tells any owner exactly where they stand.",
-          ].map((p, i) => (
-            <p
-              key={i}
-              style={{
-                fontFamily: inter,
-                fontSize: 16,
-                fontWeight: 400,
-                color: i === 0 ? C.onDark : "rgba(245,245,245,0.60)",
-                lineHeight: 1.75,
-                letterSpacing: "0.1px",
-                margin: 0,
-                transition: "color 0.2s",
-              }}
-            >
-              {p}
-            </p>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ── Founders Section ──────────────────────────────────────────────────────────
-function FoundersSection() {
-  const founders = [
+function AFounders() {
+  const team = [
     {
       photo: "/suyash.jpeg",
       name: "Suyash Agrawal",
-      title: "Co-founder & CEO · Buy-side operator, ex-micro-PE",
-      bio: [
-        "Three years running a micro-PE fund acquiring Main Street businesses. Saw the brokerage problem from the inside — deals collapsing in diligence because sellers had never been told what buyers actually look for.",
-        "Scorta is the firm he wished existed when he was on the buy side. Deal prep, SBA packaging, and honest valuation — available to every seller, not just the ones with $5M+ in revenue.",
-      ],
-      linkedIn: "https://www.linkedin.com/in/suyash-agrawal-20/",
+      role: "Co-founder, CEO",
+      bio: "Three years running a micro-PE fund acquiring Main Street businesses. Saw the brokerage problem from the inside — deals collapsing in diligence because sellers had never been told what buyers actually look for. Scorta is the firm he wished existed when he was on the buy side.",
+      li: "https://www.linkedin.com/in/suyash-agrawal-20/",
+      grad: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 50%, #a8c8e8 80%, #0c0a09 100%)",
     },
     {
       photo: "/puneet.jpeg",
       name: "Puneet Gupta",
-      title: "Co-founder & CTO · Product engineer",
-      bio: [
-        "Builder focused on AI-native product experiences. Designed and engineered ExitIQ — the assessment engine that surfaces deal risks and buyer signals in real time, the way an M&A advisor thinks.",
-        "Believes the best software makes complex decisions feel obvious. Bringing that principle to the part of an owner's life that matters most: what their business is actually worth.",
-      ],
-      linkedIn: "https://www.linkedin.com/in/puneetguptaa1",
+      role: "Co-founder, CTO",
+      bio: "Builder focused on AI-native product experiences. Designed and engineered ExitIQ — the assessment engine that surfaces deal risks and buyer signals in real time, the way an M&A advisor thinks. Believes the best software makes complex decisions feel obvious.",
+      li: "https://www.linkedin.com/in/puneetguptaa1",
+      grad: "radial-gradient(circle at 35% 35%, #f4c5a8 0%, #e8b8c4 50%, #c8b8e0 80%, #0c0a09 100%)",
     },
   ]
 
   return (
-    <section style={{ padding: "96px 48px", background: C.surfaceCard, position: "relative", overflow: "hidden" }}>
-      {/* Subtle orbs give the glass cards something to blur against */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 1100,
-          height: 650,
-          background:
-            `radial-gradient(ellipse at 18% 42%, ${C.gradLavender}30 0%, transparent 50%),` +
-            `radial-gradient(ellipse at 82% 58%, ${C.gradSky}26 0%, transparent 50%)`,
-          pointerEvents: "none",
-          filter: "blur(12px)",
-        }}
-      />
-      <div style={{ maxWidth: 1040, margin: "0 auto", position: "relative", zIndex: 1 }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <div
+    <section id="founders" style={{ padding: "96px 24px", background: C.canvas }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="a-rv" style={{ maxWidth: 720, margin: "0 auto 48px", textAlign: "center" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>Founders</div>
+          <h2
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "4px 10px",
-              background: C.surfaceStrong,
-              borderRadius: 9999,
-              fontFamily: inter,
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: "0.96px",
-              textTransform: "uppercase",
-              color: C.muted,
-              marginBottom: 20,
+              fontFamily: garamond,
+              fontSize: "clamp(32px, 4vw, 52px)",
+              fontWeight: 300,
+              letterSpacing: "-1.2px",
+              lineHeight: 1.06,
+              color: C.ink,
+              margin: 0,
             }}
           >
-            The team
-          </div>
-          <h2 style={{ ...displayStyle(44), lineHeight: 1.1 }}>Two operators, one conviction.</h2>
+            Built by operators, not <em style={{ fontStyle: "italic" }}>brokers.</em>
+          </h2>
         </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 28,
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 18,
+            maxWidth: 880,
+            margin: "0 auto",
           }}
         >
-          {founders.map((f) => (
-            <FounderCard key={f.name} {...f} />
+          {team.map((m, i) => (
+            <div
+              key={i}
+              className={`a-rv a-ch a-d${i + 1}`}
+              style={{
+                background: C.card,
+                border: `1px solid ${C.hairline}`,
+                borderRadius: 24,
+                padding: 28,
+              }}
+            >
+              {/* Photo */}
+              <div
+                style={{
+                  width: 88,
+                  height: 88,
+                  borderRadius: "50%",
+                  marginBottom: 18,
+                  position: "relative",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px rgba(0,0,0,0.06)",
+                }}
+              >
+                <Image
+                  src={m.photo}
+                  alt={m.name}
+                  fill
+                  sizes="88px"
+                  style={{ objectFit: "cover", objectPosition: "center top" }}
+                />
+              </div>
+
+              {/* Name */}
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 22,
+                  fontWeight: 300,
+                  color: C.ink,
+                  letterSpacing: "-.3px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {m.name}
+              </div>
+
+              {/* Role pill */}
+              <div
+                style={{
+                  display: "inline-block",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: C.mint,
+                  letterSpacing: ".4px",
+                  marginTop: 6,
+                  padding: "2px 10px",
+                  background: C.dark,
+                  borderRadius: 9999,
+                  fontFamily: inter,
+                }}
+              >
+                {m.role}
+              </div>
+
+              {/* Bio */}
+              <p
+                style={{
+                  fontFamily: inter,
+                  fontSize: 14.5,
+                  color: C.body,
+                  lineHeight: 1.6,
+                  marginTop: 14,
+                  marginBottom: 0,
+                }}
+              >
+                {m.bio}
+              </p>
+
+              {/* LinkedIn */}
+              <a
+                href={m.li}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontFamily: inter,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: C.muted,
+                  textDecoration: "none",
+                  marginTop: 16,
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.ink)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+              >
+                <LinkedInIcon />
+                LinkedIn
+              </a>
+            </div>
           ))}
         </div>
       </div>
@@ -596,192 +894,70 @@ function FoundersSection() {
   )
 }
 
-// ── Traction Section ──────────────────────────────────────────────────────────
-function TractionSection() {
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function AExitCTA({ onOpen }: { onOpen: () => void }) {
   return (
     <section
       style={{
-        padding: "80px 48px",
-        background: C.surfaceCard,
-        borderTop: `1px solid ${C.hairline}`,
-        borderBottom: `1px solid ${C.hairline}`,
+        background: C.dark,
+        color: C.onDark,
+        padding: "120px 24px",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      {/* Ambient gradient — mirrors HeroSection treatment */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 900,
-          height: 500,
-          background:
-            `radial-gradient(ellipse at 28% 52%, ${C.gradMint}28 0%, transparent 55%),` +
-            `radial-gradient(ellipse at 74% 48%, ${C.gradPeach}22 0%, transparent 50%)`,
-          pointerEvents: "none",
-          filter: "blur(10px)",
-        }}
-      />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <div
           style={{
-            fontFamily: inter,
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.96px",
-            textTransform: "uppercase",
-            color: C.mutedSoft,
-            marginBottom: 52,
+            position: "absolute",
+            width: 800,
+            height: 800,
+            top: "-40%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(167,229,211,.18) 0%, rgba(200,184,224,.1) 45%, transparent 70%)",
+            filter: "blur(60px)",
+            animation: "aOrbFloat1 18s ease-in-out infinite",
           }}
-        >
-          Traction
-        </div>
-
-        <div
-          style={{
-            ...glassLight,
-            borderRadius: 24,
-            padding: "40px 48px",
-            marginBottom: 52,
-          }}
-        >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40 }}>
-            <StatBadge value="50+" label="Exit assessments completed" />
-            <StatBadge value="3+" label="Businesses in active exit process" />
-            <StatBadge value="3 yrs" label="Buy-side M&A deal experience" />
-            <StatBadge value="100%" label="Referral & inbound only" />
-          </div>
-        </div>
-
-        <p
-          style={{
-            fontFamily: inter,
-            fontSize: 15,
-            fontWeight: 400,
-            color: C.body,
-            lineHeight: 1.75,
-            maxWidth: 560,
-            margin: "0 auto",
-          }}
-        >
-          Our sellers find us at their most uncertain moment — not knowing what their business is worth, who would buy
-          it, or whether their financials will hold up in diligence. ExitIQ gives them the clarity to move forward with
-          confidence.
-        </p>
+        />
       </div>
-    </section>
-  )
-}
-
-// ── Mission Section ───────────────────────────────────────────────────────────
-function MissionSection() {
-  return (
-    <section
-      style={{
-        padding: "96px 48px",
-        background: C.canvas,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 800,
-          height: 500,
-          background:
-            `radial-gradient(ellipse at 32% 50%, ${C.gradSky}50 0%, transparent 55%),` +
-            `radial-gradient(ellipse at 70% 48%, ${C.gradMint}46 0%, transparent 50%)`,
-          pointerEvents: "none",
-          filter: "blur(8px)",
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 700,
-          margin: "0 auto",
-          textAlign: "center",
-          ...glassLight,
-          borderRadius: 28,
-          padding: "60px 64px 56px",
-        }}
-      >
-        <h2 style={{ ...displayStyle(48), lineHeight: 1.07, marginBottom: 24 }}>
-          Making every Main Street
-          <br />
-          business sellable.
+      <div className="a-rv" style={{ position: "relative", textAlign: "center", maxWidth: 740, margin: "0 auto" }}>
+        <div style={{ ...eyebrow(true), marginBottom: 18 }}>Three minutes. Free. No login.</div>
+        <h2
+          style={{
+            fontFamily: garamond,
+            fontSize: "clamp(38px, 5.6vw, 68px)",
+            fontWeight: 300,
+            letterSpacing: "-1.92px",
+            lineHeight: 1.02,
+            color: C.onDark,
+            marginBottom: 22,
+          }}
+        >
+          See what your business <em style={{ fontStyle: "italic" }}>is worth.</em>
         </h2>
-        <p
-          style={{
-            fontFamily: inter,
-            fontSize: 17,
-            fontWeight: 400,
-            color: C.body,
-            lineHeight: 1.68,
-            letterSpacing: "0.1px",
-            marginBottom: 40,
-          }}
-        >
-          2.9 million businesses. 10,000 new exits entering the market every day. Most will never sell — not because
-          there's no buyer, but because no one built the infrastructure to get them ready. That's what we're building.
-        </p>
-
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link
-            href="/"
-            style={{ ...pillPrimary, height: 48, padding: "0 28px", fontSize: 16 }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = C.ink)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = C.primary)}
-          >
-            Try ExitIQ free
-          </Link>
-          <a
-            href="mailto:hello@scorta.co"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              height: 48,
-              padding: "0 27px",
-              background: "transparent",
-              color: C.ink,
-              borderRadius: 9999,
-              fontFamily: inter,
-              fontSize: 16,
-              fontWeight: 500,
-              border: `1px solid ${C.hairlineStrong}`,
-              cursor: "pointer",
-              textDecoration: "none",
-            }}
-          >
-            Say hello
-          </a>
-        </div>
+        <button onClick={onOpen} style={btnLight}>
+          Start ExitIQ →
+        </button>
       </div>
     </section>
   )
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
-function FooterSection() {
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function AFooter() {
   return (
-    <footer style={{ background: C.canvas, borderTop: `1px solid ${C.hairline}`, padding: "48px 48px 32px" }}>
+    <footer style={{ background: C.canvasSoft, borderTop: `1px solid ${C.hairline}`, padding: "48px 24px 32px" }}>
       <div
         style={{
-          maxWidth: 1100,
+          maxWidth: 1180,
           margin: "0 auto",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
         <Link
@@ -791,7 +967,7 @@ function FooterSection() {
             fontSize: 20,
             fontWeight: 300,
             color: C.ink,
-            letterSpacing: "-0.3px",
+            letterSpacing: "-.3px",
             textDecoration: "none",
           }}
         >
@@ -805,27 +981,25 @@ function FooterSection() {
   )
 }
 
-// ── Root Export ───────────────────────────────────────────────────────────────
+// ─── Root Export ──────────────────────────────────────────────────────────────
 export function AboutPage() {
-  const [appOpen, setAppOpen] = React.useState(false)
+  useReveal()
+  const [exitOpen, setExitOpen] = React.useState(false)
+  const handleOpen = () => setExitOpen(true)
 
   return (
     <>
-      <style>{`
-        html { scroll-behavior: smooth; }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
-      `}</style>
-      {appOpen && <ExitIQOverlay onClose={() => setAppOpen(false)} />}
-
-      <div style={{ background: C.canvas, color: C.ink, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
-        <TopNav onStart={() => setAppOpen(true)} />
-        <HeroSection />
-        <OriginSection />
-        <FoundersSection />
-        <TractionSection />
-        <MissionSection />
-        <FooterSection />
+      <style dangerouslySetInnerHTML={{ __html: ABOUT_CSS }} />
+      {exitOpen && <ExitIQOverlay onClose={() => setExitOpen(false)} />}
+      <div style={{ background: C.canvas, color: C.body, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
+        <ANav onOpen={handleOpen} />
+        <AHero />
+        <ANumbers />
+        <AMission />
+        <ATimeline />
+        <AFounders />
+        <AExitCTA onOpen={handleOpen} />
+        <AFooter />
       </div>
     </>
   )

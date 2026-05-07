@@ -906,8 +906,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
   const links = [
     { l: "How it works", href: "#how" },
     { l: "Products", href: "#products" },
-    { l: "Pricing", href: "#pricing" },
-    { l: "About", href: "/about" },
+{ l: "About", href: "/about" },
   ]
 
   return (
@@ -2979,7 +2978,7 @@ export function ScortaLanding() {
           color: C.body,
           fontFamily: inter,
           minHeight: "100vh",
-          overflowX: "hidden",
+          overflowX: "clip",
         }}
       >
         <SNav onOpen={handleOpen} />
