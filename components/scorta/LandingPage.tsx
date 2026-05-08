@@ -19,6 +19,7 @@ const C = {
   hairlineStrong: "#d6d3d1",
   strong: "#f0efed",
   mint: "#a7e5d3",
+  mintDeep: "#1a7a60",
   peach: "#f4c5a8",
   lav: "#c8b8e0",
   sky: "#a8c8e8",
@@ -941,7 +942,7 @@ function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
           fontFamily: inter,
           fontSize: 12,
           fontWeight: 600,
-          color: "#1a7a60",
+          color: C.mintDeep,
           textDecoration: "none",
           letterSpacing: ".01em",
         }}
