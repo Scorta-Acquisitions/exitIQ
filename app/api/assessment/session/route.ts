@@ -21,6 +21,8 @@ const sessionBodySchema = z.object({
       sde: z.string().optional(),
       employees: z.string().optional(),
       state: z.string().optional(),
+      facilityType: z.string().optional(),
+      docReadiness: z.string().optional(),
     })
     .optional(),
   gate: z

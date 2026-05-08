@@ -62,8 +62,8 @@ const DOC_LABELS: Record<string, string> = {
 
 const REAL_ESTATE_LABELS: Record<string, string> = {
   owns_location: "Owns the property (included or separable)",
-  long_term_lease: "Long-term lease (3+ years remaining)",
-  short_lease: "Short lease (under 3 years — may need renegotiation)",
+  long_term_lease: "Long-term lease (7+ years remaining)",
+  short_lease: "Short lease (under 7 years — may need renegotiation)",
   no_fixed_location: "No fixed location (remote / home-based / mobile)",
 }
 

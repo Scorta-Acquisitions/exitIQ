@@ -111,21 +111,41 @@ function scoreMarket(s1: Partial<Stage1Answers>): number {
 }
 
 // ─── Dimension: Deal Readiness (15%) ─────────────────────────────────────────
-function scoreDealReadiness(s2: Partial<Stage2Answers>, s3: Partial<Stage3Answers>): number {
-  const docScores: Record<string, number> = { no_docs: 10, partial_docs: 42, clean_docs: 88 }
+function scoreDealReadiness(
+  s1: Partial<Stage1Answers>,
+  s2: Partial<Stage2Answers>,
+  s3: Partial<Stage3Answers>
+): number {
+  // Recognize both legacy stage2 slugs and the new stage1 facilityType / docReadiness values
+  const docScores: Record<string, number> = {
+    no_docs: 10,
+    partial_docs: 42,
+    clean_docs: 88,
+    poor: 10,
+    fair: 42,
+    good: 70,
+    excellent: 88,
+  }
   const legalScores: Record<string, number> = { yes_issues: 15, no_issues: 88 }
 
-  const doc = docScores[s2.docReadiness ?? ""] ?? 42
+  // Prefer stage1.docReadiness (10-question flow) over stage2.docReadiness (multi-stage flow)
+  const docKey = s1.docReadiness ?? s2.docReadiness ?? ""
+  const doc = docScores[docKey] ?? 42
   const legal = legalScores[s3.legal ?? ""] ?? 88
   let score = Math.round((doc + legal) / 2)
 
+  // Lease signal: recognize both new facilityType (stage1) and realEstate (stage2) slugs
   const leaseDeltas: Record<string, number> = {
+    owns: 10,
+    long_lease: 0,
+    short_lease: -12,
+    no_location: 5,
     owns_location: 10,
     long_term_lease: 0,
-    short_lease: -12,
     no_fixed_location: 5,
   }
-  score += leaseDeltas[s2.realEstate ?? ""] ?? 0
+  const leaseKey = s1.facilityType ?? s2.realEstate ?? ""
+  score += leaseDeltas[leaseKey] ?? 0
 
   return Math.min(100, Math.max(0, score))
 }
@@ -196,6 +216,7 @@ export function getTeaserRange(s1: Partial<Stage1Answers>): [number, number] {
 // ─── Flag generation ─────────────────────────────────────────────────────────
 function generateFlags(
   dims: RadarDimension[],
+  s1: Partial<Stage1Answers>,
   s2: Partial<Stage2Answers>,
   s3: Partial<Stage3Answers>,
   distressed: boolean
@@ -228,8 +249,11 @@ function generateFlags(
   else if (s3.sops === "no_docs")
     yellow.push("Lack of SOPs extends deal timelines — 30 days of documentation pays off significantly")
 
-  if (s2.docReadiness === "clean_docs") green.push("Clean financials ready — deal can move fast once a buyer is found")
-  else if (s2.docReadiness === "no_docs") red.push("No financial documentation — this will delay or kill most deals")
+  const docKey = s1.docReadiness ?? s2.docReadiness ?? ""
+  if (docKey === "clean_docs" || docKey === "excellent")
+    green.push("Clean financials ready — deal can move fast once a buyer is found")
+  else if (docKey === "no_docs" || docKey === "poor")
+    red.push("No financial documentation — this will delay or kill most deals")
 
   if (s3.legal === "yes_issues") red.push("Pending legal issues must be resolved before going to market")
   else green.push("Clean legal standing — no deal-blockers identified")
@@ -239,8 +263,10 @@ function generateFlags(
   else if (s2.customerConcentration === "25_50")
     yellow.push("Customer concentration is manageable but worth disclosing early")
 
-  if (s2.realEstate === "owns_location") green.push("Business owns its location — adds asset value and buyer security")
-  else if (s2.realEstate === "short_lease") yellow.push("Short lease term — negotiate an extension before listing")
+  const facilityKey = s1.facilityType ?? s2.realEstate
+  if (facilityKey === "owns_location" || facilityKey === "owns")
+    green.push("Business owns its location — adds asset value and buyer security")
+  else if (facilityKey === "short_lease") yellow.push("Short lease term — negotiate an extension before listing")
 
   if (distressed) red.push("Distressed sale context noted — focus on asset value and deal structure flexibility")
 
@@ -250,17 +276,24 @@ function generateFlags(
 }
 
 // ─── 90-day checklist ────────────────────────────────────────────────────────
-function generateChecklist(dims: RadarDimension[], s2: Partial<Stage2Answers>, s3: Partial<Stage3Answers>): string[] {
+function generateChecklist(
+  dims: RadarDimension[],
+  s1: Partial<Stage1Answers>,
+  s2: Partial<Stage2Answers>,
+  s3: Partial<Stage3Answers>
+): string[] {
   const items: Array<{ text: string; priority: number }> = []
   const dimMap = Object.fromEntries(dims.map((d) => [d.key, d.score]))
 
   if ((dimMap.dealReadiness ?? 100) < 70) {
-    if (s2.docReadiness !== "clean_docs")
+    const docKey = s1.docReadiness ?? s2.docReadiness ?? ""
+    if (docKey !== "clean_docs" && docKey !== "excellent")
       items.push({ text: "Get clean P&L statements and tax returns for the last 3 years from your CPA", priority: 10 })
     if (s3.legal === "yes_issues")
       items.push({ text: "Consult your attorney to resolve any pending legal or regulatory issues", priority: 9 })
-    if (s2.realEstate === "short_lease")
-      items.push({ text: "Negotiate a lease extension of at least 3–5 years before listing", priority: 8 })
+    const leaseKey = s1.facilityType ?? s2.realEstate ?? ""
+    if (leaseKey === "short_lease")
+      items.push({ text: "Negotiate a lease extension of at least 7–10 years before listing", priority: 8 })
     items.push({ text: "Create a current inventory list and equipment valuation", priority: 5 })
   }
 
@@ -379,7 +412,7 @@ export function computeScore(session: Partial<AssessmentSession>): ScoreResult {
     { key: "financial", name: "Financial Attractiveness", score: scoreFinancial(s1, s2), weight: 0.25 },
     { key: "operational", name: "Operational Independence", score: scoreOperational(s2, s3), weight: 0.25 },
     { key: "market", name: "Market Positioning", score: scoreMarket(s1), weight: 0.2 },
-    { key: "dealReadiness", name: "Deal Readiness", score: scoreDealReadiness(s2, s3), weight: 0.15 },
+    { key: "dealReadiness", name: "Deal Readiness", score: scoreDealReadiness(s1, s2, s3), weight: 0.15 },
     { key: "buyerAccess", name: "Buyer Accessibility", score: scoreBuyerAccess(s1, s3, s4, sbaEligible), weight: 0.15 },
   ]
 
@@ -395,8 +428,8 @@ export function computeScore(session: Partial<AssessmentSession>): ScoreResult {
   else if (composite >= 70) grade = "B"
   else if (composite >= 55) grade = "C"
 
-  const flags = generateFlags(dimensions, s2, s3, distressed)
-  const checklist = generateChecklist(dimensions, s2, s3)
+  const flags = generateFlags(dimensions, s1, s2, s3, distressed)
+  const checklist = generateChecklist(dimensions, s1, s2, s3)
   const narrative = buildNarrative(composite, grade, distressed, dimensions)
 
   return { composite, grade, narrative, dimensions, distressed, flags, checklist }

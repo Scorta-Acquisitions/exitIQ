@@ -10,7 +10,10 @@ export interface ValuationRange {
 export interface BrokerFee {
   low: number
   high: number
-  text: string
+  text: string      // range e.g. "$120K – $155K" (backward compat)
+  midFee: number    // fee at midpoint EV
+  blendedPct: number // blended % at midpoint EV (e.g. 9.4)
+  midText: string   // e.g. "~$132K (9.4%)"
 }
 
 export interface Derived {
@@ -22,6 +25,43 @@ export interface Derived {
   industry: Industry | null
   isHotState: boolean
   radarScores: number[]
+}
+
+// Double Lehman / Modern Lehman tiered broker fee (IBBA/Main Street M&A standard, 2026)
+export function calcBrokerFee(ev: number): { fee: number; blendedPct: number } {
+  if (ev <= 0) return { fee: 0, blendedPct: 0 }
+
+  if (ev < 1_000_000) {
+    // Sub-$1M deals: flat 11% (midpoint of 10–12% home-services wedge)
+    const fee = Math.round(ev * 0.11)
+    return { fee, blendedPct: 11 }
+  }
+
+  // Tiered Double Lehman: 10/8/6/4/2% on successive $1M bands
+  const tiers: Array<{ ceiling: number; rate: number }> = [
+    { ceiling: 1_000_000, rate: 0.1 },
+    { ceiling: 2_000_000, rate: 0.08 },
+    { ceiling: 3_000_000, rate: 0.06 },
+    { ceiling: 4_000_000, rate: 0.04 },
+    { ceiling: Infinity, rate: 0.02 },
+  ]
+
+  let fee = 0
+  let prev = 0
+  for (const { ceiling, rate } of tiers) {
+    if (ev <= prev) break
+    const slice = Math.min(ev, ceiling) - prev
+    fee += slice * rate
+    prev = ceiling
+  }
+
+  fee = Math.round(fee)
+
+  // Cap blended rate at 8% for deals above $5M (rare in our wedge)
+  if (ev > 5_000_000) fee = Math.min(fee, Math.round(ev * 0.08))
+
+  const blendedPct = Math.round((fee / ev) * 1000) / 10
+  return { fee, blendedPct }
 }
 
 export function fmtMoney(n: number): string {
@@ -56,24 +96,19 @@ export function calcDerived(answers: Record<string, string>): Derived {
     // Year confidence boosts or penalizes midpoint
     midMultiple *= 0.82 + yearBoost * 0.22
 
-    // Owner role modifier
-    const roleAdj: Record<string, number> = {
-      passive: 1.1,
-      mostly_hands_off: 1.04,
-      partial: 0.97,
-      operator: 0.88,
+    // Facility type modifier: owned property = premium, short lease = risk flag
+    const facilityAdj: Record<string, number> = {
+      owns: 1.06,
+      long_lease: 1.0,
+      short_lease: 0.9,
+      no_location: 1.02,
     }
-    midMultiple *= roleAdj[answers.ownerRole ?? ""] ?? 1.0
+    midMultiple *= facilityAdj[answers.facilityType ?? ""] ?? 1.0
 
-    // Revenue trend modifier
-    const trendAdj: Record<string, number> = {
-      growing_fast: 1.14,
-      growing: 1.07,
-      flat: 1.0,
-      declining_slight: 0.89,
-      declining_fast: 0.76,
-    }
-    midMultiple *= trendAdj[answers.revenueTrend ?? ""] ?? 1.0
+    // Documentation readiness: score 1–10 maps to multiplier 0.84–1.08
+    const docScoreMap: Record<string, number> = { excellent: 10, good: 7, fair: 4, poor: 1 }
+    const docScore = docScoreMap[answers.docReadiness ?? ""] ?? 5
+    midMultiple *= 0.84 + (docScore / 10) * 0.24
 
     // Customer concentration modifier
     const concAdj: Record<string, number> = {
@@ -120,21 +155,45 @@ export function calcDerived(answers: Record<string, string>): Derived {
     multiple = midMultiple.toFixed(1) + "×"
   }
 
-  // Broker fee: 8–10% of the valuation range (traditional 10% commission benchmark)
+  // Broker fee: Double Lehman tiered (traditional broker benchmark)
   let brokerFee: BrokerFee | null = null
   if (valuationRange) {
-    const feeLow = Math.round(valuationRange.low * 0.08)
-    const feeHigh = Math.round(valuationRange.high * 0.1)
-    brokerFee = { low: feeLow, high: feeHigh, text: fmtRange(feeLow, feeHigh) }
+    const { fee: feeLow } = calcBrokerFee(valuationRange.low)
+    const { fee: feeHigh } = calcBrokerFee(valuationRange.high)
+    const midEV = Math.round((valuationRange.low + valuationRange.high) / 2)
+    const { fee: midFee, blendedPct } = calcBrokerFee(midEV)
+    brokerFee = {
+      low: feeLow,
+      high: feeHigh,
+      text: fmtRange(feeLow, feeHigh),
+      midFee,
+      blendedPct,
+      midText: `~${fmtMoney(midFee)} (${blendedPct}%)`,
+    }
   }
 
   const transferability = empOption ? empOption.transferability : null
   const isHotState = answers.state ? HOT_STATES.includes(answers.state) : false
 
+  // Financials axis: weighted by doc readiness (0.2 floor + up to 0.7 from doc score)
+  const docScoreForRadar = { excellent: 10, good: 7, fair: 4, poor: 1 }[answers.docReadiness ?? ""] ?? 0
+  const financialsScore = answers.docReadiness
+    ? 0.2 + (docScoreForRadar / 10) * 0.7
+    : answers.revenue
+      ? 0.45
+      : 0
+
+  // Deal Structure axis: facility type signals lease stability
+  const facilityScore = answers.facilityType
+    ? ({ owns: 0.92, long_lease: 0.72, short_lease: 0.42, no_location: 0.78 }[answers.facilityType] ?? 0.65)
+    : answers.years
+      ? (years ? years.buyerConfidence : 0)
+      : 0
+
   const radarScores = [
     sde && industry ? Math.min((sde.mid * industry.multiple[0]) / 2_000_000, 1) : 0,
     industry ? 0.55 : 0,
-    answers.revenue ? 0.45 : 0,
+    financialsScore,
     empOption ? empOption.transferability : 0,
     answers.recurringRev
       ? answers.recurringRev === "high"
@@ -143,7 +202,7 @@ export function calcDerived(answers: Record<string, string>): Derived {
           ? 0.75
           : 0.5
       : 0,
-    answers.years ? (years ? years.buyerConfidence : 0) : 0,
+    facilityScore,
   ]
 
   return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores }

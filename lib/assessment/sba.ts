@@ -48,12 +48,17 @@ export function computeSBASnapshot(s1: Partial<Stage1Answers>): SBASnapshot {
   const downPayment = Math.round(loanAmount * 0.1)
   const monthlyPayment = calcMonthlyPayment(loanAmount)
 
+  const leaseWarning =
+    s1.facilityType === "short_lease"
+      ? " Note: your lease expiring within 7 years is a risk flag for SBA lenders — negotiate an extension before listing."
+      : ""
+
   return {
     eligible: true,
     loanAmount,
     downPayment,
     monthlyPayment,
     buyerPoolLabel: BUYER_POOL[s1.revenue ?? "500_1m"] ?? "Moderate",
-    note: `Based on your revenue and industry, this business likely qualifies for SBA 7(a) financing. A buyer could acquire with as little as ${fmt(downPayment)} down, dramatically expanding your buyer pool.`,
+    note: `Based on your revenue and industry, this business likely qualifies for SBA 7(a) financing. A buyer could acquire with as little as ${fmt(downPayment)} down, dramatically expanding your buyer pool.${leaseWarning}`,
   }
 }

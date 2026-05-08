@@ -109,19 +109,34 @@ export const EMPLOYEE_OPTIONS: EmployeeOption[] = [
   { label: "50+", count: 60, dots: 25, transferability: 0.9 },
 ]
 
-export const OWNER_ROLE_OPTIONS: SimpleOption[] = [
-  { value: "operator", label: "Day-to-day operator", sub: "I run everything — open to close" },
-  { value: "partial", label: "Partially involved", sub: "I manage the team and handle key relationships" },
-  { value: "mostly_hands_off", label: "Mostly hands-off", sub: "Strong team in place, I step back regularly" },
-  { value: "passive", label: "Silent / investor role", sub: "Fully passive — minimal day-to-day involvement" },
+export const FACILITY_TYPE_OPTIONS: SimpleOption[] = [
+  { value: "owns", label: "Own the property", sub: "Full ownership — adds asset value and eliminates lease risk" },
+  {
+    value: "long_lease",
+    label: "Lease with 7+ years remaining",
+    sub: "Strong position — buyers and SBA lenders see this as stable",
+  },
+  {
+    value: "short_lease",
+    label: "Lease expiring within 7 years",
+    sub: "Risk flag — negotiate an extension before listing",
+  },
+  {
+    value: "no_location",
+    label: "No fixed location / mobile / remote",
+    sub: "Location-independent — flexible buyer profile, no lease risk",
+  },
 ]
 
-export const REVENUE_TREND_OPTIONS: SimpleOption[] = [
-  { value: "growing_fast", label: "Growing 20%+ annually", sub: "Strong upward momentum" },
-  { value: "growing", label: "Growing 5–20% annually", sub: "Steady positive trajectory" },
-  { value: "flat", label: "Flat — within ±5%", sub: "Stable and consistent" },
-  { value: "declining_slight", label: "Declining 5–20%", sub: "Some softness in recent years" },
-  { value: "declining_fast", label: "Declining 20%+", sub: "Meaningful revenue headwinds" },
+export const DOC_READINESS_OPTIONS: SimpleOption[] = [
+  {
+    value: "excellent",
+    label: "3 years of tax returns + clean P&Ls ready",
+    sub: "Deal-ready — buyers and SBA lenders will move fast",
+  },
+  { value: "good", label: "Most records, some gaps", sub: "Good — minor prep needed before diligence" },
+  { value: "fair", label: "Scattered / disorganized", sub: "Will require significant CPA prep time before listing" },
+  { value: "poor", label: "Box of receipts / unprepared", sub: "Buyers and lenders will not proceed without clean records" },
 ]
 
 export const CUSTOMER_CONC_OPTIONS: SimpleOption[] = [
@@ -288,15 +303,15 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
     "10+ years":
       "A decade-plus track record commands the strongest buyer confidence. Resilience through economic cycles is a premium signal.",
   },
-  ownerRole: {
-    operator:
-      "Owner-operators command loyal businesses — but buyers will carefully model the transition risk. A clear handover plan is essential.",
-    partial:
-      "Partial involvement is common and manageable. Documenting your team's responsibilities now accelerates buyer confidence.",
-    mostly_hands_off:
-      "Strong signal. A business that runs without constant owner oversight is exactly what sophisticated buyers want to acquire.",
-    passive:
-      "Passive ownership is the highest-value transfer profile. Your multiple ceiling is meaningfully higher than operator-run peers.",
+  facilityType: {
+    owns:
+      "Owning the property adds real asset value and removes lease risk entirely — both are meaningful factors in buyer valuation and SBA lender underwriting.",
+    long_lease:
+      "A lease with 7+ years remaining is a strong signal. SBA lenders and buyers view lease stability as a deal facilitator, not a risk.",
+    short_lease:
+      "A lease expiring within 7 years is a risk flag for SBA lenders and buyers. Negotiate a 7–10 year extension before listing to protect your multiple.",
+    no_location:
+      "Location-independent businesses carry no lease risk and often appeal to remote-operator buyers — a growing and well-capitalized buyer archetype.",
   },
   revenue: {
     "Under $250K":
@@ -322,16 +337,15 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
     "$1M+":
       "Top-decile SDE. Institutional capital is engaged. Your business qualifies for competitive multi-buyer processes.",
   },
-  revenueTrend: {
-    growing_fast:
-      "20%+ growth is a powerful buyer signal. Growing businesses command multiple expansion — buyers are paying for future earnings, not just trailing SDE.",
-    growing:
-      "Steady growth in the 5–20% range is exactly what most buyers look for. This profile supports premium multiples and competitive deal processes.",
-    flat: "Flat revenue is neutral. Buyers won't penalize stability, but they'll look harder at margin, retention, and operational moats.",
-    declining_slight:
-      "Moderate decline narrows your buyer pool and compresses multiples. A clear explanation and operational plan are critical to maintaining valuation.",
-    declining_fast:
-      "Significant revenue decline materially impacts valuation. Buyers will price in risk heavily — a strong narrative and seller financing become essential tools.",
+  docReadiness: {
+    excellent:
+      "Deal-ready financials dramatically accelerate deal velocity. Buyers and SBA lenders will move quickly — expect shorter timelines and stronger offers.",
+    good:
+      "Most records in place is a solid foundation. Close the remaining gaps before you list — diligence-ready documentation is worth real money at the table.",
+    fair:
+      "Disorganized records will require significant CPA prep time and extend your deal timeline. Buyers use documentation gaps as leverage — get organized now.",
+    poor:
+      "No financial documentation is a deal-stopper for most buyers and all SBA lenders. This is the single highest-ROI action before going to market.",
   },
   customerConc: {
     diversified:
@@ -380,10 +394,10 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
 export const RECALC_MESSAGES: Record<string, string> = {
   industry: "Mapping industry buyer demand…",
   years: "Adjusting buyer confidence signal…",
-  ownerRole: "Modeling ownership transfer risk…",
+  facilityType: "Evaluating lease and facility risk…",
   revenue: "Calculating valuation baseline…",
   sde: "Modeling SDE multiple range…",
-  revenueTrend: "Factoring revenue trajectory…",
+  docReadiness: "Scoring documentation readiness…",
   customerConc: "Analyzing concentration risk…",
   employees: "Updating transferability signal…",
   keyMan: "Calibrating key-man dependency…",
@@ -394,10 +408,10 @@ export const RECALC_MESSAGES: Record<string, string> = {
 export const ANSWER_KEYS = [
   "industry", // Phase 1: Business Identity
   "years",
-  "ownerRole",
+  "facilityType",
   "revenue", // Phase 2: Financial Snapshot
   "sde",
-  "revenueTrend",
+  "docReadiness",
   "customerConc",
   "employees", // Phase 3: Operational Profile
   "keyMan",

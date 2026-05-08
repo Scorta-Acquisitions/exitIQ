@@ -3,6 +3,7 @@
 
 import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
+import { fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
 import { ScanLine } from "./ui"
 
@@ -29,15 +30,14 @@ function statusColors(s: Status) {
   return { bg: "var(--s2)", border: "var(--b3)", color: "var(--t3)", dot: "var(--t4)", label: "Neutral" }
 }
 
-function trendSignal(v: string): { label: string; status: Status; pill: string } {
+function docReadinessSignal(v: string): { label: string; status: Status; pill: string } {
   const m: Record<string, { label: string; status: Status; pill: string }> = {
-    growing_fast: { label: "Growing 20%+", status: "bull", pill: "📈 Bullish" },
-    growing: { label: "Growing 5–20%", status: "bull", pill: "📈 Positive" },
-    flat: { label: "Flat / Stable", status: "neutral", pill: "➡️ Neutral" },
-    declining_slight: { label: "Declining 5–20%", status: "risk", pill: "📉 Softening" },
-    declining_fast: { label: "Declining 20%+", status: "risk", pill: "📉 Bearish" },
+    excellent: { label: "3yr Returns + Clean P&Ls", status: "bull", pill: "📋 Deal-ready" },
+    good: { label: "Most Records, Some Gaps", status: "bull", pill: "📋 Good" },
+    fair: { label: "Scattered / Disorganized", status: "risk", pill: "📋 Needs Prep" },
+    poor: { label: "Not Prepared", status: "risk", pill: "📋 Not Ready" },
   }
-  return m[v] ?? { label: "Not provided", status: "neutral", pill: "➡️ —" }
+  return m[v] ?? { label: "Not provided", status: "neutral", pill: "📋 —" }
 }
 
 function teamSignal(v: string): { label: string; status: Status; pill: string } {
@@ -69,12 +69,12 @@ function concSignal(v: string): { label: string; status: Status } {
   return m[v] ?? { label: "Not provided", status: "neutral" }
 }
 
-function roleSignal(v: string): { label: string; status: Status } {
+function facilitySignal(v: string): { label: string; status: Status } {
   const m: Record<string, { label: string; status: Status }> = {
-    passive: { label: "Passive / Investor", status: "bull" },
-    mostly_hands_off: { label: "Mostly Hands-off", status: "bull" },
-    partial: { label: "Partially Involved", status: "neutral" },
-    operator: { label: "Day-to-Day Operator", status: "risk" },
+    owns: { label: "Owns Property", status: "bull" },
+    long_lease: { label: "Lease 7+ Years", status: "bull" },
+    short_lease: { label: "Lease < 7 Years", status: "risk" },
+    no_location: { label: "Mobile / Remote", status: "neutral" },
   }
   return m[v] ?? { label: "Not provided", status: "neutral" }
 }
@@ -155,10 +155,15 @@ function getStrengths(answers: Record<string, string>, radarScores: number[], in
       title: "Deep Operational Team",
       desc: `A ${emp}-person team significantly reduces transition risk and post-close continuity concerns. Buyers view this headcount as a genuine strength — it commands premium multiples versus owner-operated peers and dramatically accelerates buyer confidence through the diligence process.`,
     }
-  } else if (answers.ownerRole === "passive" || answers.ownerRole === "mostly_hands_off") {
+  } else if (answers.facilityType === "owns") {
     s2 = {
-      title: "Owner-Independent Operations",
-      desc: "A business that runs without constant owner involvement commands a meaningful multiple premium. Sophisticated buyers specifically target this profile — it reduces perceived transition risk, dramatically accelerates deal close timelines, and removes the most common cause of post-LOI re-trades.",
+      title: "Owned Real Estate Asset",
+      desc: "Owning the property adds tangible asset value and removes lease risk entirely — both are meaningful factors in buyer valuation and SBA lender underwriting. Property ownership signals stability and can directly expand your qualified buyer pool.",
+    }
+  } else if (answers.docReadiness === "excellent" || answers.docReadiness === "good") {
+    s2 = {
+      title: "Deal-Ready Financial Records",
+      desc: "Clean, auditable financials are the #1 deal facilitator. Buyers move faster and lenders approve more confidently when records are organized — this directly compresses deal timelines, reduces re-trade risk, and eliminates the most common reason deals collapse in diligence.",
     }
   } else if (answers.years === "10+ years") {
     s2 = {
@@ -186,11 +191,6 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
       title: "Elevated Key-Man Risk",
       desc: "Most key relationships and decisions flow through you. Buyers will carefully model what happens post-close and price in the risk with a discount and structured earnout. Documenting your client relationships, processes, and institutional knowledge is the fastest path to multiple improvement before going to market.",
     }
-  } else if (answers.ownerRole === "operator") {
-    r1 = {
-      title: "Owner Dependency Risk",
-      desc: "Your day-to-day involvement signals meaningful transition risk to buyers — the most commonly cited reason for multiple compression in businesses under $5M. A clear, documented handover plan with demonstrated team depth is essential before your first buyer conversation. Buyers will test this assumption hard.",
-    }
   } else {
     const nonZero = radarScores.map((s, i) => ({ s, i })).filter((x) => x.s > 0)
     const minItem = nonZero.reduce((a, b) => (b.s < a.s ? b : a), nonZero[0] ?? { s: 0, i: 2 })
@@ -209,15 +209,20 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
       title: "Customer Concentration Flag",
       desc: "25–50% from your top customer will be flagged in diligence. Buyers will apply multiple discounts and often require earnouts tied to that customer's retention. Long-tenure relationship history and documented contracts are your strongest counter-arguments — have them prepared before your first buyer call.",
     }
-  } else if (answers.revenueTrend === "declining_fast") {
+  } else if (answers.docReadiness === "poor") {
     r2 = {
-      title: "Revenue Decline Headwind",
-      desc: "Meaningful revenue decline materially impacts valuation and narrows your buyer pool to those with turnaround appetite. A credible, data-backed recovery narrative and seller financing become essential tools to sustaining deal momentum. Without them, expect multiple compression of 0.5–1.5× versus peers.",
+      title: "Financial Records Not Ready",
+      desc: "No organized financial documentation will stall or kill most deals. Buyers and SBA lenders require 3 years of clean tax returns and P&L statements before they can proceed — this is the single highest-ROI action before going to market.",
     }
-  } else if (answers.revenueTrend === "declining_slight") {
+  } else if (answers.docReadiness === "fair") {
     r2 = {
-      title: "Revenue Softness Signal",
-      desc: "Moderate decline compresses multiples and narrows your buyer pool toward more risk-tolerant acquirers who demand better terms. Buyers will scrutinize trailing revenue carefully — operational improvements and a forward-looking narrative with data are critical to sustaining deal confidence through a full diligence process.",
+      title: "Disorganized Financial Records",
+      desc: "Scattered records will require significant CPA prep time and extend your deal timeline. Buyers use documentation gaps as leverage in negotiations — organize and normalize your financials before your first buyer conversation.",
+    }
+  } else if (answers.facilityType === "short_lease") {
+    r2 = {
+      title: "Lease Expiration Risk",
+      desc: "A lease expiring within 7 years is a significant SBA and buyer red flag. Lenders will hesitate and buyers will discount the offer or require lease contingencies. Negotiate a 7–10 year extension before listing to protect your multiple.",
     }
   } else if (answers.recurringRev === "low") {
     r2 = {
@@ -838,15 +843,15 @@ const QUESTION_META: { key: string; label: string; format: (v: string) => string
   { key: "industry", label: "Industry", format: (v) => v || "—" },
   { key: "years", label: "Years in business", format: (v) => v || "—" },
   {
-    key: "ownerRole",
-    label: "Owner role",
+    key: "facilityType",
+    label: "Facility situation",
     format: (v) =>
       ((
         ({
-          operator: "Day-to-day operator",
-          partial: "Partially involved",
-          mostly_hands_off: "Mostly hands-off",
-          passive: "Silent / investor",
+          owns: "Own the property",
+          long_lease: "Lease 7+ years remaining",
+          short_lease: "Lease expiring < 7 years",
+          no_location: "Mobile / remote / no location",
         }) as Record<string, string>
       )[v] ??
         v) ||
@@ -855,16 +860,15 @@ const QUESTION_META: { key: string; label: string; format: (v: string) => string
   { key: "revenue", label: "Annual revenue", format: (v) => v || "—" },
   { key: "sde", label: "Annual SDE", format: (v) => v || "—" },
   {
-    key: "revenueTrend",
-    label: "Revenue trend",
+    key: "docReadiness",
+    label: "Doc readiness",
     format: (v) =>
       ((
         ({
-          growing_fast: "Growing 20%+",
-          growing: "Growing 5–20%",
-          flat: "Flat / Stable",
-          declining_slight: "Declining 5–20%",
-          declining_fast: "Declining 20%+",
+          excellent: "3yr returns + clean P&Ls ready",
+          good: "Most records, some gaps",
+          fair: "Scattered / disorganized",
+          poor: "Box of receipts / unprepared",
         }) as Record<string, string>
       )[v] ??
         v) ||
@@ -1440,7 +1444,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
                   animation: "numRoll .7s ease",
                 }}
               >
-                {brokerFee.text}
+                {brokerFee.midText}
               </div>
               <div
                 style={{
@@ -1451,7 +1455,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
                   lineHeight: 1.5,
                 }}
               >
-                Before you pay this, see what buyers will question.
+                Traditional broker estimate · Double Lehman
               </div>
             </>
           ) : (
@@ -1631,11 +1635,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
   // Headline: prefer AI-generated, fall back to computed
   const headline = teaserData?.headline ?? buildHeadline(answers)
 
-  const trend = trendSignal(answers.revenueTrend ?? "")
+  const doc = docReadinessSignal(answers.docReadiness ?? "")
   const team = teamSignal(answers.employees ?? "")
   const recur = recurSignal(answers.recurringRev ?? "")
   const conc = concSignal(answers.customerConc ?? "")
-  const role = roleSignal(answers.ownerRole ?? "")
+  const facility = facilitySignal(answers.facilityType ?? "")
   const km = keyManSig(answers.keyMan ?? "")
 
   const industryMultRange = industry ? `${industry.multiple[0]}–${industry.multiple[1]}×` : "—"
@@ -1659,7 +1663,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
     : computedRisks
 
   // Driver pill labels: prefer AI signals
-  const trendPillLabel = teaserData?.revenueTrendSignal ?? trend.pill.replace(/^[^ ]+ /, "")
+  const docPillLabel = teaserData?.revenueTrendSignal ?? doc.pill.replace(/^[^ ]+ /, "")
   const teamPillLabel = teaserData?.teamSignal ?? team.pill.replace("👥 ", "")
   const recurPillLabel = teaserData?.recurringSignal ?? recur.pill.replace("🔁 ", "")
 
@@ -1935,7 +1939,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             Valuation Drivers — What&apos;s Moving Your Number
           </div>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            <DriverPill emoji="📈" label="Revenue trend" value={trendPillLabel} status={trend.status} />
+            <DriverPill emoji="📋" label="Doc readiness" value={docPillLabel} status={doc.status} />
             <DriverPill emoji="👥" label="Team depth" value={teamPillLabel} status={team.status} />
             <DriverPill emoji="🔁" label="Recurring rev" value={recurPillLabel} status={recur.status} />
           </div>
@@ -1955,9 +1959,9 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             gap: 7,
           }}
         >
-          <SignalCard label="Revenue Trend" value={trend.label} status={trend.status} delay={0} />
+          <SignalCard label="Doc Readiness" value={doc.label} status={doc.status} delay={0} />
           <SignalCard label="Customer Risk" value={conc.label} status={conc.status} delay={55} />
-          <SignalCard label="Owner Role" value={role.label} status={role.status} delay={110} />
+          <SignalCard label="Facility" value={facility.label} status={facility.status} delay={110} />
           <SignalCard label="Recurring Rev" value={recur.label} status={recur.status} delay={165} />
           <SignalCard label="Independence" value={km.label} status={km.status} delay={220} />
           <SignalCard
@@ -2030,7 +2034,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             marginBottom: 8,
           }}
         >
-          Traditional Broker Fee (10%)
+          Traditional Broker Fee{brokerFee ? ` (~${brokerFee.blendedPct}% blended)` : ""}
         </div>
         {brokerFee ? (
           <>
@@ -2046,7 +2050,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
                 marginBottom: 10,
               }}
             >
-              {brokerFee.text}
+              {brokerFee.midText}
             </div>
             <div
               style={{
@@ -2060,11 +2064,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
                 <span style={{ color: "#a7e5d3", fontWeight: 500 }}>{teaserData.brokerFeeNarrative}</span>
               ) : (
                 <>
-                  Scorta replaces this with a flat fee —{" "}
+                  Scorta replaces this with a hybrid model: $5–10K retainer + 2.5–4% capped success fee —{" "}
                   <span style={{ color: "#a7e5d3", fontWeight: 500 }}>
-                    sellers keep {brokerFee.text} more at close.
+                    sellers keep most of that {fmtMoney(brokerFee.midFee)} at close.
                   </span>{" "}
-                  No broker call, no listing commission, no split at the finish line.
+                  No listing commission. No exit tax at the finish line.
                 </>
               )}
             </div>
