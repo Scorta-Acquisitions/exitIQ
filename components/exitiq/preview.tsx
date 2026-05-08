@@ -104,33 +104,37 @@ function buildHeadline(answers: Record<string, string>): string {
 }
 
 const RADAR_STRENGTH_DESC: Record<string, string> = {
-  Valuation:
-    "Your SDE-to-value ratio compares favorably against the industry peer set. Market buyers are actively paying premiums for businesses at this multiple tier — your financial structure positions you well for a competitive exit process.",
-  "Buyer Demand":
-    "Your industry and size profile attract multiple buyer types simultaneously — operators, SBA-backed buyers, and strategic acquirers are all active and eligible. Competitive buyer interest typically supports stronger offer terms and faster closes.",
-  Financials:
-    "Revenue, SDE, and trajectory align well with buyer expectations at this market tier. Your financial profile should hold up in initial diligence screens and support bankable deal structures that expand your qualified buyer pool.",
-  Independence:
-    "Business operations show meaningful independence from owner involvement — a primary driver of premium multiples across all buyer types in the lower-middle market. Sophisticated acquirers pay a genuine premium for this profile.",
-  "Market Timing":
-    "Current market conditions are favorable for sellers in your segment. Buyer activity and deal velocity are elevated relative to prior quarters — timing a process now captures this tailwind and reduces exposure to rate or multiple compression.",
-  "Deal Structure":
-    "Your profile supports clean, bankable deal structures. SBA eligibility may apply, which significantly expands your qualified buyer pool and supports competitive offer dynamics that wouldn't exist in a single-buyer process.",
+  "Fin. Docs":
+    "Your financial documentation is deal-ready — 3 years of clean tax returns and organized P&Ls are what SBA lenders and buyers need to move fast. This eliminates the most common diligence bottleneck and supports a compressed, competitive process.",
+  "Owner Dep.":
+    "Business operations show meaningful independence from owner involvement — a primary driver of premium multiples across all buyer types in the lower-middle market. Sophisticated acquirers pay a genuine premium for this transferable profile.",
+  "Rev. Quality":
+    "Your recurring revenue base is a top-tier signal. Buyers price predictable cash flows at a meaningful premium over transactional peers — this directly expands your multiple ceiling, draws competing bids, and makes your business easier to finance at acquisition.",
+  "Cust. Conc.":
+    "A diversified customer base eliminates the most common single-buyer discount. No customer concentration risk means your revenue is more defensible in diligence, and buyers have full confidence in post-close continuity of the cash flow.",
+  Longevity:
+    "A long operating history proves resilience through economic cycles. Buyers treat decade-plus track records as a fundamental de-risking signal — it supports premium multiples, cleaner deal structures, and more favorable SBA financing terms.",
+  "Ops Depth":
+    "Strong team depth and operational infrastructure significantly reduce transition risk. This headcount and independence profile commands premium multiples over owner-operated peers and accelerates buyer confidence through the diligence process.",
+  Positioning:
+    "Your vertical and geographic positioning attracts premium buyers. Strong industry multiples and active M&A buyer density in your region support competitive offer dynamics and shorter time-to-close relative to lower-demand segments.",
 }
 
 const RADAR_RISK_DESC: Record<string, string> = {
-  Valuation:
-    "Valuation may be compressed by financial profile gaps or market headwinds in your segment. Addressing key value drivers before listing — through normalization, add-backs, and operational improvements — could expand your range meaningfully.",
-  "Buyer Demand":
-    "Buyer demand signals are mixed for this profile. Positioning strategy and targeted outreach will be critical to generating competitive offers rather than a single below-market bid from an uninformed buyer.",
-  Financials:
-    "Financial documentation gaps or SDE uncertainty will trigger buyer scrutiny in diligence. Clean, normalized financials with documented add-backs are the #1 deal facilitator — and the #1 deal killer when missing or inconsistent.",
-  Independence:
-    "Owner dependency is flagged at a level buyers will scrutinize. They will model transition risk carefully and apply a discount accordingly. A documented handover plan with team depth demonstrated is essential to protecting your multiple.",
-  "Market Timing":
-    "Market timing signals are less favorable in your segment. Buyers may push for conservative deal structures, holdbacks, or performance-based earnouts to offset perceived risk — preparation and positioning become more important.",
-  "Deal Structure":
-    "Deal structure complexity could limit your buyer pool to those with higher risk tolerance. SBA eligibility and financing packaging will need careful preparation before going to market to attract the broadest competitive buyer set.",
+  "Fin. Docs":
+    "Financial documentation gaps will trigger buyer scrutiny in diligence. Clean, normalized financials with documented add-backs are the #1 deal facilitator — and the #1 deal killer when missing. This is the highest-ROI action before going to market.",
+  "Owner Dep.":
+    "Owner dependency is flagged at a level buyers will scrutinize. They will model transition risk carefully and apply a discount accordingly. A documented handover plan with demonstrated team depth is essential to protecting your multiple.",
+  "Rev. Quality":
+    "Predominantly transactional revenue compresses multiples compared to recurring-model peers. Buyers discount for revenue unpredictability and financing difficulty — even partial restructuring toward retainer or contract models can materially improve your range.",
+  "Cust. Conc.":
+    "Customer concentration will be flagged in diligence. Buyers apply multiple discounts and often require earnouts tied to customer retention post-close. Long-tenure relationship history and documented contracts are your strongest counter-arguments.",
+  Longevity:
+    "A shorter operating history requires a strong growth narrative. Buyers will weight trajectory over historical revenue — consistent growth data, documented processes, and a compelling forward story are critical to protecting your multiple.",
+  "Ops Depth":
+    "Limited team depth raises transition risk concerns. Buyers will model what happens post-close carefully and price in the continuity risk. Documenting processes, cross-training team members, and reducing single-person dependencies are the fastest fixes.",
+  Positioning:
+    "Your industry multiple tier or geographic market presents valuation headwinds. Targeted buyer outreach and a strong positioning narrative become more important in lower-demand segments to generate competitive offers rather than a single below-market bid.",
 }
 
 function getStrengths(answers: Record<string, string>, radarScores: number[], industryLabel: string) {
@@ -1352,7 +1356,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
             fontFamily: "Inter, sans-serif",
           }}
         >
-          Based on {industry.toLowerCase()} market data. {estimatedDims} dimensions estimated — unlock your full
+          Based on {industry.toLowerCase()} market data. All {RADAR_AXES.length} axes scored — unlock your full
           diagnostic below.
         </p>
       </div>
@@ -1535,17 +1539,17 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
       {/* Radar + locked rows */}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <RadarChart scores={radarScores} blurred={true} />
+          <RadarChart scores={radarScores.map((s) => s / 10)} blurred={false} />
           <div
             style={{
               fontSize: 10,
-              color: "var(--t4)",
+              color: "rgba(167,229,211,.6)",
               fontFamily: "Inter, sans-serif",
               textAlign: "center",
               lineHeight: 1.4,
             }}
           >
-            {estimatedDims} of {RADAR_AXES.length} dimensions estimated
+            {estimatedDims} of {RADAR_AXES.length} axes scored
           </div>
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
@@ -2119,7 +2123,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
 
         {/* Right: blurred radar */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-          <RadarChart scores={radarScores} blurred={true} />
+          <RadarChart scores={radarScores.map((s) => s / 10)} blurred={true} />
           <div
             style={{
               fontSize: 9.5,

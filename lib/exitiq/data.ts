@@ -242,13 +242,15 @@ export const BUYER_CARDS: BuyerCard[] = [
   { type: "Institutional buyer", icon: "○", base: "low", color: "var(--t4)" },
 ]
 
+// 7 axes of the Exit Readiness Score — order must stay in sync with radarScores array in calculations.ts
 export const RADAR_AXES: string[] = [
-  "Valuation",
-  "Buyer Demand",
-  "Financials",
-  "Independence",
-  "Market Timing",
-  "Deal Structure",
+  "Fin. Docs",        // axis 0 — Financial Documentation (20%)
+  "Owner Dep.",       // axis 1 — Owner Dependency (18%)
+  "Rev. Quality",     // axis 2 — Revenue Quality (17%)
+  "Cust. Conc.",      // axis 3 — Customer Concentration (15%)
+  "Longevity",        // axis 4 — Business Longevity (12%)
+  "Ops Depth",        // axis 5 — Operational Depth (10%)
+  "Positioning",      // axis 6 — Positioning (8%)
 ]
 
 // 11 values: index 0–10 answers answered

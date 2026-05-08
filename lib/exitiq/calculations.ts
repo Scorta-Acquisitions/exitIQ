@@ -379,34 +379,89 @@ export function calcDerived(answers: Record<string, string>): Derived {
   const transferability = empOption ? empOption.transferability : null
   const isHotState = answers.state ? HOT_STATES.includes(answers.state) : false
 
-  // Financials axis: weighted by doc readiness (0.2 floor + up to 0.7 from doc score)
-  const docScoreForRadar = { excellent: 10, good: 7, fair: 4, poor: 1 }[answers.docReadiness ?? ""] ?? 0
-  const financialsScore = answers.docReadiness
-    ? 0.2 + (docScoreForRadar / 10) * 0.7
-    : answers.revenue
-      ? 0.45
+  // ── Radar scores: 7 axes, each normalized 0–10, weights per Exit Readiness Score spec ──────
+  //
+  // Axis 0 — Financial Documentation (20%)
+  // Source: docReadiness answer directly maps to a 0–10 scale.
+  // excellent=10, good=7, fair=3, poor=1. Missing=0 (not yet answered).
+  const axis0_finDocs = answers.docReadiness
+    ? ({ excellent: 10, good: 7, fair: 3, poor: 1 } as Record<string, number>)[answers.docReadiness] ?? 0
+    : 0
+
+  // Axis 1 — Owner Dependency (18%)
+  // Source: keyMan 1–5 scale (higher = more independent = better score).
+  // 1→1, 2→3, 3→5, 4→8, 5→10. Missing=0.
+  const axis1_ownerDep = answers.keyMan
+    ? ({ "1": 1, "2": 3, "3": 5, "4": 8, "5": 10 } as Record<string, number>)[answers.keyMan] ?? 0
+    : 0
+
+  // Axis 2 — Revenue Quality (17%)
+  // Source: recurringRev (primary) + years as growth-trajectory proxy.
+  // Recurring component (0–10): high=10, medium_high=7.5, medium=4.5, low=1.5
+  // Longevity trajectory bonus (0–2): 10+ yrs=2, 5–10=1.5, 2–5=0.75, <2=0
+  // Blended = 0.75 * recurScore + 0.25 * trajectoryBonus(scaled to 10)
+  const recurScore: Record<string, number> = { high: 10, medium_high: 7.5, medium: 4.5, low: 1.5 }
+  const revTrajectoryBonus: Record<string, number> = { "10+ years": 2, "5 – 10 years": 1.5, "2 – 5 years": 0.75, "Under 2 years": 0 }
+  const revRecurRaw = answers.recurringRev ? recurScore[answers.recurringRev] ?? 0 : null
+  const revTrajRaw = answers.years ? revTrajectoryBonus[answers.years] ?? 0 : 0
+  const axis2_revQuality =
+    revRecurRaw !== null
+      ? Math.min(10, revRecurRaw * 0.75 + (revTrajRaw / 2) * 10 * 0.25)
       : 0
 
-  // Deal Structure axis: facility type signals lease stability
-  const facilityScore = answers.facilityType
-    ? ({ owns: 0.92, long_lease: 0.72, short_lease: 0.42, no_location: 0.78 }[answers.facilityType] ?? 0.65)
-    : answers.years
-      ? (years ? years.buyerConfidence : 0)
+  // Axis 3 — Customer Concentration (15%)
+  // Source: customerConc. Lower concentration = higher score (inverted risk signal).
+  // diversified=10, moderate=7, concentrated=3, high_risk=1. Missing=0.
+  const axis3_custConc = answers.customerConc
+    ? ({ diversified: 10, moderate: 7, concentrated: 3, high_risk: 1 } as Record<string, number>)[answers.customerConc] ?? 0
+    : 0
+
+  // Axis 4 — Business Longevity (12%)
+  // Source: years in business (buyerConfidence proxy scaled to 0–10).
+  // Under 2 = 2, 2–5 = 4.5, 5–10 = 7.5, 10+ = 10. Missing=0.
+  const axis4_longevity = answers.years
+    ? ({ "Under 2 years": 2, "2 – 5 years": 4.5, "5 – 10 years": 7.5, "10+ years": 10 } as Record<string, number>)[answers.years] ?? 0
+    : 0
+
+  // Axis 5 — Operational Depth (10%)
+  // Source: employees (depth) + keyMan (key-person dependency).
+  // Employee component (0–10): Just me=1, 2–5=3.5, 6–15=6, 16–50=8.5, 50+=10
+  // keyMan component reused from axis1 (0–10).
+  // Blended = 0.55 * empScore + 0.45 * keyManScore.
+  const empDepthScore: Record<string, number> = { "Just me": 1, "2 – 5": 3.5, "6 – 15": 6, "16 – 50": 8.5, "50+": 10 }
+  const empDepthRaw = answers.employees ? empDepthScore[answers.employees] ?? 0 : null
+  const axis5_opsDepth =
+    empDepthRaw !== null
+      ? Math.min(10, empDepthRaw * 0.55 + axis1_ownerDep * 0.45)
+      : axis1_ownerDep > 0
+        ? Math.min(10, axis1_ownerDep * 0.45)
+        : 0
+
+  // Axis 6 — Positioning (8%)
+  // Source: industry multiple tier (premium vertical = higher score) + state (NJ/NY metro = +1 bonus).
+  // Industry multiple midpoint mapped to 0–10 against the observable range of 1.75 (low) to 6.0 (high).
+  // State bonus: NJ, NY, CA, TX, FL, IL = +1 (hot M&A geo), else 0.
+  const PREMIUM_STATES = new Set(["New Jersey", "New York", "California", "Texas", "Florida", "Illinois", "Colorado", "Georgia", "Washington", "North Carolina"])
+  const industryMidMultiple = industry ? (industry.multiple[0] + industry.multiple[1]) / 2 : null
+  const industryPositioningScore = industryMidMultiple
+    ? Math.min(10, Math.max(0, ((industryMidMultiple - 1.75) / (6.0 - 1.75)) * 10))
+    : null
+  const stateBonus = answers.state && PREMIUM_STATES.has(answers.state) ? 1 : 0
+  const axis6_positioning =
+    industryPositioningScore !== null
+      ? Math.min(10, industryPositioningScore + stateBonus)
       : 0
 
+  // Weighted overall Exit Readiness Score (0–10) — used for radar polygon
+  // Weights: 20% + 18% + 17% + 15% + 12% + 10% + 8% = 100%
   const radarScores = [
-    sde && industry ? Math.min((sde.mid * industry.multiple[0]) / 2_000_000, 1) : 0,
-    industry ? 0.55 : 0,
-    financialsScore,
-    empOption ? empOption.transferability : 0,
-    answers.recurringRev
-      ? answers.recurringRev === "high"
-        ? 0.9
-        : answers.recurringRev === "medium_high"
-          ? 0.75
-          : 0.5
-      : 0,
-    facilityScore,
+    axis0_finDocs,
+    axis1_ownerDep,
+    axis2_revQuality,
+    axis3_custConc,
+    axis4_longevity,
+    axis5_opsDepth,
+    axis6_positioning,
   ]
 
   return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores }
