@@ -1,4 +1,4 @@
-import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, SDE_RANGES, YEAR_OPTIONS } from "./data"
+import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, REVENUE_RANGES, SDE_RANGES, YEAR_OPTIONS } from "./data"
 import type { Industry } from "./data"
 
 export interface BuyerMatch {
@@ -23,6 +23,16 @@ export interface BrokerFee {
   midText: string   // e.g. "~$132K (9.4%)"
 }
 
+export type SdeMarginStatus = "green" | "yellow" | "red"
+
+export interface SdeMarginCheck {
+  margin: number          // SDE / Revenue as a decimal, e.g. 0.22 = 22%
+  pct: string             // formatted, e.g. "22%"
+  status: SdeMarginStatus
+  headline: string        // short label shown in the banner badge
+  message: string         // one-sentence explanation for the flag
+}
+
 export interface Derived {
   confidence: number
   valuationRange: ValuationRange | null
@@ -32,6 +42,7 @@ export interface Derived {
   industry: Industry | null
   isHotState: boolean
   radarScores: number[]
+  sdeMarginCheck: SdeMarginCheck | null  // null when revenue or SDE not yet answered
 }
 
 // Double Lehman / Modern Lehman tiered broker fee (IBBA/Main Street M&A standard, 2026)
@@ -464,5 +475,49 @@ export function calcDerived(answers: Record<string, string>): Derived {
     axis6_positioning,
   ]
 
-  return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores }
+  // ── SDE / Revenue margin sanity check ────────────────────────────────────────
+  // Uses bucket midpoints so the check is as accurate as the data available.
+  // Green: 12–35% (home-services norm per 2026 sold-deal data)
+  // Yellow: 8–12% or 35–45% (soft flag — aggressive add-backs or missed expenses)
+  // Red: <8% or >45% (prominent warning — likely data entry error or outlier)
+  let sdeMarginCheck: SdeMarginCheck | null = null
+  const revRange = REVENUE_RANGES.find((r) => r.label === answers.revenue) ?? null
+  if (sde && revRange) {
+    const margin = sde.mid / revRange.mid
+    const pct = Math.round(margin * 100) + "%"
+    let status: SdeMarginStatus
+    let headline: string
+    let message: string
+
+    if (margin < 0.08) {
+      status = "red"
+      headline = "Very low margin"
+      message =
+        "SDE below 8% of revenue is unusual — buyers and SBA lenders will question it. Check that owner compensation add-backs are fully captured and one-time expenses haven't been overlooked."
+    } else if (margin <= 0.12) {
+      status = "yellow"
+      headline = "Below typical range"
+      message =
+        "SDE margin of 8–12% is below the 15–30% norm for home services. Common causes: aggressive expense classification or missed add-backs. Worth reviewing before going to market."
+    } else if (margin <= 0.35) {
+      status = "green"
+      headline = "Margin looks healthy"
+      message =
+        "SDE margin of 12–35% is squarely within the range buyers and lenders expect for home-services businesses based on 2026 sold-deal data."
+    } else if (margin <= 0.45) {
+      status = "yellow"
+      headline = "Above typical range"
+      message =
+        "SDE margin of 35–45% is higher than the typical 15–30% for home services. This can reflect lean operations, but buyers may ask for documentation on aggressive add-backs."
+    } else {
+      status = "red"
+      headline = "Unusually high margin"
+      message =
+        "SDE above 45% of revenue is a flag buyers and lenders will scrutinize. Verify add-backs are defensible and that no significant expenses have been excluded from the SDE calculation."
+    }
+
+    sdeMarginCheck = { margin, pct, status, headline, message }
+  }
+
+  return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores, sdeMarginCheck }
 }

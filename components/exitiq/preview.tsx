@@ -2,7 +2,7 @@
 "use client"
 
 import React from "react"
-import type { Derived } from "@/lib/exitiq/calculations"
+import type { Derived, SdeMarginCheck } from "@/lib/exitiq/calculations"
 import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
 import { ScanLine } from "./ui"
@@ -1225,6 +1225,124 @@ function BottomUnlockCTA({ onUnlock, label = "Unlock my full report →" }: { on
   )
 }
 
+// ── SDE / Revenue margin sanity banner ───────────────────────────────────────
+function SdeMarginBanner({ check }: { check: SdeMarginCheck }) {
+  const isRed = check.status === "red"
+  const isYellow = check.status === "yellow"
+  const isGreen = check.status === "green"
+
+  const colors = isRed
+    ? { bg: "rgba(239,68,68,.07)", border: "rgba(239,68,68,.22)", icon: "#ef4444", badge: "rgba(239,68,68,.15)", badgeBorder: "rgba(239,68,68,.3)", badgeText: "rgba(252,165,165,.9)", text: "rgba(252,165,165,.8)" }
+    : isYellow
+      ? { bg: "rgba(251,191,36,.06)", border: "rgba(251,191,36,.22)", icon: "#fbbf24", badge: "rgba(251,191,36,.12)", badgeBorder: "rgba(251,191,36,.28)", badgeText: "rgba(253,230,138,.9)", text: "rgba(253,230,138,.75)" }
+      : { bg: "rgba(16,185,129,.05)", border: "rgba(16,185,129,.18)", icon: "#10b981", badge: "rgba(16,185,129,.1)", badgeBorder: "rgba(16,185,129,.25)", badgeText: "rgba(167,229,211,.9)", text: "rgba(167,229,211,.7)" }
+
+  return (
+    <div
+      style={{
+        background: colors.bg,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 12,
+        padding: "13px 15px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        animation: "slideUp .45s cubic-bezier(.34,1.2,.64,1) both",
+      }}
+    >
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Icon */}
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              background: colors.badge,
+              border: `1px solid ${colors.badgeBorder}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {isGreen ? (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M2 5.5L4.5 8L9 3" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : isYellow ? (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 2v4M5.5 8.5v.5" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 2v4M5.5 8.5v.5" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" />
+              </svg>
+            )}
+          </div>
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: ".8px",
+              textTransform: "uppercase",
+              color: "var(--t4)",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            SDE / Revenue Check
+          </div>
+        </div>
+        {/* Margin + status badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+              fontSize: 15,
+              fontWeight: 400,
+              color: colors.icon,
+              letterSpacing: "-.1px",
+            }}
+          >
+            {check.pct}
+          </span>
+          <span
+            style={{
+              fontSize: 8.5,
+              fontWeight: 700,
+              letterSpacing: ".7px",
+              textTransform: "uppercase",
+              color: colors.badgeText,
+              background: colors.badge,
+              border: `1px solid ${colors.badgeBorder}`,
+              borderRadius: 9999,
+              padding: "2px 7px",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            {check.headline}
+          </span>
+        </div>
+      </div>
+      {/* Message */}
+      <div
+        style={{
+          fontSize: 11.5,
+          color: "var(--t3)",
+          lineHeight: 1.6,
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        {check.message}
+        {(isRed || isYellow) && (
+          <span style={{ color: colors.text, fontWeight: 500 }}> Review your revenue and SDE figures before going to market.</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── GateTeaserCard — shown at step 10 BEFORE email submission ────────────────
 interface GateTeaserCardProps {
   derived: Derived
@@ -1584,6 +1702,14 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
       <SectionDivider label="Your responses" />
 
       <AnswersSummary answers={answers} />
+
+      {/* SDE / Revenue margin sanity check — only shown when both revenue + SDE answered */}
+      {derived.sdeMarginCheck && (
+        <>
+          <SectionDivider label="Margin check" />
+          <SdeMarginBanner check={derived.sdeMarginCheck} />
+        </>
+      )}
 
       {/* Pain callout */}
       <div
