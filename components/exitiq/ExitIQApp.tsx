@@ -24,6 +24,18 @@ import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = React.useState(false)
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    setMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [breakpoint])
+  return mobile
+}
+
 // Maps frontend year-bucket labels to representative year numbers for Stage1Answers.years
 const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
   "Under 2 years": 1,
@@ -179,6 +191,7 @@ function ExitConfirmDialog({ onStay, onExit }: { onStay: () => void; onExit: () 
 }
 
 export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
+  const isMobile = useIsMobile()
   const [step, setStep] = React.useState(0)
   const [answers, setAnswers] = React.useState<Record<string, string>>({})
   const [processing, setProcessing] = React.useState(false)
@@ -452,8 +465,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         <nav
           className="glass"
           style={{
-            margin: "14px 20px 0",
-            padding: "0 24px",
+            margin: isMobile ? "0" : "14px 20px 0",
+            padding: isMobile ? "0 16px" : "0 24px",
             height: 52,
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
@@ -535,14 +548,14 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           </div>
         </nav>
 
-        {/* ── Hero layout (2 columns) ── */}
+        {/* ── Hero layout (2 columns desktop / 1 column mobile) ── */}
         <div
           style={{
             flex: 1,
             display: "grid",
-            gridTemplateColumns: "1fr minmax(320px,400px)",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr minmax(320px,400px)",
             gap: 20,
-            padding: "28px 20px",
+            padding: isMobile ? "16px 16px" : "28px 20px",
             maxWidth: 1200,
             margin: "0 auto",
             width: "100%",
@@ -550,10 +563,10 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           }}
         >
           {/* ── Left column ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingRight: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, paddingRight: isMobile ? 0 : 16 }}>
             {/* Orb + headline */}
-            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-              <SignalOrb phase={stepCount} size={ORB_SIZE} active={processing || !!recalcMsg} />
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 12 : 24 }}>
+              <SignalOrb phase={stepCount} size={isMobile ? 72 : ORB_SIZE} active={processing || !!recalcMsg} />
               <div>
                 {/* <div
                   style={{
@@ -571,11 +584,11 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                 <h1
                   style={{
                     fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                    fontSize: "clamp(32px,3.2vw,50px)",
+                    fontSize: isMobile ? "clamp(26px,7vw,34px)" : "clamp(32px,3.2vw,50px)",
                     fontWeight: 300,
                     color: "var(--t1)",
-                    lineHeight: 1.05,
-                    letterSpacing: "-1.2px",
+                    lineHeight: 1.1,
+                    letterSpacing: "-1px",
                     margin: 0,
                   }}
                 >
@@ -709,8 +722,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             )}
           </div>
 
-          {/* ── Right column: Dashboard ── */}
-          <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />
+          {/* ── Right column: Dashboard — hidden on mobile ── */}
+          {!isMobile && <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />}
         </div>
       </div>
     </div>

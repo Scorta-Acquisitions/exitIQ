@@ -83,6 +83,19 @@ const SHARED_CSS = `
   @keyframes sNumRoll     { from{opacity:0;transform:translateY(-10px)}  to{opacity:1;transform:translateY(0)} }
 `
 
+// ─── Mobile hook ─────────────────────────────────────────────────────────────
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = React.useState(false)
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    setMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [breakpoint])
+  return mobile
+}
+
 // ─── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useReveal() {
   React.useEffect(() => {
@@ -383,6 +396,7 @@ function TeaserConfMeter({ value }: { value: number }) {
 
 // ─── ExitIQ teaser card (design from design files) ────────────────────────────
 function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
+  const isMobile = useIsMobile()
   const [phase, setPhase] = React.useState(0)
   const [answers, setAnswers] = React.useState<string[]>([])
   const [trans, setTrans] = React.useState(false)
@@ -487,14 +501,14 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
           position: "relative",
           zIndex: 2,
           display: "grid",
-          gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,.85fr)",
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.25fr) minmax(280px,.85fr)",
           gap: 0,
-          minHeight: 380,
+          minHeight: isMobile ? "auto" : 380,
         }}
       >
         {/* Left: question + chips */}
-        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: 22 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ padding: isMobile ? "20px 16px" : "28px", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 22 }}>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 10 : 18 }}>
             <TeaserSignalOrb phase={phase} />
             <div>
               <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 4 }}>
@@ -639,8 +653,8 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
           )}
         </div>
 
-        {/* Right: dashboard */}
-        <div
+        {/* Right: dashboard — hidden on mobile */}
+        {!isMobile && <div
           style={{
             padding: "28px 24px",
             borderLeft: "1px solid rgba(245,245,245,.08)",
@@ -762,7 +776,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
               </div>
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )
@@ -770,6 +784,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
 
 // ─── ExitIQ overlay (full app) ────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
+  const isMobile = useIsMobile()
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -784,18 +799,18 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      onClick={onClose}
+      onClick={isMobile ? undefined : onClose}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 2000,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "stretch" : "center",
         justifyContent: "center",
-        padding: "24px",
-        background: "rgba(0,0,0,0.55)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        padding: isMobile ? 0 : "24px",
+        background: isMobile ? "transparent" : "rgba(0,0,0,0.55)",
+        backdropFilter: isMobile ? "none" : "blur(12px)",
+        WebkitBackdropFilter: isMobile ? "none" : "blur(12px)",
         animation: "sFadeIn 0.2s ease",
       }}
     >
@@ -804,11 +819,11 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 1160,
-          height: "90vh",
-          borderRadius: 20,
+          maxWidth: isMobile ? "100%" : 1160,
+          height: isMobile ? "100%" : "90vh",
+          borderRadius: isMobile ? 0 : 20,
           overflow: "hidden",
-          boxShadow: "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
+          boxShadow: isMobile ? "none" : "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
           animation: "sSlideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
         }}
       >
@@ -893,9 +908,73 @@ const btnLight: React.CSSProperties = {
   transition: "transform .18s, box-shadow .18s",
 }
 
+// ─── Announcement Bar ─────────────────────────────────────────────────────────
+function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(90deg, rgba(167,229,211,.18) 0%, rgba(200,184,224,.14) 50%, rgba(168,200,232,.14) 100%)",
+        borderBottom: `1px solid rgba(167,229,211,.35)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        padding: "0 16px",
+        height: 37,
+        position: "relative",
+      }}
+    >
+      <span
+        style={{
+          fontFamily: inter,
+          fontSize: 12.5,
+          fontWeight: 500,
+          color: C.ink2,
+          letterSpacing: ".01em",
+        }}
+      >
+        ✦ ExitIQ is free to use — no broker call required
+      </span>
+      <a
+        href="#exitiq"
+        style={{
+          fontFamily: inter,
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#1a7a60",
+          textDecoration: "none",
+          letterSpacing: ".01em",
+        }}
+      >
+        Try it →
+      </a>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        style={{
+          position: "absolute",
+          right: 12,
+          top: "50%",
+          transform: "translateY(-50%)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: C.mutedSoft,
+          lineHeight: 1,
+          padding: 4,
+          fontSize: 16,
+        }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function SNav({ onOpen }: { onOpen: () => void }) {
   const [scrolled, setScrolled] = React.useState(false)
+  const isMobile = useIsMobile()
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
     window.addEventListener("scroll", onScroll)
@@ -912,8 +991,6 @@ function SNav({ onOpen }: { onOpen: () => void }) {
   return (
     <nav
       style={{
-        position: "sticky",
-        top: 0,
         zIndex: 100,
         display: "flex",
         alignItems: "center",
@@ -953,60 +1030,64 @@ function SNav({ onOpen }: { onOpen: () => void }) {
         </Link>
       </div>
 
-      {/* Links */}
-      <div style={{ display: "flex", gap: 26, flex: 1 }}>
-        {links.map(({ l, href }) =>
-          href.startsWith("/") ? (
-            <Link
-              key={l}
-              href={href}
-              style={{
-                fontFamily: inter,
-                fontSize: 14,
-                fontWeight: 500,
-                color: C.body,
-                opacity: 0.85,
-                textDecoration: "none",
-                transition: "opacity .15s",
-              }}
-            >
-              {l}
-            </Link>
-          ) : (
-            <a
-              key={l}
-              href={href}
-              style={{
-                fontFamily: inter,
-                fontSize: 14,
-                fontWeight: 500,
-                color: C.body,
-                opacity: 0.85,
-                textDecoration: "none",
-                transition: "opacity .15s",
-              }}
-            >
-              {l}
-            </a>
-          )
-        )}
-      </div>
+      {/* Links — hidden on mobile */}
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 26, flex: 1 }}>
+          {links.map(({ l, href }) =>
+            href.startsWith("/") ? (
+              <Link
+                key={l}
+                href={href}
+                style={{
+                  fontFamily: inter,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: C.body,
+                  opacity: 0.85,
+                  textDecoration: "none",
+                  transition: "opacity .15s",
+                }}
+              >
+                {l}
+              </Link>
+            ) : (
+              <a
+                key={l}
+                href={href}
+                style={{
+                  fontFamily: inter,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: C.body,
+                  opacity: 0.85,
+                  textDecoration: "none",
+                  transition: "opacity .15s",
+                }}
+              >
+                {l}
+              </a>
+            )
+          )}
+        </div>
+      )}
 
       {/* CTAs */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <a
-          href="#exitiq"
-          style={{
-            fontFamily: inter,
-            fontSize: 14,
-            fontWeight: 500,
-            color: C.body,
-            opacity: 0.7,
-            textDecoration: "none",
-          }}
-        >
-          Sign in
-        </a>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
+        {!isMobile && (
+          <a
+            href="#exitiq"
+            style={{
+              fontFamily: inter,
+              fontSize: 14,
+              fontWeight: 500,
+              color: C.body,
+              opacity: 0.7,
+              textDecoration: "none",
+            }}
+          >
+            Sign in
+          </a>
+        )}
         <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
           Try ExitIQ
         </button>
@@ -2960,7 +3041,39 @@ function SFooter() {
 export function ScortaLanding() {
   useReveal()
   const [exitOpen, setExitOpen] = React.useState(false)
+  const [announcementVisible, setAnnouncementVisible] = React.useState(true)
+  const barWrapRef = React.useRef<HTMLDivElement>(null)
   const handleOpen = () => setExitOpen(true)
+
+  React.useEffect(() => {
+    if (!announcementVisible) return
+    const el = barWrapRef.current
+    if (!el) return
+    const barHeight = el.offsetHeight || 37
+    const HIDE_AT = 80
+    const SHOW_AT = 50
+    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
+    el.style.transition = "none"
+    el.style.height = barHeight + "px"
+    el.style.opacity = "1"
+    void el.offsetHeight
+    el.style.transition = TRANSITION
+    let hidden = false
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!hidden && y > HIDE_AT) {
+        hidden = true
+        el.style.height = "0px"
+        el.style.opacity = "0"
+      } else if (hidden && y < SHOW_AT) {
+        hidden = false
+        el.style.height = barHeight + "px"
+        el.style.opacity = "1"
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [announcementVisible])
 
   return (
     <>
@@ -2975,7 +3088,14 @@ export function ScortaLanding() {
           overflowX: "clip",
         }}
       >
-        <SNav onOpen={handleOpen} />
+        <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+          {announcementVisible && (
+            <div ref={barWrapRef} style={{ overflow: "hidden" }}>
+              <SAnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />
+            </div>
+          )}
+          <SNav onOpen={handleOpen} />
+        </div>
         <SHero onOpen={handleOpen} />
         <SIndustryMarquee />
         <SSignalsBand />
