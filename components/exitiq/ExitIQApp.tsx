@@ -710,7 +710,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           </div>
 
           {/* ── Right column: Dashboard ── */}
-          <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />
+          <DashboardPanel step={stepCount} derived={derived} answers={answers} processing={processing} recalcMsg={recalcMsg} />
         </div>
       </div>
     </div>

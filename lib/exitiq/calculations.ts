@@ -1,6 +1,13 @@
 import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, SDE_RANGES, YEAR_OPTIONS } from "./data"
 import type { Industry } from "./data"
 
+export interface BuyerMatch {
+  persona: string
+  score: number
+  likelihood: number
+  keyReasons: string[]
+}
+
 export interface ValuationRange {
   low: number
   high: number
@@ -28,6 +35,203 @@ export interface Derived {
 }
 
 // Double Lehman / Modern Lehman tiered broker fee (IBBA/Main Street M&A standard, 2026)
+export function computeBuyerMatchLikelihoods(answers: Record<string, string>): BuyerMatch[] {
+  const { customerConc, facilityType, keyMan, docReadiness, recurringRev, years, revenue, employees, industry, sde } =
+    answers
+
+  // ── Searcher (SBA 7(a), $500K–$2M sweet spot) ───────────────────────────────
+  // 40% SBA-financeability
+  let sbaBase = 70
+  if (customerConc === "concentrated") sbaBase -= 20
+  if (customerConc === "high_risk") sbaBase -= 40
+  if (facilityType === "short_lease") sbaBase -= 15
+  if (facilityType === "owns") sbaBase += 10
+  if (facilityType === "long_lease") sbaBase += 5
+  if (keyMan === "1") sbaBase -= 25
+  if (keyMan === "2") sbaBase -= 12
+  if (keyMan === "4") sbaBase += 8
+  if (keyMan === "5") sbaBase += 12
+  if (docReadiness === "excellent") sbaBase += 20
+  if (docReadiness === "good") sbaBase += 8
+  if (docReadiness === "fair") sbaBase -= 10
+  if (docReadiness === "poor") sbaBase -= 25
+  // SDE in $250K–$1M is the SBA 7(a) sweet spot
+  const sdeSbaScore: Record<string, number> = {
+    "Under $100K": 25,
+    "$100K – $250K": 60,
+    "$250K – $500K": 90,
+    "$500K – $1M": 85,
+    "$1M+": 55,
+  }
+  const sdeBoost = sdeSbaScore[sde ?? ""] ?? 55
+  const sbaScore = Math.max(0, Math.min(100, sbaBase * 0.6 + sdeBoost * 0.4))
+
+  // 30% recurring revenue (SBA lenders reward predictable cash flow)
+  const recurSearcherScore: Record<string, number> = { high: 95, medium_high: 78, medium: 52, low: 20 }
+  const recurSearcher = recurSearcherScore[recurringRev ?? ""] ?? 35
+
+  // 20% revenue trend proxy — years in business as stability signal
+  const trendScore: Record<string, number> = {
+    "10+ years": 88,
+    "5 – 10 years": 72,
+    "2 – 5 years": 48,
+    "Under 2 years": 18,
+  }
+  const trend = trendScore[years ?? ""] ?? 45
+
+  // 10% doc readiness
+  const docSearcherScore: Record<string, number> = { excellent: 100, good: 70, fair: 40, poor: 10 }
+  const docSearcher = docSearcherScore[docReadiness ?? ""] ?? 40
+
+  const rawSearcher = sbaScore * 0.4 + recurSearcher * 0.3 + trend * 0.2 + docSearcher * 0.1
+
+  const searcherReasons: string[] = []
+  if (docReadiness === "excellent" || docReadiness === "good") searcherReasons.push("Deal-ready financials")
+  if (facilityType === "owns" || facilityType === "long_lease") searcherReasons.push("Strong lease position")
+  if (recurringRev === "high" || recurringRev === "medium_high") searcherReasons.push("Recurring revenue base")
+  if (sde === "$250K – $500K" || sde === "$500K – $1M") searcherReasons.push("SBA sweet-spot SDE")
+  if (customerConc === "high_risk" || customerConc === "concentrated") searcherReasons.push("Concentration risk")
+  if (facilityType === "short_lease") searcherReasons.push("Short lease flags SBA lenders")
+  if (keyMan === "1" || keyMan === "2") searcherReasons.push("Owner dependency risk")
+  if (docReadiness === "poor") searcherReasons.push("Financials not SBA-ready")
+
+  // ── Strategic (roll-up / PE add-on) ─────────────────────────────────────────
+  // 45% recurring + contracted revenue
+  const recurStrategicScore: Record<string, number> = { high: 100, medium_high: 82, medium: 50, low: 15 }
+  const recurStrategic = recurStrategicScore[recurringRev ?? ""] ?? 30
+
+  // 25% low customer concentration
+  const concStrategicScore: Record<string, number> = { diversified: 100, moderate: 72, concentrated: 32, high_risk: 8 }
+  const concStrategic = concStrategicScore[customerConc ?? ""] ?? 50
+
+  // 20% scale signals: revenue tier + employee count
+  const revScaleScore: Record<string, number> = {
+    "Under $250K": 10,
+    "$250K – $500K": 28,
+    "$500K – $1M": 55,
+    "$1M – $3M": 82,
+    "$3M – $10M": 95,
+    "$10M+": 100,
+  }
+  const empScaleScore: Record<string, number> = {
+    "Just me": 15,
+    "2 – 5": 35,
+    "6 – 15": 65,
+    "16 – 50": 85,
+    "50+": 95,
+  }
+  const scaleStrategic = (revScaleScore[revenue ?? ""] ?? 40) * 0.55 + (empScaleScore[employees ?? ""] ?? 40) * 0.45
+
+  // 10% industry vertical fit
+  const industryStrategicScore: Record<string, number> = {
+    "Tech / SaaS": 98,
+    "Staffing / Recruiting": 88,
+    "Healthcare / Medical": 86,
+    "Financial Services": 82,
+    "Manufacturing": 78,
+    "Home Services": 72,
+    "Landscaping / Grounds": 72,
+    "Childcare / Education": 68,
+    "Professional Services": 62,
+    "E-commerce / DTC": 80,
+    "Dental / Optometry": 84,
+  }
+  const indStrategic = industryStrategicScore[industry ?? ""] ?? 42
+
+  const rawStrategic = recurStrategic * 0.45 + concStrategic * 0.25 + scaleStrategic * 0.2 + indStrategic * 0.1
+
+  const strategicReasons: string[] = []
+  if (recurringRev === "high" || recurringRev === "medium_high") strategicReasons.push("Strong recurring revenue")
+  if (customerConc === "diversified" || customerConc === "moderate") strategicReasons.push("Diversified customer base")
+  if (revenue === "$1M – $3M" || revenue === "$3M – $10M" || revenue === "$10M+")
+    strategicReasons.push("Revenue at PE threshold")
+  if (employees === "16 – 50" || employees === "50+") strategicReasons.push("Scalable team infrastructure")
+  if (indStrategic >= 80) strategicReasons.push(`${industry} is a PE target sector`)
+  if (customerConc === "high_risk") strategicReasons.push("Concentration deters strategics")
+  if (recurringRev === "low") strategicReasons.push("Transactional rev limits PE interest")
+
+  // ── Operator (family office / cash buyer) ───────────────────────────────────
+  // 40% cash-flow stability: low-volatility vertical + recurring revenue
+  const stableIndustryScore: Record<string, number> = {
+    "Home Services": 92,
+    "Landscaping / Grounds": 90,
+    "Auto Services": 86,
+    "Childcare / Education": 78,
+    "Beauty / Wellness": 74,
+    "Restaurant / Food Service": 72,
+    "Construction / Trades": 70,
+    "Retail (Brick & Mortar)": 65,
+    "Specialty Retail": 62,
+    "Fitness / Gym": 60,
+  }
+  const indStability = stableIndustryScore[industry ?? ""] ?? 50
+  const recurOperatorScore: Record<string, number> = { high: 100, medium_high: 80, medium: 55, low: 30 }
+  const recurOperator = recurOperatorScore[recurringRev ?? ""] ?? 40
+  const cashFlowStability = indStability * 0.5 + recurOperator * 0.5
+
+  // 30% owner independence: keyMan
+  const kmScore: Record<string, number> = { "5": 100, "4": 82, "3": 58, "2": 30, "1": 12 }
+  const km = kmScore[keyMan ?? ""] ?? 50
+
+  // 20% longevity
+  const longevityScore: Record<string, number> = {
+    "10+ years": 100,
+    "5 – 10 years": 78,
+    "2 – 5 years": 42,
+    "Under 2 years": 10,
+  }
+  const longevity = longevityScore[years ?? ""] ?? 42
+
+  // 10% facility stability (operator buyers value fixed, established locations)
+  const facilityOpScore: Record<string, number> = { owns: 100, long_lease: 80, no_location: 55, short_lease: 30 }
+  const facilityOp = facilityOpScore[facilityType ?? ""] ?? 55
+
+  const rawOperator = cashFlowStability * 0.4 + km * 0.3 + longevity * 0.2 + facilityOp * 0.1
+
+  const operatorReasons: string[] = []
+  if (indStability >= 80) operatorReasons.push(`${industry} is a cash-flow operator target`)
+  if (keyMan === "4" || keyMan === "5") operatorReasons.push("Business runs without owner")
+  if (years === "10+ years" || years === "5 – 10 years") operatorReasons.push("Proven operating history")
+  if (facilityType === "owns") operatorReasons.push("Owns real estate — no lease risk")
+  if (facilityType === "long_lease") operatorReasons.push("Stable long-term lease")
+  if (keyMan === "1" || keyMan === "2") operatorReasons.push("Owner dependency limits appeal")
+  if (facilityType === "short_lease") operatorReasons.push("Lease expiry is a risk flag")
+
+  // ── Softmax normalization ────────────────────────────────────────────────────
+  const T = 22 // temperature: controls spread between scores
+  const raws = [rawSearcher, rawStrategic, rawOperator]
+  const exps = raws.map((r) => Math.exp(r / T))
+  const sumExp = exps.reduce((a, b) => a + b, 0)
+  const likelihoods = exps.map((e) => Math.round((e / sumExp) * 100))
+  // Correct rounding drift so sum === 100
+  const diff = 100 - likelihoods.reduce((a, b) => a + b, 0)
+  const maxIdx = likelihoods.indexOf(Math.max(likelihoods[0] ?? 0, likelihoods[1] ?? 0, likelihoods[2] ?? 0))
+  likelihoods[maxIdx] = (likelihoods[maxIdx] ?? 0) + diff
+
+  const topN = (reasons: string[], n: number) => reasons.slice(0, n)
+
+  return [
+    {
+      persona: "Searcher / SBA Buyer",
+      score: Math.round(rawSearcher),
+      likelihood: likelihoods[0] ?? 33,
+      keyReasons: topN(searcherReasons, 3),
+    },
+    {
+      persona: "Strategic / PE Add-on",
+      score: Math.round(rawStrategic),
+      likelihood: likelihoods[1] ?? 33,
+      keyReasons: topN(strategicReasons, 3),
+    },
+    {
+      persona: "Operator / Cash Buyer",
+      score: Math.round(rawOperator),
+      likelihood: likelihoods[2] ?? 34,
+      keyReasons: topN(operatorReasons, 3),
+    },
+  ]
+}
+
 export function calcBrokerFee(ev: number): { fee: number; blendedPct: number } {
   if (ev <= 0) return { fee: 0, blendedPct: 0 }
 

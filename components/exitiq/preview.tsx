@@ -3,7 +3,7 @@
 
 import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
-import { fmtMoney } from "@/lib/exitiq/calculations"
+import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
 import { ScanLine } from "./ui"
 
@@ -1602,6 +1602,151 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
   )
 }
 
+// ── Buyer archetype section ───────────────────────────────────────────────────
+const ARCHETYPE_COLORS = ["#10b981", "#a7e5d3", "#c8b8e0"] as const
+const ARCHETYPE_ICONS = ["◉", "◎", "◈"] as const
+
+function BuyerArchetypeSection({ answers }: { answers: Record<string, string> }) {
+  const matches = computeBuyerMatchLikelihoods(answers)
+  const maxLikelihood = Math.max(...matches.map((m) => m.likelihood))
+
+  return (
+    <div
+      style={{
+        background: "var(--s2)",
+        border: "1px solid var(--b3)",
+        borderRadius: 14,
+        padding: "16px 18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        animation: "slideUp .45s cubic-bezier(.34,1.2,.64,1) both",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9.5,
+          fontWeight: 700,
+          letterSpacing: ".8px",
+          textTransform: "uppercase",
+          color: "var(--t4)",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Who Is Most Likely to Buy Your Business
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {matches.map(({ persona, likelihood, keyReasons }, i) => {
+          const color = ARCHETYPE_COLORS[i] ?? "#a7e5d3"
+          const icon = ARCHETYPE_ICONS[i] ?? "◉"
+          const isTop = likelihood === maxLikelihood
+          return (
+            <div key={persona} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ color, fontSize: 12, lineHeight: 1 }}>{icon}</span>
+                  <span
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: isTop ? 600 : 400,
+                      color: isTop ? color : "var(--t2)",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    {persona}
+                  </span>
+                  {isTop && (
+                    <span
+                      style={{
+                        fontSize: 8.5,
+                        fontWeight: 700,
+                        letterSpacing: ".6px",
+                        textTransform: "uppercase",
+                        color,
+                        background: `${color}18`,
+                        border: `1px solid ${color}38`,
+                        borderRadius: 9999,
+                        padding: "2px 7px",
+                        fontFamily: "Inter, sans-serif",
+                      }}
+                    >
+                      Best match
+                    </span>
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color,
+                    fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                    letterSpacing: "-.1px",
+                    opacity: isTop ? 1 : 0.7,
+                  }}
+                >
+                  {likelihood}%
+                </span>
+              </div>
+
+              {/* Likelihood bar */}
+              <div style={{ height: 4, borderRadius: 2, background: "var(--b3)", overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${likelihood}%`,
+                    background: color,
+                    borderRadius: 2,
+                    opacity: isTop ? 0.85 : 0.45,
+                    transition: "width .7s cubic-bezier(.34,1.2,.64,1)",
+                  }}
+                />
+              </div>
+
+              {/* Key reasons */}
+              {keyReasons.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {keyReasons.map((reason) => (
+                    <span
+                      key={reason}
+                      style={{
+                        fontSize: 10,
+                        color: "var(--t4)",
+                        background: "var(--s1)",
+                        border: "1px solid var(--b3)",
+                        borderRadius: 9999,
+                        padding: "2px 8px",
+                        fontFamily: "Inter, sans-serif",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div
+        style={{
+          fontSize: 10.5,
+          color: "var(--t5)",
+          fontFamily: "Inter, sans-serif",
+          lineHeight: 1.55,
+          borderTop: "1px solid var(--b3)",
+          paddingTop: 10,
+        }}
+      >
+        Likelihoods are softmax-normalized across all three archetypes based on your profile signals.
+      </div>
+    </div>
+  )
+}
+
 // ── PreviewCard ───────────────────────────────────────────────────────────────
 interface TeaserData {
   headline?: string
@@ -1988,6 +2133,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
           </div>
         </div>
       </div>
+
+      <SectionDivider label="Buyer archetype match" />
+
+      {/* ── SECTION 3b: Buyer Archetype Likelihoods ──────────────────────────── */}
+      <BuyerArchetypeSection answers={answers} />
 
       <SectionDivider label="Strengths & risks" />
 
