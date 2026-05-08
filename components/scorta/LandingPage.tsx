@@ -19,6 +19,7 @@ const C = {
   hairlineStrong: "#d6d3d1",
   strong: "#f0efed",
   mint: "#a7e5d3",
+  mintDeep: "#1a7a60",
   peach: "#f4c5a8",
   lav: "#c8b8e0",
   sky: "#a8c8e8",
@@ -82,6 +83,19 @@ const SHARED_CSS = `
   @keyframes sRingSpin    { from{transform:rotate(0)}                    to{transform:rotate(360deg)} }
   @keyframes sNumRoll     { from{opacity:0;transform:translateY(-10px)}  to{opacity:1;transform:translateY(0)} }
 `
+
+// ─── Mobile hook ─────────────────────────────────────────────────────────────
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = React.useState(false)
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    setMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [breakpoint])
+  return mobile
+}
 
 // ─── Scroll-reveal hook ───────────────────────────────────────────────────────
 function useReveal() {
@@ -383,6 +397,7 @@ function TeaserConfMeter({ value }: { value: number }) {
 
 // ─── ExitIQ teaser card (design from design files) ────────────────────────────
 function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
+  const isMobile = useIsMobile()
   const [phase, setPhase] = React.useState(0)
   const [answers, setAnswers] = React.useState<string[]>([])
   const [trans, setTrans] = React.useState(false)
@@ -487,14 +502,14 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
           position: "relative",
           zIndex: 2,
           display: "grid",
-          gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,.85fr)",
+          gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.25fr) minmax(280px,.85fr)",
           gap: 0,
-          minHeight: 380,
+          minHeight: isMobile ? "auto" : 380,
         }}
       >
         {/* Left: question + chips */}
-        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: 22 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ padding: isMobile ? "20px 16px" : "28px", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 22 }}>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 10 : 18 }}>
             <TeaserSignalOrb phase={phase} />
             <div>
               <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 4 }}>
@@ -639,8 +654,8 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
           )}
         </div>
 
-        {/* Right: dashboard */}
-        <div
+        {/* Right: dashboard — hidden on mobile */}
+        {!isMobile && <div
           style={{
             padding: "28px 24px",
             borderLeft: "1px solid rgba(245,245,245,.08)",
@@ -762,7 +777,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
               </div>
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )
@@ -770,6 +785,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
 
 // ─── ExitIQ overlay (full app) ────────────────────────────────────────────────
 function ExitIQOverlay({ onClose }: { onClose: () => void }) {
+  const isMobile = useIsMobile()
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -784,18 +800,18 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      onClick={onClose}
+      onClick={isMobile ? undefined : onClose}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 2000,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "stretch" : "center",
         justifyContent: "center",
-        padding: "24px",
-        background: "rgba(0,0,0,0.55)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        padding: isMobile ? 0 : "24px",
+        background: isMobile ? "transparent" : "rgba(0,0,0,0.55)",
+        backdropFilter: isMobile ? "none" : "blur(12px)",
+        WebkitBackdropFilter: isMobile ? "none" : "blur(12px)",
         animation: "sFadeIn 0.2s ease",
       }}
     >
@@ -804,11 +820,11 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 1160,
-          height: "90vh",
-          borderRadius: 20,
+          maxWidth: isMobile ? "100%" : 1160,
+          height: isMobile ? "100%" : "90vh",
+          borderRadius: isMobile ? 0 : 20,
           overflow: "hidden",
-          boxShadow: "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
+          boxShadow: isMobile ? "none" : "0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,245,245,0.08)",
           animation: "sSlideUp 0.35s cubic-bezier(0.34,1.15,0.64,1)",
         }}
       >
@@ -893,9 +909,75 @@ const btnLight: React.CSSProperties = {
   transition: "transform .18s, box-shadow .18s",
 }
 
+// ─── Announcement Bar ─────────────────────────────────────────────────────────
+function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(90deg, rgba(167,229,211,.18) 0%, rgba(200,184,224,.14) 50%, rgba(168,200,232,.14) 100%)",
+        borderBottom: `1px solid rgba(167,229,211,.35)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        padding: "0 16px",
+        height: 37,
+        position: "relative",
+      }}
+    >
+      <span
+        style={{
+          fontFamily: inter,
+          fontSize: 12.5,
+          fontWeight: 500,
+          color: C.ink2,
+          letterSpacing: ".01em",
+        }}
+      >
+        ✦ ExitIQ is free to use — no broker call required
+      </span>
+      <a
+        href="#exitiq"
+        style={{
+          fontFamily: inter,
+          fontSize: 12,
+          fontWeight: 600,
+          color: C.mintDeep,
+          textDecoration: "none",
+          letterSpacing: ".01em",
+        }}
+      >
+        Try it →
+      </a>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        style={{
+          position: "absolute",
+          right: 12,
+          top: "50%",
+          transform: "translateY(-50%)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: C.mutedSoft,
+          lineHeight: 1,
+          padding: 4,
+          fontSize: 16,
+        }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function SNav({ onOpen }: { onOpen: () => void }) {
   const [scrolled, setScrolled] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const isMobile = useIsMobile()
+
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
     window.addEventListener("scroll", onScroll)
@@ -903,115 +985,269 @@ function SNav({ onOpen }: { onOpen: () => void }) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  // Close menu when switching to desktop
+  React.useEffect(() => {
+    if (!isMobile) setMenuOpen(false)
+  }, [isMobile])
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault()
+    setMenuOpen(false)
+    const id = href.replace("#", "")
+    const target = document.getElementById(id)
+    if (!target) return
+    const stickyHeader = document.querySelector<HTMLElement>('[data-sticky-header]')
+    const offset = stickyHeader ? stickyHeader.offsetHeight : 64
+    const top = target.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: "smooth" })
+  }
+
   const links = [
     { l: "How it works", href: "#how" },
     { l: "Products", href: "#products" },
-{ l: "About", href: "/about" },
+    { l: "About", href: "/about" },
   ]
 
+  const navBg = scrolled || menuOpen ? "rgba(245,245,245,.95)" : "transparent"
+  const navBorder = scrolled || menuOpen ? `1px solid ${C.hairline}` : "1px solid transparent"
+
   return (
-    <nav
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        height: 64,
-        padding: "0 24px",
-        background: scrolled ? "rgba(245,245,245,.85)" : "transparent",
-        borderBottom: scrolled ? `1px solid ${C.hairline}` : "1px solid transparent",
-        backdropFilter: scrolled ? "blur(14px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
-        transition: "background .25s, border-color .25s",
-      }}
-    >
-      {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+    <div style={{ position: "relative" }}>
+      <nav
+        style={{
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          height: 64,
+          padding: "0 24px",
+          background: navBg,
+          borderBottom: navBorder,
+          backdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          WebkitBackdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          transition: "background .25s, border-color .25s",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+              boxShadow: "0 0 12px rgba(167,229,211,.4)",
+              flexShrink: 0,
+            }}
+          />
+          <Link
+            href="/"
+            style={{
+              fontFamily: garamond,
+              fontSize: 22,
+              fontWeight: 400,
+              color: C.ink,
+              letterSpacing: "-.4px",
+              textDecoration: "none",
+            }}
+          >
+            Scorta
+          </Link>
+        </div>
+
+        {/* Links — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 26, flex: 1 }}>
+            {links.map(({ l, href }) =>
+              href.startsWith("/") ? (
+                <Link
+                  key={l}
+                  href={href}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: C.body,
+                    opacity: 0.85,
+                    textDecoration: "none",
+                    transition: "opacity .15s",
+                  }}
+                >
+                  {l}
+                </Link>
+              ) : (
+                <a
+                  key={l}
+                  href={href}
+                  onClick={(e) => scrollToSection(e, href)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: C.body,
+                    opacity: 0.85,
+                    textDecoration: "none",
+                    transition: "opacity .15s",
+                  }}
+                >
+                  {l}
+                </a>
+              )
+            )}
+          </div>
+        )}
+
+        {/* CTAs */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
+          {!isMobile && (
+            <a
+              href="#exitiq"
+              onClick={(e) => scrollToSection(e, "#exitiq")}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: C.body,
+                opacity: 0.7,
+                textDecoration: "none",
+              }}
+            >
+              Sign in
+            </a>
+          )}
+          <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
+            Try ExitIQ
+          </button>
+          {/* Hamburger — mobile only */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 5,
+                width: 38,
+                height: 38,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "transform .22s ease, opacity .22s ease",
+                  transform: menuOpen ? "translateY(6.5px) rotate(45deg)" : "none",
+                }}
+              />
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "opacity .22s ease",
+                  opacity: menuOpen ? 0 : 1,
+                }}
+              />
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "transform .22s ease, opacity .22s ease",
+                  transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none",
+                }}
+              />
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {isMobile && (
         <div
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
-            boxShadow: "0 0 12px rgba(167,229,211,.4)",
-            flexShrink: 0,
-          }}
-        />
-        <Link
-          href="/"
-          style={{
-            fontFamily: garamond,
-            fontSize: 22,
-            fontWeight: 400,
-            color: C.ink,
-            letterSpacing: "-.4px",
-            textDecoration: "none",
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "rgba(245,245,245,.97)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            borderBottom: `1px solid ${C.hairline}`,
+            overflow: "hidden",
+            maxHeight: menuOpen ? 320 : 0,
+            transition: "max-height .3s cubic-bezier(.4,0,.2,1)",
+            zIndex: 99,
           }}
         >
-          Scorta
-        </Link>
-      </div>
-
-      {/* Links */}
-      <div style={{ display: "flex", gap: 26, flex: 1 }}>
-        {links.map(({ l, href }) =>
-          href.startsWith("/") ? (
-            <Link
-              key={l}
-              href={href}
-              style={{
-                fontFamily: inter,
-                fontSize: 14,
-                fontWeight: 500,
-                color: C.body,
-                opacity: 0.85,
-                textDecoration: "none",
-                transition: "opacity .15s",
-              }}
-            >
-              {l}
-            </Link>
-          ) : (
+          <div style={{ display: "flex", flexDirection: "column", padding: "8px 0 16px" }}>
+            {links.map(({ l, href }) =>
+              href.startsWith("/") ? (
+                <Link
+                  key={l}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: C.ink,
+                    textDecoration: "none",
+                    padding: "12px 24px",
+                  }}
+                >
+                  {l}
+                </Link>
+              ) : (
+                <a
+                  key={l}
+                  href={href}
+                  onClick={(e) => scrollToSection(e, href)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: C.ink,
+                    textDecoration: "none",
+                    padding: "12px 24px",
+                  }}
+                >
+                  {l}
+                </a>
+              )
+            )}
+            <div style={{ height: 1, background: C.hairline, margin: "8px 24px" }} />
             <a
-              key={l}
-              href={href}
+              href="#exitiq"
+              onClick={(e) => scrollToSection(e, "#exitiq")}
               style={{
                 fontFamily: inter,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 500,
                 color: C.body,
-                opacity: 0.85,
                 textDecoration: "none",
-                transition: "opacity .15s",
+                padding: "12px 24px",
               }}
             >
-              {l}
+              Sign in
             </a>
-          )
-        )}
-      </div>
-
-      {/* CTAs */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <a
-          href="#exitiq"
-          style={{
-            fontFamily: inter,
-            fontSize: 14,
-            fontWeight: 500,
-            color: C.body,
-            opacity: 0.7,
-            textDecoration: "none",
-          }}
-        >
-          Sign in
-        </a>
-        <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
-          Try ExitIQ
-        </button>
-      </div>
-    </nav>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -2960,7 +3196,39 @@ function SFooter() {
 export function ScortaLanding() {
   useReveal()
   const [exitOpen, setExitOpen] = React.useState(false)
+  const [announcementVisible, setAnnouncementVisible] = React.useState(true)
+  const barWrapRef = React.useRef<HTMLDivElement>(null)
   const handleOpen = () => setExitOpen(true)
+
+  React.useEffect(() => {
+    if (!announcementVisible) return
+    const el = barWrapRef.current
+    if (!el) return
+    const barHeight = el.offsetHeight || 37
+    const HIDE_AT = 80
+    const SHOW_AT = 50
+    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
+    el.style.transition = "none"
+    el.style.height = barHeight + "px"
+    el.style.opacity = "1"
+    void el.offsetHeight
+    el.style.transition = TRANSITION
+    let hidden = false
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!hidden && y > HIDE_AT) {
+        hidden = true
+        el.style.height = "0px"
+        el.style.opacity = "0"
+      } else if (hidden && y < SHOW_AT) {
+        hidden = false
+        el.style.height = barHeight + "px"
+        el.style.opacity = "1"
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [announcementVisible])
 
   return (
     <>
@@ -2975,7 +3243,14 @@ export function ScortaLanding() {
           overflowX: "clip",
         }}
       >
-        <SNav onOpen={handleOpen} />
+        <div data-sticky-header style={{ position: "sticky", top: 0, zIndex: 100 }}>
+          {announcementVisible && (
+            <div ref={barWrapRef} style={{ overflow: "hidden" }}>
+              <SAnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />
+            </div>
+          )}
+          <SNav onOpen={handleOpen} />
+        </div>
         <SHero onOpen={handleOpen} />
         <SIndustryMarquee />
         <SSignalsBand />
