@@ -41,7 +41,7 @@ function StepLabel({ step }: { step: number }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Phase pills */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
         {PHASES.map((p) => (
           <div
             key={p.phase}
@@ -78,6 +78,7 @@ function StepLabel({ step }: { step: number }) {
                 color:
                   p.phase < phase ? "rgba(16,185,129,.7)" : p.phase === phase ? "rgba(16,185,129,.9)" : "var(--t4)",
                 fontFamily: "Inter, sans-serif",
+                whiteSpace: "nowrap",
               }}
             >
               {p.label}

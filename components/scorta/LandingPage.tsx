@@ -975,7 +975,9 @@ function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function SNav({ onOpen }: { onOpen: () => void }) {
   const [scrolled, setScrolled] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
   const isMobile = useIsMobile()
+
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
     window.addEventListener("scroll", onScroll)
@@ -983,117 +985,269 @@ function SNav({ onOpen }: { onOpen: () => void }) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  // Close menu when switching to desktop
+  React.useEffect(() => {
+    if (!isMobile) setMenuOpen(false)
+  }, [isMobile])
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault()
+    setMenuOpen(false)
+    const id = href.replace("#", "")
+    const target = document.getElementById(id)
+    if (!target) return
+    const stickyHeader = document.querySelector<HTMLElement>('[data-sticky-header]')
+    const offset = stickyHeader ? stickyHeader.offsetHeight : 64
+    const top = target.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: "smooth" })
+  }
+
   const links = [
     { l: "How it works", href: "#how" },
     { l: "Products", href: "#products" },
-{ l: "About", href: "/about" },
+    { l: "About", href: "/about" },
   ]
 
+  const navBg = scrolled || menuOpen ? "rgba(245,245,245,.95)" : "transparent"
+  const navBorder = scrolled || menuOpen ? `1px solid ${C.hairline}` : "1px solid transparent"
+
   return (
-    <nav
-      style={{
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        height: 64,
-        padding: "0 24px",
-        background: scrolled ? "rgba(245,245,245,.85)" : "transparent",
-        borderBottom: scrolled ? `1px solid ${C.hairline}` : "1px solid transparent",
-        backdropFilter: scrolled ? "blur(14px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
-        transition: "background .25s, border-color .25s",
-      }}
-    >
-      {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
-        <div
-          style={{
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
-            boxShadow: "0 0 12px rgba(167,229,211,.4)",
-            flexShrink: 0,
-          }}
-        />
-        <Link
-          href="/"
-          style={{
-            fontFamily: garamond,
-            fontSize: 22,
-            fontWeight: 400,
-            color: C.ink,
-            letterSpacing: "-.4px",
-            textDecoration: "none",
-          }}
-        >
-          Scorta
-        </Link>
-      </div>
-
-      {/* Links — hidden on mobile */}
-      {!isMobile && (
-        <div style={{ display: "flex", gap: 26, flex: 1 }}>
-          {links.map(({ l, href }) =>
-            href.startsWith("/") ? (
-              <Link
-                key={l}
-                href={href}
-                style={{
-                  fontFamily: inter,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: C.body,
-                  opacity: 0.85,
-                  textDecoration: "none",
-                  transition: "opacity .15s",
-                }}
-              >
-                {l}
-              </Link>
-            ) : (
-              <a
-                key={l}
-                href={href}
-                style={{
-                  fontFamily: inter,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: C.body,
-                  opacity: 0.85,
-                  textDecoration: "none",
-                  transition: "opacity .15s",
-                }}
-              >
-                {l}
-              </a>
-            )
-          )}
-        </div>
-      )}
-
-      {/* CTAs */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
-        {!isMobile && (
-          <a
-            href="#exitiq"
+    <div style={{ position: "relative" }}>
+      <nav
+        style={{
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          height: 64,
+          padding: "0 24px",
+          background: navBg,
+          borderBottom: navBorder,
+          backdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          WebkitBackdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          transition: "background .25s, border-color .25s",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+          <div
             style={{
-              fontFamily: inter,
-              fontSize: 14,
-              fontWeight: 500,
-              color: C.body,
-              opacity: 0.7,
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+              boxShadow: "0 0 12px rgba(167,229,211,.4)",
+              flexShrink: 0,
+            }}
+          />
+          <Link
+            href="/"
+            style={{
+              fontFamily: garamond,
+              fontSize: 22,
+              fontWeight: 400,
+              color: C.ink,
+              letterSpacing: "-.4px",
               textDecoration: "none",
             }}
           >
-            Sign in
-          </a>
+            Scorta
+          </Link>
+        </div>
+
+        {/* Links — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 26, flex: 1 }}>
+            {links.map(({ l, href }) =>
+              href.startsWith("/") ? (
+                <Link
+                  key={l}
+                  href={href}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: C.body,
+                    opacity: 0.85,
+                    textDecoration: "none",
+                    transition: "opacity .15s",
+                  }}
+                >
+                  {l}
+                </Link>
+              ) : (
+                <a
+                  key={l}
+                  href={href}
+                  onClick={(e) => scrollToSection(e, href)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: C.body,
+                    opacity: 0.85,
+                    textDecoration: "none",
+                    transition: "opacity .15s",
+                  }}
+                >
+                  {l}
+                </a>
+              )
+            )}
+          </div>
         )}
-        <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
-          Try ExitIQ
-        </button>
-      </div>
-    </nav>
+
+        {/* CTAs */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
+          {!isMobile && (
+            <a
+              href="#exitiq"
+              onClick={(e) => scrollToSection(e, "#exitiq")}
+              style={{
+                fontFamily: inter,
+                fontSize: 14,
+                fontWeight: 500,
+                color: C.body,
+                opacity: 0.7,
+                textDecoration: "none",
+              }}
+            >
+              Sign in
+            </a>
+          )}
+          <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
+            Try ExitIQ
+          </button>
+          {/* Hamburger — mobile only */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 5,
+                width: 38,
+                height: 38,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "transform .22s ease, opacity .22s ease",
+                  transform: menuOpen ? "translateY(6.5px) rotate(45deg)" : "none",
+                }}
+              />
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "opacity .22s ease",
+                  opacity: menuOpen ? 0 : 1,
+                }}
+              />
+              <span
+                style={{
+                  display: "block",
+                  width: 20,
+                  height: 1.5,
+                  background: C.ink,
+                  borderRadius: 2,
+                  transition: "transform .22s ease, opacity .22s ease",
+                  transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none",
+                }}
+              />
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {isMobile && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "rgba(245,245,245,.97)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            borderBottom: `1px solid ${C.hairline}`,
+            overflow: "hidden",
+            maxHeight: menuOpen ? 320 : 0,
+            transition: "max-height .3s cubic-bezier(.4,0,.2,1)",
+            zIndex: 99,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", padding: "8px 0 16px" }}>
+            {links.map(({ l, href }) =>
+              href.startsWith("/") ? (
+                <Link
+                  key={l}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: C.ink,
+                    textDecoration: "none",
+                    padding: "12px 24px",
+                  }}
+                >
+                  {l}
+                </Link>
+              ) : (
+                <a
+                  key={l}
+                  href={href}
+                  onClick={(e) => scrollToSection(e, href)}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: C.ink,
+                    textDecoration: "none",
+                    padding: "12px 24px",
+                  }}
+                >
+                  {l}
+                </a>
+              )
+            )}
+            <div style={{ height: 1, background: C.hairline, margin: "8px 24px" }} />
+            <a
+              href="#exitiq"
+              onClick={(e) => scrollToSection(e, "#exitiq")}
+              style={{
+                fontFamily: inter,
+                fontSize: 16,
+                fontWeight: 500,
+                color: C.body,
+                textDecoration: "none",
+                padding: "12px 24px",
+              }}
+            >
+              Sign in
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -3089,7 +3243,7 @@ export function ScortaLanding() {
           overflowX: "clip",
         }}
       >
-        <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+        <div data-sticky-header style={{ position: "sticky", top: 0, zIndex: 100 }}>
           {announcementVisible && (
             <div ref={barWrapRef} style={{ overflow: "hidden" }}>
               <SAnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />

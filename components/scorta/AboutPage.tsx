@@ -19,6 +19,7 @@ const C = {
   hairline: "#e7e5e4",
   hairlineStrong: "#d6d3d1",
   mint: "#a7e5d3",
+  mintDeep: "#1a7a60",
   peach: "#f4c5a8",
   lav: "#c8b8e0",
   sky: "#a8c8e8",
@@ -55,6 +56,18 @@ const ABOUT_CSS = `
 `
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = React.useState(false)
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    setMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [breakpoint])
+  return mobile
+}
+
 function useReveal() {
   React.useEffect(() => {
     const els = document.querySelectorAll(".a-rv")
@@ -210,8 +223,53 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
-function ANav({ onOpen }: { onOpen: () => void }) {
+// ─── Announcement Bar ─────────────────────────────────────────────────────────
+function AAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(90deg, rgba(167,229,211,.18) 0%, rgba(200,184,224,.14) 50%, rgba(168,200,232,.14) 100%)",
+        borderBottom: `1px solid rgba(167,229,211,.35)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        padding: "0 16px",
+        height: 37,
+        position: "relative",
+      }}
+    >
+      <span style={{ fontFamily: inter, fontSize: 12.5, fontWeight: 500, color: C.ink2, letterSpacing: ".01em" }}>
+        ✦ ExitIQ is free to use — no broker call required
+      </span>
+      <Link
+        href="/"
+        style={{ fontFamily: inter, fontSize: 12, fontWeight: 600, color: C.mintDeep, textDecoration: "none", letterSpacing: ".01em" }}
+      >
+        Try it →
+      </Link>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.mutedSoft, lineHeight: 1, padding: 4, fontSize: 16 }}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function ANav({ onOpen, announcementVisible, barWrapRef, onDismissAnnouncement }: {
+  onOpen: () => void
+  announcementVisible: boolean
+  barWrapRef: React.RefObject<HTMLDivElement | null>
+  onDismissAnnouncement: () => void
+}) {
   const [scrolled, setScrolled] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const isMobile = useIsMobile()
+
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
     window.addEventListener("scroll", onScroll)
@@ -219,99 +277,162 @@ function ANav({ onOpen }: { onOpen: () => void }) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  React.useEffect(() => {
+    if (!isMobile) setMenuOpen(false)
+  }, [isMobile])
+
   const links = [
     { l: "How it works", href: "/#how" },
     { l: "Products", href: "/#products" },
     { l: "About", href: "/about" },
   ]
 
+  const navBg = scrolled || menuOpen ? "rgba(245,245,245,.95)" : "transparent"
+  const navBorder = scrolled || menuOpen ? `1px solid ${C.hairline}` : "1px solid transparent"
+
   return (
-    <nav
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        height: 64,
-        padding: "0 24px",
-        background: scrolled ? "rgba(245,245,245,.85)" : "transparent",
-        borderBottom: scrolled ? `1px solid ${C.hairline}` : "1px solid transparent",
-        backdropFilter: scrolled ? "blur(14px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(14px)" : "none",
-        transition: "background .25s, border-color .25s",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+      {announcementVisible && (
+        <div ref={barWrapRef} style={{ overflow: "hidden" }}>
+          <AAnnouncementBar onDismiss={onDismissAnnouncement} />
+        </div>
+      )}
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          height: 64,
+          padding: "0 24px",
+          background: navBg,
+          borderBottom: navBorder,
+          backdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          WebkitBackdropFilter: scrolled || menuOpen ? "blur(14px)" : "none",
+          transition: "background .25s, border-color .25s",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 36 }}>
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
+              boxShadow: "0 0 12px rgba(167,229,211,.4)",
+              flexShrink: 0,
+            }}
+          />
+          <Link
+            href="/"
+            style={{
+              fontFamily: garamond,
+              fontSize: 22,
+              fontWeight: 400,
+              color: C.ink,
+              letterSpacing: "-.4px",
+              textDecoration: "none",
+            }}
+          >
+            Scorta
+          </Link>
+        </div>
+
+        {/* Links — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 26, flex: 1 }}>
+            {links.map(({ l, href }) => (
+              <Link
+                key={l}
+                href={href}
+                style={{
+                  fontFamily: inter,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: l === "About" ? C.ink : C.body,
+                  opacity: l === "About" ? 1 : 0.85,
+                  textDecoration: "none",
+                  transition: "opacity .15s",
+                }}
+              >
+                {l}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* CTAs */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
+          <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
+            Try ExitIQ
+          </button>
+          {/* Hamburger — mobile only */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 5,
+                width: 38,
+                height: 38,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ display: "block", width: 20, height: 1.5, background: C.ink, borderRadius: 2, transition: "transform .22s ease, opacity .22s ease", transform: menuOpen ? "translateY(6.5px) rotate(45deg)" : "none" }} />
+              <span style={{ display: "block", width: 20, height: 1.5, background: C.ink, borderRadius: 2, transition: "opacity .22s ease", opacity: menuOpen ? 0 : 1 }} />
+              <span style={{ display: "block", width: 20, height: 1.5, background: C.ink, borderRadius: 2, transition: "transform .22s ease, opacity .22s ease", transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none" }} />
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {isMobile && (
         <div
           style={{
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            background: "radial-gradient(circle at 35% 35%, #a7e5d3 0%, #c8b8e0 55%, #0c0a09 100%)",
-            boxShadow: "0 0 12px rgba(167,229,211,.4)",
-            flexShrink: 0,
-          }}
-        />
-        <Link
-          href="/"
-          style={{
-            fontFamily: garamond,
-            fontSize: 22,
-            fontWeight: 400,
-            color: C.ink,
-            letterSpacing: "-.4px",
-            textDecoration: "none",
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "rgba(245,245,245,.97)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            borderBottom: `1px solid ${C.hairline}`,
+            overflow: "hidden",
+            maxHeight: menuOpen ? 320 : 0,
+            transition: "max-height .3s cubic-bezier(.4,0,.2,1)",
+            zIndex: 99,
           }}
         >
-          Scorta
-        </Link>
-      </div>
-
-      <div style={{ display: "flex", gap: 26, flex: 1 }}>
-        {links.map(({ l, href }) =>
-          href.startsWith("/") && !href.startsWith("/#") ? (
-            <Link
-              key={l}
-              href={href}
-              style={{
-                fontFamily: inter,
-                fontSize: 14,
-                fontWeight: 500,
-                color: l === "About" ? C.ink : C.body,
-                opacity: l === "About" ? 1 : 0.85,
-                textDecoration: "none",
-                transition: "opacity .15s",
-              }}
-            >
-              {l}
-            </Link>
-          ) : (
-            <a
-              key={l}
-              href={href}
-              style={{
-                fontFamily: inter,
-                fontSize: 14,
-                fontWeight: 500,
-                color: C.body,
-                opacity: 0.85,
-                textDecoration: "none",
-                transition: "opacity .15s",
-              }}
-            >
-              {l}
-            </a>
-          )
-        )}
-      </div>
-
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
-          Try ExitIQ
-        </button>
-      </div>
-    </nav>
+          <div style={{ display: "flex", flexDirection: "column", padding: "8px 0 16px" }}>
+            {links.map(({ l, href }) => (
+              <Link
+                key={l}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  fontFamily: inter,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: C.ink,
+                  textDecoration: "none",
+                  padding: "12px 24px",
+                }}
+              >
+                {l}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -980,14 +1101,51 @@ function AFooter() {
 export function AboutPage() {
   useReveal()
   const [exitOpen, setExitOpen] = React.useState(false)
+  const [announcementVisible, setAnnouncementVisible] = React.useState(true)
+  const barWrapRef = React.useRef<HTMLDivElement>(null)
   const handleOpen = () => setExitOpen(true)
+
+  React.useEffect(() => {
+    if (!announcementVisible) return
+    const el = barWrapRef.current
+    if (!el) return
+    const barHeight = el.offsetHeight || 37
+    const HIDE_AT = 80
+    const SHOW_AT = 50
+    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
+    el.style.transition = "none"
+    el.style.height = barHeight + "px"
+    el.style.opacity = "1"
+    void el.offsetHeight
+    el.style.transition = TRANSITION
+    let hidden = false
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!hidden && y > HIDE_AT) {
+        hidden = true
+        el.style.height = "0px"
+        el.style.opacity = "0"
+      } else if (hidden && y < SHOW_AT) {
+        hidden = false
+        el.style.height = barHeight + "px"
+        el.style.opacity = "1"
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [announcementVisible])
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: ABOUT_CSS }} />
       {exitOpen && <ExitIQOverlay onClose={() => setExitOpen(false)} />}
-      <div style={{ background: C.canvas, color: C.body, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
-        <ANav onOpen={handleOpen} />
+      <div style={{ background: C.canvas, color: C.body, fontFamily: inter, minHeight: "100vh", overflowX: "clip" }}>
+        <ANav
+          onOpen={handleOpen}
+          announcementVisible={announcementVisible}
+          barWrapRef={barWrapRef}
+          onDismissAnnouncement={() => setAnnouncementVisible(false)}
+        />
         <AHero />
         <ANumbers />
         <AMission />
