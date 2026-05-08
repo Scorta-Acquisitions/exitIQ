@@ -43,6 +43,8 @@ export interface Derived {
   isHotState: boolean
   radarScores: number[]
   sdeMarginCheck: SdeMarginCheck | null  // null when revenue or SDE not yet answered
+  exitReadinessScore: number             // 0–100, weighted composite of 7 radar axes
+  exitReadinessGrade: "A" | "B" | "C" | "D" | "—"
 }
 
 // Double Lehman / Modern Lehman tiered broker fee (IBBA/Main Street M&A standard, 2026)
@@ -475,6 +477,27 @@ export function calcDerived(answers: Record<string, string>): Derived {
     axis6_positioning,
   ]
 
+  // ── Exit Readiness Score (0–100) ──────────────────────────────────────────
+  // Exact weighted dot product: each axis is 0–10, weight sums to 1.0.
+  // Multiply by 10 to normalize the weighted result (max 10×1.0) → 0–100.
+  const AXIS_WEIGHTS = [0.20, 0.18, 0.17, 0.15, 0.12, 0.10, 0.08] as const
+  const weightedSum =
+    axis0_finDocs   * AXIS_WEIGHTS[0] +
+    axis1_ownerDep  * AXIS_WEIGHTS[1] +
+    axis2_revQuality* AXIS_WEIGHTS[2] +
+    axis3_custConc  * AXIS_WEIGHTS[3] +
+    axis4_longevity * AXIS_WEIGHTS[4] +
+    axis5_opsDepth  * AXIS_WEIGHTS[5] +
+    axis6_positioning * AXIS_WEIGHTS[6]
+  // weightedSum is 0–10 (each axis max 10 × weight sum 1.0). Scale to 0–100.
+  const exitReadinessScore = Math.round(weightedSum * 10)
+  const exitReadinessGrade: Derived["exitReadinessGrade"] =
+    exitReadinessScore >= 75 ? "A"
+    : exitReadinessScore >= 55 ? "B"
+    : exitReadinessScore >= 35 ? "C"
+    : exitReadinessScore > 0  ? "D"
+    : "—"
+
   // ── SDE / Revenue margin sanity check ────────────────────────────────────────
   // Uses bucket midpoints so the check is as accurate as the data available.
   // Green: 12–35% (home-services norm per 2026 sold-deal data)
@@ -519,5 +542,5 @@ export function calcDerived(answers: Record<string, string>): Derived {
     sdeMarginCheck = { margin, pct, status, headline, message }
   }
 
-  return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores, sdeMarginCheck }
+  return { confidence, valuationRange, multiple, brokerFee, transferability, industry, isHotState, radarScores, sdeMarginCheck, exitReadinessScore, exitReadinessGrade }
 }

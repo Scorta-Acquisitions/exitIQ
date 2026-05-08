@@ -1225,6 +1225,249 @@ function BottomUnlockCTA({ onUnlock, label = "Unlock my full report →" }: { on
   )
 }
 
+// ── Exit Readiness Score hero ─────────────────────────────────────────────────
+function ExitReadinessHero({
+  score,
+  grade,
+  industry,
+}: {
+  score: number
+  grade: "A" | "B" | "C" | "D" | "—"
+  industry: string
+}) {
+  const hasScore = score > 0
+
+  // Colour ramp: A=mint, B=sky-blue, C=amber, D=peach-red
+  const gradeColor =
+    grade === "A" ? "#10b981"
+    : grade === "B" ? "#60a5fa"
+    : grade === "C" ? "#fbbf24"
+    : grade === "D" ? "#f87171"
+    : "var(--t4)"
+
+  const gradeGlow =
+    grade === "A" ? "rgba(16,185,129,.35)"
+    : grade === "B" ? "rgba(96,165,250,.35)"
+    : grade === "C" ? "rgba(251,191,36,.35)"
+    : grade === "D" ? "rgba(248,113,113,.35)"
+    : "transparent"
+
+  const gradeLabel =
+    grade === "A" ? "Market-ready"
+    : grade === "B" ? "Mostly ready"
+    : grade === "C" ? "Needs prep"
+    : grade === "D" ? "Significant gaps"
+    : "Calculating…"
+
+  // SVG arc: radius 54, circumference = 2π×54 ≈ 339.3. Offset to leave a gap at the bottom.
+  // We use 75% of the full circle (270°), starting from the left (225° in SVG coords).
+  const R = 54
+  const CIRC = 2 * Math.PI * R
+  const ARC_FRACTION = 0.75           // 270° sweep
+  const arcLen = CIRC * ARC_FRACTION  // the drawn portion
+  // dashoffset = arcLen × (1 - score/100) fills proportionally from the start
+  const fillLen = arcLen * (score / 100)
+  const dashOffset = arcLen - fillLen
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        animation: "slideUp .6s cubic-bezier(.34,1.1,.64,1) both",
+      }}
+    >
+      {/* Live pill */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: "#10b981",
+            boxShadow: "0 0 10px rgba(16,185,129,.9)",
+            animation: "liveBlink 2s infinite",
+            flexShrink: 0,
+          }}
+        />
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: ".96px",
+            textTransform: "uppercase",
+            color: "rgba(16,185,129,.8)",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          ExitIQ Preview · {industry}
+        </div>
+      </div>
+
+      {/* Score + arc row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        {/* Arc gauge */}
+        <div style={{ position: "relative", width: 130, height: 130, flexShrink: 0 }}>
+          <svg width={130} height={130} viewBox="0 0 130 130" style={{ overflow: "visible" }}>
+            {/* Track arc */}
+            <circle
+              cx={65}
+              cy={65}
+              r={R}
+              fill="none"
+              stroke="var(--b3)"
+              strokeWidth={10}
+              strokeDasharray={`${arcLen} ${CIRC}`}
+              strokeDashoffset={-(CIRC - arcLen) / 2 - CIRC * 0.125}
+              strokeLinecap="round"
+            />
+            {/* Fill arc */}
+            {hasScore && (
+              <circle
+                cx={65}
+                cy={65}
+                r={R}
+                fill="none"
+                stroke={gradeColor}
+                strokeWidth={10}
+                strokeDasharray={`${fillLen} ${CIRC}`}
+                strokeDashoffset={-(CIRC - arcLen) / 2 - CIRC * 0.125}
+                strokeLinecap="round"
+                style={{
+                  filter: `drop-shadow(0 0 6px ${gradeGlow})`,
+                  transition: "stroke-dasharray .9s cubic-bezier(.34,1.1,.64,1)",
+                }}
+              />
+            )}
+          </svg>
+          {/* Centre text */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              paddingBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                fontSize: hasScore ? 32 : 22,
+                fontWeight: 300,
+                color: hasScore ? gradeColor : "var(--t4)",
+                letterSpacing: "-1px",
+                lineHeight: 1,
+                animation: hasScore ? "numRoll .8s ease" : undefined,
+              }}
+            >
+              {hasScore ? `${score}%` : "—"}
+            </div>
+            <div
+              style={{
+                fontSize: 8.5,
+                fontWeight: 700,
+                letterSpacing: ".8px",
+                textTransform: "uppercase",
+                color: "var(--t4)",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              readiness
+            </div>
+          </div>
+        </div>
+
+        {/* Right: headline + grade badge + descriptor */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+              fontSize: 26,
+              fontWeight: 300,
+              color: "var(--t1)",
+              letterSpacing: "-.35px",
+              lineHeight: 1.18,
+              marginBottom: 8,
+            }}
+          >
+            {hasScore ? "Your exit readiness score." : "Your valuation signal is forming."}
+          </div>
+
+          {/* Grade badge + label */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 9,
+                background: `${gradeColor}18`,
+                border: `1.5px solid ${gradeColor}55`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: hasScore ? `0 0 12px ${gradeGlow}` : "none",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 20,
+                  fontWeight: 400,
+                  color: gradeColor,
+                  lineHeight: 1,
+                }}
+              >
+                {grade}
+              </span>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--t2)",
+                  fontFamily: "Inter, sans-serif",
+                  lineHeight: 1.3,
+                }}
+              >
+                {gradeLabel}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--t4)",
+                  fontFamily: "Inter, sans-serif",
+                  marginTop: 2,
+                }}
+              >
+                Based on {RADAR_AXES.length} weighted dimensions
+              </div>
+            </div>
+          </div>
+
+          <p
+            style={{
+              fontSize: 12.5,
+              color: "var(--t3)",
+              lineHeight: 1.62,
+              fontFamily: "Inter, sans-serif",
+              margin: 0,
+            }}
+          >
+            All {RADAR_AXES.length} axes scored — unlock your full diagnostic, buyer objection map, and 90-day exit plan below.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── SDE / Revenue margin sanity banner ───────────────────────────────────────
 function SdeMarginBanner({ check }: { check: SdeMarginCheck }) {
   const isRed = check.status === "red"
@@ -1408,7 +1651,7 @@ function LockedRow({ label, sub, delay = 0 }: { label: string; sub?: string; del
 }
 
 export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardProps) {
-  const { valuationRange, brokerFee, radarScores, confidence } = derived
+  const { valuationRange, brokerFee, radarScores, confidence, exitReadinessScore, exitReadinessGrade } = derived
   const industry = answers.industry ?? "your business"
   const estimatedDims = radarScores.filter((s) => s > 0).length
 
@@ -1426,58 +1669,12 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
         overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <div
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#10b981",
-              boxShadow: "0 0 10px rgba(16,185,129,.9)",
-              animation: "liveBlink 2s infinite",
-            }}
-          />
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: ".96px",
-              textTransform: "uppercase",
-              color: "rgba(16,185,129,.8)",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            ExitIQ Preview
-          </div>
-        </div>
-        <h2
-          style={{
-            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-            fontSize: 26,
-            fontWeight: 300,
-            color: "var(--t1)",
-            letterSpacing: "-.35px",
-            lineHeight: 1.18,
-            margin: 0,
-          }}
-        >
-          Your valuation signal is forming.
-        </h2>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--t3)",
-            marginTop: 7,
-            lineHeight: 1.65,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Based on {industry.toLowerCase()} market data. All {RADAR_AXES.length} axes scored — unlock your full
-          diagnostic below.
-        </p>
-      </div>
+      {/* ── Exit Readiness Score hero ── */}
+      <ExitReadinessHero
+        score={exitReadinessScore}
+        grade={exitReadinessGrade}
+        industry={industry}
+      />
 
       <UnlockCTA onUnlock={onUnlock} />
 
