@@ -899,14 +899,15 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
       style={{
-        background: "#1b4f63",
-        color: "rgba(245,245,245,0.88)",
+        background: "#BCE0DF",
+        color: "rgba(12,10,9,0.75)",
         padding: "10px 48px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         gap: 16,
         position: "relative",
+        borderBottom: "1px solid rgba(74,155,192,0.18)",
       }}
     >
       <div
@@ -914,8 +915,8 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: "#7ecfe8",
-          boxShadow: "0 0 8px #7ecfe8",
+          background: "#3a8fa8",
+          boxShadow: "0 0 7px rgba(58,143,168,0.55)",
           flexShrink: 0,
         }}
       />
@@ -929,7 +930,7 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
         }}
       >
         {"Most owners discover deal-killing issues too late. "}
-        <span style={{ color: "#7ecfe8" }}>Scorta surfaces them before buyers do.</span>
+        <span style={{ color: "#1a5068", fontWeight: 600 }}>Scorta surfaces them before buyers do.</span>
       </span>
       <button
         onClick={onDismiss}
@@ -942,15 +943,15 @@ function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: "rgba(245,245,245,.4)",
+          color: "rgba(12,10,9,0.3)",
           fontSize: 16,
           lineHeight: 1,
           padding: 4,
           display: "flex",
           alignItems: "center",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(245,245,245,.8)")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(245,245,245,.4)")}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(12,10,9,0.7)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(12,10,9,0.3)")}
       >
         ×
       </button>
