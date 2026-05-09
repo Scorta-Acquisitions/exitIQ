@@ -560,6 +560,30 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           </div>
         </nav>
 
+        {/* ── Progress bar — visible only during the 10-question flow ── */}
+        {step < 10 && !submitted && (
+          <div
+            style={{
+              margin: isMobile ? "0" : "0 20px",
+              height: 2,
+              background: "rgba(255,255,255,0.06)",
+              flexShrink: 0,
+              borderRadius: 9999,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${(step / 10) * 100}%`,
+                background: "linear-gradient(90deg, rgba(16,185,129,0.5) 0%, rgba(167,229,211,0.8) 100%)",
+                borderRadius: 9999,
+                transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
+              }}
+            />
+          </div>
+        )}
+
         {/* ── Hero layout (2 columns desktop / 1 column mobile) ── */}
         <div
           style={{
