@@ -1,3 +1,4 @@
+// use client: renders interactive assessment questions and local input state
 "use client"
 
 import React from "react"
@@ -30,84 +31,95 @@ function getPhaseInfo(step: number) {
 // ── Step label with phase context ─────────────────────────────────────────────
 function StepLabel({ step }: { step: number }) {
   const { phase, label, total, stepInPhase } = getPhaseInfo(step)
+  const progressPct = ((step + 1) / 10) * 100
+  const markerPct = Math.min(100, Math.max(0, progressPct))
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {/* Phase pills */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        {PHASES.map((p) => (
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <div
-            key={p.phase}
             style={{
-              height: 20,
-              padding: "0 9px",
-              borderRadius: 9999,
-              background:
-                p.phase < phase ? "rgba(16,185,129,.18)" : p.phase === phase ? "rgba(16,185,129,.12)" : "var(--s1)",
-              border: `1px solid ${p.phase <= phase ? "rgba(16,185,129,.35)" : "var(--b3)"}`,
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              transition: "all .4s ease",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: ".6px",
+              textTransform: "uppercase",
+              color: "rgba(16,185,129,.78)",
+              fontFamily: "Inter, sans-serif",
             }}
           >
-            {p.phase < phase && (
-              <svg width={8} height={8} viewBox="0 0 8 8" fill="none">
-                <path
-                  d="M1.5 4l2 2 3-3"
-                  stroke="#10b981"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 600,
-                letterSpacing: ".7px",
-                textTransform: "uppercase",
-                color:
-                  p.phase < phase ? "rgba(16,185,129,.7)" : p.phase === phase ? "rgba(16,185,129,.9)" : "var(--t4)",
-                fontFamily: "Inter, sans-serif",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {p.label}
-            </span>
+            Phase {phase}: {label} · {stepInPhase + 1}/{total}
           </div>
-        ))}
-      </div>
-
-      {/* Within-phase progress bars */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ display: "flex", gap: 5, flex: 1 }}>
-          {Array.from({ length: total }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                height: 2,
-                borderRadius: 9999,
-                background: i < stepInPhase ? "#10b981" : i === stepInPhase ? "rgba(16,185,129,.38)" : "var(--s1)",
-                boxShadow: i < stepInPhase ? "0 0 6px rgba(16,185,129,.55)" : "none",
-                transition: "background .6s ease, box-shadow .6s ease",
-              }}
-            />
-          ))}
+          <div
+            style={{
+              fontSize: 10,
+              color: "var(--t5)",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            {step + 1} of 10
+          </div>
         </div>
+
         <div
+          aria-label={`Assessment progress: question ${step + 1} of 10, phase ${phase}: ${label}`}
           style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: "var(--t4)",
-            fontFamily: "Inter, sans-serif",
-            whiteSpace: "nowrap",
-            marginLeft: 4,
+            height: 3,
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 9999,
+            position: "relative",
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,.04)",
           }}
         >
-          {label} {stepInPhase + 1}/{total}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: `${progressPct}%`,
+              background: "linear-gradient(90deg, rgba(16,185,129,0.5) 0%, rgba(167,229,211,0.8) 100%)",
+              borderRadius: 9999,
+              transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "30%",
+              top: -3,
+              bottom: -3,
+              width: 1,
+              background: "rgba(255,255,255,0.35)",
+              transform: "translateX(-50%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "70%",
+              top: -3,
+              bottom: -3,
+              width: 1,
+              background: "rgba(255,255,255,0.35)",
+              transform: "translateX(-50%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: `${markerPct}%`,
+              top: "50%",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "var(--btn-bg)",
+              border: "2px solid rgba(255,255,255,.85)",
+              boxShadow: "0 0 16px rgba(16,185,129,.6), 0 2px 8px rgba(0,0,0,.32)",
+              transform: "translate(-50%, -50%)",
+              transition: "left 0.5s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          />
         </div>
       </div>
     </div>
