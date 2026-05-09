@@ -24,6 +24,23 @@ import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
+const CHIP_QUESTION_LABELS: Record<string, string> = {
+  industry: "Industry",
+  years: "Tenure",
+  facilityType: "Facility",
+  revenue: "Revenue",
+  sde: "SDE",
+  docReadiness: "Doc Readiness",
+  customerConc: "Cust. Conc.",
+  employees: "Team Size",
+  keyMan: "Key-Man",
+  recurringRev: "Recurring Rev.",
+}
+
+function formatChipAnswer(value: string): string {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 // Maps frontend year-bucket labels to representative year numbers for Stage1Answers.years
 const YEAR_LABEL_TO_NUMBER: Record<string, number> = {
   "Under 2 years": 1,
@@ -649,6 +666,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                   {ANSWER_KEYS.filter((k) => !!answers[k]).map((key) => {
                     const targetStep = ANSWER_KEYS.indexOf(key)
                     const disabled = processing || transitioning
+                    const questionLabel = CHIP_QUESTION_LABELS[key] ?? key
+                    const answerLabel = formatChipAnswer(answers[key])
                     return (
                       <button
                         key={key}
@@ -685,7 +704,9 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                           if (icon) icon.style.opacity = "0.28"
                         }}
                       >
-                        {answers[key]}
+                        <span style={{ color: "var(--t5)", fontWeight: 400 }}>{questionLabel}</span>
+                        <span style={{ color: "var(--t5)", opacity: 0.5, margin: "0 1px" }}>·</span>
+                        {answerLabel}
                         <svg
                           className="chip-edit-icon"
                           width={9}
