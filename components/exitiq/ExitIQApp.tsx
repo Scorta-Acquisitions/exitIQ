@@ -227,11 +227,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     return gl.cleanup
   }, [])
 
-  // ── Confidence → WebGL uniform ─────────────────────────────────────────────────────────────────────────
-  React.useEffect(() => {
-    glRef.current?.setConf(derived.confidence / 100)
-  }, [derived.confidence])
-
   // ── Restore partial progress from a previous mid-assessment exit ───────────────────────────
   React.useEffect(() => {
     const partial = loadPartialProgress()
@@ -667,7 +662,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                     const targetStep = ANSWER_KEYS.indexOf(key)
                     const disabled = processing || transitioning
                     const questionLabel = CHIP_QUESTION_LABELS[key] ?? key
-                    const answerLabel = formatChipAnswer(answers[key])
+                    const answerLabel = formatChipAnswer(answers[key] ?? "")
                     return (
                       <button
                         key={key}

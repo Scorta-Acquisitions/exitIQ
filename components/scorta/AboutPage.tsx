@@ -210,6 +210,70 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
+// ─── Announcement bar ─────────────────────────────────────────────────────────
+function AnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div
+      style={{
+        background: "#1b4f63",
+        color: "rgba(245,245,245,0.88)",
+        padding: "10px 48px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 16,
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: "#7ecfe8",
+          boxShadow: "0 0 8px #7ecfe8",
+          flexShrink: 0,
+        }}
+      />
+      <span
+        style={{
+          fontFamily: inter,
+          fontSize: 13,
+          fontWeight: 500,
+          letterSpacing: "0.1px",
+          textAlign: "center",
+        }}
+      >
+        {"Most owners discover deal-killing issues too late. "}
+        <span style={{ color: "#7ecfe8" }}>Scorta surfaces them before buyers do.</span>
+      </span>
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss announcement"
+        style={{
+          position: "absolute",
+          right: 14,
+          top: "50%",
+          transform: "translateY(-50%)",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "rgba(245,245,245,.4)",
+          fontSize: 16,
+          lineHeight: 1,
+          padding: 4,
+          display: "flex",
+          alignItems: "center",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(245,245,245,.8)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(245,245,245,.4)")}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 function ANav({ onOpen }: { onOpen: () => void }) {
   const [scrolled, setScrolled] = React.useState(false)
   React.useEffect(() => {
@@ -228,9 +292,7 @@ function ANav({ onOpen }: { onOpen: () => void }) {
   return (
     <nav
       style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
+        position: "relative",
         display: "flex",
         alignItems: "center",
         height: 64,
@@ -981,13 +1043,52 @@ export function AboutPage() {
   useReveal()
   const [exitOpen, setExitOpen] = React.useState(false)
   const handleOpen = () => setExitOpen(true)
+  const [announcementVisible, setAnnouncementVisible] = React.useState(true)
+  const barWrapRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!announcementVisible) return
+    const el = barWrapRef.current
+    if (!el) return
+    const barHeight = el.offsetHeight || 37
+    const HIDE_AT = 80
+    const SHOW_AT = 50
+    const TRANSITION = "height 0.35s ease, opacity 0.3s ease"
+    el.style.transition = "none"
+    el.style.height = barHeight + "px"
+    el.style.opacity = "1"
+    void el.offsetHeight
+    el.style.transition = TRANSITION
+    let hidden = false
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!hidden && y > HIDE_AT) {
+        hidden = true
+        el.style.height = "0px"
+        el.style.opacity = "0"
+      } else if (hidden && y < SHOW_AT) {
+        hidden = false
+        el.style.height = barHeight + "px"
+        el.style.opacity = "1"
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [announcementVisible])
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: ABOUT_CSS }} />
       {exitOpen && <ExitIQOverlay onClose={() => setExitOpen(false)} />}
-      <div style={{ background: C.canvas, color: C.body, fontFamily: inter, minHeight: "100vh", overflowX: "hidden" }}>
-        <ANav onOpen={handleOpen} />
+      <div style={{ background: C.canvas, color: C.body, fontFamily: inter, minHeight: "100vh", overflowX: "clip" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+          {announcementVisible && (
+            <div ref={barWrapRef} style={{ overflow: "hidden" }}>
+              <AnnouncementBar onDismiss={() => setAnnouncementVisible(false)} />
+            </div>
+          )}
+          <ANav onOpen={handleOpen} />
+        </div>
         <AHero />
         <ANumbers />
         <AMission />
