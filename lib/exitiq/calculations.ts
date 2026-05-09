@@ -1,4 +1,4 @@
-import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, REVENUE_RANGES, SDE_RANGES, YEAR_OPTIONS } from "./data"
+import { CONFIDENCE_BY_STEP, EMPLOYEE_OPTIONS, HOT_STATES, INDUSTRIES, INDUSTRY_MULTIPLES, REVENUE_RANGES, SDE_RANGES } from "./data"
 import type { Industry } from "./data"
 
 export interface BuyerMatch {
@@ -291,12 +291,56 @@ export function fmtRange(lo: number, hi: number): string {
   return fmtMoney(lo) + " – " + fmtMoney(hi)
 }
 
+export function computeSdeMultiple(answers: Record<string, string>): {
+  base: number
+  adjusted: number
+  low: number
+  high: number
+} {
+  const entry = INDUSTRY_MULTIPLES[answers.industry ?? ""]
+  const base = entry?.base ?? 2.5
+
+  let adj = 0
+
+  if (answers.recurringRev === "high")             adj += 0.50
+  else if (answers.recurringRev === "medium_high") adj += 0.25
+
+  const km = parseInt(answers.keyMan ?? "0", 10)
+  if (km === 4 || km === 5)       adj += 0.40
+  else if (km === 1 || km === 2)  adj -= 0.30
+
+  if (answers.customerConc === "diversified")       adj += 0.40
+  else if (answers.customerConc === "moderate")     adj += 0.20
+  else if (answers.customerConc === "concentrated") adj -= 0.30
+  else if (answers.customerConc === "high_risk")    adj -= 0.60
+
+  if (answers.docReadiness === "excellent")  adj += 0.30
+  else if (answers.docReadiness === "good")  adj += 0.15
+  else if (answers.docReadiness === "fair")  adj -= 0.15
+  else if (answers.docReadiness === "poor")  adj -= 0.30
+
+  if (answers.facilityType === "owns" || answers.facilityType === "long_lease") adj += 0.30
+  else if (answers.facilityType === "short_lease") adj -= 0.30
+
+  if (answers.years === "10+ years")                                      adj += 0.20
+  else if (answers.years === "Under 2 years" || answers.years === "2 – 5 years") adj -= 0.20
+
+  const clampedAdj = Math.max(-1.5, Math.min(1.5, adj))
+  const adjusted = Math.round((base + clampedAdj) * 100) / 100
+
+  return {
+    base,
+    adjusted,
+    low:  Math.round((adjusted - 0.25) * 100) / 100,
+    high: Math.round((adjusted + 0.25) * 100) / 100,
+  }
+}
+
 export function calcDerived(answers: Record<string, string>): Derived {
   const stepCount = Object.keys(answers).length
   const industry = INDUSTRIES.find((i) => i.label === answers.industry) ?? null
   const sde = SDE_RANGES.find((r) => r.label === answers.sde) ?? null
   const empOption = EMPLOYEE_OPTIONS.find((e) => e.label === answers.employees) ?? null
-  const years = YEAR_OPTIONS.find((y) => y.label === answers.years) ?? null
 
   const confidence = CONFIDENCE_BY_STEP[Math.min(stepCount, 10)] ?? 0
 
@@ -304,72 +348,13 @@ export function calcDerived(answers: Record<string, string>): Derived {
   let multiple: string | null = null
 
   if (sde && industry) {
-    const [baseLo, baseHi] = industry.multiple
-    const yearBoost = years ? years.buyerConfidence : 0.6
+    const { adjusted, low: multiLo, high: multiHi } = computeSdeMultiple(answers)
 
-    // ── Step 1: apply modifier signals to the midpoint ────────────────────────
-    let midMultiple = (baseLo + baseHi) / 2
-
-    // Year confidence boosts or penalizes midpoint
-    midMultiple *= 0.82 + yearBoost * 0.22
-
-    // Facility type modifier: owned property = premium, short lease = risk flag
-    const facilityAdj: Record<string, number> = {
-      owns: 1.06,
-      long_lease: 1.0,
-      short_lease: 0.9,
-      no_location: 1.02,
-    }
-    midMultiple *= facilityAdj[answers.facilityType ?? ""] ?? 1.0
-
-    // Documentation readiness: score 1–10 maps to multiplier 0.84–1.08
-    const docScoreMap: Record<string, number> = { excellent: 10, good: 7, fair: 4, poor: 1 }
-    const docScore = docScoreMap[answers.docReadiness ?? ""] ?? 5
-    midMultiple *= 0.84 + (docScore / 10) * 0.24
-
-    // Customer concentration modifier
-    const concAdj: Record<string, number> = {
-      diversified: 1.08,
-      moderate: 1.02,
-      concentrated: 0.92,
-      high_risk: 0.8,
-    }
-    midMultiple *= concAdj[answers.customerConc ?? ""] ?? 1.0
-
-    // Key-man dependency modifier
-    const keyManAdj: Record<string, number> = {
-      "1": 0.84,
-      "2": 0.92,
-      "3": 1.0,
-      "4": 1.06,
-      "5": 1.12,
-    }
-    midMultiple *= keyManAdj[answers.keyMan ?? ""] ?? 1.0
-
-    // Recurring revenue modifier
-    const recurAdj: Record<string, number> = {
-      high: 1.13,
-      medium_high: 1.07,
-      medium: 1.0,
-      low: 0.9,
-    }
-    midMultiple *= recurAdj[answers.recurringRev ?? ""] ?? 1.0
-
-    // ── Step 2: confidence-based range narrowing ──────────────────────────────
-    // At low confidence the band is wide; narrows as more signals come in.
-    // At 90% confidence the spread collapses to ~35% of the base industry spread.
-    const baseHalfSpread = (baseHi - baseLo) / 2
-    const confFactor = Math.max(0.35, 1 - (confidence / 100) * 0.68)
-    const halfSpread = baseHalfSpread * confFactor
-
-    const finalLo = Math.max(0.5, midMultiple - halfSpread)
-    const finalHi = midMultiple + halfSpread
-
-    const valLo = Math.round(sde.mid * finalLo)
-    const valHi = Math.round(sde.mid * finalHi)
+    const valLo = Math.round(sde.mid * multiLo)
+    const valHi = Math.round(sde.mid * multiHi)
 
     valuationRange = { low: valLo, high: valHi, text: fmtRange(valLo, valHi) }
-    multiple = midMultiple.toFixed(1) + "×"
+    multiple = adjusted.toFixed(2) + "×"
   }
 
   // Broker fee: Double Lehman tiered (traditional broker benchmark)

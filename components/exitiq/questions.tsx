@@ -6,7 +6,7 @@ import {
   DOC_READINESS_OPTIONS,
   EMPLOYEE_OPTIONS,
   FACILITY_TYPE_OPTIONS,
-  INDUSTRIES,
+  INDUSTRY_MULTIPLES,
   KEY_MAN_OPTIONS,
   RECURRING_REV_OPTIONS,
   REVENUE_RANGES,
@@ -14,13 +14,6 @@ import {
   YEAR_OPTIONS,
 } from "@/lib/exitiq/data"
 import { ProcessingDots, ScanLine } from "./ui"
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function hexToRgb(hex: string): string {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!r || !r[1] || !r[2] || !r[3]) return "167,229,211"
-  return `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}`
-}
 
 // ── Phase info ────────────────────────────────────────────────────────────────
 const PHASES = [
@@ -227,7 +220,7 @@ function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mou
       <QHead>What type of business do you own?</QHead>
       <QSub>Select the category that best fits — we use this to benchmark your buyer market and multiple range.</QSub>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {INDUSTRIES.map(({ label, color }, i) => (
+        {Object.keys(INDUSTRY_MULTIPLES).map((label, i) => (
           <button
             key={label}
             onClick={(e) => !disabled && onAnswer(label, e)}
@@ -247,11 +240,11 @@ function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mou
             onMouseEnter={(e) => {
               if (disabled) return
               const el = e.currentTarget
-              el.style.background = `rgba(${hexToRgb(color)},.14)`
-              el.style.borderColor = `rgba(${hexToRgb(color)},.5)`
-              el.style.color = color
+              el.style.background = "rgba(16,185,129,.14)"
+              el.style.borderColor = "rgba(16,185,129,.5)"
+              el.style.color = "#10b981"
               el.style.transform = "translateY(-2px) scale(1.04)"
-              el.style.boxShadow = `0 0 18px rgba(${hexToRgb(color)},.15)`
+              el.style.boxShadow = "0 0 18px rgba(16,185,129,.15)"
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget
