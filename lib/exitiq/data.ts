@@ -52,30 +52,56 @@ export interface SimpleOption {
 }
 
 export const INDUSTRIES: Industry[] = [
-  { label: "Restaurant / Food Service", multiple: [1.5, 3.0], color: "var(--peach)", buyerLead: "Operator buyers" },
-  {
-    label: "Retail (Brick & Mortar)",
-    multiple: [1.5, 2.5],
-    color: "var(--lavender)",
-    buyerLead: "Strategic acquirers",
-  },
-  { label: "E-commerce / DTC", multiple: [2.5, 4.5], color: "var(--sky)", buyerLead: "Strategic & PE buyers" },
-  { label: "Home Services", multiple: [2.5, 4.5], color: "var(--mint)", buyerLead: "PE-backed rollups" },
-  { label: "Healthcare / Medical", multiple: [3.0, 5.0], color: "var(--sky)", buyerLead: "DSO / group buyers" },
-  { label: "Dental / Optometry", multiple: [3.5, 6.0], color: "var(--mint)", buyerLead: "DSO acquirers" },
-  { label: "Auto Services", multiple: [2.5, 4.0], color: "var(--lavender)", buyerLead: "Regional rollups" },
-  { label: "Beauty / Wellness", multiple: [2.0, 3.5], color: "var(--peach)", buyerLead: "Operator buyers" },
-  { label: "Childcare / Education", multiple: [2.0, 4.0], color: "var(--sky)", buyerLead: "PE & strategic" },
-  { label: "Professional Services", multiple: [2.5, 4.0], color: "var(--lavender)", buyerLead: "Strategic buyers" },
-  { label: "Financial Services", multiple: [3.0, 5.0], color: "var(--mint)", buyerLead: "RIA consolidators" },
-  { label: "Manufacturing", multiple: [3.0, 5.0], color: "var(--sky)", buyerLead: "PE & strategics" },
-  { label: "Construction / Trades", multiple: [2.0, 3.5], color: "var(--lavender)", buyerLead: "Operator buyers" },
-  { label: "Landscaping / Grounds", multiple: [2.5, 4.5], color: "var(--mint)", buyerLead: "PE-backed rollups" },
-  { label: "Tech / SaaS", multiple: [4.0, 8.0], color: "var(--sky)", buyerLead: "Strategic & PE buyers" },
-  { label: "Fitness / Gym", multiple: [2.0, 3.5], color: "var(--peach)", buyerLead: "Franchise rollups" },
-  { label: "Staffing / Recruiting", multiple: [2.5, 4.0], color: "var(--lavender)", buyerLead: "PE consolidators" },
-  { label: "Specialty Retail", multiple: [2.0, 3.5], color: "var(--peach)", buyerLead: "Strategic acquirers" },
+  { label: "Auto Services",               multiple: [2.13, 2.73], color: "var(--lavender)", buyerLead: "Regional rollups" },
+  { label: "Beauty / Wellness",           multiple: [1.87, 2.47], color: "var(--peach)",    buyerLead: "Operator buyers" },
+  { label: "Childcare / Education",       multiple: [2.38, 2.98], color: "var(--sky)",      buyerLead: "PE & strategic" },
+  { label: "Construction / Trades",       multiple: [3.22, 3.82], color: "var(--lavender)", buyerLead: "Operator buyers" },
+  { label: "Dental / Optometry",          multiple: [1.78, 2.38], color: "var(--mint)",     buyerLead: "DSO acquirers" },
+  { label: "E-commerce / DTC",            multiple: [1.95, 2.55], color: "var(--sky)",      buyerLead: "Strategic & PE buyers" },
+  { label: "Energy / Environment",        multiple: [3.06, 3.66], color: "var(--mint)",     buyerLead: "PE & infrastructure funds" },
+  { label: "Financial Services",          multiple: [1.52, 2.12], color: "var(--mint)",     buyerLead: "RIA consolidators" },
+  { label: "Fitness / Gym",              multiple: [1.40, 2.00], color: "var(--peach)",    buyerLead: "Franchise rollups" },
+  { label: "Healthcare / Medical",        multiple: [2.52, 3.12], color: "var(--sky)",      buyerLead: "DSO / group buyers" },
+  { label: "Home Services",              multiple: [2.12, 2.72], color: "var(--mint)",     buyerLead: "PE-backed rollups" },
+  { label: "Landscaping / Grounds",       multiple: [2.02, 2.62], color: "var(--mint)",     buyerLead: "PE-backed rollups" },
+  { label: "Manufacturing",              multiple: [2.73, 3.33], color: "var(--sky)",      buyerLead: "PE & strategics" },
+  { label: "Pet Services",               multiple: [2.48, 3.08], color: "var(--peach)",    buyerLead: "Operator buyers" },
+  { label: "Professional Services",       multiple: [2.15, 2.75], color: "var(--lavender)", buyerLead: "Strategic buyers" },
+  { label: "Restaurant / Food Service",   multiple: [1.80, 2.40], color: "var(--peach)",    buyerLead: "Operator buyers" },
+  { label: "Retail (Brick & Mortar)",     multiple: [2.05, 2.65], color: "var(--lavender)", buyerLead: "Strategic acquirers" },
+  { label: "Specialty Retail / Hospitality", multiple: [2.58, 3.18], color: "var(--peach)", buyerLead: "Strategic acquirers" },
+  { label: "Staffing / Recruiting",       multiple: [1.70, 2.30], color: "var(--lavender)", buyerLead: "PE consolidators" },
+  { label: "Tech / SaaS",                multiple: [2.15, 2.75], color: "var(--sky)",      buyerLead: "Strategic & PE buyers" },
+  { label: "Transportation / Logistics",  multiple: [2.16, 2.76], color: "var(--sky)",      buyerLead: "Strategic & PE buyers" },
+  { label: "Wholesale / Distribution",    multiple: [1.99, 2.59], color: "var(--lavender)", buyerLead: "PE & strategics" },
 ]
+
+// SDE multiples keyed by general industry label — source: 2025 Bizhubdata sold-deal CSV.
+// base = CSV average for that category; low/high = base ± 0.30 default band.
+export const INDUSTRY_MULTIPLES: Record<string, { base: number; low: number; high: number }> = {
+  "Auto Services":                  { base: 2.43, low: 2.13, high: 2.73 },
+  "Beauty / Wellness":              { base: 2.17, low: 1.87, high: 2.47 },
+  "Childcare / Education":          { base: 2.68, low: 2.38, high: 2.98 },
+  "Construction / Trades":          { base: 3.52, low: 3.22, high: 3.82 },
+  "Dental / Optometry":             { base: 2.08, low: 1.78, high: 2.38 },
+  "E-commerce / DTC":               { base: 2.25, low: 1.95, high: 2.55 },
+  "Energy / Environment":           { base: 3.36, low: 3.06, high: 3.66 },
+  "Financial Services":             { base: 1.82, low: 1.52, high: 2.12 },
+  "Fitness / Gym":                  { base: 1.70, low: 1.40, high: 2.00 },
+  "Healthcare / Medical":           { base: 2.82, low: 2.52, high: 3.12 },
+  "Home Services":                  { base: 2.42, low: 2.12, high: 2.72 },
+  "Landscaping / Grounds":          { base: 2.32, low: 2.02, high: 2.62 },
+  "Manufacturing":                  { base: 3.03, low: 2.73, high: 3.33 },
+  "Pet Services":                   { base: 2.78, low: 2.48, high: 3.08 },
+  "Professional Services":          { base: 2.45, low: 2.15, high: 2.75 },
+  "Restaurant / Food Service":      { base: 2.10, low: 1.80, high: 2.40 },
+  "Retail (Brick & Mortar)":        { base: 2.35, low: 2.05, high: 2.65 },
+  "Specialty Retail / Hospitality": { base: 2.88, low: 2.58, high: 3.18 },
+  "Staffing / Recruiting":          { base: 2.00, low: 1.70, high: 2.30 },
+  "Tech / SaaS":                    { base: 2.45, low: 2.15, high: 2.75 },
+  "Transportation / Logistics":     { base: 2.46, low: 2.16, high: 2.76 },
+  "Wholesale / Distribution":       { base: 2.29, low: 1.99, high: 2.59 },
+}
 
 export const YEAR_OPTIONS: YearOption[] = [
   { label: "Under 2 years", key: "under2", buyerConfidence: 0.38 },
@@ -109,19 +135,34 @@ export const EMPLOYEE_OPTIONS: EmployeeOption[] = [
   { label: "50+", count: 60, dots: 25, transferability: 0.9 },
 ]
 
-export const OWNER_ROLE_OPTIONS: SimpleOption[] = [
-  { value: "operator", label: "Day-to-day operator", sub: "I run everything — open to close" },
-  { value: "partial", label: "Partially involved", sub: "I manage the team and handle key relationships" },
-  { value: "mostly_hands_off", label: "Mostly hands-off", sub: "Strong team in place, I step back regularly" },
-  { value: "passive", label: "Silent / investor role", sub: "Fully passive — minimal day-to-day involvement" },
+export const FACILITY_TYPE_OPTIONS: SimpleOption[] = [
+  { value: "owns", label: "Own the property", sub: "Full ownership — adds asset value and eliminates lease risk" },
+  {
+    value: "long_lease",
+    label: "Lease with 7+ years remaining",
+    sub: "Strong position — buyers and SBA lenders see this as stable",
+  },
+  {
+    value: "short_lease",
+    label: "Lease expiring within 7 years",
+    sub: "Risk flag — negotiate an extension before listing",
+  },
+  {
+    value: "no_location",
+    label: "No fixed location / mobile / remote",
+    sub: "Location-independent — flexible buyer profile, no lease risk",
+  },
 ]
 
-export const REVENUE_TREND_OPTIONS: SimpleOption[] = [
-  { value: "growing_fast", label: "Growing 20%+ annually", sub: "Strong upward momentum" },
-  { value: "growing", label: "Growing 5–20% annually", sub: "Steady positive trajectory" },
-  { value: "flat", label: "Flat — within ±5%", sub: "Stable and consistent" },
-  { value: "declining_slight", label: "Declining 5–20%", sub: "Some softness in recent years" },
-  { value: "declining_fast", label: "Declining 20%+", sub: "Meaningful revenue headwinds" },
+export const DOC_READINESS_OPTIONS: SimpleOption[] = [
+  {
+    value: "excellent",
+    label: "3 years of tax returns + clean P&Ls ready",
+    sub: "Deal-ready — buyers and SBA lenders will move fast",
+  },
+  { value: "good", label: "Most records, some gaps", sub: "Good — minor prep needed before diligence" },
+  { value: "fair", label: "Scattered / disorganized", sub: "Will require significant CPA prep time before listing" },
+  { value: "poor", label: "Box of receipts / unprepared", sub: "Buyers and lenders will not proceed without clean records" },
 ]
 
 export const CUSTOMER_CONC_OPTIONS: SimpleOption[] = [
@@ -227,13 +268,15 @@ export const BUYER_CARDS: BuyerCard[] = [
   { type: "Institutional buyer", icon: "○", base: "low", color: "var(--t4)" },
 ]
 
+// 7 axes of the Exit Readiness Score — order must stay in sync with radarScores array in calculations.ts
 export const RADAR_AXES: string[] = [
-  "Valuation",
-  "Buyer Demand",
-  "Financials",
-  "Independence",
-  "Market Timing",
-  "Deal Structure",
+  "Fin. Docs",        // axis 0 — Financial Documentation (20%)
+  "Owner Dep.",       // axis 1 — Owner Dependency (18%)
+  "Rev. Quality",     // axis 2 — Revenue Quality (17%)
+  "Cust. Conc.",      // axis 3 — Customer Concentration (15%)
+  "Longevity",        // axis 4 — Business Longevity (12%)
+  "Ops Depth",        // axis 5 — Operational Depth (10%)
+  "Positioning",      // axis 6 — Positioning (8%)
 ]
 
 // 11 values: index 0–10 answers answered
@@ -288,15 +331,15 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
     "10+ years":
       "A decade-plus track record commands the strongest buyer confidence. Resilience through economic cycles is a premium signal.",
   },
-  ownerRole: {
-    operator:
-      "Owner-operators command loyal businesses — but buyers will carefully model the transition risk. A clear handover plan is essential.",
-    partial:
-      "Partial involvement is common and manageable. Documenting your team's responsibilities now accelerates buyer confidence.",
-    mostly_hands_off:
-      "Strong signal. A business that runs without constant owner oversight is exactly what sophisticated buyers want to acquire.",
-    passive:
-      "Passive ownership is the highest-value transfer profile. Your multiple ceiling is meaningfully higher than operator-run peers.",
+  facilityType: {
+    owns:
+      "Owning the property adds real asset value and removes lease risk entirely — both are meaningful factors in buyer valuation and SBA lender underwriting.",
+    long_lease:
+      "A lease with 7+ years remaining is a strong signal. SBA lenders and buyers view lease stability as a deal facilitator, not a risk.",
+    short_lease:
+      "A lease expiring within 7 years is a risk flag for SBA lenders and buyers. Negotiate a 7–10 year extension before listing to protect your multiple.",
+    no_location:
+      "Location-independent businesses carry no lease risk and often appeal to remote-operator buyers — a growing and well-capitalized buyer archetype.",
   },
   revenue: {
     "Under $250K":
@@ -322,16 +365,15 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
     "$1M+":
       "Top-decile SDE. Institutional capital is engaged. Your business qualifies for competitive multi-buyer processes.",
   },
-  revenueTrend: {
-    growing_fast:
-      "20%+ growth is a powerful buyer signal. Growing businesses command multiple expansion — buyers are paying for future earnings, not just trailing SDE.",
-    growing:
-      "Steady growth in the 5–20% range is exactly what most buyers look for. This profile supports premium multiples and competitive deal processes.",
-    flat: "Flat revenue is neutral. Buyers won't penalize stability, but they'll look harder at margin, retention, and operational moats.",
-    declining_slight:
-      "Moderate decline narrows your buyer pool and compresses multiples. A clear explanation and operational plan are critical to maintaining valuation.",
-    declining_fast:
-      "Significant revenue decline materially impacts valuation. Buyers will price in risk heavily — a strong narrative and seller financing become essential tools.",
+  docReadiness: {
+    excellent:
+      "Deal-ready financials dramatically accelerate deal velocity. Buyers and SBA lenders will move quickly — expect shorter timelines and stronger offers.",
+    good:
+      "Most records in place is a solid foundation. Close the remaining gaps before you list — diligence-ready documentation is worth real money at the table.",
+    fair:
+      "Disorganized records will require significant CPA prep time and extend your deal timeline. Buyers use documentation gaps as leverage — get organized now.",
+    poor:
+      "No financial documentation is a deal-stopper for most buyers and all SBA lenders. This is the single highest-ROI action before going to market.",
   },
   customerConc: {
     diversified:
@@ -380,10 +422,10 @@ export const INSIGHTS: Record<string, Record<string, string> | ((s: string) => s
 export const RECALC_MESSAGES: Record<string, string> = {
   industry: "Mapping industry buyer demand…",
   years: "Adjusting buyer confidence signal…",
-  ownerRole: "Modeling ownership transfer risk…",
+  facilityType: "Evaluating lease and facility risk…",
   revenue: "Calculating valuation baseline…",
   sde: "Modeling SDE multiple range…",
-  revenueTrend: "Factoring revenue trajectory…",
+  docReadiness: "Scoring documentation readiness…",
   customerConc: "Analyzing concentration risk…",
   employees: "Updating transferability signal…",
   keyMan: "Calibrating key-man dependency…",
@@ -394,10 +436,10 @@ export const RECALC_MESSAGES: Record<string, string> = {
 export const ANSWER_KEYS = [
   "industry", // Phase 1: Business Identity
   "years",
-  "ownerRole",
+  "facilityType",
   "revenue", // Phase 2: Financial Snapshot
   "sde",
-  "revenueTrend",
+  "docReadiness",
   "customerConc",
   "employees", // Phase 3: Operational Profile
   "keyMan",

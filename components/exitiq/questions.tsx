@@ -3,24 +3,17 @@
 import React from "react"
 import {
   CUSTOMER_CONC_OPTIONS,
+  DOC_READINESS_OPTIONS,
   EMPLOYEE_OPTIONS,
-  INDUSTRIES,
+  FACILITY_TYPE_OPTIONS,
+  INDUSTRY_MULTIPLES,
   KEY_MAN_OPTIONS,
-  OWNER_ROLE_OPTIONS,
   RECURRING_REV_OPTIONS,
   REVENUE_RANGES,
-  REVENUE_TREND_OPTIONS,
   SDE_RANGES,
   YEAR_OPTIONS,
 } from "@/lib/exitiq/data"
 import { ProcessingDots, ScanLine } from "./ui"
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function hexToRgb(hex: string): string {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!r || !r[1] || !r[2] || !r[3]) return "167,229,211"
-  return `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}`
-}
 
 // ── Phase info ────────────────────────────────────────────────────────────────
 const PHASES = [
@@ -228,7 +221,7 @@ function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mou
       <QHead>What type of business do you own?</QHead>
       <QSub>Select the category that best fits — we use this to benchmark your buyer market and multiple range.</QSub>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {INDUSTRIES.map(({ label, color }, i) => (
+        {Object.keys(INDUSTRY_MULTIPLES).map((label, i) => (
           <button
             key={label}
             onClick={(e) => !disabled && onAnswer(label, e)}
@@ -248,11 +241,11 @@ function Q1Industry({ onAnswer, disabled }: { onAnswer: (v: string, e: React.Mou
             onMouseEnter={(e) => {
               if (disabled) return
               const el = e.currentTarget
-              el.style.background = `rgba(${hexToRgb(color)},.14)`
-              el.style.borderColor = `rgba(${hexToRgb(color)},.5)`
-              el.style.color = color
+              el.style.background = "rgba(16,185,129,.14)"
+              el.style.borderColor = "rgba(16,185,129,.5)"
+              el.style.color = "#10b981"
               el.style.transform = "translateY(-2px) scale(1.04)"
-              el.style.boxShadow = `0 0 18px rgba(${hexToRgb(color)},.15)`
+              el.style.boxShadow = "0 0 18px rgba(16,185,129,.15)"
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget
@@ -415,8 +408,8 @@ function Q2Years({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseE
   )
 }
 
-// ── Q3: Owner role ────────────────────────────────────────────────────────────
-function Q3OwnerRole({
+// ── Q3: Facility type ─────────────────────────────────────────────────────────
+function Q3FacilityType({
   onAnswer,
   disabled,
 }: {
@@ -425,9 +418,18 @@ function Q3OwnerRole({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <QHead>What's your role in the day-to-day?</QHead>
-      <QSub>Owner dependency is the #1 thing buyers underwrite. Be honest — it shapes your multiple ceiling.</QSub>
-      <RadioCardList options={OWNER_ROLE_OPTIONS} onAnswer={onAnswer} disabled={disabled} />
+      <QHead>What is your facility situation?</QHead>
+      <QSub>
+        Lease terms and property ownership are scrutinized in SBA pre-screens and buyer due diligence — they directly
+        affect your deal structure options.
+      </QSub>
+      <RadioCardList
+        options={FACILITY_TYPE_OPTIONS}
+        onAnswer={onAnswer}
+        disabled={disabled}
+        accentColor="#10b981"
+        accentRgb="16,185,129"
+      />
     </div>
   )
 }
@@ -579,25 +581,95 @@ function Q5SDE({ onAnswer, disabled }: { onAnswer: (v: string, e: React.MouseEve
   )
 }
 
-// ── Q6: Revenue trend ─────────────────────────────────────────────────────────
-function Q6RevenueTrend({
+// ── Q6: Documentation readiness ──────────────────────────────────────────────
+function Q6DocReadiness({
   onAnswer,
   disabled,
 }: {
   onAnswer: (v: string, e: React.MouseEvent) => void
   disabled: boolean
 }) {
+  const scoreLabels: Record<string, string> = { excellent: "10 / 10", good: "7 / 10", fair: "4 / 10", poor: "1 / 10" }
+  const scoreColors: Record<string, string> = {
+    excellent: "#10b981",
+    good: "#a7e5d3",
+    fair: "#eab308",
+    poor: "#ef4444",
+  }
+  const [hover, setHover] = React.useState<string | null>(null)
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <QHead>Over the last 3 years, your revenue has…</QHead>
-      <QSub>Trend matters as much as the number — buyers pay for trajectory, not just today's earnings.</QSub>
-      <RadioCardList
-        options={REVENUE_TREND_OPTIONS}
-        onAnswer={onAnswer}
-        disabled={disabled}
-        accentColor="#10b981"
-        accentRgb="16,185,129"
-      />
+      <QHead>How prepared are your financial records for a buyer or lender review?</QHead>
+      <QSub>
+        Financial documentation is the #1 deal facilitator — and the #1 deal killer when missing. Be honest.
+      </QSub>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {DOC_READINESS_OPTIONS.map(({ value, label, sub }, i) => (
+          <button
+            key={value}
+            onClick={(e) => !disabled && onAnswer(value, e)}
+            onMouseEnter={() => setHover(value)}
+            onMouseLeave={() => setHover(null)}
+            style={{
+              padding: "14px 18px",
+              textAlign: "left",
+              cursor: disabled ? "default" : "pointer",
+              background: hover === value ? "rgba(16,185,129,.09)" : "var(--s2)",
+              border: `1px solid ${hover === value ? "rgba(16,185,129,.38)" : "var(--b3)"}`,
+              borderRadius: 12,
+              transition: "all .22s cubic-bezier(.34,1.4,.64,1)",
+              animation: `chipFloat .5s ${i * 60}ms cubic-bezier(.34,1.3,.64,1) both`,
+              transform: hover === value ? "translateX(4px)" : "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 17,
+                  fontWeight: 300,
+                  color: hover === value ? "#10b981" : "var(--t1)",
+                  letterSpacing: "-.2px",
+                  transition: "color .2s",
+                }}
+              >
+                {label}
+              </div>
+              {sub && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: hover === value ? "rgba(16,185,129,.65)" : "var(--t4)",
+                    marginTop: 3,
+                    fontFamily: "Inter, sans-serif",
+                    transition: "color .2s",
+                  }}
+                >
+                  {sub}
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                flexShrink: 0,
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+                color: scoreColors[value] ?? "var(--t4)",
+                opacity: hover === value ? 1 : 0.6,
+                transition: "opacity .2s",
+              }}
+            >
+              {scoreLabels[value]}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -667,7 +739,7 @@ function Q8Employees({
       <QHead>How many employees do you have?</QHead>
       <QSub>Team size affects transferability and the type of buyer who can realistically operate your business.</QSub>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {EMPLOYEE_OPTIONS.map(({ label, dots, transferability }, i) => (
+        {EMPLOYEE_OPTIONS.map(({ label, dots }, i) => (
           <button
             key={label}
             onClick={(e) => !disabled && onAnswer(label, e)}
@@ -685,29 +757,19 @@ function Q8Employees({
               transform: hover === i ? "translateX(4px)" : "none",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div
-                  style={{
-                    fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                    fontSize: 20,
-                    fontWeight: 300,
-                    color: hover === i ? "#a8c8e8" : "var(--t1)",
-                    letterSpacing: "-.2px",
-                    transition: "color .2s",
-                  }}
-                >
-                  {label}
-                </div>
-                <EmployeeDots count={dots} color={hover === i ? "#a8c8e8" : undefined} />
-              </div>
-              <div style={{ fontSize: 11, color: "var(--t4)", textAlign: "right", fontFamily: "Inter, sans-serif" }}>
-                <div>Transferability</div>
-                <div style={{ color: hover === i ? "#a8c8e8" : "var(--t2)", fontWeight: 500, marginTop: 2 }}>
-                  {Math.round(transferability * 100)}%
-                </div>
-              </div>
+            <div
+              style={{
+                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                fontSize: 20,
+                fontWeight: 300,
+                color: hover === i ? "#a8c8e8" : "var(--t1)",
+                letterSpacing: "-.2px",
+                transition: "color .2s",
+              }}
+            >
+              {label}
             </div>
+            <EmployeeDots count={dots} color={hover === i ? "#a8c8e8" : undefined} />
           </button>
         ))}
       </div>
@@ -825,10 +887,10 @@ function Q10RecurringRev({
 const NEXT_UNLOCK_HINTS = [
   { step: 0, unlocks: "Buyer pool match + industry multiple range" },
   { step: 1, unlocks: "Buyer confidence score + stability signal" },
-  { step: 2, unlocks: "Owner-dependency risk adjustment" },
+  { step: 2, unlocks: "Facility & lease risk signal + SBA pre-screen flag" },
   { step: 3, unlocks: "Broker fee exposure + revenue-based baseline" },
   { step: 4, unlocks: "Preliminary valuation range + SDE multiple" },
-  { step: 5, unlocks: "Trajectory premium or discount" },
+  { step: 5, unlocks: "Deal readiness score + documentation adjustment" },
   { step: 6, unlocks: "Customer risk scan + concentration adjustment" },
   { step: 7, unlocks: "Transferability score + team depth signal" },
   { step: 8, unlocks: "Operational independence premium" },
@@ -882,10 +944,10 @@ export function QuestionPanel({ step, onAnswer, processing, disabled }: Question
   const components = [
     Q1Industry,
     Q2Years,
-    Q3OwnerRole,
+    Q3FacilityType,
     Q4Revenue,
     Q5SDE,
-    Q6RevenueTrend,
+    Q6DocReadiness,
     Q7CustomerConc,
     Q8Employees,
     Q9KeyMan,

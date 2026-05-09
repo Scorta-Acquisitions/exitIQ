@@ -3,7 +3,7 @@
 
 import React from "react"
 import type { Derived } from "@/lib/exitiq/calculations"
-import { BUYER_CARDS } from "@/lib/exitiq/data"
+import { computeBuyerMatchLikelihoods } from "@/lib/exitiq/calculations"
 import { ConfidenceMeter, Divider, LiveBadge, useSpring } from "./ui"
 //hello
 
@@ -133,8 +133,71 @@ function DiagnosisZone({
   )
 }
 
+// ── Buyer match zone ──────────────────────────────────────────────────────────
+const PERSONA_COLORS = ["#10b981", "#a7e5d3", "#c8b8e0"] as const
+
+function BuyerMatchZone({ answers }: { answers: Record<string, string> }) {
+  const matches = computeBuyerMatchLikelihoods(answers)
+  const maxLikelihood = Math.max(...matches.map((m) => m.likelihood))
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: ".8px",
+          textTransform: "uppercase",
+          color: "rgba(167,229,211,.5)",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Buyer Archetype Match
+      </div>
+      {matches.map(({ persona, likelihood, keyReasons }, i) => {
+        const color = PERSONA_COLORS[i] ?? "#a7e5d3"
+        const isTop = likelihood === maxLikelihood
+        return (
+          <div
+            key={persona}
+            style={{ display: "flex", flexDirection: "column", gap: 4, animation: `slideUp .35s ${i * 65}ms ease both` }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, color: isTop ? color : "var(--t2)", fontFamily: "Inter, sans-serif", fontWeight: isTop ? 600 : 400 }}>
+                {persona}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "Inter, sans-serif" }}>
+                {likelihood}%
+              </span>
+            </div>
+            {/* Bar */}
+            <div style={{ height: 3, borderRadius: 2, background: "var(--b3)", overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${likelihood}%`,
+                  background: color,
+                  borderRadius: 2,
+                  transition: "width .6s cubic-bezier(.34,1.2,.64,1)",
+                  opacity: isTop ? 1 : 0.55,
+                }}
+              />
+            </div>
+            {/* Top reason */}
+            {keyReasons[0] && (
+              <div style={{ fontSize: 9.5, color: "var(--t5)", fontFamily: "Inter, sans-serif", lineHeight: 1.35 }}>
+                {keyReasons[0]}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Zone 2: Key signals ───────────────────────────────────────────────────────
-function SignalsZone({ derived }: { derived: Derived }) {
+function SignalsZone({ derived, answers }: { derived: Derived; answers: Record<string, string> }) {
   const { valuationRange, multiple, brokerFee } = derived
 
   return (
@@ -255,54 +318,9 @@ function SignalsZone({ derived }: { derived: Derived }) {
         )}
       </div>
 
-      {/* Buyer match */}
-      {derived.industry && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: ".8px",
-              textTransform: "uppercase",
-              color: "rgba(167,229,211,.5)",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            Buyer Match
-          </div>
-          {BUYER_CARDS.map(({ type, icon, color }, i) => {
-            const likelihood = i === 0 ? "High" : i === 1 ? "Medium" : i === 2 ? "Medium" : "Unlikely"
-            return (
-              <div
-                key={type}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  opacity: i === 3 ? 0.3 : 1,
-                  animation: `slideUp .35s ${i * 65}ms ease both`,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ color, fontSize: 11 }}>{icon}</span>
-                  <span style={{ fontSize: 11, color: "var(--t2)", fontFamily: "Inter, sans-serif" }}>{type}</span>
-                </div>
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    letterSpacing: ".6px",
-                    textTransform: "uppercase",
-                    fontFamily: "Inter, sans-serif",
-                    color: i === 0 ? "#10b981" : i <= 2 ? "#a7e5d3" : "var(--t4)",
-                  }}
-                >
-                  {likelihood}
-                </span>
-              </div>
-            )
-          })}
-        </div>
+      {/* Buyer match — dynamic archetype scoring */}
+      {Object.keys(answers).length > 0 && (
+        <BuyerMatchZone answers={answers} />
       )}
     </div>
   )
@@ -471,11 +489,12 @@ function MarketConditions({ derived }: { derived: Derived }) {
 interface DashboardPanelProps {
   step: number
   derived: Derived
+  answers: Record<string, string>
   processing: boolean
   recalcMsg: string | null
 }
 
-export function DashboardPanel({ step, derived, processing, recalcMsg }: DashboardPanelProps) {
+export function DashboardPanel({ step, derived, answers, processing, recalcMsg }: DashboardPanelProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative" }}>
       <div
@@ -494,7 +513,7 @@ export function DashboardPanel({ step, derived, processing, recalcMsg }: Dashboa
         <LiveBadge />
         <DiagnosisZone derived={derived} processing={processing} recalcMsg={recalcMsg} step={step} />
         <Divider />
-        <SignalsZone derived={derived} />
+        <SignalsZone derived={derived} answers={answers} />
         {step > 0 && (
           <>
             <Divider />

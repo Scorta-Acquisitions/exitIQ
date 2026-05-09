@@ -7,6 +7,8 @@ export interface Stage1Answers {
   sde: string
   employees: string
   state: string
+  facilityType?: string
+  docReadiness?: string
 }
 
 export interface GateAnswers {

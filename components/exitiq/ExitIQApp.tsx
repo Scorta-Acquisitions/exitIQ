@@ -24,6 +24,23 @@ import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
 
+const CHIP_QUESTION_LABELS: Record<string, string> = {
+  industry: "Industry",
+  years: "Tenure",
+  facilityType: "Facility",
+  revenue: "Revenue",
+  sde: "SDE",
+  docReadiness: "Doc Readiness",
+  customerConc: "Cust. Conc.",
+  employees: "Team Size",
+  keyMan: "Key-Man",
+  recurringRev: "Recurring Rev.",
+}
+
+function formatChipAnswer(value: string): string {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 function useIsMobile(breakpoint = 768) {
   const [mobile, setMobile] = React.useState(false)
   React.useEffect(() => {
@@ -223,11 +240,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     return gl.cleanup
   }, [])
 
-  // ── Confidence → WebGL uniform ─────────────────────────────────────────────────────────────────────────
-  React.useEffect(() => {
-    glRef.current?.setConf(derived.confidence / 100)
-  }, [derived.confidence])
-
   // ── Restore partial progress from a previous mid-assessment exit ───────────────────────────
   React.useEffect(() => {
     const partial = loadPartialProgress()
@@ -360,8 +372,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         sde: answers.sde ?? "",
         employees: answers.employees ?? "",
         state: answers.state ?? "",
-        ownerRole: answers.ownerRole ?? "",
-        revenueTrend: answers.revenueTrend ?? "",
+        facilityType: answers.facilityType ?? "",
+        docReadiness: answers.docReadiness ?? "",
         customerConc: answers.customerConc ?? "",
         keyMan: answers.keyMan ?? "",
         recurringRev: answers.recurringRev ?? "",
@@ -662,6 +674,8 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                   {ANSWER_KEYS.filter((k) => !!answers[k]).map((key) => {
                     const targetStep = ANSWER_KEYS.indexOf(key)
                     const disabled = processing || transitioning
+                    const questionLabel = CHIP_QUESTION_LABELS[key] ?? key
+                    const answerLabel = formatChipAnswer(answers[key] ?? "")
                     return (
                       <button
                         key={key}
@@ -698,7 +712,9 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                           if (icon) icon.style.opacity = "0.28"
                         }}
                       >
-                        {answers[key]}
+                        <span style={{ color: "var(--t5)", fontWeight: 400 }}>{questionLabel}</span>
+                        <span style={{ color: "var(--t5)", opacity: 0.5, margin: "0 1px" }}>·</span>
+                        {answerLabel}
                         <svg
                           className="chip-edit-icon"
                           width={9}
@@ -723,7 +739,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
           </div>
 
           {/* ── Right column: Dashboard — hidden on mobile ── */}
-          {!isMobile && <DashboardPanel step={stepCount} derived={derived} processing={processing} recalcMsg={recalcMsg} />}
+          {!isMobile && <DashboardPanel step={stepCount} derived={derived} answers={answers} processing={processing} recalcMsg={recalcMsg} />}
         </div>
       </div>
     </div>

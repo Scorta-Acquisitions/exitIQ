@@ -222,7 +222,6 @@ function ExitIQOverlay({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ─── Nav ──────────────────────────────────────────────────────────────────────
 // ─── Announcement Bar ─────────────────────────────────────────────────────────
 function AAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
   return (

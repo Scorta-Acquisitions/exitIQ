@@ -100,10 +100,10 @@ export const STAGE2_QUESTIONS: StageQuestion[] = [
       },
       {
         value: "long_term_lease",
-        label: "Long-term lease (3+ years remaining)",
+        label: "Long-term lease (7+ years remaining)",
         sub: "Stable tenancy — buyers will be comfortable",
       },
-      { value: "short_lease", label: "Short lease (under 3 years)", sub: "May need to renegotiate before listing" },
+      { value: "short_lease", label: "Short lease (under 7 years)", sub: "May need to renegotiate before listing" },
       { value: "no_fixed_location", label: "No fixed location", sub: "Remote, home-based, or mobile business" },
     ],
   },

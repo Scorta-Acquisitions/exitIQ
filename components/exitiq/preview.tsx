@@ -2,7 +2,8 @@
 "use client"
 
 import React from "react"
-import type { Derived } from "@/lib/exitiq/calculations"
+import type { Derived, SdeMarginCheck } from "@/lib/exitiq/calculations"
+import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
 import { ScanLine } from "./ui"
 
@@ -29,15 +30,14 @@ function statusColors(s: Status) {
   return { bg: "var(--s2)", border: "var(--b3)", color: "var(--t3)", dot: "var(--t4)", label: "Neutral" }
 }
 
-function trendSignal(v: string): { label: string; status: Status; pill: string } {
+function docReadinessSignal(v: string): { label: string; status: Status; pill: string } {
   const m: Record<string, { label: string; status: Status; pill: string }> = {
-    growing_fast: { label: "Growing 20%+", status: "bull", pill: "📈 Bullish" },
-    growing: { label: "Growing 5–20%", status: "bull", pill: "📈 Positive" },
-    flat: { label: "Flat / Stable", status: "neutral", pill: "➡️ Neutral" },
-    declining_slight: { label: "Declining 5–20%", status: "risk", pill: "📉 Softening" },
-    declining_fast: { label: "Declining 20%+", status: "risk", pill: "📉 Bearish" },
+    excellent: { label: "3yr Returns + Clean P&Ls", status: "bull", pill: "📋 Deal-ready" },
+    good: { label: "Most Records, Some Gaps", status: "bull", pill: "📋 Good" },
+    fair: { label: "Scattered / Disorganized", status: "risk", pill: "📋 Needs Prep" },
+    poor: { label: "Not Prepared", status: "risk", pill: "📋 Not Ready" },
   }
-  return m[v] ?? { label: "Not provided", status: "neutral", pill: "➡️ —" }
+  return m[v] ?? { label: "Not provided", status: "neutral", pill: "📋 —" }
 }
 
 function teamSignal(v: string): { label: string; status: Status; pill: string } {
@@ -69,12 +69,12 @@ function concSignal(v: string): { label: string; status: Status } {
   return m[v] ?? { label: "Not provided", status: "neutral" }
 }
 
-function roleSignal(v: string): { label: string; status: Status } {
+function facilitySignal(v: string): { label: string; status: Status } {
   const m: Record<string, { label: string; status: Status }> = {
-    passive: { label: "Passive / Investor", status: "bull" },
-    mostly_hands_off: { label: "Mostly Hands-off", status: "bull" },
-    partial: { label: "Partially Involved", status: "neutral" },
-    operator: { label: "Day-to-Day Operator", status: "risk" },
+    owns: { label: "Owns Property", status: "bull" },
+    long_lease: { label: "Lease 7+ Years", status: "bull" },
+    short_lease: { label: "Lease < 7 Years", status: "risk" },
+    no_location: { label: "Mobile / Remote", status: "neutral" },
   }
   return m[v] ?? { label: "Not provided", status: "neutral" }
 }
@@ -104,33 +104,37 @@ function buildHeadline(answers: Record<string, string>): string {
 }
 
 const RADAR_STRENGTH_DESC: Record<string, string> = {
-  Valuation:
-    "Your SDE-to-value ratio compares favorably against the industry peer set. Market buyers are actively paying premiums for businesses at this multiple tier — your financial structure positions you well for a competitive exit process.",
-  "Buyer Demand":
-    "Your industry and size profile attract multiple buyer types simultaneously — operators, SBA-backed buyers, and strategic acquirers are all active and eligible. Competitive buyer interest typically supports stronger offer terms and faster closes.",
-  Financials:
-    "Revenue, SDE, and trajectory align well with buyer expectations at this market tier. Your financial profile should hold up in initial diligence screens and support bankable deal structures that expand your qualified buyer pool.",
-  Independence:
-    "Business operations show meaningful independence from owner involvement — a primary driver of premium multiples across all buyer types in the lower-middle market. Sophisticated acquirers pay a genuine premium for this profile.",
-  "Market Timing":
-    "Current market conditions are favorable for sellers in your segment. Buyer activity and deal velocity are elevated relative to prior quarters — timing a process now captures this tailwind and reduces exposure to rate or multiple compression.",
-  "Deal Structure":
-    "Your profile supports clean, bankable deal structures. SBA eligibility may apply, which significantly expands your qualified buyer pool and supports competitive offer dynamics that wouldn't exist in a single-buyer process.",
+  "Fin. Docs":
+    "Your financial documentation is deal-ready — 3 years of clean tax returns and organized P&Ls are what SBA lenders and buyers need to move fast. This eliminates the most common diligence bottleneck and supports a compressed, competitive process.",
+  "Owner Dep.":
+    "Business operations show meaningful independence from owner involvement — a primary driver of premium multiples across all buyer types in the lower-middle market. Sophisticated acquirers pay a genuine premium for this transferable profile.",
+  "Rev. Quality":
+    "Your recurring revenue base is a top-tier signal. Buyers price predictable cash flows at a meaningful premium over transactional peers — this directly expands your multiple ceiling, draws competing bids, and makes your business easier to finance at acquisition.",
+  "Cust. Conc.":
+    "A diversified customer base eliminates the most common single-buyer discount. No customer concentration risk means your revenue is more defensible in diligence, and buyers have full confidence in post-close continuity of the cash flow.",
+  Longevity:
+    "A long operating history proves resilience through economic cycles. Buyers treat decade-plus track records as a fundamental de-risking signal — it supports premium multiples, cleaner deal structures, and more favorable SBA financing terms.",
+  "Ops Depth":
+    "Strong team depth and operational infrastructure significantly reduce transition risk. This headcount and independence profile commands premium multiples over owner-operated peers and accelerates buyer confidence through the diligence process.",
+  Positioning:
+    "Your vertical and geographic positioning attracts premium buyers. Strong industry multiples and active M&A buyer density in your region support competitive offer dynamics and shorter time-to-close relative to lower-demand segments.",
 }
 
 const RADAR_RISK_DESC: Record<string, string> = {
-  Valuation:
-    "Valuation may be compressed by financial profile gaps or market headwinds in your segment. Addressing key value drivers before listing — through normalization, add-backs, and operational improvements — could expand your range meaningfully.",
-  "Buyer Demand":
-    "Buyer demand signals are mixed for this profile. Positioning strategy and targeted outreach will be critical to generating competitive offers rather than a single below-market bid from an uninformed buyer.",
-  Financials:
-    "Financial documentation gaps or SDE uncertainty will trigger buyer scrutiny in diligence. Clean, normalized financials with documented add-backs are the #1 deal facilitator — and the #1 deal killer when missing or inconsistent.",
-  Independence:
-    "Owner dependency is flagged at a level buyers will scrutinize. They will model transition risk carefully and apply a discount accordingly. A documented handover plan with team depth demonstrated is essential to protecting your multiple.",
-  "Market Timing":
-    "Market timing signals are less favorable in your segment. Buyers may push for conservative deal structures, holdbacks, or performance-based earnouts to offset perceived risk — preparation and positioning become more important.",
-  "Deal Structure":
-    "Deal structure complexity could limit your buyer pool to those with higher risk tolerance. SBA eligibility and financing packaging will need careful preparation before going to market to attract the broadest competitive buyer set.",
+  "Fin. Docs":
+    "Financial documentation gaps will trigger buyer scrutiny in diligence. Clean, normalized financials with documented add-backs are the #1 deal facilitator — and the #1 deal killer when missing. This is the highest-ROI action before going to market.",
+  "Owner Dep.":
+    "Owner dependency is flagged at a level buyers will scrutinize. They will model transition risk carefully and apply a discount accordingly. A documented handover plan with demonstrated team depth is essential to protecting your multiple.",
+  "Rev. Quality":
+    "Predominantly transactional revenue compresses multiples compared to recurring-model peers. Buyers discount for revenue unpredictability and financing difficulty — even partial restructuring toward retainer or contract models can materially improve your range.",
+  "Cust. Conc.":
+    "Customer concentration will be flagged in diligence. Buyers apply multiple discounts and often require earnouts tied to customer retention post-close. Long-tenure relationship history and documented contracts are your strongest counter-arguments.",
+  Longevity:
+    "A shorter operating history requires a strong growth narrative. Buyers will weight trajectory over historical revenue — consistent growth data, documented processes, and a compelling forward story are critical to protecting your multiple.",
+  "Ops Depth":
+    "Limited team depth raises transition risk concerns. Buyers will model what happens post-close carefully and price in the continuity risk. Documenting processes, cross-training team members, and reducing single-person dependencies are the fastest fixes.",
+  Positioning:
+    "Your industry multiple tier or geographic market presents valuation headwinds. Targeted buyer outreach and a strong positioning narrative become more important in lower-demand segments to generate competitive offers rather than a single below-market bid.",
 }
 
 function getStrengths(answers: Record<string, string>, radarScores: number[], industryLabel: string) {
@@ -155,10 +159,15 @@ function getStrengths(answers: Record<string, string>, radarScores: number[], in
       title: "Deep Operational Team",
       desc: `A ${emp}-person team significantly reduces transition risk and post-close continuity concerns. Buyers view this headcount as a genuine strength — it commands premium multiples versus owner-operated peers and dramatically accelerates buyer confidence through the diligence process.`,
     }
-  } else if (answers.ownerRole === "passive" || answers.ownerRole === "mostly_hands_off") {
+  } else if (answers.facilityType === "owns") {
     s2 = {
-      title: "Owner-Independent Operations",
-      desc: "A business that runs without constant owner involvement commands a meaningful multiple premium. Sophisticated buyers specifically target this profile — it reduces perceived transition risk, dramatically accelerates deal close timelines, and removes the most common cause of post-LOI re-trades.",
+      title: "Owned Real Estate Asset",
+      desc: "Owning the property adds tangible asset value and removes lease risk entirely — both are meaningful factors in buyer valuation and SBA lender underwriting. Property ownership signals stability and can directly expand your qualified buyer pool.",
+    }
+  } else if (answers.docReadiness === "excellent" || answers.docReadiness === "good") {
+    s2 = {
+      title: "Deal-Ready Financial Records",
+      desc: "Clean, auditable financials are the #1 deal facilitator. Buyers move faster and lenders approve more confidently when records are organized — this directly compresses deal timelines, reduces re-trade risk, and eliminates the most common reason deals collapse in diligence.",
     }
   } else if (answers.years === "10+ years") {
     s2 = {
@@ -186,11 +195,6 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
       title: "Elevated Key-Man Risk",
       desc: "Most key relationships and decisions flow through you. Buyers will carefully model what happens post-close and price in the risk with a discount and structured earnout. Documenting your client relationships, processes, and institutional knowledge is the fastest path to multiple improvement before going to market.",
     }
-  } else if (answers.ownerRole === "operator") {
-    r1 = {
-      title: "Owner Dependency Risk",
-      desc: "Your day-to-day involvement signals meaningful transition risk to buyers — the most commonly cited reason for multiple compression in businesses under $5M. A clear, documented handover plan with demonstrated team depth is essential before your first buyer conversation. Buyers will test this assumption hard.",
-    }
   } else {
     const nonZero = radarScores.map((s, i) => ({ s, i })).filter((x) => x.s > 0)
     const minItem = nonZero.reduce((a, b) => (b.s < a.s ? b : a), nonZero[0] ?? { s: 0, i: 2 })
@@ -209,15 +213,20 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
       title: "Customer Concentration Flag",
       desc: "25–50% from your top customer will be flagged in diligence. Buyers will apply multiple discounts and often require earnouts tied to that customer's retention. Long-tenure relationship history and documented contracts are your strongest counter-arguments — have them prepared before your first buyer call.",
     }
-  } else if (answers.revenueTrend === "declining_fast") {
+  } else if (answers.docReadiness === "poor") {
     r2 = {
-      title: "Revenue Decline Headwind",
-      desc: "Meaningful revenue decline materially impacts valuation and narrows your buyer pool to those with turnaround appetite. A credible, data-backed recovery narrative and seller financing become essential tools to sustaining deal momentum. Without them, expect multiple compression of 0.5–1.5× versus peers.",
+      title: "Financial Records Not Ready",
+      desc: "No organized financial documentation will stall or kill most deals. Buyers and SBA lenders require 3 years of clean tax returns and P&L statements before they can proceed — this is the single highest-ROI action before going to market.",
     }
-  } else if (answers.revenueTrend === "declining_slight") {
+  } else if (answers.docReadiness === "fair") {
     r2 = {
-      title: "Revenue Softness Signal",
-      desc: "Moderate decline compresses multiples and narrows your buyer pool toward more risk-tolerant acquirers who demand better terms. Buyers will scrutinize trailing revenue carefully — operational improvements and a forward-looking narrative with data are critical to sustaining deal confidence through a full diligence process.",
+      title: "Disorganized Financial Records",
+      desc: "Scattered records will require significant CPA prep time and extend your deal timeline. Buyers use documentation gaps as leverage in negotiations — organize and normalize your financials before your first buyer conversation.",
+    }
+  } else if (answers.facilityType === "short_lease") {
+    r2 = {
+      title: "Lease Expiration Risk",
+      desc: "A lease expiring within 7 years is a significant SBA and buyer red flag. Lenders will hesitate and buyers will discount the offer or require lease contingencies. Negotiate a 7–10 year extension before listing to protect your multiple.",
     }
   } else if (answers.recurringRev === "low") {
     r2 = {
@@ -838,15 +847,15 @@ const QUESTION_META: { key: string; label: string; format: (v: string) => string
   { key: "industry", label: "Industry", format: (v) => v || "—" },
   { key: "years", label: "Years in business", format: (v) => v || "—" },
   {
-    key: "ownerRole",
-    label: "Owner role",
+    key: "facilityType",
+    label: "Facility situation",
     format: (v) =>
       ((
         ({
-          operator: "Day-to-day operator",
-          partial: "Partially involved",
-          mostly_hands_off: "Mostly hands-off",
-          passive: "Silent / investor",
+          owns: "Own the property",
+          long_lease: "Lease 7+ years remaining",
+          short_lease: "Lease expiring < 7 years",
+          no_location: "Mobile / remote / no location",
         }) as Record<string, string>
       )[v] ??
         v) ||
@@ -855,16 +864,15 @@ const QUESTION_META: { key: string; label: string; format: (v: string) => string
   { key: "revenue", label: "Annual revenue", format: (v) => v || "—" },
   { key: "sde", label: "Annual SDE", format: (v) => v || "—" },
   {
-    key: "revenueTrend",
-    label: "Revenue trend",
+    key: "docReadiness",
+    label: "Doc readiness",
     format: (v) =>
       ((
         ({
-          growing_fast: "Growing 20%+",
-          growing: "Growing 5–20%",
-          flat: "Flat / Stable",
-          declining_slight: "Declining 5–20%",
-          declining_fast: "Declining 20%+",
+          excellent: "3yr returns + clean P&Ls ready",
+          good: "Most records, some gaps",
+          fair: "Scattered / disorganized",
+          poor: "Box of receipts / unprepared",
         }) as Record<string, string>
       )[v] ??
         v) ||
@@ -1217,6 +1225,367 @@ function BottomUnlockCTA({ onUnlock, label = "Unlock my full report →" }: { on
   )
 }
 
+// ── Exit Readiness Score hero ─────────────────────────────────────────────────
+function ExitReadinessHero({
+  score,
+  grade,
+  industry,
+}: {
+  score: number
+  grade: "A" | "B" | "C" | "D" | "—"
+  industry: string
+}) {
+  const hasScore = score > 0
+
+  // Colour ramp: A=mint, B=sky-blue, C=amber, D=peach-red
+  const gradeColor =
+    grade === "A" ? "#10b981"
+    : grade === "B" ? "#60a5fa"
+    : grade === "C" ? "#fbbf24"
+    : grade === "D" ? "#f87171"
+    : "var(--t4)"
+
+  const gradeGlow =
+    grade === "A" ? "rgba(16,185,129,.35)"
+    : grade === "B" ? "rgba(96,165,250,.35)"
+    : grade === "C" ? "rgba(251,191,36,.35)"
+    : grade === "D" ? "rgba(248,113,113,.35)"
+    : "transparent"
+
+  const gradeLabel =
+    grade === "A" ? "Market-ready"
+    : grade === "B" ? "Mostly ready"
+    : grade === "C" ? "Needs prep"
+    : grade === "D" ? "Significant gaps"
+    : "Calculating…"
+
+  // SVG arc: radius 54, circumference = 2π×54 ≈ 339.3. Offset to leave a gap at the bottom.
+  // We use 75% of the full circle (270°), starting from the left (225° in SVG coords).
+  const R = 54
+  const CIRC = 2 * Math.PI * R
+  const ARC_FRACTION = 0.75           // 270° sweep
+  const arcLen = CIRC * ARC_FRACTION  // the drawn portion
+  // dashoffset = arcLen × (1 - score/100) fills proportionally from the start
+  const fillLen = arcLen * (score / 100)
+  const dashOffset = arcLen - fillLen
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        animation: "slideUp .6s cubic-bezier(.34,1.1,.64,1) both",
+      }}
+    >
+      {/* Live pill */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: "#10b981",
+            boxShadow: "0 0 10px rgba(16,185,129,.9)",
+            animation: "liveBlink 2s infinite",
+            flexShrink: 0,
+          }}
+        />
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: ".96px",
+            textTransform: "uppercase",
+            color: "rgba(16,185,129,.8)",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          ExitIQ Preview · {industry}
+        </div>
+      </div>
+
+      {/* Score + arc row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        {/* Arc gauge */}
+        <div style={{ position: "relative", width: 130, height: 130, flexShrink: 0 }}>
+          <svg width={130} height={130} viewBox="0 0 130 130" style={{ overflow: "visible" }}>
+            {/* Track arc */}
+            <circle
+              cx={65}
+              cy={65}
+              r={R}
+              fill="none"
+              stroke="var(--b3)"
+              strokeWidth={10}
+              strokeDasharray={`${arcLen} ${CIRC}`}
+              strokeDashoffset={-(CIRC - arcLen) / 2 - CIRC * 0.125}
+              strokeLinecap="round"
+            />
+            {/* Fill arc */}
+            {hasScore && (
+              <circle
+                cx={65}
+                cy={65}
+                r={R}
+                fill="none"
+                stroke={gradeColor}
+                strokeWidth={10}
+                strokeDasharray={`${fillLen} ${CIRC}`}
+                strokeDashoffset={-(CIRC - arcLen) / 2 - CIRC * 0.125}
+                strokeLinecap="round"
+                style={{
+                  filter: `drop-shadow(0 0 6px ${gradeGlow})`,
+                  transition: "stroke-dasharray .9s cubic-bezier(.34,1.1,.64,1)",
+                }}
+              />
+            )}
+          </svg>
+          {/* Centre text */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              paddingBottom: 8,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                fontSize: hasScore ? 32 : 22,
+                fontWeight: 300,
+                color: hasScore ? gradeColor : "var(--t4)",
+                letterSpacing: "-1px",
+                lineHeight: 1,
+                animation: hasScore ? "numRoll .8s ease" : undefined,
+              }}
+            >
+              {hasScore ? `${score}%` : "—"}
+            </div>
+            <div
+              style={{
+                fontSize: 8.5,
+                fontWeight: 700,
+                letterSpacing: ".8px",
+                textTransform: "uppercase",
+                color: "var(--t4)",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              readiness
+            </div>
+          </div>
+        </div>
+
+        {/* Right: headline + grade badge + descriptor */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+              fontSize: 26,
+              fontWeight: 300,
+              color: "var(--t1)",
+              letterSpacing: "-.35px",
+              lineHeight: 1.18,
+              marginBottom: 8,
+            }}
+          >
+            {hasScore ? "Your exit readiness score." : "Your valuation signal is forming."}
+          </div>
+
+          {/* Grade badge + label */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 9,
+                background: `${gradeColor}18`,
+                border: `1.5px solid ${gradeColor}55`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: hasScore ? `0 0 12px ${gradeGlow}` : "none",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 20,
+                  fontWeight: 400,
+                  color: gradeColor,
+                  lineHeight: 1,
+                }}
+              >
+                {grade}
+              </span>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--t2)",
+                  fontFamily: "Inter, sans-serif",
+                  lineHeight: 1.3,
+                }}
+              >
+                {gradeLabel}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--t4)",
+                  fontFamily: "Inter, sans-serif",
+                  marginTop: 2,
+                }}
+              >
+                Based on {RADAR_AXES.length} weighted dimensions
+              </div>
+            </div>
+          </div>
+
+          <p
+            style={{
+              fontSize: 12.5,
+              color: "var(--t3)",
+              lineHeight: 1.62,
+              fontFamily: "Inter, sans-serif",
+              margin: 0,
+            }}
+          >
+            All {RADAR_AXES.length} axes scored — unlock your full diagnostic, buyer objection map, and 90-day exit plan below.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── SDE / Revenue margin sanity banner ───────────────────────────────────────
+function SdeMarginBanner({ check }: { check: SdeMarginCheck }) {
+  const isRed = check.status === "red"
+  const isYellow = check.status === "yellow"
+  const isGreen = check.status === "green"
+
+  const colors = isRed
+    ? { bg: "rgba(239,68,68,.07)", border: "rgba(239,68,68,.22)", icon: "#ef4444", badge: "rgba(239,68,68,.15)", badgeBorder: "rgba(239,68,68,.3)", badgeText: "rgba(252,165,165,.9)", text: "rgba(252,165,165,.8)" }
+    : isYellow
+      ? { bg: "rgba(251,191,36,.06)", border: "rgba(251,191,36,.22)", icon: "#fbbf24", badge: "rgba(251,191,36,.12)", badgeBorder: "rgba(251,191,36,.28)", badgeText: "rgba(253,230,138,.9)", text: "rgba(253,230,138,.75)" }
+      : { bg: "rgba(16,185,129,.05)", border: "rgba(16,185,129,.18)", icon: "#10b981", badge: "rgba(16,185,129,.1)", badgeBorder: "rgba(16,185,129,.25)", badgeText: "rgba(167,229,211,.9)", text: "rgba(167,229,211,.7)" }
+
+  return (
+    <div
+      style={{
+        background: colors.bg,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 12,
+        padding: "13px 15px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        animation: "slideUp .45s cubic-bezier(.34,1.2,.64,1) both",
+      }}
+    >
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Icon */}
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              background: colors.badge,
+              border: `1px solid ${colors.badgeBorder}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {isGreen ? (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M2 5.5L4.5 8L9 3" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : isYellow ? (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 2v4M5.5 8.5v.5" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 2v4M5.5 8.5v.5" stroke={colors.icon} strokeWidth={1.5} strokeLinecap="round" />
+              </svg>
+            )}
+          </div>
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: ".8px",
+              textTransform: "uppercase",
+              color: "var(--t4)",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            SDE / Revenue Check
+          </div>
+        </div>
+        {/* Margin + status badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+              fontSize: 15,
+              fontWeight: 400,
+              color: colors.icon,
+              letterSpacing: "-.1px",
+            }}
+          >
+            {check.pct}
+          </span>
+          <span
+            style={{
+              fontSize: 8.5,
+              fontWeight: 700,
+              letterSpacing: ".7px",
+              textTransform: "uppercase",
+              color: colors.badgeText,
+              background: colors.badge,
+              border: `1px solid ${colors.badgeBorder}`,
+              borderRadius: 9999,
+              padding: "2px 7px",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            {check.headline}
+          </span>
+        </div>
+      </div>
+      {/* Message */}
+      <div
+        style={{
+          fontSize: 11.5,
+          color: "var(--t3)",
+          lineHeight: 1.6,
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        {check.message}
+        {(isRed || isYellow) && (
+          <span style={{ color: colors.text, fontWeight: 500 }}> Review your revenue and SDE figures before going to market.</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── GateTeaserCard — shown at step 10 BEFORE email submission ────────────────
 interface GateTeaserCardProps {
   derived: Derived
@@ -1282,7 +1651,7 @@ function LockedRow({ label, sub, delay = 0 }: { label: string; sub?: string; del
 }
 
 export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardProps) {
-  const { valuationRange, brokerFee, radarScores, confidence } = derived
+  const { valuationRange, brokerFee, radarScores, confidence, exitReadinessScore, exitReadinessGrade } = derived
   const industry = answers.industry ?? "your business"
   const estimatedDims = radarScores.filter((s) => s > 0).length
 
@@ -1300,58 +1669,12 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
         overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <div
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#10b981",
-              boxShadow: "0 0 10px rgba(16,185,129,.9)",
-              animation: "liveBlink 2s infinite",
-            }}
-          />
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: ".96px",
-              textTransform: "uppercase",
-              color: "rgba(16,185,129,.8)",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            ExitIQ Preview
-          </div>
-        </div>
-        <h2
-          style={{
-            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-            fontSize: 26,
-            fontWeight: 300,
-            color: "var(--t1)",
-            letterSpacing: "-.35px",
-            lineHeight: 1.18,
-            margin: 0,
-          }}
-        >
-          Your valuation signal is forming.
-        </h2>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--t3)",
-            marginTop: 7,
-            lineHeight: 1.65,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Based on {industry.toLowerCase()} market data. {estimatedDims} dimensions estimated — unlock your full
-          diagnostic below.
-        </p>
-      </div>
+      {/* ── Exit Readiness Score hero ── */}
+      <ExitReadinessHero
+        score={exitReadinessScore}
+        grade={exitReadinessGrade}
+        industry={industry}
+      />
 
       <UnlockCTA onUnlock={onUnlock} />
 
@@ -1440,7 +1763,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
                   animation: "numRoll .7s ease",
                 }}
               >
-                {brokerFee.text}
+                {brokerFee.midText}
               </div>
               <div
                 style={{
@@ -1451,7 +1774,7 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
                   lineHeight: 1.5,
                 }}
               >
-                Before you pay this, see what buyers will question.
+                Traditional broker estimate · Double Lehman
               </div>
             </>
           ) : (
@@ -1531,17 +1854,17 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
       {/* Radar + locked rows */}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <RadarChart scores={radarScores} blurred={true} />
+          <RadarChart scores={radarScores.map((s) => s / 10)} blurred={false} />
           <div
             style={{
               fontSize: 10,
-              color: "var(--t4)",
+              color: "rgba(167,229,211,.6)",
               fontFamily: "Inter, sans-serif",
               textAlign: "center",
               lineHeight: 1.4,
             }}
           >
-            {estimatedDims} of {RADAR_AXES.length} dimensions estimated
+            {estimatedDims} of {RADAR_AXES.length} axes scored
           </div>
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}>
@@ -1577,6 +1900,14 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
 
       <AnswersSummary answers={answers} />
 
+      {/* SDE / Revenue margin sanity check — only shown when both revenue + SDE answered */}
+      {derived.sdeMarginCheck && (
+        <>
+          <SectionDivider label="Margin check" />
+          <SdeMarginBanner check={derived.sdeMarginCheck} />
+        </>
+      )}
+
       {/* Pain callout */}
       <div
         style={{
@@ -1594,6 +1925,151 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
       </div>
 
       <BottomUnlockCTA onUnlock={onUnlock} label="Unlock my full report →" />
+    </div>
+  )
+}
+
+// ── Buyer archetype section ───────────────────────────────────────────────────
+const ARCHETYPE_COLORS = ["#10b981", "#a7e5d3", "#c8b8e0"] as const
+const ARCHETYPE_ICONS = ["◉", "◎", "◈"] as const
+
+function BuyerArchetypeSection({ answers }: { answers: Record<string, string> }) {
+  const matches = computeBuyerMatchLikelihoods(answers)
+  const maxLikelihood = Math.max(...matches.map((m) => m.likelihood))
+
+  return (
+    <div
+      style={{
+        background: "var(--s2)",
+        border: "1px solid var(--b3)",
+        borderRadius: 14,
+        padding: "16px 18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        animation: "slideUp .45s cubic-bezier(.34,1.2,.64,1) both",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9.5,
+          fontWeight: 700,
+          letterSpacing: ".8px",
+          textTransform: "uppercase",
+          color: "var(--t4)",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        Who Is Most Likely to Buy Your Business
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {matches.map(({ persona, likelihood, keyReasons }, i) => {
+          const color = ARCHETYPE_COLORS[i] ?? "#a7e5d3"
+          const icon = ARCHETYPE_ICONS[i] ?? "◉"
+          const isTop = likelihood === maxLikelihood
+          return (
+            <div key={persona} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ color, fontSize: 12, lineHeight: 1 }}>{icon}</span>
+                  <span
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: isTop ? 600 : 400,
+                      color: isTop ? color : "var(--t2)",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    {persona}
+                  </span>
+                  {isTop && (
+                    <span
+                      style={{
+                        fontSize: 8.5,
+                        fontWeight: 700,
+                        letterSpacing: ".6px",
+                        textTransform: "uppercase",
+                        color,
+                        background: `${color}18`,
+                        border: `1px solid ${color}38`,
+                        borderRadius: 9999,
+                        padding: "2px 7px",
+                        fontFamily: "Inter, sans-serif",
+                      }}
+                    >
+                      Best match
+                    </span>
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color,
+                    fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                    letterSpacing: "-.1px",
+                    opacity: isTop ? 1 : 0.7,
+                  }}
+                >
+                  {likelihood}%
+                </span>
+              </div>
+
+              {/* Likelihood bar */}
+              <div style={{ height: 4, borderRadius: 2, background: "var(--b3)", overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${likelihood}%`,
+                    background: color,
+                    borderRadius: 2,
+                    opacity: isTop ? 0.85 : 0.45,
+                    transition: "width .7s cubic-bezier(.34,1.2,.64,1)",
+                  }}
+                />
+              </div>
+
+              {/* Key reasons */}
+              {keyReasons.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {keyReasons.map((reason) => (
+                    <span
+                      key={reason}
+                      style={{
+                        fontSize: 10,
+                        color: "var(--t4)",
+                        background: "var(--s1)",
+                        border: "1px solid var(--b3)",
+                        borderRadius: 9999,
+                        padding: "2px 8px",
+                        fontFamily: "Inter, sans-serif",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div
+        style={{
+          fontSize: 10.5,
+          color: "var(--t5)",
+          fontFamily: "Inter, sans-serif",
+          lineHeight: 1.55,
+          borderTop: "1px solid var(--b3)",
+          paddingTop: 10,
+        }}
+      >
+        Likelihoods are softmax-normalized across all three archetypes based on your profile signals.
+      </div>
     </div>
   )
 }
@@ -1631,11 +2107,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
   // Headline: prefer AI-generated, fall back to computed
   const headline = teaserData?.headline ?? buildHeadline(answers)
 
-  const trend = trendSignal(answers.revenueTrend ?? "")
+  const doc = docReadinessSignal(answers.docReadiness ?? "")
   const team = teamSignal(answers.employees ?? "")
   const recur = recurSignal(answers.recurringRev ?? "")
   const conc = concSignal(answers.customerConc ?? "")
-  const role = roleSignal(answers.ownerRole ?? "")
+  const facility = facilitySignal(answers.facilityType ?? "")
   const km = keyManSig(answers.keyMan ?? "")
 
   const industryMultRange = industry ? `${industry.multiple[0]}–${industry.multiple[1]}×` : "—"
@@ -1659,7 +2135,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
     : computedRisks
 
   // Driver pill labels: prefer AI signals
-  const trendPillLabel = teaserData?.revenueTrendSignal ?? trend.pill.replace(/^[^ ]+ /, "")
+  const docPillLabel = teaserData?.revenueTrendSignal ?? doc.pill.replace(/^[^ ]+ /, "")
   const teamPillLabel = teaserData?.teamSignal ?? team.pill.replace("👥 ", "")
   const recurPillLabel = teaserData?.recurringSignal ?? recur.pill.replace("🔁 ", "")
 
@@ -1935,7 +2411,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             Valuation Drivers — What&apos;s Moving Your Number
           </div>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            <DriverPill emoji="📈" label="Revenue trend" value={trendPillLabel} status={trend.status} />
+            <DriverPill emoji="📋" label="Doc readiness" value={docPillLabel} status={doc.status} />
             <DriverPill emoji="👥" label="Team depth" value={teamPillLabel} status={team.status} />
             <DriverPill emoji="🔁" label="Recurring rev" value={recurPillLabel} status={recur.status} />
           </div>
@@ -1955,9 +2431,9 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             gap: 7,
           }}
         >
-          <SignalCard label="Revenue Trend" value={trend.label} status={trend.status} delay={0} />
+          <SignalCard label="Doc Readiness" value={doc.label} status={doc.status} delay={0} />
           <SignalCard label="Customer Risk" value={conc.label} status={conc.status} delay={55} />
-          <SignalCard label="Owner Role" value={role.label} status={role.status} delay={110} />
+          <SignalCard label="Facility" value={facility.label} status={facility.status} delay={110} />
           <SignalCard label="Recurring Rev" value={recur.label} status={recur.status} delay={165} />
           <SignalCard label="Independence" value={km.label} status={km.status} delay={220} />
           <SignalCard
@@ -1970,7 +2446,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
 
         {/* Right: blurred radar */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-          <RadarChart scores={radarScores} blurred={true} />
+          <RadarChart scores={radarScores.map((s) => s / 10)} blurred={true} />
           <div
             style={{
               fontSize: 9.5,
@@ -1984,6 +2460,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
           </div>
         </div>
       </div>
+
+      <SectionDivider label="Buyer archetype match" />
+
+      {/* ── SECTION 3b: Buyer Archetype Likelihoods ──────────────────────────── */}
+      <BuyerArchetypeSection answers={answers} />
 
       <SectionDivider label="Strengths & risks" />
 
@@ -2030,7 +2511,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
             marginBottom: 8,
           }}
         >
-          Traditional Broker Fee (10%)
+          Traditional Broker Fee{brokerFee ? ` (~${brokerFee.blendedPct}% blended)` : ""}
         </div>
         {brokerFee ? (
           <>
@@ -2046,7 +2527,7 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
                 marginBottom: 10,
               }}
             >
-              {brokerFee.text}
+              {brokerFee.midText}
             </div>
             <div
               style={{
@@ -2060,11 +2541,11 @@ export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewC
                 <span style={{ color: "#a7e5d3", fontWeight: 500 }}>{teaserData.brokerFeeNarrative}</span>
               ) : (
                 <>
-                  Scorta replaces this with a flat fee —{" "}
+                  Scorta replaces this with a hybrid model: $5–10K retainer + 2.5–4% capped success fee —{" "}
                   <span style={{ color: "#a7e5d3", fontWeight: 500 }}>
-                    sellers keep {brokerFee.text} more at close.
+                    sellers keep most of that {fmtMoney(brokerFee.midFee)} at close.
                   </span>{" "}
-                  No broker call, no listing commission, no split at the finish line.
+                  No listing commission. No exit tax at the finish line.
                 </>
               )}
             </div>
