@@ -1,7 +1,13 @@
 import { findIndustry } from "@/lib/assessment/industries"
 import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { computeScore, fmt, getValuationRange, getTeaserRange } from "@/lib/assessment/scoring"
-import type { Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
+import type {
+  GateExitReadinessSnapshot,
+  Stage1Answers,
+  Stage2Answers,
+  Stage3Answers,
+  Stage4Answers,
+} from "@/lib/assessment/session"
 import { appendWorkflowTrace, compactStagesForTrace } from "@/lib/debug/workflow-trace"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -171,12 +177,56 @@ const GRADE_LABELS: Record<string, string> = {
   D: "Early Stage",
 }
 
+// Mirrors the pre-gate ExitReadinessHero labels so post-gate copy matches what
+// the seller already saw. Thresholds (A≥75, B≥55, C≥35) come from calcDerived.
+const READINESS_GRADE_LABELS: Record<string, string> = {
+  A: "Market-Ready",
+  B: "Mostly Ready",
+  C: "Needs Prep",
+  D: "Significant Gaps",
+}
+
 const SUBSCORE_LABELS: Record<string, string> = {
   financial: "Financial Attractiveness",
   operational: "Operational Independence",
   market: "Market Positioning",
   dealReadiness: "Deal Readiness",
   buyerAccess: "Buyer Accessibility",
+}
+
+// Axis labels for the 7-axis Exit Readiness subscore strip. Order MUST match
+// the radarScores array in lib/exitiq/calculations.ts and RADAR_AXES.
+const READINESS_AXIS_KEYS = [
+  "finDocs",
+  "ownerDep",
+  "revQuality",
+  "custConc",
+  "longevity",
+  "opsDepth",
+  "positioning",
+] as const
+
+const READINESS_AXIS_LABELS: Record<string, string> = {
+  finDocs:     "Financial Documentation",
+  ownerDep:    "Owner Dependency",
+  revQuality:  "Revenue Quality",
+  custConc:    "Customer Concentration",
+  longevity:   "Business Longevity",
+  opsDepth:    "Operational Depth",
+  positioning: "Market Positioning",
+}
+
+function readinessHeadline(score: number, grade: string, name: string): string {
+  if (grade === "A") {
+    return `${name}, your Exit IQ score of ${score} puts you in the top tier of seller-ready businesses. Your foundation can absorb buyer scrutiny — the work ahead is staging a clean process, not fixing fundamentals.`
+  }
+  if (grade === "B") {
+    return `${name}, your Exit IQ score of ${score} reflects a fundamentally strong business with room to optimize. Closing the gaps below is what moves you from a sound asset to one that commands the upper end of the multiple range.`
+  }
+  if (grade === "C") {
+    return `${name}, your Exit IQ score of ${score} shows a business with good bones that needs preparation. The detractors and next steps below are the highest-leverage moves before going to market.`
+  }
+  return `${name}, your Exit IQ score of ${score} indicates this business is in early exit preparation. Most of the gaps are solvable — the 90-day checklist below is the clear action plan.`
 }
 
 function scoreColor(v: number): string {
@@ -572,7 +622,12 @@ export function buildReportData(
   s2: Partial<Stage2Answers> = {},
   s3: Partial<Stage3Answers> = {},
   s4: Partial<Stage4Answers> = {},
-  trace?: BuildReportDataTraceContext
+  trace?: BuildReportDataTraceContext,
+  // Frozen snapshot of the pre-gate Exit Readiness calc (calcDerived). When
+  // supplied, becomes the single source of truth for composite, grade, and the
+  // 7-axis subscore strip — so the post-gate report shows the same number the
+  // seller saw on the gate teaser. Falls back to computeScore when absent.
+  exitReadiness?: GateExitReadinessSnapshot
 ): ReportData {
   if (trace) {
     appendWorkflowTrace({
@@ -686,12 +741,36 @@ export function buildReportData(
         }
 
   // ── Subscores ────────────────────────────────────────────────────────────────
-  const subscores: ReportSubscore[] = scoreResult.dimensions.map((d) => ({
-    key: d.key,
-    label: SUBSCORE_LABELS[d.key] ?? d.name,
-    value: d.score,
-    color: scoreColor(d.score),
-  }))
+  // When the pre-gate readiness snapshot is present, surface its 7 axes as the
+  // visible subscore strip so the post-gate visual matches the radar the seller
+  // just saw on the gate teaser. Otherwise fall back to the 5-dimension model.
+  const useReadiness = !!exitReadiness && exitReadiness.score > 0
+  const subscores: ReportSubscore[] = useReadiness
+    ? READINESS_AXIS_KEYS.map((key, i) => {
+        const value = Math.round((exitReadiness!.axes[i] ?? 0) * 10)
+        return {
+          key,
+          label: READINESS_AXIS_LABELS[key] ?? key,
+          value,
+          color: scoreColor(value),
+        }
+      })
+    : scoreResult.dimensions.map((d) => ({
+        key: d.key,
+        label: SUBSCORE_LABELS[d.key] ?? d.name,
+        value: d.score,
+        color: scoreColor(d.score),
+      }))
+
+  // Resolve the visible composite + grade + headline against the same precedence.
+  const visibleComposite = useReadiness ? exitReadiness!.score : scoreResult.composite
+  const visibleGrade = useReadiness && exitReadiness!.grade !== "—" ? exitReadiness!.grade : scoreResult.grade
+  const visibleGradeLabel = useReadiness
+    ? READINESS_GRADE_LABELS[visibleGrade] ?? "Needs Prep"
+    : GRADE_LABELS[scoreResult.grade] ?? "Early Stage"
+  const visibleHeadline = useReadiness
+    ? readinessHeadline(visibleComposite, visibleGrade, firstName)
+    : scoreResult.narrative
 
   // ── Drivers / Detractors ─────────────────────────────────────────────────────
   const drivers = buildDrivers(scoreResult.dimensions, s1Scored, s2, s3, valLo, valHi, sba.eligible)
@@ -711,13 +790,27 @@ export function buildReportData(
       sessionId: trace.sessionId,
       origin: trace.origin,
       detail: {
-        composite: scoreResult.composite,
-        grade: scoreResult.grade,
+        // Composite + grade actually rendered — sourced from gate.exitReadiness
+        // when present, otherwise computeScore's composite.
+        composite: visibleComposite,
+        grade: visibleGrade,
+        readinessOverrideApplied: useReadiness,
+        legacyComputeScoreComposite: scoreResult.composite,
+        legacyComputeScoreGrade: scoreResult.grade,
+        readinessSnapshot: exitReadiness
+          ? {
+              score: exitReadiness.score,
+              grade: exitReadiness.grade,
+              axes: exitReadiness.axes,
+            }
+          : null,
         distressed: scoreResult.distressed,
-        // All 5 dimension subscores — pinpoint which dimension is wrong when composite looks off
+        // 5 dim subscores (computeScore — still drives drivers/detractors content)
         dimensions: Object.fromEntries(
           scoreResult.dimensions.map((d) => [d.key, d.score])
         ),
+        // 7-axis subscores actually shown to the user
+        visibleSubscores: Object.fromEntries(subscores.map((s) => [s.key, s.value])),
         valuationK: { lo: valLo, mid: valMid, hi: valHi },
         teaserK: { lo: teaserLo, hi: teaserHi },
         sbaEligible: sba.eligible,
@@ -747,10 +840,10 @@ export function buildReportData(
       revenueMultiple: industry.revenueMultiple,
     },
     score: {
-      composite: scoreResult.composite,
-      grade: scoreResult.grade,
-      gradeLabel: GRADE_LABELS[scoreResult.grade] ?? "Early Stage",
-      headline: scoreResult.narrative,
+      composite: visibleComposite,
+      grade: visibleGrade,
+      gradeLabel: visibleGradeLabel,
+      headline: visibleHeadline,
       distressed: scoreResult.distressed,
       subscores,
     },

@@ -459,6 +459,13 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
         email:           data.email,
         sellingTimeline: timelineSlug,
         tag,
+        // Freeze the pre-gate readiness number so the post-gate report renders
+        // exactly what the seller saw on the gate teaser — single source of truth.
+        exitReadiness: {
+          score: derived.exitReadinessScore,
+          grade: derived.exitReadinessGrade,
+          axes:  derived.radarScores,
+        },
       },
       completedAt: Date.now(),
     }).then(() => {

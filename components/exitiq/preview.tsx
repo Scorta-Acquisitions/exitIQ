@@ -2,6 +2,7 @@
 "use client"
 
 import React from "react"
+import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
 import type { Derived, SdeMarginCheck } from "@/lib/exitiq/calculations"
 import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
@@ -1258,6 +1259,23 @@ function ExitReadinessHero({
     : grade === "C" ? "Needs prep"
     : grade === "D" ? "Significant gaps"
     : "Calculating…"
+
+  // Log the exit readiness score the seller is about to see immediately before the email gate.
+  // Fires only when the score actually resolves (score > 0) and re-fires on any recalculation.
+  // Correlated with the post-gate report composite via the next persistSession call.
+  React.useEffect(() => {
+    if (!hasScore) return
+    workflowTraceClient({
+      phase: "client.pre_gate_exit_readiness_shown",
+      origin: "preview.ExitReadinessHero",
+      detail: {
+        exitReadinessScore: score,
+        exitReadinessGrade: grade,
+        industry,
+        gradeLabel,
+      },
+    })
+  }, [score, grade, industry, hasScore, gradeLabel])
 
   // SVG arc: radius 54, circumference = 2π×54 ≈ 339.3. Offset to leave a gap at the bottom.
   // We use 75% of the full circle (270°), starting from the left (225° in SVG coords).

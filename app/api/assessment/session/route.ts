@@ -32,6 +32,14 @@ const sessionBodySchema = z.object({
       email: z.string().optional(),
       sellingTimeline: z.string().optional(),
       tag: z.enum(["hot_seller", "warm_explorer", "nurture", "burned_by_broker"]).optional(),
+      // Pre-gate Exit Readiness snapshot — drives the report composite + subscores
+      exitReadiness: z
+        .object({
+          score: z.number(),
+          grade: z.enum(["A", "B", "C", "D", "—"]),
+          axes: z.array(z.number()).length(7),
+        })
+        .optional(),
     })
     .optional(),
   stage2: z
@@ -89,16 +97,23 @@ export async function POST(req: Request) {
     // Translate frontend labels to scoring slugs without altering stored stage1
     const scoringStage1 = data.stage1 ? mapStage1ForScoring(data.stage1 as Partial<Stage1Answers>) : {}
 
-    const scoreResult = computeScore({
-      sessionId: data.sessionId,
-      createdAt: Date.now(),
-      stage1: scoringStage1,
-      gate: data.gate,
-      stage2: data.stage2,
-      stage3: data.stage3,
-      stage4: data.stage4,
-    })
-    score = scoreResult.composite
+    // Prefer the pre-gate Exit Readiness snapshot when the client sent one.
+    // This is the same number the seller saw on the gate teaser, and is what
+    // the post-gate report renders — keep the DB column in sync.
+    if (data.gate?.exitReadiness && data.gate.exitReadiness.score > 0) {
+      score = data.gate.exitReadiness.score
+    } else {
+      const scoreResult = computeScore({
+        sessionId: data.sessionId,
+        createdAt: Date.now(),
+        stage1: scoringStage1,
+        gate: data.gate,
+        stage2: data.stage2,
+        stage3: data.stage3,
+        stage4: data.stage4,
+      })
+      score = scoreResult.composite
+    }
 
     const sbaSnapshot = computeSBASnapshot(scoringStage1)
     sbaEligible = sbaSnapshot.eligible

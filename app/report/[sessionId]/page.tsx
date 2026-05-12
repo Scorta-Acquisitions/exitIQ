@@ -94,7 +94,8 @@ export default async function ReportPage({ params }: { params: Promise<{ session
     session.stage2 ?? undefined,
     session.stage3 ?? undefined,
     session.stage4 ?? undefined,
-    { sessionId, origin: "page.report" }
+    { sessionId, origin: "page.report" },
+    session.gate.exitReadiness ?? undefined
   )
 
   appendWorkflowTrace({
