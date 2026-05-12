@@ -714,12 +714,19 @@ export function buildReportData(
         composite: scoreResult.composite,
         grade: scoreResult.grade,
         distressed: scoreResult.distressed,
+        // All 5 dimension subscores — pinpoint which dimension is wrong when composite looks off
+        dimensions: Object.fromEntries(
+          scoreResult.dimensions.map((d) => [d.key, d.score])
+        ),
         valuationK: { lo: valLo, mid: valMid, hi: valHi },
         teaserK: { lo: teaserLo, hi: teaserHi },
         sbaEligible: sba.eligible,
+        sba: { loan: sba.loanAmount, dscr, dscrFloor: 1.25 },
         driverTitles: drivers.map((d) => d.title),
         detractorTitles: detractors.map((d) => d.title),
         growthLeverTitles: growthLevers.map((l) => l.title),
+        nextStepTitles: nextSteps.map((s) => s.title),
+        teaserBridgeNote,
       },
     })
   }

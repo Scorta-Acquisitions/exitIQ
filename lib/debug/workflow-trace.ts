@@ -70,7 +70,9 @@ export function appendWorkflowTrace({
 }
 
 /**
- * Returns a compact summary of which stage2/3/4 keys have non-null values.
+ * Returns a compact summary of stage2/3/4 for a trace detail object.
+ * Includes both key presence (for quick boolean checks) AND actual values
+ * (all stage2/3/4 fields are non-PII slugs like "25_50", "one", "over_75").
  * Spread the result into a trace `detail` object.
  */
 export function compactStagesForTrace(
@@ -78,14 +80,19 @@ export function compactStagesForTrace(
   s3?: Record<string, unknown>,
   s4?: Record<string, unknown>
 ): Record<string, unknown> {
-  const presentKeys = (obj?: Record<string, unknown>) =>
-    obj ? Object.keys(obj).filter((k) => obj[k] != null) : []
+  const presentVals = (obj?: Record<string, unknown>) =>
+    obj
+      ? Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null && v !== ""))
+      : {}
+  const s2v = presentVals(s2)
+  const s3v = presentVals(s3)
+  const s4v = presentVals(s4)
   return {
-    s2Keys: presentKeys(s2),
-    s3Keys: presentKeys(s3),
-    s4Keys: presentKeys(s4),
-    hasStage2: presentKeys(s2).length > 0,
-    hasStage3: presentKeys(s3).length > 0,
-    hasStage4: presentKeys(s4).length > 0,
+    hasStage2: Object.keys(s2v).length > 0,
+    hasStage3: Object.keys(s3v).length > 0,
+    hasStage4: Object.keys(s4v).length > 0,
+    s2: s2v,
+    s3: s3v,
+    s4: s4v,
   }
 }

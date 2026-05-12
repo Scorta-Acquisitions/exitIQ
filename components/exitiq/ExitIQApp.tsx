@@ -368,6 +368,67 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
       answersCount: Object.keys(answers).length,
     })
 
+    // Capture all 10 raw answer slugs so the full pipeline input is reconstructable
+    traceClient("client.answers_snapshot", {
+      sessionId: sid,
+      detail: {
+        industry: answers.industry,
+        yearsLabel: answers.years,
+        revenue: answers.revenue,
+        sde: answers.sde,
+        employees: answers.employees,
+        facilityType: answers.facilityType,
+        docReadiness: answers.docReadiness,
+        customerConc: answers.customerConc,
+        keyMan: answers.keyMan,
+        recurringRev: answers.recurringRev,
+      },
+    })
+
+    // ── Signal Mapping Fix ────────────────────────────────────────────────────
+    // Translate UI answer slugs into the scoring-model slug codes expected by
+    // stage2/stage3. These three signals were previously packed into the stage1
+    // JSONB blob as unrecognised extra fields — the scoring model never saw them.
+    const CUSTOMER_CONC_MAP: Record<string, string> = {
+      concentrated: "25_50",
+      high_risk:    "over_50",
+      moderate:     "10_25",
+      diversified:  "under_10",
+    }
+    const RECURRING_REV_MAP: Record<string, string> = {
+      high:        "over_75",
+      medium_high: "50_75",
+      medium:      "25_50",
+      low:         "under_10",
+    }
+    const KEY_MAN_MAP: Record<string, string> = {
+      "1": "none",
+      "2": "one",
+      "3": "two_three",
+      "4": "two_three",
+      "5": "four_plus",
+    }
+
+    const customerConcentration = CUSTOMER_CONC_MAP[answers.customerConc ?? ""] ?? null
+    const recurringRevenue      = RECURRING_REV_MAP[answers.recurringRev ?? ""]  ?? null
+    const keyPersonRisk         = KEY_MAN_MAP[answers.keyMan ?? ""]               ?? null
+
+    // Log exactly what will be sent to each stage so signal routing is verifiable
+    traceClient("client.persist_session_payload_shape", {
+      sessionId: sid,
+      detail: {
+        signalMappingApplied: true,
+        stage1Fields: ["industry","years","revenue","sde","employees","state","facilityType","docReadiness"],
+        stage2: { customerConcentration, recurringRevenue },
+        stage3: { keyPersonRisk },
+        unmappedSignals: {
+          customerConc: customerConcentration === null ? answers.customerConc : null,
+          recurringRev: recurringRevenue      === null ? answers.recurringRev : null,
+          keyMan:       keyPersonRisk         === null ? answers.keyMan       : null,
+        },
+      },
+    })
+
     setGateFirstName(data.firstName)
     setSessionId(sid)
     setShowModal(false)
@@ -377,21 +438,25 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     void persistSession({
       sessionId: sid,
       stage1: {
-        industry: answers.industry ?? "",
-        years: (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
-        revenue: answers.revenue ?? "",
-        sde: answers.sde ?? "",
-        employees: answers.employees ?? "",
-        state: answers.state ?? "",
+        industry:     answers.industry ?? "",
+        years:        (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
+        revenue:      answers.revenue ?? "",
+        sde:          answers.sde ?? "",
+        employees:    answers.employees ?? "",
+        state:        answers.state ?? "",
         facilityType: answers.facilityType ?? "",
         docReadiness: answers.docReadiness ?? "",
-        customerConc: answers.customerConc ?? "",
-        keyMan: answers.keyMan ?? "",
-        recurringRev: answers.recurringRev ?? "",
-      } as Parameters<typeof persistSession>[0]["stage1"],
+      },
+      stage2: {
+        ...(customerConcentration ? { customerConcentration } : {}),
+        ...(recurringRevenue      ? { recurringRevenue }      : {}),
+      },
+      stage3: {
+        ...(keyPersonRisk ? { keyPersonRisk } : {}),
+      },
       gate: {
-        firstName: data.firstName,
-        email: data.email,
+        firstName:       data.firstName,
+        email:           data.email,
         sellingTimeline: timelineSlug,
         tag,
       },
@@ -401,7 +466,17 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
       setReportStreaming(true)
       const generateStartMs = Date.now()
       void requestGenerate(sid).then(async (res) => {
-        if (!res?.body) {
+        if (res === null) {
+          // requestGenerate already logged the specific error (client.request_generate_error
+          // or client.request_generate_network_error) — log the outcome here for the loader
+          traceClient("client.request_generate_null_response", {
+            sessionId: sid,
+            note: "requestGenerate returned null — see client.request_generate_error for cause",
+          })
+          setReportStreaming(false)
+          return
+        }
+        if (!res.body) {
           traceClient("client.request_generate_no_body", { sessionId: sid })
           setReportStreaming(false)
           return
@@ -416,10 +491,18 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             if (done) break
             acc += dec.decode(value, { stream: true })
           }
+          const sectionCount = (acc.match(/\n## /g) ?? []).length
+          const sectionTitles = ("\n" + acc).split("\n## ").slice(1).map((part) => {
+            const nl = part.indexOf("\n")
+            return nl === -1 ? part.trim() : part.slice(0, nl).trim()
+          })
           traceClient("client.generate_stream_reader_closed", {
             sessionId: sid,
             textLength: acc.length,
+            isEmpty: acc.length === 0,
             durationMs: Date.now() - generateStartMs,
+            sectionCount,
+            sectionTitles,
           })
           setReportMd(acc)
         } finally {

@@ -2119,16 +2119,50 @@ export function FullReportVisual({
 }) {
   const prose = React.useMemo(() => parseNarrativeSections(reportMd ?? ""), [reportMd])
 
+  // Fires once on mount — confirms the report page reached the client with data
+  React.useEffect(() => {
+    workflowTraceClient({
+      phase: "client.report_page_mounted",
+      sessionId,
+      origin: "FullReportVisual",
+      detail: {
+        hasReportMd: !!reportMd && reportMd.length > 0,
+        reportMdChars: (reportMd ?? "").length,
+        visualComposite: data.score.composite,
+        grade: data.score.grade,
+        industry: data.meta.industry,
+        valuationK: { lo: data.valuation.lo, mid: data.valuation.mid, hi: data.valuation.hi },
+        sbaEligible: data.sba.eligible,
+      },
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]) // mount only
+
+  // Fires when narrative parsing completes — confirms LLM sections mapped to visual cards
   React.useEffect(() => {
     const keys = Object.keys(prose)
+    const CANONICAL = [
+      "Executive Summary", "Valuation Analysis", "SBA 7(a) Eligibility",
+      "Transferability Score", "Value Drivers", "Value Detractors",
+      "Recommended Deal Structure", "Growth Levers", "Next Steps",
+    ]
     workflowTraceClient({
       phase: "client.full_report_visual_parsed_narrative",
       sessionId,
       origin: "FullReportVisual",
       detail: {
         reportMdChars: (reportMd ?? "").length,
+        isEmpty: (reportMd ?? "").length === 0,
         parsedSectionCount: keys.length,
+        expectedSections: 9,
+        sectionCountOk: keys.length === 9,
         parsedSectionTitles: keys,
+        missingSections: CANONICAL.filter((s) => !keys.includes(s)),
+        extraSections: keys.filter((s) => !CANONICAL.includes(s)),
+        // Per-section: present = has prose, absent = will show "Analysis not available"
+        sectionProseStatus: Object.fromEntries(
+          CANONICAL.map((s) => [s, (prose[s]?.length ?? 0) > 0 ? "present" : "absent"])
+        ),
         charsPerSection: Object.fromEntries(keys.map((k) => [k, prose[k]?.length ?? 0])),
         visualComposite: data.score.composite,
       },

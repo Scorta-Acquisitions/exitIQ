@@ -367,14 +367,34 @@ export function CinematicLoader({
   const [phasesComplete, setPhasesComplete] = React.useState(false)
   const pctDisplay = Math.round(useSpring(phasesComplete && !aiReady ? 99 : progress * 100))
 
+  // Record mount timestamp so downstream effects can measure wait durations
+  const mountTsRef = React.useRef(Date.now())
+
   React.useEffect(() => {
     workflowTraceClient({
       phase: "client.cinematic_loader_mounted",
       sessionId,
       origin: "CinematicLoader",
-      detail: { aiReadyInitial: aiReady },
+      detail: { mountTs: mountTsRef.current },
     })
-  }, [sessionId, aiReady])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]) // fire once on mount only
+
+  // Fires when the Sonnet stream finishes and aiReady flips true
+  React.useEffect(() => {
+    if (aiReady) {
+      workflowTraceClient({
+        phase: "client.cinematic_loader_ai_stream_ready",
+        sessionId,
+        origin: "CinematicLoader",
+        detail: {
+          streamWaitMs: Date.now() - mountTsRef.current,
+          phasesAlreadyComplete: phasesComplete,
+          willNavigateImmediately: phasesComplete,
+        },
+      })
+    }
+  }, [aiReady, sessionId, phasesComplete])
 
   // Phase advancement
   React.useEffect(() => {
@@ -409,7 +429,10 @@ export function CinematicLoader({
         phase: "client.cinematic_loader_complete_happy_path",
         sessionId,
         origin: "CinematicLoader",
-        detail: { phasesComplete, aiReady },
+        detail: {
+          totalElapsedMs: Date.now() - mountTsRef.current,
+          reportMdPresent: aiReady,
+        },
       })
       onComplete()
     }
@@ -422,7 +445,12 @@ export function CinematicLoader({
         phase: "client.cinematic_loader_complete_failsafe_90s",
         sessionId,
         origin: "CinematicLoader",
-        detail: { phasesComplete, aiReady },
+        detail: {
+          totalElapsedMs: Date.now() - mountTsRef.current,
+          phasesComplete,
+          streamReady: aiReady,
+          note: "90s failsafe fired — stream did not resolve in time",
+        },
       })
       onComplete()
     }, 90_000)

@@ -5,7 +5,7 @@ import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { computeScore } from "@/lib/assessment/scoring"
 import type { GateAnswers, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
 import { mapStage1ForScoring } from "@/lib/assessment/transform"
-import { redactGateForTrace, traceEvent } from "@/lib/debug/workflow-trace"
+import { compactStagesForTrace, redactGateForTrace, traceEvent } from "@/lib/debug/workflow-trace"
 import { db } from "@/lib/db"
 import { assessmentSessions } from "@/lib/db/schema"
 import { sendWelcomeEmail } from "@/lib/email"
@@ -123,6 +123,12 @@ export async function POST(req: Request) {
     gate: gateData ? redactGateForTrace(gateData) : undefined,
     score: score ?? undefined,
     sbaEligible: sbaEligible ?? undefined,
+    // Stage2/3 presence and actual signal values — critical for verifying Signal Mapping Fix
+    ...compactStagesForTrace(
+      data.stage2 as Record<string, unknown> | undefined,
+      data.stage3 as Record<string, unknown> | undefined,
+      data.stage4 as Record<string, unknown> | undefined
+    ),
   })
 
   logger.info("session.upsert", {
@@ -162,7 +168,20 @@ export async function POST(req: Request) {
             ...(completedAtDate !== undefined ? { completedAt: completedAtDate } : {}),
           },
         })
-      traceEvent("api.session.db_upsert_ok_in_after", { sessionId: data.sessionId })
+      traceEvent("api.session.db_upsert_ok_in_after", {
+        sessionId: data.sessionId,
+        score: score ?? undefined,
+        sbaEligible: sbaEligible ?? undefined,
+        isCompletion,
+        // Confirms whether stage2/3 were actually written (key for Signal Mapping Fix verification)
+        wroteStage2: s2 != null,
+        wroteStage3: s3 != null,
+        ...compactStagesForTrace(
+          s2 as unknown as Record<string, unknown> | undefined,
+          s3 as unknown as Record<string, unknown> | undefined,
+          s4 as unknown as Record<string, unknown> | undefined
+        ),
+      })
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       logger.error("session.save_failed", { sessionId: data.sessionId, error: errorMsg })

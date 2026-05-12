@@ -55,9 +55,36 @@ export default async function ReportPage({ params }: { params: Promise<{ session
     redirect("/")
   }
 
-  const s1Scored = mapStage1ForScoring({
-    ...session.stage1,
-    years: session.stage1?.years ?? 5,
+  const yearsDefaulted = session.stage1?.years == null
+  const s1Raw = { ...session.stage1, years: session.stage1?.years ?? 5 }
+  const s1Scored = mapStage1ForScoring(s1Raw)
+
+  appendWorkflowTrace({
+    phase: "page.report.stage1_scored",
+    surface: "server",
+    sessionId,
+    origin: "app/report/[sessionId]/page",
+    detail: {
+      raw: {
+        industry: s1Raw.industry,
+        revenue: s1Raw.revenue,
+        sde: s1Raw.sde,
+        employees: s1Raw.employees,
+        facilityType: s1Raw.facilityType,
+        docReadiness: s1Raw.docReadiness,
+        years: s1Raw.years,
+      },
+      scored: {
+        industry: s1Scored.industry,
+        revenue: s1Scored.revenue,
+        sde: s1Scored.sde,
+        employees: s1Scored.employees,
+        facilityType: s1Scored.facilityType,
+        docReadiness: s1Scored.docReadiness,
+        years: s1Scored.years,
+      },
+      yearsDefaulted,
+    },
   })
 
   const data = buildReportData(
@@ -77,7 +104,11 @@ export default async function ReportPage({ params }: { params: Promise<{ session
     origin: "app/report/[sessionId]/page",
     detail: {
       reportMdPassedToClientChars: report?.reportMd?.length ?? 0,
+      reportMdIsEmpty: !report?.reportMd || report.reportMd.length === 0,
       visualComposite: data.score.composite,
+      grade: data.score.grade,
+      valuationK: { lo: data.valuation.lo, mid: data.valuation.mid, hi: data.valuation.hi },
+      sbaEligible: data.sba.eligible,
     },
   })
 

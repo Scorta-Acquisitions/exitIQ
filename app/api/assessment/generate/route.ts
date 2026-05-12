@@ -8,7 +8,7 @@ import { buildReportPrompt } from "@/lib/ai/prompts"
 import { buildReportData } from "@/lib/assessment/report-transform"
 import type { AssessmentSession } from "@/lib/assessment/session"
 import { mapStage1ForScoring } from "@/lib/assessment/transform"
-import { traceEvent } from "@/lib/debug/workflow-trace"
+import { compactStagesForTrace, traceEvent } from "@/lib/debug/workflow-trace"
 import { db } from "@/lib/db"
 import { assessmentReports, assessmentSessions } from "@/lib/db/schema"
 import { logger } from "@/lib/logger"
@@ -53,7 +53,12 @@ export async function POST(req: Request) {
     sessionId,
     hasStage1: !!session.stage1,
     hasGate: !!session.gate,
-    hasStage2: !!session.stage2,
+    // Full stage2/3 signal values — verify Signal Mapping Fix reached the DB
+    ...compactStagesForTrace(
+      session.stage2 as unknown as Record<string, unknown> | undefined,
+      session.stage3 as unknown as Record<string, unknown> | undefined,
+      session.stage4 as unknown as Record<string, unknown> | undefined
+    ),
   })
 
   // Require at minimum stage1 + gate; stages 2–4 are optional (Phase 1 only collects stage1 + gate)
@@ -73,29 +78,76 @@ export async function POST(req: Request) {
   })
 
   if (existingReport?.reportMd) {
-    logger.info("generate.cache_hit", { sessionId, model: existingReport.modelUsed })
-    traceEvent("api.generate.cache_hit", {
-      sessionId,
-      model: existingReport.modelUsed ?? undefined,
-      reportMdLength: existingReport.reportMd.length,
-    })
-    const cached = existingReport.reportMd
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(cached))
-        controller.close()
-      },
-    })
-    return new Response(stream, {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    })
+    // Stale-cache detection: if stage2 now has real signal data (Signal Mapping Fix applied)
+    // but the cached report was generated before the fix deployed on 2026-05-12, it was
+    // built from empty stage2/3 — serve it and it will show wrong scores. Regenerate instead.
+    const FIX_DEPLOY_DATE = new Date("2026-05-12T00:00:00Z")
+    const s2 = session.stage2 as Record<string, unknown> | null
+    const reportAge = existingReport.createdAt
+    const cacheIsPreFix = reportAge < FIX_DEPLOY_DATE
+    const sessionHasRealSignals = !!(s2?.customerConcentration || s2?.recurringRevenue)
+    const bypassCache = cacheIsPreFix && sessionHasRealSignals
+
+    if (bypassCache) {
+      traceEvent("api.generate.cache_bypassed_stale_pre_fix", {
+        sessionId,
+        reportAge: reportAge.toISOString(),
+        fixDeployDate: FIX_DEPLOY_DATE.toISOString(),
+        reason: "cached report predates Signal Mapping Fix — regenerating with real stage2/3 signals",
+        s2Signals: { customerConcentration: s2?.customerConcentration, recurringRevenue: s2?.recurringRevenue },
+      })
+    } else {
+      logger.info("generate.cache_hit", { sessionId, model: existingReport.modelUsed })
+      traceEvent("api.generate.cache_hit", {
+        sessionId,
+        model: existingReport.modelUsed ?? undefined,
+        reportMdLength: existingReport.reportMd.length,
+        reportAge: reportAge.toISOString(),
+      })
+      const cached = existingReport.reportMd
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(cached))
+          controller.close()
+        },
+      })
+      return new Response(stream, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      })
+    }
   }
 
   // Build frozen ReportData once — shared by both the prompt and the visual renderer
-  const s1Scored = mapStage1ForScoring({
-    ...session.stage1,
-    years: session.stage1?.years ?? 5,
+  const yearsDefaulted = session.stage1?.years == null
+  const s1Raw = { ...session.stage1, years: session.stage1?.years ?? 5 }
+  const s1Scored = mapStage1ForScoring(s1Raw)
+
+  traceEvent("api.generate.stage1_scored", {
+    sessionId,
+    raw: {
+      industry: s1Raw.industry,
+      revenue: s1Raw.revenue,
+      sde: s1Raw.sde,
+      employees: s1Raw.employees,
+      facilityType: s1Raw.facilityType,
+      docReadiness: s1Raw.docReadiness,
+      years: s1Raw.years,
+    },
+    scored: {
+      industry: s1Scored.industry,
+      revenue: s1Scored.revenue,
+      sde: s1Scored.sde,
+      employees: s1Scored.employees,
+      facilityType: s1Scored.facilityType,
+      docReadiness: s1Scored.docReadiness,
+      years: s1Scored.years,
+    },
+    unmappedFields: Object.keys(s1Raw).filter(
+      (k) => s1Raw[k as keyof typeof s1Raw] != null && s1Scored[k as keyof typeof s1Scored] == null
+    ),
+    yearsDefaulted,
   })
+
   const firstName = session.gate?.firstName ?? "there"
   const timeline = session.gate?.sellingTimeline
 
@@ -121,7 +173,7 @@ export async function POST(req: Request) {
   }
 
   const prompt = buildReportPrompt(assessmentSession, reportData, { sessionId })
-  traceEvent("api.generate.prompt_built", { sessionId, promptLength: prompt.length })
+  // buildReportPrompt fires buildReportPrompt.built internally with promptChars + sectionHeaderCount + sectionHeaderTitles
 
   const startMs = Date.now()
 
@@ -134,11 +186,29 @@ export async function POST(req: Request) {
     onFinish: ({ text }) => {
       const generationMs = Date.now() - startMs
       logger.info("generate.finished", { sessionId, model: SONNET_MODEL, durationMs: generationMs })
+      const sectionCount = (text.match(/\n## /g) ?? []).length
+      // Extract actual section titles so misnamed headers are visible even when count === 9
+      const sectionTitles = ("\n" + text).split("\n## ").slice(1).map((part) => {
+        const nl = part.indexOf("\n")
+        return nl === -1 ? part.trim() : part.slice(0, nl).trim()
+      })
+      const CANONICAL = [
+        "Executive Summary", "Valuation Analysis", "SBA 7(a) Eligibility",
+        "Transferability Score", "Value Drivers", "Value Detractors",
+        "Recommended Deal Structure", "Growth Levers", "Next Steps",
+      ]
       traceEvent("api.generate.stream_finished", {
         sessionId,
         model: SONNET_MODEL,
         durationMs: generationMs,
         textLength: text.length,
+        isEmpty: text.length === 0,
+        sectionCount,
+        expectedSections: 9,
+        sectionCountOk: sectionCount === 9,
+        sectionTitles,
+        missingSections: CANONICAL.filter((s) => !sectionTitles.includes(s)),
+        extraSections: sectionTitles.filter((s) => !CANONICAL.includes(s)),
       })
       after(async () => {
         try {
