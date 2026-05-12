@@ -111,9 +111,11 @@ export async function POST(req: Request) {
               },
             })
         } catch (err) {
+          const e = err instanceof Error ? err : new Error(String(err))
           logger.error("generate.save_failed", {
             sessionId,
-            error: err instanceof Error ? err.message : String(err),
+            error: e.message,
+            cause: e.cause instanceof Error ? e.cause.message : String(e.cause ?? ""),
           })
         }
       })
