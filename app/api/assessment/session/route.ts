@@ -5,6 +5,7 @@ import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { computeScore } from "@/lib/assessment/scoring"
 import type { GateAnswers, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
 import { mapStage1ForScoring } from "@/lib/assessment/transform"
+import { redactGateForTrace, traceEvent } from "@/lib/debug/workflow-trace"
 import { db } from "@/lib/db"
 import { assessmentSessions } from "@/lib/db/schema"
 import { sendWelcomeEmail } from "@/lib/email"
@@ -69,11 +70,13 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
+    traceEvent("api.session.parse_failed", { reason: "invalid_json" })
     return Response.json({ error: "invalid_json" }, { status: 400 })
   }
 
   const parsed = sessionBodySchema.safeParse(body)
   if (!parsed.success) {
+    traceEvent("api.session.validation_failed", { issueCount: parsed.error.issues.length })
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 })
   }
 
@@ -112,6 +115,16 @@ export async function POST(req: Request) {
 
   const isCompletion = data.completedAt !== undefined
 
+  traceEvent("api.session.post_received", {
+    sessionId: data.sessionId,
+    isCompletion,
+    hasStage1: !!data.stage1,
+    hasGate: !!data.gate,
+    gate: gateData ? redactGateForTrace(gateData) : undefined,
+    score: score ?? undefined,
+    sbaEligible: sbaEligible ?? undefined,
+  })
+
   logger.info("session.upsert", {
     sessionId: data.sessionId,
     isCompletion,
@@ -149,21 +162,37 @@ export async function POST(req: Request) {
             ...(completedAtDate !== undefined ? { completedAt: completedAtDate } : {}),
           },
         })
+      traceEvent("api.session.db_upsert_ok_in_after", { sessionId: data.sessionId })
     } catch (err) {
-      logger.error("session.save_failed", {
-        sessionId: data.sessionId,
-        error: err instanceof Error ? err.message : String(err),
-      })
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      logger.error("session.save_failed", { sessionId: data.sessionId, error: errorMsg })
+      traceEvent("api.session.db_upsert_failed_in_after", { sessionId: data.sessionId, error: errorMsg })
     }
 
     if (isCompletion && gateData) {
-      await sendWelcomeEmail({
-        gate: gateData,
-        stage1: s1,
-        leadQuality: gateData.tag ?? "nurture",
-      })
+      traceEvent("api.session.email_send_started", { sessionId: data.sessionId, tag: gateData.tag })
+      try {
+        await sendWelcomeEmail({
+          gate: gateData,
+          stage1: s1,
+          leadQuality: gateData.tag ?? "nurture",
+        })
+        traceEvent("api.session.email_send_ok", { sessionId: data.sessionId })
+      } catch (err) {
+        traceEvent("api.session.email_send_failed", {
+          sessionId: data.sessionId,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
     }
   })
 
+  // IMPORTANT: HTTP 200 is returned HERE, before after() runs the DB upsert.
+  // If a client immediately calls /api/assessment/generate after receiving this
+  // response, the session may not yet exist in the DB (race window).
+  traceEvent("api.session.http_200_sent_before_after", {
+    sessionId: data.sessionId,
+    note: "DB upsert runs in after() — generate race window starts now",
+  })
   return Response.json({ sessionId: data.sessionId, score: score ?? null, sbaEligible: sbaEligible ?? null })
 }

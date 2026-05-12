@@ -1,10 +1,10 @@
 // use client: manages assessment state machine, WebGL canvas lifecycle via useEffect/useRef, and all user interaction handlers
 "use client"
 
-import { useRouter } from "next/navigation"
 import React from "react"
-
+import { useRouter } from "next/navigation"
 import { persistSession, requestGenerate } from "@/lib/assessment/api"
+import { traceClient } from "@/lib/debug/workflow-trace-client"
 import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
 import {
@@ -222,6 +222,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [submitted, setSubmitted] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
+  const [sessionId, setSessionId] = React.useState("")
   const [reportMd, setReportMd] = React.useState("")
   const [reportStreaming, setReportStreaming] = React.useState(false)
   const [gateFirstName, setGateFirstName] = React.useState("")
@@ -229,7 +230,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null)
   const glRef = React.useRef<WebGLControls | null>(null)
-  const sessionIdRef = React.useRef<string>("")
 
   const derived = React.useMemo(() => calcDerived(answers), [answers])
   const stepCount = step < 10 ? step : 10
@@ -307,7 +307,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     setReportMd("")
     setReportStreaming(false)
     setGateFirstName("")
-    sessionIdRef.current = ""
     glRef.current?.setConf(0)
   }, [])
 
@@ -353,10 +352,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
 
   const handleUnlock = () => setShowModal(true)
 
-  const handleLoaderComplete = React.useCallback(() => {
-    router.push(`/report/${sessionIdRef.current}`)
-  }, [router])
-
   const handleSubmit = (data: { firstName: string; email: string; timeline: string }) => {
     const timelineSlug = TIMELINE_LABEL_TO_SLUG[data.timeline] ?? "curious"
     const tag = computeTag(timelineSlug) as SegmentTag
@@ -364,9 +359,17 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     const YEAR_TO_NUMBER = YEAR_LABEL_TO_NUMBER
     const session = loadSession()
     const sid = session.sessionId ?? generateSessionId()
-    sessionIdRef.current = sid
+
+    traceClient("client.email_gate_submit_start", {
+      sessionId: sid,
+      emailPresent: !!data.email,
+      timelineSlug,
+      tag,
+      answersCount: Object.keys(answers).length,
+    })
 
     setGateFirstName(data.firstName)
+    setSessionId(sid)
     setShowModal(false)
     setSubmitted(true)
     clearPartialProgress()
@@ -394,13 +397,16 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
       },
       completedAt: Date.now(),
     }).then(() => {
-      // Full report: stream from Sonnet (~20–40s) — signals CinematicLoader when complete
+      // Full report: stream from Sonnet (~20–40s) — CinematicLoader navigates on completion
       setReportStreaming(true)
+      const generateStartMs = Date.now()
       void requestGenerate(sid).then(async (res) => {
         if (!res?.body) {
+          traceClient("client.request_generate_no_body", { sessionId: sid })
           setReportStreaming(false)
           return
         }
+        traceClient("client.generate_stream_reader_opened", { sessionId: sid })
         const reader = res.body.getReader()
         const dec = new TextDecoder()
         let acc = ""
@@ -410,6 +416,11 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             if (done) break
             acc += dec.decode(value, { stream: true })
           }
+          traceClient("client.generate_stream_reader_closed", {
+            sessionId: sid,
+            textLength: acc.length,
+            durationMs: Date.now() - generateStartMs,
+          })
           setReportMd(acc)
         } finally {
           setReportStreaming(false)
@@ -641,7 +652,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
               </p>
             </div>
 
-            {/* ── Question → Gate Teaser → [email gate] → Cinematic Loader → /report/[sid] ── */}
+            {/* ── Question → Gate Teaser → [email gate] → CinematicLoader → Report Page ── */}
             {!submitted ? (
               step < 10 ? (
                 <QuestionPanel step={step} onAnswer={handleAnswer} processing={processing} disabled={transitioning} />
@@ -650,9 +661,11 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                 <GateTeaserCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
+              // Post-gate: loader runs while Sonnet streams; navigates to /report/[sessionId] on completion
               <CinematicLoader
+                sessionId={sessionId}
                 aiReady={!reportStreaming && !!reportMd}
-                onComplete={handleLoaderComplete}
+                onComplete={() => router.push(`/report/${sessionId}`)}
                 answers={answers}
                 name={gateFirstName}
               />

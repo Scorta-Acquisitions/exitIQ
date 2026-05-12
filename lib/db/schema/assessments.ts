@@ -33,7 +33,6 @@ export const assessmentReports = pgTable("assessment_reports", {
     .references(() => assessmentSessions.sessionId),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   reportMd: text("report_md").notNull(),
-  teaserJson: jsonb("teaser_json"),
   modelUsed: text("model_used").notNull(),
   generationMs: integer("generation_ms"),
 })

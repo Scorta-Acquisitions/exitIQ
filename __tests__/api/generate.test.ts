@@ -57,7 +57,6 @@ vi.mock("@/lib/ai", () => ({
 
 vi.mock("@/lib/ai/prompts", () => ({
   buildReportPrompt: vi.fn(() => "test prompt"),
-  buildTeaserPrompt: vi.fn(() => "test teaser prompt"),
 }))
 
 type PostHandler = (req: Request) => Promise<Response>
@@ -137,7 +136,6 @@ describe("POST /api/assessment/generate", () => {
       id: "report-uuid",
       sessionId: "test-123",
       reportMd: "# Cached Report\n\nExisting content",
-      teaserJson: null,
       modelUsed: "claude-sonnet-4-6",
       generationMs: 5000,
       createdAt: new Date(),
@@ -157,7 +155,7 @@ describe("POST /api/assessment/generate", () => {
     expect(text).toContain("Cached Report")
   })
 
-  it("returns 422 with missing array for incomplete session", async () => {
+  it("succeeds when stage2/3/4 are null (they are optional in the 10-question flow)", async () => {
     mockSessionFindFirst.mockResolvedValueOnce({
       ...completeSession,
       stage2: null,
@@ -172,13 +170,8 @@ describe("POST /api/assessment/generate", () => {
     })
 
     const res = await POST(req)
-    expect(res.status).toBe(422)
-
-    const data = (await res.json()) as { error: string; missing: string[] }
-    expect(data.error).toBe("incomplete_session")
-    expect(data.missing).toContain("stage2")
-    expect(data.missing).toContain("stage3")
-    expect(data.missing).toContain("stage4")
+    expect(res.status).toBe(200)
+    expect(mockStreamText).toHaveBeenCalledOnce()
   })
 
   it("returns 404 when session not found", async () => {

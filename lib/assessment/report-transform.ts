@@ -1,7 +1,8 @@
 import { findIndustry } from "@/lib/assessment/industries"
 import { computeSBASnapshot } from "@/lib/assessment/sba"
-import { computeScore, fmt, getValuationRange } from "@/lib/assessment/scoring"
-import type { Stage1Answers } from "@/lib/assessment/session"
+import { computeScore, fmt, getValuationRange, getTeaserRange } from "@/lib/assessment/scoring"
+import type { Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
+import { appendWorkflowTrace, compactStagesForTrace } from "@/lib/debug/workflow-trace"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -44,17 +45,27 @@ export interface ReportData {
     revenue: string
     sde: string
     sdeMidK: number
+    revMidK: number
     yearsInBusiness: number
     employees: string
     timeline: string
+    sdeMultiple: [number, number]
+    revenueMultiple: [number, number]
   }
   score: {
     composite: number
     grade: string
     gradeLabel: string
     headline: string
+    distressed: boolean
     subscores: ReportSubscore[]
   }
+  flags: {
+    green: string[]
+    yellow: string[]
+    red: string[]
+  }
+  checklist: string[]
   valuation: {
     lo: number
     mid: number
@@ -99,6 +110,11 @@ export interface ReportData {
     priority: string
     impact: string
   }>
+  teaserValuation: {
+    lo: number
+    hi: number
+    bridgeNote: string
+  }
 }
 
 // ── Local midpoint tables (mirrors scoring.ts private constants) ──────────────
@@ -174,6 +190,8 @@ function scoreColor(v: number): string {
 function buildDrivers(
   dims: Array<{ key: string; score: number }>,
   s1: Partial<Stage1Answers>,
+  s2: Partial<Stage2Answers>,
+  s3: Partial<Stage3Answers>,
   valLo: number,
   valHi: number,
   sbaEligible: boolean
@@ -202,7 +220,33 @@ function buildDrivers(
     })
   }
 
-  if ((dimMap.market ?? 0) >= 65) {
+  if (s2.recurringRevenue === "over_75" || s2.recurringRevenue === "50_75") {
+    const recurringPct = s2.recurringRevenue === "over_75" ? "75%+" : "50–75%"
+    drivers.push({
+      rank: drivers.length + 1,
+      title: `${recurringPct} recurring revenue`,
+      impact: "+0.3×–0.5× on multiple",
+      detail: `Contracted or subscription revenue is the single highest-valued signal in lower-middle-market M&A. Buyers pay a premium multiple for predictable cash flow — it de-risks acquisition financing and justifies higher leverage.`,
+    })
+  }
+
+  if (s2.ownerDependency === "runs_independently") {
+    drivers.push({
+      rank: drivers.length + 1,
+      title: "Business runs independently",
+      impact: "Maximum seller leverage",
+      detail: `A team-driven operation removes the #1 buyer objection in small-business M&A. Buyers can finance confidently and transition without a long earn-out — which typically shortens time-to-close and improves deal terms.`,
+    })
+  } else if (s3.sops === "fully_docs" && drivers.length < 3) {
+    drivers.push({
+      rank: drivers.length + 1,
+      title: "Fully documented operations",
+      impact: "Reduces due-diligence friction",
+      detail: `Complete SOPs signal a transferable system rather than owner-dependent tribal knowledge. Buyers and their lenders move faster with documented processes, reducing the re-trade risk that kills deals late.`,
+    })
+  }
+
+  if ((dimMap.market ?? 0) >= 65 && drivers.length < 3) {
     drivers.push({
       rank: drivers.length + 1,
       title: `Market Positioning ${dimMap.market}/100`,
@@ -211,7 +255,7 @@ function buildDrivers(
     })
   }
 
-  if (sbaEligible) {
+  if (sbaEligible && drivers.length < 3) {
     const down = fmt(Math.round(Math.min((valLo + valHi) / 2, 5000000) * 0.09))
     drivers.push({
       rank: drivers.length + 1,
@@ -230,7 +274,8 @@ function buildDrivers(
     })
   }
 
-  if (s1.facilityType === "owns" || s1.facilityType === "owns_location") {
+  const facilityKey = s1.facilityType ?? s2.realEstate
+  if ((facilityKey === "owns" || facilityKey === "owns_location") && drivers.length < 3) {
     drivers.push({
       rank: drivers.length + 1,
       title: "Business owns its location",
@@ -239,7 +284,7 @@ function buildDrivers(
     })
   }
 
-  // Fill with SDE driver if still short
+  // Fill with industry SDE driver if still short
   if (drivers.length < 2) {
     drivers.push({
       rank: drivers.length + 1,
@@ -255,6 +300,8 @@ function buildDrivers(
 function buildDetractors(
   dims: Array<{ key: string; score: number }>,
   s1: Partial<Stage1Answers>,
+  s2: Partial<Stage2Answers>,
+  s3: Partial<Stage3Answers>,
   checklist: string[],
   sdeMid: number,
   industry: ReturnType<typeof findIndustry>
@@ -263,20 +310,50 @@ function buildDetractors(
   const dimMap = Object.fromEntries(dims.map((d) => [d.key, d.score]))
   const multipleSwing = fmt(Math.round(sdeMid * (industry.sdeMultiple[1] - industry.sdeMultiple[0])))
 
-  if ((dimMap.operational ?? 100) < 65) {
+  // Owner dependency — use the specific signal value when available
+  const ownerDep = s2.ownerDependency
+  if (ownerDep === "everything_stops" || ownerDep === "significant_impact" || (dimMap.operational ?? 100) < 65) {
     const opCheckItem =
       checklist.find((c) => c.toLowerCase().includes("operations manual") || c.toLowerCase().includes("owner")) ??
       "Write a one-page operations manual for your top 5 owner-dependent tasks."
+    const depDetail =
+      ownerDep === "everything_stops"
+        ? `Everything stops when the owner is away — buyers treat this as a job acquisition, not a business acquisition. Offers anchor at the low end of the SDE multiple range — a swing of ${multipleSwing} in enterprise value.`
+        : `Significant owner dependency signals transition risk to buyers and SBA lenders. Offers anchor at the low end of the SDE multiple range — a swing of ${multipleSwing} in enterprise value.`
     detractors.push({
       rank: 1,
-      title: `Operational Independence ${dimMap.operational}/100`,
+      title: `Operational Independence ${dimMap.operational ?? "—"}/100`,
       impact: `−${multipleSwing} on multiple`,
-      detail: `A score below 65 signals to buyers that this business is a job, not a system. Offers anchor at the low end of the SDE multiple range — a swing of ${multipleSwing} in enterprise value.`,
+      detail: depDetail,
       fix: opCheckItem,
     })
   }
 
-  if ((dimMap.dealReadiness ?? 100) < 65) {
+  // Customer concentration — explicit signal check
+  if (s2.customerConcentration === "over_50" && detractors.length < 3) {
+    detractors.push({
+      rank: detractors.length + 1,
+      title: "High customer concentration",
+      impact: "Buyer price adjustment",
+      detail:
+        "Top 3 customers represent over 50% of revenue — buyers will require escrow holdbacks or price adjustments to compensate for the revenue-loss risk if any one relationship doesn't transfer.",
+      fix: "Actively diversify your customer base before listing. Document long-standing relationships in writing to reduce perceived concentration risk.",
+    })
+  }
+
+  // Legal issues — explicit signal check
+  if (s3.legal === "yes_issues" && detractors.length < 3) {
+    detractors.push({
+      rank: detractors.length + 1,
+      title: "Active legal or regulatory exposure",
+      impact: "Deal blocker",
+      detail:
+        "Pending legal matters must be disclosed and typically trigger buyer counsel to insert indemnification clauses, price holds, or walk rights. Unresolved at LOI stage, they kill deals.",
+      fix: "Consult your attorney to resolve or formally contain any pending matters before going to market.",
+    })
+  }
+
+  if ((dimMap.dealReadiness ?? 100) < 65 && detractors.length < 3) {
     const docFix =
       checklist.find((c) => c.toLowerCase().includes("p&l") || c.toLowerCase().includes("financial")) ??
       "Get clean P&L statements and tax returns for the last 3 years."
@@ -290,7 +367,9 @@ function buildDetractors(
     })
   }
 
-  if (s1.facilityType === "short_lease") {
+  // Lease risk — check both stage1 facilityType and stage2 realEstate
+  const facilityKey = s1.facilityType ?? s2.realEstate
+  if ((facilityKey === "short_lease") && detractors.length < 3) {
     detractors.push({
       rank: detractors.length + 1,
       title: "Short or unresolved lease",
@@ -331,10 +410,19 @@ function buildDetractors(
 
 function buildGrowthLevers(
   s1: Partial<Stage1Answers>,
+  s3: Partial<Stage3Answers>,
   _industry: ReturnType<typeof findIndustry>
 ): Array<{ title: string; detail: string }> {
   const years = s1.years ?? 0
   const levers: Array<{ title: string; detail: string }> = []
+
+  // If the seller stated growth levers, surface that signal first
+  if (s3.growthLevers && s3.growthLevers.trim().length > 0) {
+    levers.push({
+      title: "Seller-identified growth opportunity",
+      detail: `The current owner has already identified: "${s3.growthLevers}." A buyer who documents and executes this lever in the first 12 months can justify a premium at acquisition and capture the upside themselves.`,
+    })
+  }
 
   levers.push({
     title: "Geographic or service-line expansion",
@@ -361,7 +449,7 @@ function buildGrowthLevers(
       : `Hiring a single senior employee or manager creates the organizational depth that transitions this from a self-employed practice to a transferable business.`,
   })
 
-  return levers
+  return levers.slice(0, 3)
 }
 
 function buildNextSteps(
@@ -432,23 +520,93 @@ function buildNextSteps(
     .map((s, i) => ({ rank: i + 1, ...s }))
 }
 
+// ── Teaser bridge note ────────────────────────────────────────────────────────
+// Produces a short phrase (e.g. "high customer concentration and owner-dependent
+// operations") that the LLM cites when bridging the pre-gate estimate to the
+// full-report range. Based on detractors and scored signals — not invented by LLM.
+function buildTeaserBridgeNote(
+  detractors: ReportDetractor[],
+  s1: Partial<Stage1Answers>,
+  s2: Partial<Stage2Answers>
+): string {
+  const signals: string[] = []
+
+  if (s2.customerConcentration === "over_50") {
+    signals.push("high customer concentration")
+  } else if (s2.customerConcentration === "25_50") {
+    signals.push("moderate customer concentration")
+  }
+
+  if (detractors.some((d) => d.title.toLowerCase().includes("operational"))) {
+    signals.push("owner-dependent operations")
+  }
+
+  if (s1.docReadiness === "fair" || s1.docReadiness === "poor") {
+    signals.push("incomplete financial documentation")
+  }
+
+  if (signals.length === 0) return "the full assessment scoring all collected signals"
+  if (signals.length === 1) return signals[0]!
+  if (signals.length === 2) return `${signals[0]} and ${signals[1]}`
+  return `${signals.slice(0, -1).join(", ")}, and ${signals[signals.length - 1]}`
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
- * Builds the full `ReportData` struct from a Stage1Answers object that has
- * already been through `mapStage1ForScoring()` (i.e., slugs, not human labels).
+ * Builds the full `ReportData` struct. s1Scored must have already been through
+ * `mapStage1ForScoring()` (slugs, not human labels). s2/s3/s4 are passed through
+ * so all collected signals are reflected. In the current 10-question flow, only
+ * stage2.customerConcentration, stage2.recurringRevenue, and stage3.keyPersonRisk
+ * are populated beyond stage1; all other stage2/3/4 fields default to neutral.
  */
+export type BuildReportDataTraceContext = {
+  sessionId: string
+  origin: "api.generate" | "page.report"
+}
+
 export function buildReportData(
   s1Scored: Partial<Stage1Answers>,
   firstName: string,
-  sellingTimeline?: string
+  sellingTimeline?: string,
+  s2: Partial<Stage2Answers> = {},
+  s3: Partial<Stage3Answers> = {},
+  s4: Partial<Stage4Answers> = {},
+  trace?: BuildReportDataTraceContext
 ): ReportData {
+  if (trace) {
+    appendWorkflowTrace({
+      phase: "buildReportData.input",
+      surface: "server",
+      sessionId: trace.sessionId,
+      origin: trace.origin,
+      detail: {
+        firstNameLen: firstName.length,
+        sellingTimeline,
+        s1: {
+          industry: s1Scored.industry,
+          years: s1Scored.years,
+          revenue: s1Scored.revenue,
+          sde: s1Scored.sde,
+          employees: s1Scored.employees,
+          docReadiness: s1Scored.docReadiness,
+          facilityType: s1Scored.facilityType,
+        },
+        ...compactStagesForTrace(
+          s2 as Record<string, unknown>,
+          s3 as Record<string, unknown>,
+          s4 as Record<string, unknown>
+        ),
+      },
+    })
+  }
+
   const industry = findIndustry(s1Scored.industry ?? "other")
   const sdeMid = SDE_MIDS[s1Scored.sde ?? "500_1m"] ?? 750000
   const revMid = REV_MIDS[s1Scored.revenue ?? "500_1m"] ?? 750000
 
-  // ── Scoring ──────────────────────────────────────────────────────────────────
-  const scoreResult = computeScore({ stage1: s1Scored })
+  // ── Scoring — full session so all collected signals are reflected ────────────
+  const scoreResult = computeScore({ stage1: s1Scored, stage2: s2, stage3: s3, stage4: s4 })
   const sba = computeSBASnapshot(s1Scored)
   const [valLo, valHi] = getValuationRange(s1Scored)
   const valMid = Math.round((valLo + valHi) / 2)
@@ -501,7 +659,7 @@ export function buildReportData(
   const dollarImpact = Math.round(sdeMid * (industry.sdeMultiple[1] - industry.sdeMultiple[0]) * 0.4)
 
   // ── Growth levers ────────────────────────────────────────────────────────────
-  const growthLevers = buildGrowthLevers(s1Scored, industry)
+  const growthLevers = buildGrowthLevers(s1Scored, s3, industry)
   const growthFramed = `A buyer who sees these levers documented prices closer to ${industry.sdeMultiple[1]}×. A buyer who has to find them independently prices at ${industry.sdeMultiple[0]}× and treats the upside as their compensation.`
 
   // ── Deal structure ───────────────────────────────────────────────────────────
@@ -536,11 +694,35 @@ export function buildReportData(
   }))
 
   // ── Drivers / Detractors ─────────────────────────────────────────────────────
-  const drivers = buildDrivers(scoreResult.dimensions, s1Scored, valLo, valHi, sba.eligible)
-  const detractors = buildDetractors(scoreResult.dimensions, s1Scored, scoreResult.checklist, sdeMid, industry)
+  const drivers = buildDrivers(scoreResult.dimensions, s1Scored, s2, s3, valLo, valHi, sba.eligible)
+  const detractors = buildDetractors(scoreResult.dimensions, s1Scored, s2, s3, scoreResult.checklist, sdeMid, industry)
 
   // ── Next steps ───────────────────────────────────────────────────────────────
   const nextSteps = buildNextSteps(scoreResult.checklist, scoreResult.dimensions, s1Scored)
+
+  // ── Teaser valuation (pre-gate estimate: getValuationRange ± 25%) ─────────────
+  const [teaserLo, teaserHi] = getTeaserRange(s1Scored)
+  const teaserBridgeNote = buildTeaserBridgeNote(detractors, s1Scored, s2)
+
+  if (trace) {
+    appendWorkflowTrace({
+      phase: "buildReportData.output",
+      surface: "server",
+      sessionId: trace.sessionId,
+      origin: trace.origin,
+      detail: {
+        composite: scoreResult.composite,
+        grade: scoreResult.grade,
+        distressed: scoreResult.distressed,
+        valuationK: { lo: valLo, mid: valMid, hi: valHi },
+        teaserK: { lo: teaserLo, hi: teaserHi },
+        sbaEligible: sba.eligible,
+        driverTitles: drivers.map((d) => d.title),
+        detractorTitles: detractors.map((d) => d.title),
+        growthLeverTitles: growthLevers.map((l) => l.title),
+      },
+    })
+  }
 
   return {
     meta: {
@@ -550,17 +732,23 @@ export function buildReportData(
       revenue: REVENUE_LABELS[s1Scored.revenue ?? ""] ?? s1Scored.revenue ?? "—",
       sde: SDE_LABELS[s1Scored.sde ?? ""] ?? s1Scored.sde ?? "—",
       sdeMidK: Math.round(sdeMid / 1000),
+      revMidK: Math.round(revMid / 1000),
       yearsInBusiness: s1Scored.years ?? 0,
       employees: EMPLOYEE_LABELS[s1Scored.employees ?? ""] ?? s1Scored.employees ?? "—",
       timeline: TIMELINE_LABELS[sellingTimeline ?? ""] ?? "Not specified",
+      sdeMultiple: industry.sdeMultiple,
+      revenueMultiple: industry.revenueMultiple,
     },
     score: {
       composite: scoreResult.composite,
       grade: scoreResult.grade,
       gradeLabel: GRADE_LABELS[scoreResult.grade] ?? "Early Stage",
       headline: scoreResult.narrative,
+      distressed: scoreResult.distressed,
       subscores,
     },
+    flags: scoreResult.flags,
+    checklist: scoreResult.checklist,
     valuation: { lo: valLo, mid: valMid, hi: valHi, methods },
     sba: {
       eligible: sba.eligible,
@@ -587,5 +775,6 @@ export function buildReportData(
     growth: { levers: growthLevers, framed: growthFramed },
     dealStructure: { primary, secondary },
     nextSteps,
+    teaserValuation: { lo: teaserLo, hi: teaserHi, bridgeNote: teaserBridgeNote },
   }
 }

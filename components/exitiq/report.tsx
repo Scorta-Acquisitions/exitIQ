@@ -1,6 +1,9 @@
 "use client"
 
 import React from "react"
+
+import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
+
 import { ScanLine } from "./ui"
 
 // ── Phase config ──────────────────────────────────────────────────────────────
@@ -346,11 +349,13 @@ function DataTicker({ lines, idx }: { lines: string[]; idx: number }) {
 // ── CinematicLoader ───────────────────────────────────────────────────────────
 
 export function CinematicLoader({
+  sessionId,
   aiReady,
   onComplete,
   answers,
   name,
 }: {
+  sessionId: string
   aiReady: boolean
   onComplete: () => void
   answers: Record<string, string>
@@ -361,6 +366,15 @@ export function CinematicLoader({
   const [tickerIdx, setTickerIdx] = React.useState(0)
   const [phasesComplete, setPhasesComplete] = React.useState(false)
   const pctDisplay = Math.round(useSpring(phasesComplete && !aiReady ? 99 : progress * 100))
+
+  React.useEffect(() => {
+    workflowTraceClient({
+      phase: "client.cinematic_loader_mounted",
+      sessionId,
+      origin: "CinematicLoader",
+      detail: { aiReadyInitial: aiReady },
+    })
+  }, [sessionId, aiReady])
 
   // Phase advancement
   React.useEffect(() => {
@@ -390,8 +404,30 @@ export function CinematicLoader({
 
   // Complete when both phases done and AI ready
   React.useEffect(() => {
-    if (phasesComplete && aiReady) onComplete()
-  }, [phasesComplete, aiReady, onComplete])
+    if (phasesComplete && aiReady) {
+      workflowTraceClient({
+        phase: "client.cinematic_loader_complete_happy_path",
+        sessionId,
+        origin: "CinematicLoader",
+        detail: { phasesComplete, aiReady },
+      })
+      onComplete()
+    }
+  }, [phasesComplete, aiReady, onComplete, sessionId])
+
+  // Failsafe: navigate after 90s even if the AI stream never resolves
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      workflowTraceClient({
+        phase: "client.cinematic_loader_complete_failsafe_90s",
+        sessionId,
+        origin: "CinematicLoader",
+        detail: { phasesComplete, aiReady },
+      })
+      onComplete()
+    }, 90_000)
+    return () => clearTimeout(t)
+  }, [onComplete, sessionId])
 
   // Build dynamic ticker lines from answers
   const tickerLines = React.useMemo(() => {

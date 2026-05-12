@@ -2,6 +2,7 @@
 
 import React from "react"
 import type { ReportData } from "@/lib/assessment/report-transform"
+import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
 
 // ── Shared hooks ──────────────────────────────────────────────────────────────
 
@@ -71,6 +72,54 @@ function SectionLabel({
   )
 }
 
+function parseNarrativeSections(md: string): Record<string, string> {
+  const sections: Record<string, string> = {}
+  const parts = ("\n" + md).split("\n## ")
+  for (const part of parts.slice(1)) {
+    const nl = part.indexOf("\n")
+    if (nl === -1) continue
+    const key = part.slice(0, nl).trim()
+    const body = part.slice(nl + 1).trim()
+    if (key && body) sections[key] = body
+  }
+  return sections
+}
+
+function NarrativeProse({ prose }: { prose?: string }) {
+  const paras = prose ? prose.split(/\n\n+/).filter(Boolean) : []
+  return (
+    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--div)" }}>
+      {paras.length > 0 ? (
+        paras.map((p, i) => (
+          <p
+            key={i}
+            style={{
+              fontSize: 13,
+              color: "var(--t2)",
+              lineHeight: 1.72,
+              fontFamily: "Inter, sans-serif",
+              marginBottom: i < paras.length - 1 ? 10 : 0,
+            }}
+          >
+            {p}
+          </p>
+        ))
+      ) : (
+        <p
+          style={{
+            fontSize: 12,
+            color: "var(--t4)",
+            fontStyle: "italic",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          Analysis not available
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ── §01 Hero Scorecard ────────────────────────────────────────────────────────
 
 function SubscoreBar({ sub, delay }: { sub: ReportData["score"]["subscores"][number]; delay: number }) {
@@ -117,7 +166,7 @@ function SubscoreBar({ sub, delay }: { sub: ReportData["score"]["subscores"][num
   )
 }
 
-function HeroScorecard({ data }: { data: ReportData }) {
+function HeroScorecard({ data, prose }: { data: ReportData; prose?: string }) {
   const { score, meta, valuation } = data
   const disp = useSpringNum(score.composite, 0.045, 0.84)
   const r = 100
@@ -387,6 +436,7 @@ function HeroScorecard({ data }: { data: ReportData }) {
             <SubscoreBar key={s.key} sub={s} delay={i * 60} />
           ))}
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -521,7 +571,7 @@ function MethodBar({ m, maxK, delay }: { m: ReportData["valuation"]["methods"][n
   )
 }
 
-function ValuationSection({ data }: { data: ReportData }) {
+function ValuationSection({ data, prose }: { data: ReportData; prose?: string }) {
   const { valuation } = data
   const maxK = Math.max(...valuation.methods.map((m) => m.hi), valuation.hi) * 1.15
 
@@ -637,6 +687,7 @@ function ValuationSection({ data }: { data: ReportData }) {
             />
           </div>
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -677,7 +728,7 @@ function SBAStatCard({ label, value, sub, accent }: { label: string; value: stri
   )
 }
 
-function SBASection({ data }: { data: ReportData }) {
+function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
   const { sba } = data
   if (!sba.eligible) return null
 
@@ -803,6 +854,7 @@ function SBASection({ data }: { data: ReportData }) {
             </div>
           </div>
         </div>
+        <NarrativeProse prose={prose} />
         <div
           style={{
             position: "absolute",
@@ -822,7 +874,7 @@ function SBASection({ data }: { data: ReportData }) {
 
 // ── §04 Transferability ───────────────────────────────────────────────────────
 
-function TransferabilitySection({ data }: { data: ReportData }) {
+function TransferabilitySection({ data, prose }: { data: ReportData; prose?: string }) {
   const { transferability: t } = data
   const [hover, setHover] = React.useState(false)
   const shown = hover ? t.target : t.current
@@ -1010,6 +1062,7 @@ function TransferabilitySection({ data }: { data: ReportData }) {
             </div>
           </div>
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -1203,7 +1256,7 @@ function DetractorCard({ d, delay }: { d: ReportData["detractors"][number]; dela
   )
 }
 
-function DriversDetractorsSection({ data }: { data: ReportData }) {
+function DriversDetractorsSection({ data, driversP, detractorsP }: { data: ReportData; driversP?: string; detractorsP?: string }) {
   return (
     <section style={{ marginBottom: 20 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -1229,6 +1282,7 @@ function DriversDetractorsSection({ data }: { data: ReportData }) {
               <DriverCard key={i} d={d} delay={i * 70} />
             ))}
           </div>
+          <NarrativeProse prose={driversP} />
         </div>
         <div
           className="glass-r-strong"
@@ -1252,6 +1306,7 @@ function DriversDetractorsSection({ data }: { data: ReportData }) {
               <DetractorCard key={i} d={d} delay={i * 70} />
             ))}
           </div>
+          <NarrativeProse prose={detractorsP} />
         </div>
       </div>
     </section>
@@ -1260,7 +1315,7 @@ function DriversDetractorsSection({ data }: { data: ReportData }) {
 
 // ── §07 Deal Structure ────────────────────────────────────────────────────────
 
-function DealStructureSection({ data }: { data: ReportData }) {
+function DealStructureSection({ data, prose }: { data: ReportData; prose?: string }) {
   const { dealStructure } = data
   return (
     <section style={{ marginBottom: 20 }}>
@@ -1320,6 +1375,7 @@ function DealStructureSection({ data }: { data: ReportData }) {
             </div>
           ))}
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -1327,7 +1383,7 @@ function DealStructureSection({ data }: { data: ReportData }) {
 
 // ── §08 Growth Levers ─────────────────────────────────────────────────────────
 
-function GrowthSection({ data }: { data: ReportData }) {
+function GrowthSection({ data, prose }: { data: ReportData; prose?: string }) {
   const { growth } = data
   return (
     <section style={{ marginBottom: 20 }}>
@@ -1400,6 +1456,7 @@ function GrowthSection({ data }: { data: ReportData }) {
             ))}
           </div>
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -1522,7 +1579,7 @@ function NextStepCard({ s, delay }: { s: ReportData["nextSteps"][number]; delay:
   )
 }
 
-function NextStepsSection({ data }: { data: ReportData }) {
+function NextStepsSection({ data, prose }: { data: ReportData; prose?: string }) {
   return (
     <section style={{ marginBottom: 20 }}>
       <div className="glass-r-strong" style={{ padding: "30px 36px", animation: "slideUpLg .8s .38s cubic-bezier(.34,1.1,.64,1) both" }}>
@@ -1548,6 +1605,7 @@ function NextStepsSection({ data }: { data: ReportData }) {
             <NextStepCard key={i} s={s} delay={i * 90} />
           ))}
         </div>
+        <NarrativeProse prose={prose} />
       </div>
     </section>
   )
@@ -2050,20 +2108,45 @@ function ReportTopBar({ name: _name, generated }: { name: string; generated: str
 
 // ── Root FullReportVisual ─────────────────────────────────────────────────────
 
-export function FullReportVisual({ data, reportMd: _reportMd }: { data: ReportData; reportMd?: string }) {
+export function FullReportVisual({
+  data,
+  reportMd,
+  sessionId,
+}: {
+  data: ReportData
+  reportMd?: string
+  sessionId?: string
+}) {
+  const prose = React.useMemo(() => parseNarrativeSections(reportMd ?? ""), [reportMd])
+
+  React.useEffect(() => {
+    const keys = Object.keys(prose)
+    workflowTraceClient({
+      phase: "client.full_report_visual_parsed_narrative",
+      sessionId,
+      origin: "FullReportVisual",
+      detail: {
+        reportMdChars: (reportMd ?? "").length,
+        parsedSectionCount: keys.length,
+        parsedSectionTitles: keys,
+        charsPerSection: Object.fromEntries(keys.map((k) => [k, prose[k]?.length ?? 0])),
+        visualComposite: data.score.composite,
+      },
+    })
+  }, [reportMd, prose, sessionId, data.score.composite])
   return (
     <div data-theme="cream" style={{ background: "var(--page-bg)", minHeight: "100vh" }}>
       <ReportTopBar name={data.meta.name} generated={data.meta.generated} />
 
       <main style={{ padding: "20px 24px 100px", maxWidth: 1280, margin: "0 auto" }}>
-        <HeroScorecard data={data} />
-        <ValuationSection data={data} />
-        {data.sba.eligible && <SBASection data={data} />}
-        <TransferabilitySection data={data} />
-        <DriversDetractorsSection data={data} />
-        <DealStructureSection data={data} />
-        <GrowthSection data={data} />
-        <NextStepsSection data={data} />
+        <HeroScorecard data={data} prose={prose["Executive Summary"]} />
+        <ValuationSection data={data} prose={prose["Valuation Analysis"]} />
+        {data.sba.eligible && <SBASection data={data} prose={prose["SBA 7(a) Eligibility"]} />}
+        <TransferabilitySection data={data} prose={prose["Transferability Score"]} />
+        <DriversDetractorsSection data={data} driversP={prose["Value Drivers"]} detractorsP={prose["Value Detractors"]} />
+        <DealStructureSection data={data} prose={prose["Recommended Deal Structure"]} />
+        <GrowthSection data={data} prose={prose["Growth Levers"]} />
+        <NextStepsSection data={data} prose={prose["Next Steps"]} />
         <BoardroomCTACard data={data} />
 
         <div

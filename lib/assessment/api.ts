@@ -9,6 +9,7 @@
  * Browser → /api/assessment/* → Supabase (service key, server-side)
  */
 
+import { traceClient } from "@/lib/debug/workflow-trace-client"
 import type { GateAnswers, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "./session"
 
 export type SessionPatch = {
@@ -30,13 +31,25 @@ export type SessionPatch = {
  * Fire-and-forget: `void persistSession(...)`.
  */
 export async function persistSession(patch: SessionPatch): Promise<void> {
+  traceClient("client.persist_session_http_start", {
+    sessionId: patch.sessionId,
+    isCompletion: patch.completedAt !== undefined,
+    hasGate: !!patch.gate,
+    emailPresent: !!patch.gate?.email,
+    tag: patch.gate?.tag,
+  })
   try {
-    await fetch("/api/assessment/session", {
+    const res = await fetch("/api/assessment/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     })
-  } catch {
+    traceClient("client.persist_session_http_done", { sessionId: patch.sessionId, ok: res.ok, status: res.status })
+  } catch (err) {
+    traceClient("client.persist_session_http_error", {
+      sessionId: patch.sessionId,
+      error: err instanceof Error ? err.message : "network_error",
+    })
     // Network or server errors must not interrupt the user flow.
   }
 }
@@ -91,15 +104,24 @@ export async function fetchReport(sessionId: string): Promise<ReportResult | nul
  * Fire-and-forget: `void requestTeaser(sessionId)`.
  */
 export async function requestTeaser(sessionId: string): Promise<TeaserResult | null> {
+  traceClient("client.request_teaser_start", { sessionId })
   try {
     const res = await fetch("/api/assessment/teaser", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      traceClient("client.request_teaser_error", { sessionId, status: res.status })
+      return null
+    }
+    traceClient("client.request_teaser_ok", { sessionId, status: res.status })
     return (await res.json()) as TeaserResult
-  } catch {
+  } catch (err) {
+    traceClient("client.request_teaser_network_error", {
+      sessionId,
+      error: err instanceof Error ? err.message : "network_error",
+    })
     return null
   }
 }
@@ -112,15 +134,24 @@ export async function requestTeaser(sessionId: string): Promise<TeaserResult | n
  * Fire-and-forget: `void requestGenerate(sessionId)`.
  */
 export async function requestGenerate(sessionId: string): Promise<Response | null> {
+  traceClient("client.request_generate_start", { sessionId })
   try {
     const res = await fetch("/api/assessment/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      traceClient("client.request_generate_error", { sessionId, status: res.status })
+      return null
+    }
+    traceClient("client.request_generate_stream_response_received", { sessionId, status: res.status })
     return res
-  } catch {
+  } catch (err) {
+    traceClient("client.request_generate_network_error", {
+      sessionId,
+      error: err instanceof Error ? err.message : "network_error",
+    })
     return null
   }
 }

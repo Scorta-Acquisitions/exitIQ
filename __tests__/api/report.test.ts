@@ -27,19 +27,12 @@ describe("GET /api/assessment/report/[session_id]", () => {
     vi.clearAllMocks()
   })
 
-  it("returns reportMd, teaserJson, and createdAt for a known session", async () => {
+  it("returns reportMd and createdAt for a known session", async () => {
     const mockCreatedAt = new Date("2024-01-15T10:00:00.000Z")
     mockReportFindFirst.mockResolvedValueOnce({
       id: "report-uuid",
       sessionId: "test-123",
       reportMd: "# Exit IQ Report\n\nFull report content here",
-      teaserJson: {
-        headline: "Profitable retail business",
-        valuationRange: "$1.2M – $1.8M",
-        topStrength: "Strong recurring revenue",
-        topRisk: "High owner dependency",
-        segmentTag: "hot_seller",
-      },
       modelUsed: "claude-sonnet-4-6",
       generationMs: 8500,
       createdAt: mockCreatedAt,
@@ -50,12 +43,10 @@ describe("GET /api/assessment/report/[session_id]", () => {
 
     expect(res.status).toBe(200)
 
-    const data = (await res.json()) as { reportMd: string; teaserJson: { segmentTag: string }; createdAt: string }
+    const data = (await res.json()) as { reportMd: string; createdAt: string }
     expect(data).toHaveProperty("reportMd")
-    expect(data).toHaveProperty("teaserJson")
     expect(data).toHaveProperty("createdAt")
     expect(data.reportMd).toContain("Exit IQ Report")
-    expect(data.teaserJson.segmentTag).toBe("hot_seller")
   })
 
   it("returns 404 for an unknown session_id", async () => {
