@@ -1,8 +1,10 @@
 /**
  * Server-side NDJSON workflow tracer — local dev only.
  *
- * Writes one JSON line per event to .exitiq-debug/workflow.ndjson so agents
- * and developers can stream or grep the full pipeline end-to-end.
+ * Output layout:
+ *   .exitiq-debug/
+ *     sessions/<sessionId>.ndjson  ← one file per session, all events for that session
+ *     workflow.ndjson              ← catch-all for events with no sessionId
  *
  * Guards:
  *   - Only active when EXITIQ_WORKFLOW_LOG=true
@@ -21,7 +23,13 @@ import * as path from "path"
 const ENABLED = process.env.EXITIQ_WORKFLOW_LOG === "true" && process.env.VERCEL !== "1"
 
 const LOG_DIR = path.join(process.cwd(), ".exitiq-debug")
-const LOG_FILE = path.join(LOG_DIR, "workflow.ndjson")
+const SESSION_DIR = path.join(LOG_DIR, "sessions")
+const CATCHALL_FILE = path.join(LOG_DIR, "workflow.ndjson")
+
+/** Sanitise a sessionId so it is safe to use as a filename. */
+function safeSessionId(sid: string): string {
+  return sid.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80)
+}
 
 export function traceEvent(phase: string, payload?: Record<string, unknown>): void {
   if (!ENABLED) return
@@ -33,8 +41,14 @@ export function traceEvent(phase: string, payload?: Record<string, unknown>): vo
     ...payload,
   })
   try {
-    fs.mkdirSync(LOG_DIR, { recursive: true })
-    fs.appendFileSync(LOG_FILE, entry + "\n")
+    const sessionId = typeof payload?.sessionId === "string" ? payload.sessionId : null
+    if (sessionId) {
+      fs.mkdirSync(SESSION_DIR, { recursive: true })
+      fs.appendFileSync(path.join(SESSION_DIR, `${safeSessionId(sessionId)}.ndjson`), entry + "\n")
+    } else {
+      fs.mkdirSync(LOG_DIR, { recursive: true })
+      fs.appendFileSync(CATCHALL_FILE, entry + "\n")
+    }
   } catch {
     // Tracing must never crash the app.
   }

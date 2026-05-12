@@ -1,9 +1,9 @@
 /**
  * Client-event ingest endpoint for the local workflow tracer.
  *
- * Receives browser trace events and appends them to the same
- * .exitiq-debug/workflow.ndjson file as server-side traceEvent() calls,
- * producing a unified timeline sorted by `ts`.
+ * Receives browser trace events and routes them through traceEvent() so they
+ * land in the same per-session file (.exitiq-debug/sessions/<sessionId>.ndjson)
+ * as the corresponding server-side events.
  *
  * The underlying traceEvent() already guards against VERCEL=1, so this
  * endpoint is a no-op on hosted deployments even if the client flag leaks.

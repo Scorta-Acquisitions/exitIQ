@@ -6,13 +6,30 @@ import { US_STATES } from "@/lib/assessment/states"
 // human-readable for AI prompts while scoring receives correct codes.
 
 const INDUSTRY_MAP: Record<string, string> = {
-  Restaurant: "food_bev",
-  Retail: "retail",
-  "Home Services": "home_services",
-  Medical: "healthcare_medical",
-  Manufacturing: "manufacturing_light",
-  "Professional Services": "accounting",
-  Other: "other",
+  // ── Direct matches ────────────────────────────────────────────────────────
+  "Auto Services":                  "automotive",
+  "Beauty / Wellness":              "beauty",
+  "Childcare / Education":          "childcare",
+  "Construction / Trades":          "construction",
+  "Dental / Optometry":             "healthcare_dental",
+  "E-commerce / DTC":               "ecommerce",
+  "Fitness / Gym":                  "fitness",
+  "Healthcare / Medical":           "healthcare_medical",
+  "Home Services":                  "home_services",
+  "Manufacturing":                  "manufacturing_light",
+  "Pet Services":                   "pet_services",
+  "Restaurant / Food Service":      "food_bev",
+  "Retail (Brick & Mortar)":        "retail",
+  "Staffing / Recruiting":          "staffing",
+  "Tech / SaaS":                    "saas_tech",
+  "Transportation / Logistics":     "transportation",
+  // ── Best-fit mappings (no exact backend slug; closest by buyer profile / multiples)
+  "Energy / Environment":           "construction",     // contracting / infrastructure adjacent
+  "Financial Services":             "accounting",       // professional services bucket
+  "Landscaping / Grounds":          "home_services",    // same PE rollup buyer profile as HVAC/plumbing
+  "Professional Services":          "accounting",       // accounting / consulting / advisory
+  "Specialty Retail / Hospitality": "retail",           // no dedicated hospitality slug
+  "Wholesale / Distribution":       "transportation",   // SDE multiples align better than retail
 }
 
 const REVENUE_MAP: Record<string, string> = {
