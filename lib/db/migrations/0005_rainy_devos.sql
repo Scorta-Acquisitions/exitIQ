@@ -1,0 +1,1 @@
+ALTER TABLE "assessment_reports" DROP COLUMN "teaser_json";

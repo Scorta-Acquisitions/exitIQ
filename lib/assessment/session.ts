@@ -11,11 +11,28 @@ export interface Stage1Answers {
   docReadiness?: string
 }
 
+export type ExitReadinessGrade = "A" | "B" | "C" | "D" | "—"
+
+/**
+ * Snapshot of the pre-gate Exit Readiness calc (lib/exitiq/calculations.ts).
+ * Captured at submit time so the post-gate report renders the same number the
+ * seller already saw — see report-transform.ts and the §01 audit row.
+ *
+ * Axis order matches RADAR_AXES / lib/exitiq/calculations.ts radarScores:
+ *   [finDocs, ownerDep, revQuality, custConc, longevity, opsDepth, positioning]
+ */
+export interface GateExitReadinessSnapshot {
+  score: number              // 0–100
+  grade: ExitReadinessGrade
+  axes: number[]             // length 7, each 0–10
+}
+
 export interface GateAnswers {
   firstName: string
   email: string
   sellingTimeline: string
   tag: SegmentTag
+  exitReadiness?: GateExitReadinessSnapshot
 }
 
 export interface Stage2Answers {

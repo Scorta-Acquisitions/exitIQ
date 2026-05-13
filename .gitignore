@@ -18,6 +18,9 @@ build
 *.pem
 *.tsbuildinfo
 
+# exitIQ local workflow trace (NDJSON; set EXITIQ_WORKFLOW_LOG=true)
+.exitiq-debug/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

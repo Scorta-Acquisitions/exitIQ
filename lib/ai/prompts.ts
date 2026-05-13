@@ -1,7 +1,8 @@
 import { findIndustry } from "@/lib/assessment/industries"
-import { computeSBASnapshot } from "@/lib/assessment/sba"
-import { computeScore, fmt, getTeaserRange, getValuationRange } from "@/lib/assessment/scoring"
+import type { ReportData } from "@/lib/assessment/report-transform"
+import { fmt } from "@/lib/assessment/scoring"
 import type { AssessmentSession } from "@/lib/assessment/session"
+import { appendWorkflowTrace } from "@/lib/debug/workflow-trace"
 
 // ─── Band → label lookup tables ──────────────────────────────────────────────
 // These mirror the option values defined in questions.ts / segmentation.ts so
@@ -155,49 +156,46 @@ function parseAskingPrice(raw: string | undefined): number | null {
 }
 
 // ─── buildReportPrompt ────────────────────────────────────────────────────────
-// Passed to Sonnet via streamText. Injects ALL deterministic metrics so the
-// model writes narrative only — it never recalculates financial figures.
-export function buildReportPrompt(session: AssessmentSession): string {
+// Passed to Sonnet via streamText. Accepts the pre-frozen ReportData so the
+// prompt and the visual renderer consume the exact same set of computed numbers.
+// The model is explicitly prohibited from calculating or estimating any figure.
+export function buildReportPrompt(
+  session: AssessmentSession,
+  reportData: ReportData,
+  trace?: { sessionId: string }
+): string {
   const s1 = session.stage1 ?? {}
   const gate = session.gate ?? {}
   const s2 = session.stage2 ?? {}
   const s3 = session.stage3 ?? {}
   const s4 = session.stage4 ?? {}
 
-  // ── Deterministic computations ──
-  const score = computeScore(session)
-  const [valLow, valHigh] = getValuationRange(s1)
-  const valMid = Math.round((valLow + valHigh) / 2)
-  const sba = computeSBASnapshot(s1)
-  const industry = findIndustry(s1.industry ?? "other")
-  const sdeMid = SDE_MIDPOINTS[s1.sde ?? "500_1m"] ?? 750_000
-  const revMid = SDE_MIDPOINTS[s1.revenue ?? "500_1m"] ?? 750_000
+  // ── Read quantitative values exclusively from the frozen ReportData ──
+  const { score, valuation, sba, transferability, drivers, detractors, growth, dealStructure, nextSteps, flags, meta, teaserValuation } = reportData
+  // methods[0] = SDE×multiple, [1] = revenue multiple, [2] = asset floor — always present
+  const [mSde, mRev, mAsset] = valuation.methods as [typeof valuation.methods[0], typeof valuation.methods[0], typeof valuation.methods[0]]
+  const sdeMid = meta.sdeMidK * 1000
+  const revMid = meta.revMidK * 1000
+  const dimMap = Object.fromEntries(score.subscores.map((s) => [s.key, s.value]))
+  const gradeLabel = { A: "A — Excellent", B: "B — Good", C: "C — Needs Preparation", D: "D — Early Stage" }[score.grade]
 
-  const sdeMethodLow = Math.round(sdeMid * industry.sdeMultiple[0])
-  const sdeMethodHigh = Math.round(sdeMid * industry.sdeMultiple[1])
-  const revMethodLow = Math.round(revMid * industry.revenueMultiple[0])
-  const revMethodHigh = Math.round(revMid * industry.revenueMultiple[1])
-  const assetFloor = Math.round(revMid * 0.25)
-
-  const dimMap = Object.fromEntries(score.dimensions.map((d) => [d.key, d.score]))
-
-  // ── Asking price context ──
+  // ── Asking price context — uses frozen valuation values, not independent computation ──
   const numericAsk = parseAskingPrice(s4.askingPrice)
   let askingContext: string
   if (numericAsk === null) {
     askingContext = "Owner has no price in mind — an ideal opportunity to anchor at full market value."
   } else {
-    const delta = ((numericAsk - valMid) / valMid) * 100
+    const delta = ((numericAsk - valuation.mid) / valuation.mid) * 100
     if (delta > 30) {
-      askingContext = `Owner expects ${fmt(numericAsk)}, which is ~${Math.round(delta)}% above the estimated market range of ${fmt(valLow)}–${fmt(valHigh)}. A diplomatic pricing conversation will be necessary.`
+      askingContext = `Owner expects ${fmt(numericAsk)}, which is ~${Math.round(delta)}% above the model range of ${fmt(valuation.lo)}–${fmt(valuation.hi)}. A diplomatic pricing conversation will be necessary.`
     } else if (delta < -20) {
-      askingContext = `Owner expects ${fmt(numericAsk)}, which is ~${Math.round(Math.abs(delta))}% below the estimated market range — they are likely undervaluing the business.`
+      askingContext = `Owner expects ${fmt(numericAsk)}, which is ~${Math.round(Math.abs(delta))}% below the model range — they are likely undervaluing the business.`
     } else {
-      askingContext = `Owner expects ${fmt(numericAsk)}, which falls within the estimated market range of ${fmt(valLow)}–${fmt(valHigh)}. Expectations are well-calibrated.`
+      askingContext = `Owner expects ${fmt(numericAsk)}, which falls within the model range of ${fmt(valuation.lo)}–${fmt(valuation.hi)}. Expectations are well-calibrated.`
     }
   }
 
-  // ── SBA status string ──
+  // ── SBA status string (derived from frozen sba.eligible + seller's self-report) ──
   const sbaVerdict =
     s3.sbaRestricted === "yes"
       ? "Not Eligible — owner self-reported a restricted industry category"
@@ -205,10 +203,8 @@ export function buildReportPrompt(session: AssessmentSession): string {
         ? "Eligible"
         : "Not Eligible — exceeds size thresholds or industry restriction"
 
-  // ── Deal structures ──
+  // ── Qualitative answer formatting (these are labels, not computed numbers) ──
   const structureList = (s4.dealStructure ?? []).map((v) => DEAL_STRUCTURE_LABELS[v] ?? v).join(", ") || "Not specified"
-
-  // ── Next-steps CTA line based on broker status + urgency ──
   const ctaLine =
     s4.brokerStatus === "burned"
       ? "Schedule a free consultation — we help owners sell without brokers at exitiq.com"
@@ -216,103 +212,146 @@ export function buildReportPrompt(session: AssessmentSession): string {
         ? "Join the waitlist for early marketplace access at exitiq.com"
         : "Subscribe for monthly Exit IQ updates as you prepare at exitiq.com"
 
-  const ownerName = gate.firstName ?? "Business Owner"
-  const gradeLabel = { A: "A — Excellent", B: "B — Good", C: "C — Needs Preparation", D: "D — Early Stage" }[
-    score.grade
-  ]
+  const ownerName = meta.name
 
-  return `You are a senior sell-side M&A advisor at a boutique firm specializing in main-street and lower-middle-market business exits under $10M. You are authoring a personalized Exit IQ Report for ${ownerName}.
+  // ── Pre-format driver / detractor / growth / next-step blocks ──
+  const driversBlock = drivers
+    .map((d) => `  ${d.rank}. ${d.title}  |  Impact: ${d.impact}\n     ${d.detail}`)
+    .join("\n")
+  const detractorsBlock = detractors
+    .map((d) => `  ${d.rank}. ${d.title}  |  Impact: ${d.impact}\n     ${d.detail}\n     Fix: ${d.fix}`)
+    .join("\n")
+  const growthBlock = growth.levers
+    .map((g, i) => `  ${i + 1}. ${g.title}: ${g.detail}`)
+    .join("\n")
+  const stepsBlock = nextSteps
+    .map((s) => `  ${s.rank}. [${s.priority} — ${s.when}] ${s.title}`)
+    .join("\n")
 
-CRITICAL RULES — read before writing a single word:
-1. ALL financial figures, scores, and ranges below are pre-calculated and authoritative. Do NOT recalculate, round differently, or contradict them.
-2. Every sentence must be grounded in the actual data provided. No generic language ("strong foundation", "great opportunity") unless immediately followed by a specific data point that justifies it.
-3. Tone: confident, direct, advisor-level. Write as if you personally reviewed this business. No hedging ("this may", "potentially", "could be").
-4. Avoid re-stating what the owner already told you. Add insight they don't have — buyer perspective, market context, dollar implication.
-5. This report will be shared with the owner's spouse, CPA, and attorney. It must be specific enough to hold up to scrutiny.
-6. Use the exact ## section headers listed below. No additions, no omissions.
+  const prompt = `You are a senior sell-side M&A advisor at a boutique firm specializing in main-street and lower-middle-market business exits under $10M. You are authoring a personalized Exit IQ Report for ${ownerName}.
 
-════════════════════════════════════════════════
-PRE-CALCULATED METRICS — authoritative ground truth
-════════════════════════════════════════════════
+════════════════════════════════════════════════════════
+ABSOLUTE PROHIBITION — READ BEFORE WRITING A SINGLE WORD
+════════════════════════════════════════════════════════
+You are FORBIDDEN from:
+• Calculating, estimating, deriving, or inventing any numerical value
+• Rounding any figure differently than shown in the registry below
+• Contradicting, adjusting, or qualifying any number in the registry
+• Inserting any dollar amount, score, percentage, or multiple not listed here
+
+Your role is NARRATIVE ONLY. You interpret and explain what these frozen numbers mean for the seller. The numbers themselves are immutable. Think of this like a mail-merge: the data slots are already filled; you write the prose around them.
+
+════════════════════════════════════════════════════════
+LOCKED VARIABLE REGISTRY — copy these values verbatim
+════════════════════════════════════════════════════════
 
 EXIT IQ SCORE
-  Composite:  ${score.composite} / 100  (Grade: ${gradeLabel})
-  Distressed: ${score.distressed ? "Yes — treat sale context sensitively" : "No"}
+  EXIT_IQ_SCORE   = ${score.composite} / 100
+  EXIT_IQ_GRADE   = ${score.grade}  (${gradeLabel})
+  DISTRESSED      = ${score.distressed ? "yes — treat sale context sensitively" : "no"}
 
-DIMENSION SCORES (0–100)
-  Financial Attractiveness  ${dimMap.financial ?? "N/A"}  (weight 25%)
-  Operational Independence  ${dimMap.operational ?? "N/A"}  (weight 25%)
-  Market Positioning        ${dimMap.market ?? "N/A"}  (weight 20%)
-  Deal Readiness            ${dimMap.dealReadiness ?? "N/A"}  (weight 15%)
-  Buyer Accessibility       ${dimMap.buyerAccess ?? "N/A"}  (weight 15%)
+DIMENSION SCORES (0–100, weights shown)
+  DIM_FINANCIAL     = ${dimMap.financial ?? "N/A"}  (25%)
+  DIM_OPERATIONAL   = ${dimMap.operational ?? "N/A"}  (25%)
+  DIM_MARKET        = ${dimMap.market ?? "N/A"}  (20%)
+  DIM_DEAL_READY    = ${dimMap.dealReadiness ?? "N/A"}  (15%)
+  DIM_BUYER_ACCESS  = ${dimMap.buyerAccess ?? "N/A"}  (15%)
 
-VALUATION — three methodologies
-  Industry:  ${industry.label}  |  SDE band midpoint: ${fmt(sdeMid)}  |  Revenue band midpoint: ${fmt(revMid)}
+VALUATION — three independent methodologies (all pre-computed)
+  INDUSTRY          = ${meta.industry}
+  SDE_MIDPOINT      = ${fmt(sdeMid)}
+  REV_MIDPOINT      = ${fmt(revMid)}
 
-  Method 1 — SDE × Industry Multiple (PRIMARY for ${industry.label})
-    Multiple range: ${industry.sdeMultiple[0]}x – ${industry.sdeMultiple[1]}x
-    Range:          ${fmt(sdeMethodLow)} – ${fmt(sdeMethodHigh)}
+  Method 1 — SDE × Industry Multiple (PRIMARY for ${meta.industry})
+    SDE_MULTI_LO    = ${meta.sdeMultiple[0]}×
+    SDE_MULTI_HI    = ${meta.sdeMultiple[1]}×
+    VAL_M1_LO       = ${fmt(mSde.lo)}
+    VAL_M1_HI       = ${fmt(mSde.hi)}
 
-  Method 2 — Revenue Multiple
-    Multiple range: ${industry.revenueMultiple[0]}x – ${industry.revenueMultiple[1]}x
-    Range:          ${fmt(revMethodLow)} – ${fmt(revMethodHigh)}
-    ${industry.revenueMultiple[1] < 0.6 ? "Note: revenue multiples are secondary for this industry — use for sanity-check only." : ""}
+  Method 2 — Revenue Multiple (secondary / sanity-check)
+    REV_MULTI_LO    = ${meta.revenueMultiple[0]}×
+    REV_MULTI_HI    = ${meta.revenueMultiple[1]}×
+    VAL_M2_LO       = ${fmt(mRev.lo)}
+    VAL_M2_HI       = ${fmt(mRev.hi)}
 
-  Method 3 — Asset Floor
-    25% of revenue: ${fmt(assetFloor)}
+  Method 3 — Asset Floor (reference only)
+    VAL_M3          = ${fmt(mAsset.lo)}  (25% of revenue)
 
-  ★ BLENDED RANGE (use this as the recommended listing range):  ${fmt(valLow)} – ${fmt(valHigh)}
-    Midpoint: ${fmt(valMid)}
+  ★ BLENDED RECOMMENDED LISTING RANGE
+    VALUATION_LO    = ${fmt(valuation.lo)}
+    VALUATION_MID   = ${fmt(valuation.mid)}
+    VALUATION_HI    = ${fmt(valuation.hi)}
+
+  PRE-GATE ESTIMATE (shown to seller before submitting contact info)
+    TEASER_LO       = ${fmt(teaserValuation.lo)}
+    TEASER_HI       = ${fmt(teaserValuation.hi)}
+    TEASER_SIGNALS  = "${teaserValuation.bridgeNote}"
 
   Asking price context: ${askingContext}
 
 SBA 7(a) FINANCING
-  Verdict:          ${sbaVerdict}
-  ${
-    sba.eligible && s3.sbaRestricted !== "yes"
-      ? `Loan amount:      ${fmt(sba.loanAmount)}
-  Down payment:     ${fmt(sba.downPayment)} (10%)
-  Monthly payment:  ${fmt(sba.monthlyPayment)} / month (10-year term ~10.5% APR)
-  Buyer pool size:  ${sba.buyerPoolLabel}`
-      : `Financing path:   ${sba.note}`
-  }
+  SBA_VERDICT       = ${sbaVerdict}
+  SBA_LOAN          = ${fmt(sba.loan)}
+  SBA_DOWN          = ${fmt(sba.downPayment)}  (10%)
+  SBA_MONTHLY       = ${fmt(sba.monthlyPayment)} / month  (10-yr term, ~10.5% APR)
+  SBA_DSCR          = ${sba.dscr}×  (floor: ${sba.dscrFloor}×)
+  SBA_BUYER_POOL    = ${sba.buyerPool}
 
-FLAGS IDENTIFIED
-  Green (buyer strengths):
-${score.flags.green.length ? score.flags.green.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
+TRANSFERABILITY
+  TRANSFER_SCORE    = ${transferability.current} / 100
+  TRANSFER_TARGET   = ${transferability.target} / 100  (achievable with documented ops)
+  TRANSFER_IMPACT   = $${transferability.dollarImpact}K  (estimated dollar swing)
+  TRANSFER_FIX      = "${transferability.fix}"
 
+FLAGS IDENTIFIED (pre-classified — do not reclassify)
+  Green (strengths):
+${flags.green.length ? flags.green.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
   Yellow (address before listing):
-${score.flags.yellow.length ? score.flags.yellow.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
-
+${flags.yellow.length ? flags.yellow.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
   Red (deal risks):
-${score.flags.red.length ? score.flags.red.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
+${flags.red.length ? flags.red.map((f) => `    • ${f}`).join("\n") : "    • None identified"}
 
-90-DAY CHECKLIST (pre-generated — include top 3 in Next Steps, verbatim)
-${score.checklist.map((item, i) => `  ${i + 1}. ${item}`).join("\n")}
+PRE-COMPUTED VALUE DRIVERS (titles and impact figures are locked)
+${driversBlock}
 
-════════════════════════════════════════════════
-SELLER'S RESPONSES
-════════════════════════════════════════════════
+PRE-COMPUTED VALUE DETRACTORS (titles, impact figures, and fix actions are locked)
+${detractorsBlock}
+
+PRE-COMPUTED GROWTH LEVERS
+${growthBlock}
+
+PRE-COMPUTED DEAL STRUCTURE RECOMMENDATION
+  Primary:   ${dealStructure.primary.name}
+             ${dealStructure.primary.detail}
+  Secondary: ${dealStructure.secondary.name}
+             ${dealStructure.secondary.detail}
+
+PRE-COMPUTED NEXT STEPS (90-day checklist, priority-ordered)
+${stepsBlock}
+
+════════════════════════════════════════════════════════
+SELLER'S QUALITATIVE ANSWERS (context only — not numbers)
+════════════════════════════════════════════════════════
 
 Seller:           ${ownerName}
 Selling timeline: ${lbl(SELLING_TIMELINE_LABELS, gate.sellingTimeline)}
 Segment tag:      ${gate.tag ?? "untagged"}
 
-Stage 1 — Business Snapshot
-  Industry:   ${industry.label}
-  Years:      ${s1.years ?? "Not specified"}
-  Revenue:    ${lbl(REVENUE_LABELS, s1.revenue)}
-  SDE:        ${lbl(REVENUE_LABELS, s1.sde)}
-  Employees:  ${lbl(EMPLOYEE_LABELS, s1.employees)}
-  State:      ${s1.state ?? "Not specified"}
+Stage 1 — Business Snapshot (all 10 UI answers live here or in stage2/3 below)
+  Industry:        ${meta.industry}
+  Years:           ${s1.years ?? "Not specified"}
+  Facility type:   ${lbl(REAL_ESTATE_LABELS, s1.facilityType)}
+  Revenue:         ${lbl(REVENUE_LABELS, s1.revenue)}
+  SDE:             ${lbl(REVENUE_LABELS, s1.sde)}
+  Financial docs:  ${lbl(DOC_LABELS, s1.docReadiness)}
+  Employees:       ${lbl(EMPLOYEE_LABELS, s1.employees)}
+  State:           ${s1.state ?? "Not specified"}
 
-Stage 2 — Health Check
+Stage 2 — Health Check (fields not collected in current 10-question flow show "Not specified")
   Owner dependency:       ${lbl(OWNER_DEP_LABELS, s2.ownerDependency)}
   Customer concentration: ${lbl(CUSTOMER_CONC_LABELS, s2.customerConcentration)}
   Revenue trend (3yr):    ${lbl(REVENUE_TREND_LABELS, s2.revenueTrend)}
   Recurring revenue:      ${lbl(RECURRING_LABELS, s2.recurringRevenue)}
-  Financial docs:         ${lbl(DOC_LABELS, s2.docReadiness)}
-  Real estate:            ${lbl(REAL_ESTATE_LABELS, s2.realEstate)}
   Reason for selling:     ${lbl(REASON_LABELS, s2.reasonForSelling)}
 
 Stage 3 — Buyer Lens
@@ -328,228 +367,89 @@ Stage 4 — Deal Goals
   Urgency:         ${lbl(URGENCY_LABELS, s4.urgency)}
   Broker status:   ${lbl(BROKER_LABELS, s4.brokerStatus)}
 
-════════════════════════════════════════════════
-WRITE THE REPORT NOW — use these exact ## headers
-════════════════════════════════════════════════
+════════════════════════════════════════════════════════
+WRITING INSTRUCTIONS — use these exact ## section headers
+════════════════════════════════════════════════════════
+
+Output exactly 9 sections with these headers in this order:
+  ## Executive Summary
+  ## Valuation Analysis
+  ## SBA 7(a) Eligibility
+  ## Transferability Score
+  ## Value Drivers
+  ## Value Detractors
+  ## Recommended Deal Structure
+  ## Growth Levers
+  ## Next Steps
+
+Rules for every section:
+• All numbers you write MUST match exactly a value from the LOCKED VARIABLE REGISTRY above.
+• No number may be introduced that is not in the registry.
+• Cite specific registry values (e.g. "your Exit IQ score of ${score.composite}/100") rather than paraphrasing.
+• Tone: confident, direct, advisor-level. No hedging ("may", "could", "potentially").
+• Add insight the owner doesn't already have — buyer perspective, market context, dollar implication.
+• Do not re-state what the owner told you; interpret it for them.
 
 # Exit IQ Report — ${ownerName}
 
 ## Executive Summary
-3–4 sentences. Open with the score (${score.composite}/100, Grade ${score.grade}) and the single most important insight — what makes or breaks this exit. Name the estimated valuation range (${fmt(valLow)}–${fmt(valHigh)}). End with the one action that would move the needle most before listing.
-
-## Business Profile
-2–3 sentences introducing this business to a sophisticated buyer. Include: industry, revenue band, SDE band, years in operation, employee count, state. Frame the business's market position — what kind of owner it suits and why it would attract buyers.
+4–5 sentences. First sentence: introduce this business to a sophisticated buyer — name the INDUSTRY, revenue band, SDE band, employee count, and years in one tight clause, then state what type of buyer it attracts and why. Second sentence: state EXIT_IQ_SCORE and EXIT_IQ_GRADE with the single most important insight for this exit. Third sentence: name the listing range VALUATION_LO–VALUATION_HI and the primary factor driving the spread. Final sentence: state the one action that would move the needle most before listing.
 
 ## Valuation Analysis
-Reference all three pre-calculated methodologies. Explain in one sentence why the SDE × multiple method is the primary method for ${industry.label} businesses. State the blended range (${fmt(valLow)}–${fmt(valHigh)}) as the recommended listing range and explain what drives the spread between low and high. Include the asking price context verbatim: "${askingContext}". Close with 1–2 sentences on what specific changes would move the multiple toward the high end.
+Open with exactly one bridge sentence that: (a) names the pre-gate estimate TEASER_LO–TEASER_HI the seller already saw, (b) states the refined analysis range VALUATION_LO–VALUATION_HI, and (c) cites TEASER_SIGNALS as the factor(s) that explain why buyers will anchor toward VALUATION_LO rather than VALUATION_HI. Use the exact figures from the registry — no rounding differently.
 
-## SBA Eligibility Assessment
-State the verdict: ${sbaVerdict}. ${sba.eligible && s3.sbaRestricted !== "yes" ? `Explain that a buyer can acquire with as little as ${fmt(sba.downPayment)} down at ${fmt(sba.monthlyPayment)}/month — and specifically what that means for buyer pool size (${sba.buyerPoolLabel}). If DSCR is relevant, note whether the SDE supports the debt service on a ${fmt(sba.loanAmount)} loan.` : "Explain what financing path buyers will use instead (conventional, seller financing, PE) and what that means for deal speed and buyer pool size."} One paragraph.
+Then reference all three pre-computed methodologies as three separate paragraphs, each on its own line, separated by blank lines, in this exact format (preserve the bold pattern and the em-dash, and write one sentence of "why this matters for ${meta.industry}" after the bolded headline):
+
+**Method 1 — SDE × Industry Multiple (${fmt(mSde.lo)}–${fmt(mSde.hi)}).** One sentence on why this is the primary methodology for ${meta.industry} businesses.
+
+**Method 2 — Revenue Multiple (${fmt(mRev.lo)}–${fmt(mRev.hi)}).** One sentence on what this cross-check tells a buyer.
+
+**Method 3 — Asset Floor (${fmt(mAsset.lo)}).** One sentence framing this as the absolute floor / reference only.
+
+After the three method paragraphs, state ${fmt(valuation.lo)}–${fmt(valuation.hi)} as the recommended listing range and explain what drives the spread. Include the asking price context: "${askingContext}". Close with 1–2 sentences on what specific improvements would move the multiple toward ${meta.sdeMultiple[1]}×.
+
+## SBA 7(a) Eligibility
+State the verdict: ${sbaVerdict}. ${sba.eligible && s3.sbaRestricted !== "yes" ? `Explain that a buyer can acquire with as little as ${fmt(sba.downPayment)} down at ${fmt(sba.monthlyPayment)}/month, and what this means for buyer pool size (${sba.buyerPool}). Note whether ${fmt(sdeMid)} SDE supports debt service on a ${fmt(sba.loan)} loan (DSCR ${sba.dscr}×, floor ${sba.dscrFloor}×).` : "Explain what financing path buyers will use instead and what that means for deal speed and buyer pool size."} One paragraph.
 
 ## Transferability Score
-Operational Independence score: ${dimMap.operational ?? "N/A"}/100. Write 3–4 sentences explaining what drives this specific number — reference: owner dependency (${lbl(OWNER_DEP_LABELS, s2.ownerDependency)}), SOPs (${lbl(SOPS_LABELS, s3.sops)}), and long-tenured staff (${lbl(KPR_LABELS, s3.keyPersonRisk)}). Quantify the upside: what the score would become with specific improvements, and what that translates to in dollar terms relative to the ${fmt(valMid)} midpoint.
+Operational Independence: ${transferability.current}/100. Write 3–4 sentences explaining what drives this specific score using the qualitative signals: owner dependency, SOPs, and long-tenured staff. Quantify the upside: reaching ${transferability.target}/100 with the fix described (${transferability.fix}) would unlock $${transferability.dollarImpact}K in additional deal value relative to the ${fmt(valuation.mid)} midpoint.
 
-## Deal Structure Recommendation
-Based on: structures the seller is open to (${structureList}), urgency (${lbl(URGENCY_LABELS, s4.urgency)}), SBA eligibility (${sbaVerdict}). Recommend 1–2 specific structures with concrete rationale — use specific numbers, e.g., "A 10–15% seller note expands your qualified buyer pool by roughly 3x and typically accelerates closing by 20–30%." Tailor to this seller's situation; do not give generic advice.
+## Value Drivers
+Use the 3 pre-computed driver titles and impact figures from the registry exactly as listed. Do NOT substitute or reorder. Format each as:
+**[Driver title].** [Two sentences: first from the buyer's perspective, second on dollar or multiple implication. Reference the exact impact figure from the registry.]
 
-## Top 3 Value Drivers
-Exactly 3 numbered items drawn from the Green flags and high-scoring dimensions. Format each as: **Bold label.** Two sentences — first from the buyer's perspective (what they see), second on the dollar implication or multiple impact.
+## Value Detractors
+Use the 3 pre-computed detractor titles, impact figures, and fix actions from the registry exactly as listed. Do NOT substitute or reorder. Format each as:
+**[Detractor title].** [First sentence: what a buyer will say or discount for — use the exact impact figure. Second sentence: the fix action from the registry, stated as an imperative.]
 
-## Top 3 Value Detractors
-Exactly 3 numbered items drawn from the Red/Yellow flags and lowest-scoring dimensions. Format each as: **Bold label.** First sentence: what a buyer will say or discount for. Second sentence: the single most effective mitigation before listing. Be direct — do not soften critical issues.
+## Recommended Deal Structure
+Use the pre-computed deal structure above. Explain the rationale for the Primary structure in 2–3 sentences using specific numbers from the registry. Describe the Secondary structure in 1–2 sentences. Tailor language to this seller's urgency (${lbl(URGENCY_LABELS, s4.urgency)}) and the structures they are open to (${structureList}).
 
 ## Growth Levers
-Start by referencing the owner's own words: "${s3.growthLevers ?? "not provided"}". Expand on 2–3 concrete growth angles a new owner could execute. Frame as upside — buyers pay a premium for identifiable, executable growth. 2–4 sentences total.
+Open by referencing the owner's own words: "${s3.growthLevers ?? "not provided"}". Then expand on the 3 pre-computed growth levers using the titles and detail from the registry. Frame as buyer upside — premium buyers pay for identifiable, executable growth. 3–5 sentences total.
 
 ## Next Steps
-Tailored to: ${lbl(BROKER_LABELS, s4.brokerStatus)}, timeline ${lbl(SELLING_TIMELINE_LABELS, gate.sellingTimeline)}. Write exactly 3 numbered steps, each specific and immediately actionable. Step 1 must be the highest-priority item from the 90-day checklist above. Step 3 must end with: "${ctaLine}."
+Write exactly 3 numbered steps using the pre-computed next steps from the registry. Each step should be specific and actionable. Use the title and priority/when metadata from the registry. Step 3 must end with: "${ctaLine}."
 
 ---
 *Report generated by Exit IQ — exitiq.com*`
-}
-
-// ─── buildTeaserPrompt ────────────────────────────────────────────────────────
-// Passed to Haiku via generateObject. Extended Stage 1 + gate data.
-// Valuation range and segmentTag are pre-computed and injected as ground truth
-// so Haiku writes copy, not math.
-export function buildTeaserPrompt(session: Partial<AssessmentSession>): string {
-  const s1 = session.stage1 ?? {}
-  const s1x = s1 as Record<string, unknown>
-  const gate = session.gate ?? {}
-
-  const industry = findIndustry(s1.industry ?? "other")
-  const [teaserLow, teaserHigh] = getTeaserRange(s1)
-
-  // Apply signal adjustments to tighten the teaser range
-  let adjLow = teaserLow
-  let adjHigh = teaserHigh
-
-  const trendMulti: Record<string, number> = {
-    growing_fast: 1.14,
-    growing: 1.07,
-    flat: 1.0,
-    declining_slight: 0.89,
-    declining_fast: 0.76,
+  if (trace) {
+    // Extract both count and actual titles — a title mismatch would be invisible from count alone
+    const sectionHeaderTitles = ("\n" + prompt).split("\n## ").slice(1).map((part) => {
+      const nl = part.indexOf("\n")
+      return nl === -1 ? part.trim() : part.slice(0, nl).trim()
+    })
+    appendWorkflowTrace({
+      phase: "buildReportPrompt.built",
+      surface: "server",
+      sessionId: trace.sessionId,
+      origin: "lib/ai/prompts",
+      detail: {
+        promptChars: prompt.length,
+        sectionHeaderCount: sectionHeaderTitles.length,
+        sectionHeaderTitles,
+      },
+    })
   }
-  const roleMulti: Record<string, number> = { passive: 1.1, mostly_hands_off: 1.04, partial: 0.97, operator: 0.88 }
-  const concMulti: Record<string, number> = { diversified: 1.08, moderate: 1.02, concentrated: 0.92, high_risk: 0.8 }
-  const keyManMulti: Record<string, number> = { "1": 0.84, "2": 0.92, "3": 1.0, "4": 1.06, "5": 1.12 }
-  const recurMulti: Record<string, number> = { high: 1.13, medium_high: 1.07, medium: 1.0, low: 0.9 }
-
-  const adj =
-    (trendMulti[String(s1x.revenueTrend ?? "")] ?? 1.0) *
-    (roleMulti[String(s1x.ownerRole ?? "")] ?? 1.0) *
-    (concMulti[String(s1x.customerConc ?? "")] ?? 1.0) *
-    (keyManMulti[String(s1x.keyMan ?? "")] ?? 1.0) *
-    (recurMulti[String(s1x.recurringRev ?? "")] ?? 1.0)
-
-  const midPoint = ((teaserLow + teaserHigh) / 2) * adj
-  const halfSpread = ((teaserHigh - teaserLow) / 2) * 0.45
-  adjLow = Math.round(midPoint - halfSpread)
-  adjHigh = Math.round(midPoint + halfSpread)
-
-  const teaserRangeStr = `${fmt(adjLow)} – ${fmt(adjHigh)}`
-  const segmentTag = gate.tag ?? "nurture"
-
-  const OWNER_ROLE_LABELS: Record<string, string> = {
-    operator: "Day-to-day operator — runs everything",
-    partial: "Partially involved — manages team, holds key relationships",
-    mostly_hands_off: "Mostly hands-off — strong team in place",
-    passive: "Silent/investor role — fully passive",
-  }
-  const REVENUE_TREND_LABELS_EXT: Record<string, string> = {
-    growing_fast: "Growing 20%+ annually",
-    growing: "Growing 5–20% annually",
-    flat: "Flat — within ±5%",
-    declining_slight: "Declining 5–20%",
-    declining_fast: "Declining 20%+",
-  }
-  const CUSTOMER_CONC_LABELS_EXT: Record<string, string> = {
-    diversified: "Top customer under 10% of revenue — highly diversified",
-    moderate: "Top customer 10–25% — well diversified",
-    concentrated: "Top customer 25–50% — manageable concentration",
-    high_risk: "Top customer over 50% — high concentration risk",
-  }
-  const KEY_MAN_LABELS: Record<string, string> = {
-    "1": "1 — Everything runs through owner",
-    "2": "2 — Most key relationships are owner's",
-    "3": "3 — Balanced between owner and team",
-    "4": "4 — Team handles most operations",
-    "5": "5 — Fully team-driven operations",
-  }
-  const RECURRING_LABELS_EXT: Record<string, string> = {
-    high: "Over 75% recurring / contracted",
-    medium_high: "50–75% recurring",
-    medium: "25–50% mixed model",
-    low: "Under 25% — mostly transactional",
-  }
-
-  const brokerFeeLow = Math.round(adjLow * 0.08)
-  const brokerFeeHigh = Math.round(adjHigh * 0.1)
-  const fmtFee = (n: number) =>
-    n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M` : `$${Math.round(n / 1_000)}K`
-  const brokerFeeRangeStr = `${fmtFee(brokerFeeLow)}–${fmtFee(brokerFeeHigh)}`
-  const multipleContextStr = `${((adjLow + adjHigh) / 2 / (SDE_MIDPOINTS[s1.sde ?? "500_1m"] ?? 750_000)).toFixed(1)}× SDE · ${industry.label} benchmark ${industry.sdeMultiple[0]}–${industry.sdeMultiple[1]}×`
-
-  return `You are a senior sell-side M&A advisor generating a detailed diagnostic teaser report for a business owner who just completed a comprehensive 10-signal assessment.
-
-PRE-CALCULATED VALUES — use exactly as provided, do not recalculate or modify:
-  valuationRange:   "${teaserRangeStr}"
-  multipleContext:  "${multipleContextStr}"
-  brokerFeeRange:   "${brokerFeeRangeStr}"
-  segmentTag:       "${segmentTag}"
-
-BUSINESS PROFILE (10 signals collected):
-  Industry:           ${industry.label}  (SDE multiple benchmark: ${industry.sdeMultiple[0]}x – ${industry.sdeMultiple[1]}x)
-  Years in business:  ${s1.years ?? "Not specified"}
-  Owner role:         ${OWNER_ROLE_LABELS[String(s1x.ownerRole ?? "")] ?? "Not specified"}
-  Annual revenue:     ${lbl(REVENUE_LABELS, s1.revenue)}
-  Annual SDE:         ${lbl(REVENUE_LABELS, s1.sde)}
-  Revenue trend:      ${REVENUE_TREND_LABELS_EXT[String(s1x.revenueTrend ?? "")] ?? "Not specified"}
-  Customer risk:      ${CUSTOMER_CONC_LABELS_EXT[String(s1x.customerConc ?? "")] ?? "Not specified"}
-  Employees:          ${lbl(EMPLOYEE_LABELS, s1.employees)}
-  Independence (1–5): ${KEY_MAN_LABELS[String(s1x.keyMan ?? "")] ?? "Not specified"}
-  Recurring revenue:  ${RECURRING_LABELS_EXT[String(s1x.recurringRev ?? "")] ?? "Not specified"}
-  Timeline:           ${lbl(SELLING_TIMELINE_LABELS, gate.sellingTimeline)}
-
-CRITICAL RULES:
-1. Every sentence must reference a specific signal value from the profile above — no generic M&A language.
-2. Quantify dollar or multiple impact wherever possible (e.g. "typically compresses the multiple by 0.5–1×").
-3. Tone: direct, advisor-level, as if you personally reviewed this business.
-4. Use exactly the valuationRange and multipleContext strings provided — do not recalculate.
-
-GENERATE ALL FIELDS:
-
-  headline
-    One sentence, max 18 words. Lead with the industry and the single most compelling signal.
-    Example: "Growing home services business with 75%+ recurring revenue and fully team-driven operations — SBA-eligible."
-
-  valuationRange
-    Use exactly: "${teaserRangeStr}"
-
-  multipleContext
-    Use exactly: "${multipleContextStr}"
-
-  buyerPoolPrimary
-    One sentence naming the most likely buyer type and why this profile attracts them.
-    Example: "PE-backed rollups are the primary buyer — recurring revenue and team depth match their exact acquisition thesis."
-
-  strength1Title
-    2–4 word title of the single most buyer-attractive attribute from the 10 signals.
-
-  strength1Desc
-    2–3 sentences: (1) name the specific signal and what buyers see, (2) explain the multiple or dollar implication, (3) how this expands or improves deal outcomes.
-
-  strength2Title
-    2–4 word title of the second strongest attribute from the signals.
-
-  strength2Desc
-    2–3 sentences. Same format as strength1Desc. Must reference a different signal than strength1.
-
-  risk1Title
-    2–4 word title of the single most important buyer concern from this profile.
-
-  risk1Desc
-    2–3 sentences: (1) what buyers will flag or discount for, (2) the specific dollar/multiple impact, (3) the single most effective mitigation before listing. Be direct — do not soften.
-
-  risk2Title
-    2–4 word title of the second most significant buyer concern.
-
-  risk2Desc
-    2–3 sentences. Same format as risk1Desc. Must reference a different risk signal than risk1.
-
-  revenueTrendSignal
-    Choose exactly one based on the revenue trend signal:
-    - "Bullish"    → growing 20%+ annually
-    - "Positive"   → growing 5–20% annually
-    - "Neutral"    → flat within ±5%
-    - "Softening"  → declining 5–20%
-    - "Bearish"    → declining 20%+
-
-  teamSignal
-    Choose exactly one based on employee count and independence score:
-    - "Scales without owner"  → 16+ employees OR independence 4–5
-    - "Manageable depth"      → 6–15 employees OR independence 3
-    - "Transition risk"       → 2–5 employees OR independence 2
-    - "Key-man risk"          → solo OR independence 1
-
-  recurringSignal
-    Choose exactly one based on recurring revenue:
-    - "Strong"          → over 75%
-    - "Moderate-strong" → 50–75%
-    - "Moderate"        → 25–50%
-    - "Low"             → under 25%
-
-  brokerFeeNarrative
-    One sentence using the pre-calculated brokerFeeRange: "Scorta replaces this with a flat fee — sellers keep ${brokerFeeRangeStr} more at close."
-    Use exactly "${brokerFeeRangeStr}" for the number.
-
-  topStrength
-    One sentence summary of the top strength (used in compact display). Reference the specific signal value.
-
-  topRisk
-    One sentence summary of the top risk with dollar/multiple implication. Be direct.
-
-  segmentTag
-    Use exactly: "${segmentTag}"`
+  return prompt
 }

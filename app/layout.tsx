@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { EB_Garamond, Inter } from "next/font/google"
+import { EB_Garamond, Inter, JetBrains_Mono } from "next/font/google"
 import "styles/tailwind.css"
 
 const ebGaramond = EB_Garamond({
@@ -17,6 +17,13 @@ const inter = Inter({
   display: "swap",
 })
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+})
+
 export const metadata: Metadata = {
   title: "Scorta — ExitIQ Liquid Engine",
   description:
@@ -24,7 +31,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 }
 
-const fontVariables = `${ebGaramond.variable} ${inter.variable}`
+const fontVariables = `${ebGaramond.variable} ${inter.variable} ${jetbrainsMono.variable}`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

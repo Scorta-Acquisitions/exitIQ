@@ -2,7 +2,9 @@
 "use client"
 
 import React from "react"
-import { persistSession, requestGenerate, requestTeaser, type TeaserResult } from "@/lib/assessment/api"
+import { useRouter } from "next/navigation"
+import { persistSession, requestGenerate } from "@/lib/assessment/api"
+import { traceClient } from "@/lib/debug/workflow-trace-client"
 import { computeTag } from "@/lib/assessment/segmentation"
 import type { SegmentTag } from "@/lib/assessment/session"
 import {
@@ -17,9 +19,9 @@ import { calcDerived } from "@/lib/exitiq/calculations"
 import { ANSWER_KEYS, INSIGHTS, RECALC_MESSAGES } from "@/lib/exitiq/data"
 import { setupWebGL, type WebGLControls } from "@/lib/exitiq/webgl"
 import { DashboardPanel } from "./dashboard"
-import { EmailGateModal, GateTeaserCard, PreviewCard } from "./preview"
+import { EmailGateModal, GateTeaserCard } from "./preview"
 import { QuestionPanel } from "./questions"
-import { FullReportCard, ReportGeneratingCard } from "./report"
+import { CinematicLoader } from "./report"
 import { AIInsight, Ripple, ScanLine, SignalOrb } from "./ui"
 
 const ORB_SIZE = 120
@@ -208,6 +210,7 @@ function ExitConfirmDialog({ onStay, onExit }: { onStay: () => void; onExit: () 
 }
 
 export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
+  const router = useRouter()
   const isMobile = useIsMobile()
   const [step, setStep] = React.useState(0)
   const [answers, setAnswers] = React.useState<Record<string, string>>({})
@@ -219,7 +222,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
   const [submitted, setSubmitted] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [recalcMsg, setRecalcMsg] = React.useState<string | null>(null)
-  const [teaserData, setTeaserData] = React.useState<TeaserResult | null>(null)
+  const [sessionId, setSessionId] = React.useState("")
   const [reportMd, setReportMd] = React.useState("")
   const [reportStreaming, setReportStreaming] = React.useState(false)
   const [gateFirstName, setGateFirstName] = React.useState("")
@@ -301,7 +304,6 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     setProcessing(false)
     setShowModal(false)
     setSubmitted(false)
-    setTeaserData(null)
     setReportMd("")
     setReportStreaming(false)
     setGateFirstName("")
@@ -358,7 +360,77 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     const session = loadSession()
     const sid = session.sessionId ?? generateSessionId()
 
+    traceClient("client.email_gate_submit_start", {
+      sessionId: sid,
+      emailPresent: !!data.email,
+      timelineSlug,
+      tag,
+      answersCount: Object.keys(answers).length,
+    })
+
+    // Capture all 10 raw answer slugs so the full pipeline input is reconstructable
+    traceClient("client.answers_snapshot", {
+      sessionId: sid,
+      detail: {
+        industry: answers.industry,
+        yearsLabel: answers.years,
+        revenue: answers.revenue,
+        sde: answers.sde,
+        employees: answers.employees,
+        facilityType: answers.facilityType,
+        docReadiness: answers.docReadiness,
+        customerConc: answers.customerConc,
+        keyMan: answers.keyMan,
+        recurringRev: answers.recurringRev,
+      },
+    })
+
+    // ── Signal Mapping Fix ────────────────────────────────────────────────────
+    // Translate UI answer slugs into the scoring-model slug codes expected by
+    // stage2/stage3. These three signals were previously packed into the stage1
+    // JSONB blob as unrecognised extra fields — the scoring model never saw them.
+    const CUSTOMER_CONC_MAP: Record<string, string> = {
+      concentrated: "25_50",
+      high_risk:    "over_50",
+      moderate:     "10_25",
+      diversified:  "under_10",
+    }
+    const RECURRING_REV_MAP: Record<string, string> = {
+      high:        "over_75",
+      medium_high: "50_75",
+      medium:      "25_50",
+      low:         "under_10",
+    }
+    const KEY_MAN_MAP: Record<string, string> = {
+      "1": "none",
+      "2": "one",
+      "3": "two_three",
+      "4": "two_three",
+      "5": "four_plus",
+    }
+
+    const customerConcentration = CUSTOMER_CONC_MAP[answers.customerConc ?? ""] ?? null
+    const recurringRevenue      = RECURRING_REV_MAP[answers.recurringRev ?? ""]  ?? null
+    const keyPersonRisk         = KEY_MAN_MAP[answers.keyMan ?? ""]               ?? null
+
+    // Log exactly what will be sent to each stage so signal routing is verifiable
+    traceClient("client.persist_session_payload_shape", {
+      sessionId: sid,
+      detail: {
+        signalMappingApplied: true,
+        stage1Fields: ["industry","years","revenue","sde","employees","state","facilityType","docReadiness"],
+        stage2: { customerConcentration, recurringRevenue },
+        stage3: { keyPersonRisk },
+        unmappedSignals: {
+          customerConc: customerConcentration === null ? answers.customerConc : null,
+          recurringRev: recurringRevenue      === null ? answers.recurringRev : null,
+          keyMan:       keyPersonRisk         === null ? answers.keyMan       : null,
+        },
+      },
+    })
+
     setGateFirstName(data.firstName)
+    setSessionId(sid)
     setShowModal(false)
     setSubmitted(true)
     clearPartialProgress()
@@ -366,38 +438,57 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
     void persistSession({
       sessionId: sid,
       stage1: {
-        industry: answers.industry ?? "",
-        years: (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
-        revenue: answers.revenue ?? "",
-        sde: answers.sde ?? "",
-        employees: answers.employees ?? "",
-        state: answers.state ?? "",
+        industry:     answers.industry ?? "",
+        years:        (answers.years ? YEAR_TO_NUMBER[answers.years] : undefined) ?? 5,
+        revenue:      answers.revenue ?? "",
+        sde:          answers.sde ?? "",
+        employees:    answers.employees ?? "",
+        state:        answers.state ?? "",
         facilityType: answers.facilityType ?? "",
         docReadiness: answers.docReadiness ?? "",
-        customerConc: answers.customerConc ?? "",
-        keyMan: answers.keyMan ?? "",
-        recurringRev: answers.recurringRev ?? "",
-      } as Parameters<typeof persistSession>[0]["stage1"],
+      },
+      stage2: {
+        ...(customerConcentration ? { customerConcentration } : {}),
+        ...(recurringRevenue      ? { recurringRevenue }      : {}),
+      },
+      stage3: {
+        ...(keyPersonRisk ? { keyPersonRisk } : {}),
+      },
       gate: {
-        firstName: data.firstName,
-        email: data.email,
+        firstName:       data.firstName,
+        email:           data.email,
         sellingTimeline: timelineSlug,
         tag,
+        // Freeze the pre-gate readiness number so the post-gate report renders
+        // exactly what the seller saw on the gate teaser — single source of truth.
+        exitReadiness: {
+          score: derived.exitReadinessScore,
+          grade: derived.exitReadinessGrade,
+          axes:  derived.radarScores,
+        },
       },
       completedAt: Date.now(),
     }).then(() => {
-      // Teaser: fast (Haiku, ~2–5s) — enriches preview card immediately
-      void requestTeaser(sid).then((teaser) => {
-        if (teaser) setTeaserData(teaser)
-      })
-
-      // Full report: stream from Sonnet (~20–40s) — shown below teaser when complete
+      // Full report: stream from Sonnet (~20–40s) — CinematicLoader navigates on completion
       setReportStreaming(true)
+      const generateStartMs = Date.now()
       void requestGenerate(sid).then(async (res) => {
-        if (!res?.body) {
+        if (res === null) {
+          // requestGenerate already logged the specific error (client.request_generate_error
+          // or client.request_generate_network_error) — log the outcome here for the loader
+          traceClient("client.request_generate_null_response", {
+            sessionId: sid,
+            note: "requestGenerate returned null — see client.request_generate_error for cause",
+          })
           setReportStreaming(false)
           return
         }
+        if (!res.body) {
+          traceClient("client.request_generate_no_body", { sessionId: sid })
+          setReportStreaming(false)
+          return
+        }
+        traceClient("client.generate_stream_reader_opened", { sessionId: sid })
         const reader = res.body.getReader()
         const dec = new TextDecoder()
         let acc = ""
@@ -407,6 +498,19 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
             if (done) break
             acc += dec.decode(value, { stream: true })
           }
+          const sectionCount = (acc.match(/\n## /g) ?? []).length
+          const sectionTitles = ("\n" + acc).split("\n## ").slice(1).map((part) => {
+            const nl = part.indexOf("\n")
+            return nl === -1 ? part.trim() : part.slice(0, nl).trim()
+          })
+          traceClient("client.generate_stream_reader_closed", {
+            sessionId: sid,
+            textLength: acc.length,
+            isEmpty: acc.length === 0,
+            durationMs: Date.now() - generateStartMs,
+            sectionCount,
+            sectionTitles,
+          })
           setReportMd(acc)
         } finally {
           setReportStreaming(false)
@@ -638,7 +742,7 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
               </p>
             </div>
 
-            {/* ── Question → Gate Teaser → [email gate] → Detailed AI Report ── */}
+            {/* ── Question → Gate Teaser → [email gate] → CinematicLoader → Report Page ── */}
             {!submitted ? (
               step < 10 ? (
                 <QuestionPanel step={step} onAnswer={handleAnswer} processing={processing} disabled={transitioning} />
@@ -647,12 +751,14 @@ export function ExitIQApp({ onClose }: { onClose?: () => void } = {}) {
                 <GateTeaserCard derived={derived} answers={answers} onUnlock={handleUnlock} />
               )
             ) : (
-              // Post-gate: teaser preview immediately, then full Sonnet report when ready
-              <>
-                <PreviewCard derived={derived} answers={answers} onUnlock={() => {}} teaserData={teaserData} />
-                {reportStreaming && <ReportGeneratingCard />}
-                {!reportStreaming && reportMd && <FullReportCard reportMd={reportMd} firstName={gateFirstName} />}
-              </>
+              // Post-gate: loader runs while Sonnet streams; navigates to /report/[sessionId] on completion
+              <CinematicLoader
+                sessionId={sessionId}
+                aiReady={!reportStreaming && !!reportMd}
+                onComplete={() => router.push(`/report/${sessionId}`)}
+                answers={answers}
+                name={gateFirstName}
+              />
             )}
 
             {/* AI Insight */}

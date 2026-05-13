@@ -48,14 +48,32 @@
   --footer-bg: #e8e4da;
   --footer-border: rgba(0,0,0,.08);
   --glass-bg: rgba(255,255,255,.72);
+  --glass-bg-strong: rgba(255,255,255,.82);
   --glass-border: rgba(0,0,0,.08);
+  --glass-edge: rgba(0,0,0,.07);
+  --glass-top: rgba(255,255,255,.9);
   --glass-shadow: 0 8px 32px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(0,0,0,.04);
+  --glass-shadow-strong: 0 1px 0 rgba(255,255,255,.92) inset, 0 -1px 0 rgba(0,0,0,.06) inset, 0 12px 36px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
   --panel-glow-on: 0 8px 32px rgba(0,0,0,.07), 0 0 40px rgba(16,185,129,.06), inset 0 1px 0 rgba(255,255,255,.9);
   --panel-glow-off: 0 8px 32px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.9);
   --scan-color: rgba(16,185,129,.18);
   --inp-bg: rgba(255,255,255,.7);
   --inp-border: rgba(0,0,0,.12);
   --dd-bg: rgba(245,243,238,.97);
+  /* ── Report accent palette ── */
+  --mint:       #2c8c70;
+  --mint-soft:  rgba(44,140,112,.10);
+  --mint-edge:  rgba(44,140,112,.28);
+  --peach:      #b86a3e;
+  --peach-soft: rgba(184,106,62,.10);
+  --peach-edge: rgba(184,106,62,.28);
+  --lav:        #6b5db0;
+  --lav-soft:   rgba(107,93,176,.10);
+  --lav-edge:   rgba(107,93,176,.26);
+  --sky:        #4a7ba8;
+  --sky-soft:   rgba(74,123,168,.10);
+  --sky-edge:   rgba(74,123,168,.26);
+  --crit:       #c44e2c;
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────────── */
@@ -87,6 +105,26 @@ body {
   border-radius: 20px;
   box-shadow: var(--glass-shadow);
   transition: background .5s ease, border-color .5s ease, box-shadow .5s ease;
+}
+
+/* ── Liquid glass (report cream mode) ─────────────────────────────────────── */
+.glass-r {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid var(--glass-edge, rgba(0,0,0,.07));
+  border-top-color: var(--glass-top, rgba(255,255,255,.9));
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow-strong);
+}
+.glass-r-strong {
+  background: var(--glass-bg-strong, rgba(255,255,255,.82));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-edge, rgba(0,0,0,.07));
+  border-top-color: var(--glass-top, rgba(255,255,255,.9));
+  border-radius: 22px;
+  box-shadow: var(--glass-shadow-strong);
 }
 
 /* ── Animations ────────────────────────────────────────────────────────────── */
@@ -149,6 +187,42 @@ body {
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
+}
+@keyframes slideUpLg {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes orbDrift1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(8%,-6%) scale(1.04); }
+  66%     { transform: translate(-5%,7%) scale(.98); }
+}
+@keyframes orbDrift2 {
+  0%,100% { transform: translate(0,0); }
+  50%     { transform: translate(-10%,8%) scale(1.07); }
+}
+@keyframes orbDrift3 {
+  0%,100% { transform: translate(0,0); }
+  50%     { transform: translate(7%,-9%); }
+}
+@keyframes barFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(44,140,112,.4); }
+  50%     { box-shadow: 0 0 0 8px rgba(44,140,112,0); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes pulseDot {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%     { transform: scale(1.4); opacity: .6; }
+}
+@keyframes blink {
+  50% { opacity: 0; }
 }
 
 /* ── Landing page light canvas override ─────────────────────────────────────── */

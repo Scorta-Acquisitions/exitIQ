@@ -5,6 +5,7 @@ import { computeSBASnapshot } from "@/lib/assessment/sba"
 import { computeScore } from "@/lib/assessment/scoring"
 import type { GateAnswers, Stage1Answers, Stage2Answers, Stage3Answers, Stage4Answers } from "@/lib/assessment/session"
 import { mapStage1ForScoring } from "@/lib/assessment/transform"
+import { compactStagesForTrace, redactGateForTrace, traceEvent } from "@/lib/debug/workflow-trace"
 import { db } from "@/lib/db"
 import { assessmentSessions } from "@/lib/db/schema"
 import { sendWelcomeEmail } from "@/lib/email"
@@ -31,6 +32,14 @@ const sessionBodySchema = z.object({
       email: z.string().optional(),
       sellingTimeline: z.string().optional(),
       tag: z.enum(["hot_seller", "warm_explorer", "nurture", "burned_by_broker"]).optional(),
+      // Pre-gate Exit Readiness snapshot — drives the report composite + subscores
+      exitReadiness: z
+        .object({
+          score: z.number(),
+          grade: z.enum(["A", "B", "C", "D", "—"]),
+          axes: z.array(z.number()).length(7),
+        })
+        .optional(),
     })
     .optional(),
   stage2: z
@@ -69,11 +78,13 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
+    traceEvent("api.session.parse_failed", { reason: "invalid_json" })
     return Response.json({ error: "invalid_json" }, { status: 400 })
   }
 
   const parsed = sessionBodySchema.safeParse(body)
   if (!parsed.success) {
+    traceEvent("api.session.validation_failed", { issueCount: parsed.error.issues.length })
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 })
   }
 
@@ -86,16 +97,23 @@ export async function POST(req: Request) {
     // Translate frontend labels to scoring slugs without altering stored stage1
     const scoringStage1 = data.stage1 ? mapStage1ForScoring(data.stage1 as Partial<Stage1Answers>) : {}
 
-    const scoreResult = computeScore({
-      sessionId: data.sessionId,
-      createdAt: Date.now(),
-      stage1: scoringStage1,
-      gate: data.gate,
-      stage2: data.stage2,
-      stage3: data.stage3,
-      stage4: data.stage4,
-    })
-    score = scoreResult.composite
+    // Prefer the pre-gate Exit Readiness snapshot when the client sent one.
+    // This is the same number the seller saw on the gate teaser, and is what
+    // the post-gate report renders — keep the DB column in sync.
+    if (data.gate?.exitReadiness && data.gate.exitReadiness.score > 0) {
+      score = data.gate.exitReadiness.score
+    } else {
+      const scoreResult = computeScore({
+        sessionId: data.sessionId,
+        createdAt: Date.now(),
+        stage1: scoringStage1,
+        gate: data.gate,
+        stage2: data.stage2,
+        stage3: data.stage3,
+        stage4: data.stage4,
+      })
+      score = scoreResult.composite
+    }
 
     const sbaSnapshot = computeSBASnapshot(scoringStage1)
     sbaEligible = sbaSnapshot.eligible
@@ -111,6 +129,22 @@ export async function POST(req: Request) {
   const s4 = data.stage4 as Stage4Answers | undefined
 
   const isCompletion = data.completedAt !== undefined
+
+  traceEvent("api.session.post_received", {
+    sessionId: data.sessionId,
+    isCompletion,
+    hasStage1: !!data.stage1,
+    hasGate: !!data.gate,
+    gate: gateData ? redactGateForTrace(gateData) : undefined,
+    score: score ?? undefined,
+    sbaEligible: sbaEligible ?? undefined,
+    // Stage2/3 presence and actual signal values — critical for verifying Signal Mapping Fix
+    ...compactStagesForTrace(
+      data.stage2 as Record<string, unknown> | undefined,
+      data.stage3 as Record<string, unknown> | undefined,
+      data.stage4 as Record<string, unknown> | undefined
+    ),
+  })
 
   logger.info("session.upsert", {
     sessionId: data.sessionId,
@@ -149,21 +183,50 @@ export async function POST(req: Request) {
             ...(completedAtDate !== undefined ? { completedAt: completedAtDate } : {}),
           },
         })
-    } catch (err) {
-      logger.error("session.save_failed", {
+      traceEvent("api.session.db_upsert_ok_in_after", {
         sessionId: data.sessionId,
-        error: err instanceof Error ? err.message : String(err),
+        score: score ?? undefined,
+        sbaEligible: sbaEligible ?? undefined,
+        isCompletion,
+        // Confirms whether stage2/3 were actually written (key for Signal Mapping Fix verification)
+        wroteStage2: s2 != null,
+        wroteStage3: s3 != null,
+        ...compactStagesForTrace(
+          s2 as unknown as Record<string, unknown> | undefined,
+          s3 as unknown as Record<string, unknown> | undefined,
+          s4 as unknown as Record<string, unknown> | undefined
+        ),
       })
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      logger.error("session.save_failed", { sessionId: data.sessionId, error: errorMsg })
+      traceEvent("api.session.db_upsert_failed_in_after", { sessionId: data.sessionId, error: errorMsg })
     }
 
     if (isCompletion && gateData) {
-      await sendWelcomeEmail({
-        gate: gateData,
-        stage1: s1,
-        leadQuality: gateData.tag ?? "nurture",
-      })
+      traceEvent("api.session.email_send_started", { sessionId: data.sessionId, tag: gateData.tag })
+      try {
+        await sendWelcomeEmail({
+          gate: gateData,
+          stage1: s1,
+          leadQuality: gateData.tag ?? "nurture",
+        })
+        traceEvent("api.session.email_send_ok", { sessionId: data.sessionId })
+      } catch (err) {
+        traceEvent("api.session.email_send_failed", {
+          sessionId: data.sessionId,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
     }
   })
 
+  // IMPORTANT: HTTP 200 is returned HERE, before after() runs the DB upsert.
+  // If a client immediately calls /api/assessment/generate after receiving this
+  // response, the session may not yet exist in the DB (race window).
+  traceEvent("api.session.http_200_sent_before_after", {
+    sessionId: data.sessionId,
+    note: "DB upsert runs in after() — generate race window starts now",
+  })
   return Response.json({ sessionId: data.sessionId, score: score ?? null, sbaEligible: sbaEligible ?? null })
 }

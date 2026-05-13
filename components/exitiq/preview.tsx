@@ -2,13 +2,30 @@
 "use client"
 
 import React from "react"
+import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
 import type { Derived, SdeMarginCheck } from "@/lib/exitiq/calculations"
 import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
+import { RadarChart } from "./radar"
 import { ScanLine } from "./ui"
 
 // ── Signal types & helpers ─────────────────────────────────────────────────────
 type Status = "bull" | "neutral" | "risk"
+
+// Strip a trailing plural "s" from the last word so a list-style buyerLead
+// ("RIA consolidators") reads as an adjective phrase ("RIA consolidator profile").
+// Leaves words ending in "ss", "us", or "is" alone, and no-ops on empty input.
+function singularizePhrase(phrase: string): string {
+  const trimmed = phrase.trim()
+  if (!trimmed) return ""
+  const words = trimmed.split(/\s+/)
+  const lastIdx = words.length - 1
+  const last = words[lastIdx]!
+  if (/[a-z]s$/.test(last) && !/(ss|us|is)$/i.test(last)) {
+    words[lastIdx] = last.slice(0, -1)
+  }
+  return words.join(" ")
+}
 
 function statusColors(s: Status) {
   if (s === "bull")
@@ -243,187 +260,7 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
 }
 
 // ── Radar chart ───────────────────────────────────────────────────────────────
-function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean }) {
-  const [drawn, setDrawn] = React.useState(false)
-  const [polyVisible, setPolyVisible] = React.useState(false)
-  const W = 200,
-    CX = 100,
-    CY = 100,
-    R = 70,
-    N = RADAR_AXES.length
-
-  React.useEffect(() => {
-    const t1 = setTimeout(() => setDrawn(true), 300)
-    const t2 = setTimeout(() => setPolyVisible(true), 1100)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-    }
-  }, [])
-
-  const angleOf = (i: number) => (Math.PI * 2 * i) / N - Math.PI / 2
-  const pointFor = (score: number, i: number): [number, number] => {
-    const a = angleOf(i)
-    const r = R * Math.max(score, 0.05)
-    return [CX + r * Math.cos(a), CY + r * Math.sin(a)]
-  }
-
-  const polyPoints = scores.map((s, i) => pointFor(s, i).join(",")).join(" ")
-  const axisLines = RADAR_AXES.map((_, i) => {
-    const [x, y] = pointFor(1, i)
-    return { x, y, delay: i * 110 }
-  })
-  const estimatedCount = scores.filter((s) => s > 0).length
-
-  return (
-    <div style={{ position: "relative", width: W, height: W, flexShrink: 0 }}>
-      <svg width={W} height={W} viewBox={`0 0 ${W} ${W}`}>
-        {[0.25, 0.5, 0.75, 1].map((r, i) => (
-          <polygon
-            key={i}
-            points={Array.from({ length: N }, (_, j) => pointFor(r, j).join(",")).join(" ")}
-            fill="none"
-            stroke="var(--div)"
-            strokeWidth={1}
-          />
-        ))}
-        {axisLines.map(({ x, y, delay }, i) => (
-          <line
-            key={i}
-            x1={CX}
-            y1={CY}
-            x2={x}
-            y2={y}
-            stroke="var(--b3)"
-            strokeWidth={1}
-            style={{
-              strokeDasharray: R,
-              strokeDashoffset: drawn ? 0 : R,
-              transition: `stroke-dashoffset .55s ${delay}ms ease`,
-            }}
-          />
-        ))}
-        {polyVisible && (
-          <polygon
-            points={polyPoints}
-            fill="rgba(167,229,211,.1)"
-            stroke="rgba(167,229,211,.55)"
-            strokeWidth={1.5}
-            style={{
-              filter: "drop-shadow(0 0 5px rgba(167,229,211,.4))",
-              animation: "fadeIn .5s ease",
-            }}
-          />
-        )}
-        {polyVisible &&
-          scores.map((s, i) => {
-            const [x, y] = pointFor(s, i)
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r={3}
-                fill={s > 0 ? "#a7e5d3" : "var(--s1)"}
-                style={{
-                  filter: s > 0 ? "drop-shadow(0 0 4px rgba(167,229,211,.8))" : "none",
-                  animation: `fadeIn .4s ${i * 55}ms ease both`,
-                }}
-              />
-            )
-          })}
-        {RADAR_AXES.map((label, i) => {
-          const [x, y] = pointFor(1.26, i)
-          return (
-            <text
-              key={i}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={7.5}
-              fontWeight={600}
-              fill="var(--t4)"
-              fontFamily="Inter, sans-serif"
-              letterSpacing=".4"
-            >
-              {label.toUpperCase()}
-            </text>
-          )
-        })}
-      </svg>
-
-      {blurred && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: 12,
-            backdropFilter: "blur(9px)",
-            WebkitBackdropFilter: "blur(9px)",
-            background: "rgba(0,0,0,.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            animation: "fadeIn .5s ease",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%)",
-              animation: "shimmer 3.2s ease-in-out infinite",
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 6,
-              position: "relative",
-            }}
-          >
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <rect x={4} y={11} width={16} height={11} rx={2.5} fill="var(--s1)" stroke="var(--t3)" strokeWidth={1} />
-              <path d="M8 11V7.5a4 4 0 0 1 8 0V11" stroke="var(--t3)" strokeWidth={1.3} fill="none" />
-              <circle cx={12} cy={16.5} r={1.8} fill="var(--t3)" />
-            </svg>
-            <div
-              style={{
-                fontSize: 9,
-                fontWeight: 600,
-                letterSpacing: ".9px",
-                textTransform: "uppercase",
-                color: "var(--t4)",
-                fontFamily: "Inter, sans-serif",
-                textAlign: "center",
-                lineHeight: 1.4,
-              }}
-            >
-              Full score
-              <br />
-              locked
-            </div>
-            <div
-              style={{
-                fontSize: 9,
-                color: "rgba(167,229,211,.55)",
-                fontWeight: 500,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {estimatedCount} of {N} estimated
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+// Shared implementation lives in ./radar.tsx — preview imports it above.
 
 // ── Signal card ───────────────────────────────────────────────────────────────
 function SignalCard({
@@ -1259,6 +1096,23 @@ function ExitReadinessHero({
     : grade === "D" ? "Significant gaps"
     : "Calculating…"
 
+  // Log the exit readiness score the seller is about to see immediately before the email gate.
+  // Fires only when the score actually resolves (score > 0) and re-fires on any recalculation.
+  // Correlated with the post-gate report composite via the next persistSession call.
+  React.useEffect(() => {
+    if (!hasScore) return
+    workflowTraceClient({
+      phase: "client.pre_gate_exit_readiness_shown",
+      origin: "preview.ExitReadinessHero",
+      detail: {
+        exitReadinessScore: score,
+        exitReadinessGrade: grade,
+        industry,
+        gradeLabel,
+      },
+    })
+  }, [score, grade, industry, hasScore, gradeLabel])
+
   // SVG arc: radius 54, circumference = 2π×54 ≈ 339.3. Offset to leave a gap at the bottom.
   // We use 75% of the full circle (270°), starting from the left (225° in SVG coords).
   const R = 54
@@ -1655,6 +1509,12 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
   const industry = answers.industry ?? "your business"
   const estimatedDims = radarScores.filter((s) => s > 0).length
 
+  // Top archetype from the same scoring used by the right-rail Buyer Archetype Match,
+  // so the two tiles stay in lock-step.
+  const buyerMatches = computeBuyerMatchLikelihoods(answers)
+  const topBuyer = buyerMatches.reduce((best, m) => (m.likelihood > best.likelihood ? m : best), buyerMatches[0]!)
+  const buyerLeadPhrase = singularizePhrase(derived.industry?.buyerLead ?? "")
+
   return (
     <div
       key="gate-teaser"
@@ -1701,29 +1561,37 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
           >
             Est. valuation range
           </div>
-          <div
-            style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 17,
-              fontWeight: 300,
-              color: "var(--t1)",
-              letterSpacing: "-.15px",
-              animation: "numRoll .7s ease",
-            }}
-          >
-            $900K – $1.6M
-          </div>
-          {derived.multiple && (
-            <div
-              style={{
-                fontSize: 10,
-                color: "#10b981",
-                fontWeight: 500,
-                marginTop: 3,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {derived.multiple} SDE multiple
+          {valuationRange ? (
+            <>
+              <div
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 17,
+                  fontWeight: 300,
+                  color: "var(--t1)",
+                  letterSpacing: "-.15px",
+                  animation: "numRoll .7s ease",
+                }}
+              >
+                {valuationRange.text}
+              </div>
+              {derived.multiple && (
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "#10b981",
+                    fontWeight: 500,
+                    marginTop: 3,
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
+                  {derived.multiple} SDE multiple
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: "var(--t5)", fontFamily: "Inter, sans-serif" }}>
+              Add revenue to estimate
             </div>
           )}
         </div>
@@ -1806,10 +1674,11 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
             Likely buyer pool
           </div>
           <div style={{ fontSize: 13, color: "var(--t2)", fontFamily: "Inter, sans-serif", lineHeight: 1.5 }}>
-            {derived.industry?.buyerLead ?? "Multiple buyer types"}
+            {topBuyer?.persona ?? "Multiple buyer types"}
           </div>
           <div style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif", marginTop: 3 }}>
-            Also: SBA-backed operator, local strategic
+            {buyerLeadPhrase ? `${buyerLeadPhrase} profile` : "Mixed buyer profile"}
+            {topBuyer ? ` · ${topBuyer.likelihood}% match` : ""}
           </div>
         </div>
 
@@ -2074,517 +1943,6 @@ function BuyerArchetypeSection({ answers }: { answers: Record<string, string> })
   )
 }
 
-// ── PreviewCard ───────────────────────────────────────────────────────────────
-interface TeaserData {
-  headline?: string
-  multipleContext?: string
-  buyerPoolPrimary?: string
-  strength1Title?: string
-  strength1Desc?: string
-  strength2Title?: string
-  strength2Desc?: string
-  risk1Title?: string
-  risk1Desc?: string
-  risk2Title?: string
-  risk2Desc?: string
-  revenueTrendSignal?: string
-  teamSignal?: string
-  recurringSignal?: string
-  brokerFeeNarrative?: string
-}
-
-interface PreviewCardProps {
-  derived: Derived
-  answers: Record<string, string>
-  onUnlock: () => void
-  teaserData?: TeaserData | null
-}
-
-export function PreviewCard({ derived, answers, onUnlock, teaserData }: PreviewCardProps) {
-  const { valuationRange, brokerFee, radarScores, confidence, industry, multiple } = derived
-
-  const industryLabel = answers.industry ?? "Your business"
-  // Headline: prefer AI-generated, fall back to computed
-  const headline = teaserData?.headline ?? buildHeadline(answers)
-
-  const doc = docReadinessSignal(answers.docReadiness ?? "")
-  const team = teamSignal(answers.employees ?? "")
-  const recur = recurSignal(answers.recurringRev ?? "")
-  const conc = concSignal(answers.customerConc ?? "")
-  const facility = facilitySignal(answers.facilityType ?? "")
-  const km = keyManSig(answers.keyMan ?? "")
-
-  const industryMultRange = industry ? `${industry.multiple[0]}–${industry.multiple[1]}×` : "—"
-
-  // Strengths and risks: prefer AI-generated content, fall back to computed
-  const computedStrengths = getStrengths(answers, radarScores, industryLabel)
-  const computedRisks = getRisks(answers, radarScores)
-
-  const strengths: { title: string; desc: string }[] = teaserData?.strength1Title
-    ? [
-        { title: teaserData.strength1Title ?? "", desc: teaserData.strength1Desc ?? "" },
-        { title: teaserData.strength2Title ?? "", desc: teaserData.strength2Desc ?? "" },
-      ]
-    : computedStrengths
-
-  const risks: { title: string; desc: string }[] = teaserData?.risk1Title
-    ? [
-        { title: teaserData.risk1Title ?? "", desc: teaserData.risk1Desc ?? "" },
-        { title: teaserData.risk2Title ?? "", desc: teaserData.risk2Desc ?? "" },
-      ]
-    : computedRisks
-
-  // Driver pill labels: prefer AI signals
-  const docPillLabel = teaserData?.revenueTrendSignal ?? doc.pill.replace(/^[^ ]+ /, "")
-  const teamPillLabel = teaserData?.teamSignal ?? team.pill.replace("👥 ", "")
-  const recurPillLabel = teaserData?.recurringSignal ?? recur.pill.replace("🔁 ", "")
-
-  // Buyer pool: prefer AI
-  const buyerPoolText = teaserData?.buyerPoolPrimary ?? industry?.buyerLead ?? "Multiple buyer types"
-
-  // Multiple context: prefer AI
-  const multipleContextText =
-    teaserData?.multipleContext ??
-    (multiple ? `${multiple} SDE multiple · ${industryLabel} benchmark ${industryMultRange}` : null)
-
-  const estimatedDims = radarScores.filter((s) => s > 0).length
-
-  return (
-    <div
-      key="preview"
-      className="glass-panel"
-      style={{
-        padding: 28,
-        display: "flex",
-        flexDirection: "column",
-        gap: 22,
-        animation: "slideUp .7s cubic-bezier(.34,1.1,.64,1)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* ── SECTION 1: Report Header ─────────────────────────────────────────── */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <div
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#10b981",
-              boxShadow: "0 0 10px rgba(16,185,129,.9)",
-              animation: "liveBlink 2s infinite",
-            }}
-          />
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: ".96px",
-              textTransform: "uppercase",
-              color: "rgba(16,185,129,.8)",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            ExitIQ Teaser Report
-          </div>
-        </div>
-        <h2
-          style={{
-            fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-            fontSize: 24,
-            fontWeight: 300,
-            color: "var(--t1)",
-            letterSpacing: "-.35px",
-            lineHeight: 1.22,
-            margin: 0,
-          }}
-        >
-          {headline}
-        </h2>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--t3)",
-            marginTop: 8,
-            lineHeight: 1.65,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Preliminary signal only — {estimatedDims} of {RADAR_AXES.length} diagnostic dimensions estimated. Full report
-          unlocks 4 proprietary scores, a buyer objection map, and your 90-day exit prep plan.
-        </p>
-      </div>
-
-      <UnlockCTA
-        onUnlock={onUnlock}
-        label="Get my full report — free →"
-        subtext="No broker call. No sales pitch. Straight signal."
-      />
-
-      <SectionDivider label="Valuation signal" />
-
-      {/* ── SECTION 2: Valuation Signal ──────────────────────────────────────── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {/* Top row: Est. valuation (full width) */}
-        <div
-          style={{
-            background: "var(--s2)",
-            border: "1px solid var(--b3)",
-            borderRadius: 12,
-            padding: "16px 18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".96px",
-                textTransform: "uppercase",
-                color: "var(--t4)",
-                fontFamily: "Inter, sans-serif",
-                marginBottom: 6,
-              }}
-            >
-              Est. Valuation Range
-            </div>
-            {valuationRange ? (
-              <div
-                style={{
-                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                  fontSize: 26,
-                  fontWeight: 300,
-                  color: "var(--t1)",
-                  letterSpacing: "-.2px",
-                  animation: "numRoll .7s ease",
-                  lineHeight: 1,
-                }}
-              >
-                {valuationRange.text}
-              </div>
-            ) : (
-              <div style={{ fontSize: 14, color: "var(--t5)", fontFamily: "Inter, sans-serif" }}>
-                Add revenue + SDE to unlock
-              </div>
-            )}
-            {multipleContextText && (
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "#10b981",
-                  fontWeight: 500,
-                  marginTop: 5,
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {multipleContextText}
-              </div>
-            )}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: 4,
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".7px",
-                textTransform: "uppercase",
-                color: "var(--t4)",
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              Confidence
-            </div>
-            <div
-              style={{
-                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                fontSize: 22,
-                fontWeight: 300,
-                color: "#10b981",
-                letterSpacing: "-.15px",
-              }}
-            >
-              {confidence}%
-            </div>
-            <div style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>calibrated</div>
-          </div>
-        </div>
-
-        {/* Bottom row: Likely buyer pool | Readiness signal */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div
-            style={{
-              background: "rgba(167,229,211,.05)",
-              border: "1px solid rgba(167,229,211,.12)",
-              borderRadius: 12,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".96px",
-                textTransform: "uppercase",
-                color: "rgba(167,229,211,.5)",
-                fontFamily: "Inter, sans-serif",
-                marginBottom: 6,
-              }}
-            >
-              Likely buyer pool
-            </div>
-            <div style={{ fontSize: 12.5, color: "var(--t2)", fontFamily: "Inter, sans-serif", lineHeight: 1.5 }}>
-              {buyerPoolText}
-            </div>
-          </div>
-
-          <div
-            style={{
-              background: "rgba(200,184,224,.05)",
-              border: "1px solid rgba(200,184,224,.12)",
-              borderRadius: 12,
-              padding: "14px 16px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: ".96px",
-                textTransform: "uppercase",
-                color: "rgba(200,184,224,.5)",
-                fontFamily: "Inter, sans-serif",
-                marginBottom: 6,
-              }}
-            >
-              Readiness signal
-            </div>
-            <div
-              style={{
-                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                fontSize: 20,
-                fontWeight: 300,
-                color: "var(--t1)",
-                letterSpacing: "-.1px",
-              }}
-            >
-              {confidence}% calibrated
-            </div>
-            <div style={{ fontSize: 10.5, color: "var(--t4)", fontFamily: "Inter, sans-serif", marginTop: 4 }}>
-              {RADAR_AXES.length - estimatedDims} more signals improve accuracy
-            </div>
-          </div>
-        </div>
-
-        {/* Valuation Drivers — 3 pills */}
-        <div
-          style={{
-            background: "var(--s2)",
-            border: "1px solid var(--b3)",
-            borderRadius: 12,
-            padding: "13px 15px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 9.5,
-              fontWeight: 700,
-              letterSpacing: ".8px",
-              textTransform: "uppercase",
-              color: "var(--t4)",
-              fontFamily: "Inter, sans-serif",
-              marginBottom: 10,
-            }}
-          >
-            Valuation Drivers — What&apos;s Moving Your Number
-          </div>
-          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            <DriverPill emoji="📋" label="Doc readiness" value={docPillLabel} status={doc.status} />
-            <DriverPill emoji="👥" label="Team depth" value={teamPillLabel} status={team.status} />
-            <DriverPill emoji="🔁" label="Recurring rev" value={recurPillLabel} status={recur.status} />
-          </div>
-        </div>
-      </div>
-
-      <SectionDivider label="Business diagnostics" />
-
-      {/* ── SECTION 3: Business Signals Grid ─────────────────────────────────── */}
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        {/* Left: 2×3 signal grid */}
-        <div
-          style={{
-            flex: 1,
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 7,
-          }}
-        >
-          <SignalCard label="Doc Readiness" value={doc.label} status={doc.status} delay={0} />
-          <SignalCard label="Customer Risk" value={conc.label} status={conc.status} delay={55} />
-          <SignalCard label="Facility" value={facility.label} status={facility.status} delay={110} />
-          <SignalCard label="Recurring Rev" value={recur.label} status={recur.status} delay={165} />
-          <SignalCard label="Independence" value={km.label} status={km.status} delay={220} />
-          <SignalCard
-            label="Industry Multiple"
-            value={industry ? industryMultRange : "—"}
-            status={industry ? "neutral" : "neutral"}
-            delay={275}
-          />
-        </div>
-
-        {/* Right: blurred radar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-          <RadarChart scores={radarScores.map((s) => s / 10)} blurred={true} />
-          <div
-            style={{
-              fontSize: 9.5,
-              color: "var(--t4)",
-              fontFamily: "Inter, sans-serif",
-              textAlign: "center",
-              lineHeight: 1.4,
-            }}
-          >
-            {estimatedDims} of {RADAR_AXES.length} axes estimated
-          </div>
-        </div>
-      </div>
-
-      <SectionDivider label="Buyer archetype match" />
-
-      {/* ── SECTION 3b: Buyer Archetype Likelihoods ──────────────────────────── */}
-      <BuyerArchetypeSection answers={answers} />
-
-      <SectionDivider label="Strengths & risks" />
-
-      {/* ── SECTION 4: Strengths & Risks ─────────────────────────────────────── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-        {strengths.map((s, i) => (
-          <InsightCard key={i} type="strength" title={s.title} desc={s.desc} delay={i * 80} />
-        ))}
-        {risks.map((r, i) => (
-          <InsightCard key={i} type="risk" title={r.title} desc={r.desc} delay={i * 80 + 160} />
-        ))}
-      </div>
-
-      <SectionDivider label="Fee exposure" />
-
-      {/* ── SECTION 5: Broker Fee Callout ────────────────────────────────────── */}
-      <div
-        style={{
-          background: "rgba(244,197,168,.07)",
-          border: "1px solid rgba(244,197,168,.2)",
-          borderRadius: 14,
-          padding: "18px 20px",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.025) 50%,transparent 70%)",
-            animation: "shimmer 3.5s ease-in-out infinite",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: ".96px",
-            textTransform: "uppercase",
-            color: "rgba(244,197,168,.5)",
-            fontFamily: "Inter, sans-serif",
-            marginBottom: 8,
-          }}
-        >
-          Traditional Broker Fee{brokerFee ? ` (~${brokerFee.blendedPct}% blended)` : ""}
-        </div>
-        {brokerFee ? (
-          <>
-            <div
-              style={{
-                fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-                fontSize: 30,
-                fontWeight: 300,
-                color: "#f4c5a8",
-                letterSpacing: "-.25px",
-                animation: "numRoll .7s ease",
-                lineHeight: 1,
-                marginBottom: 10,
-              }}
-            >
-              {brokerFee.midText}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                color: "var(--t3)",
-                lineHeight: 1.65,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {teaserData?.brokerFeeNarrative ? (
-                <span style={{ color: "#a7e5d3", fontWeight: 500 }}>{teaserData.brokerFeeNarrative}</span>
-              ) : (
-                <>
-                  Scorta replaces this with a hybrid model: $5–10K retainer + 2.5–4% capped success fee —{" "}
-                  <span style={{ color: "#a7e5d3", fontWeight: 500 }}>
-                    sellers keep most of that {fmtMoney(brokerFee.midFee)} at close.
-                  </span>{" "}
-                  No listing commission. No exit tax at the finish line.
-                </>
-              )}
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 13, color: "var(--t4)", fontFamily: "Inter, sans-serif" }}>
-            Add revenue to estimate your broker fee exposure
-          </div>
-        )}
-      </div>
-
-      {/* Pain callout */}
-      <div
-        style={{
-          background: "var(--s2)",
-          border: "1px solid var(--b3)",
-          borderRadius: 12,
-          padding: "13px 16px",
-          fontSize: 13,
-          color: "var(--t3)",
-          lineHeight: 1.65,
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        Most owners only discover their real buyer objections{" "}
-        <span style={{ color: "var(--t2)", fontWeight: 500 }}>after their first buyer call</span> — when it&apos;s too
-        late to fix them. ExitIQ surfaces every risk before you list, so you control the narrative.
-      </div>
-
-      <SectionDivider label="What unlocks" />
-
-      {/* ── SECTION 6: Future Unlocks ─────────────────────────────────────────── */}
-      <UnlockList />
-
-      {/* ── SECTION 7: CTA ───────────────────────────────────────────────────── */}
-      <BottomUnlockCTA onUnlock={onUnlock} label="Get my full report →" />
-    </div>
-  )
-}
 
 // ── EmailGateModal ────────────────────────────────────────────────────────────
 interface EmailGateModalProps {
