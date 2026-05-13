@@ -396,7 +396,17 @@ Rules for every section:
 4–5 sentences. First sentence: introduce this business to a sophisticated buyer — name the INDUSTRY, revenue band, SDE band, employee count, and years in one tight clause, then state what type of buyer it attracts and why. Second sentence: state EXIT_IQ_SCORE and EXIT_IQ_GRADE with the single most important insight for this exit. Third sentence: name the listing range VALUATION_LO–VALUATION_HI and the primary factor driving the spread. Final sentence: state the one action that would move the needle most before listing.
 
 ## Valuation Analysis
-Open with exactly one bridge sentence that: (a) names the pre-gate estimate TEASER_LO–TEASER_HI the seller already saw, (b) states the refined analysis range VALUATION_LO–VALUATION_HI, and (c) cites TEASER_SIGNALS as the factor(s) that explain why buyers will anchor toward VALUATION_LO rather than VALUATION_HI. Use the exact figures from the registry — no rounding differently. Then reference all three pre-computed methodologies: Method 1 (${fmt(mSde.lo)}–${fmt(mSde.hi)}), Method 2 (${fmt(mRev.lo)}–${fmt(mRev.hi)}), Method 3 (${fmt(mAsset.lo)}). Explain in one sentence why Method 1 (SDE × multiple) is primary for ${meta.industry} businesses. State ${fmt(valuation.lo)}–${fmt(valuation.hi)} as the recommended listing range and explain what drives the spread. Include the asking price context: "${askingContext}". Close with 1–2 sentences on what specific improvements would move the multiple toward ${meta.sdeMultiple[1]}×.
+Open with exactly one bridge sentence that: (a) names the pre-gate estimate TEASER_LO–TEASER_HI the seller already saw, (b) states the refined analysis range VALUATION_LO–VALUATION_HI, and (c) cites TEASER_SIGNALS as the factor(s) that explain why buyers will anchor toward VALUATION_LO rather than VALUATION_HI. Use the exact figures from the registry — no rounding differently.
+
+Then reference all three pre-computed methodologies as three separate paragraphs, each on its own line, separated by blank lines, in this exact format (preserve the bold pattern and the em-dash, and write one sentence of "why this matters for ${meta.industry}" after the bolded headline):
+
+**Method 1 — SDE × Industry Multiple (${fmt(mSde.lo)}–${fmt(mSde.hi)}).** One sentence on why this is the primary methodology for ${meta.industry} businesses.
+
+**Method 2 — Revenue Multiple (${fmt(mRev.lo)}–${fmt(mRev.hi)}).** One sentence on what this cross-check tells a buyer.
+
+**Method 3 — Asset Floor (${fmt(mAsset.lo)}).** One sentence framing this as the absolute floor / reference only.
+
+After the three method paragraphs, state ${fmt(valuation.lo)}–${fmt(valuation.hi)} as the recommended listing range and explain what drives the spread. Include the asking price context: "${askingContext}". Close with 1–2 sentences on what specific improvements would move the multiple toward ${meta.sdeMultiple[1]}×.
 
 ## SBA 7(a) Eligibility
 State the verdict: ${sbaVerdict}. ${sba.eligible && s3.sbaRestricted !== "yes" ? `Explain that a buyer can acquire with as little as ${fmt(sba.downPayment)} down at ${fmt(sba.monthlyPayment)}/month, and what this means for buyer pool size (${sba.buyerPool}). Note whether ${fmt(sdeMid)} SDE supports debt service on a ${fmt(sba.loan)} loan (DSCR ${sba.dscr}×, floor ${sba.dscrFloor}×).` : "Explain what financing path buyers will use instead and what that means for deal speed and buyer pool size."} One paragraph.

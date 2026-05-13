@@ -1,8 +1,14 @@
 "use client"
 
 import React from "react"
+import {
+  READINESS_AXIS_DESCRIPTIONS,
+  READINESS_AXIS_KEYS,
+  READINESS_AXIS_LABELS,
+} from "@/lib/assessment/readiness-axes"
 import type { ReportData } from "@/lib/assessment/report-transform"
 import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
+import { RadarChart } from "./radar"
 
 // ── Shared hooks ──────────────────────────────────────────────────────────────
 
@@ -28,9 +34,21 @@ function useSpringNum(target: number, k = 0.05, d = 0.84): number {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmt$K(n: number): string {
-  if (n >= 1000) return `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}M`
-  return `$${n}K`
+// Formats a raw-dollar amount, auto-picking K vs M.
+//   1_500_000 → "$1.5M"   135_000 → "$135K"   999 → "$999"
+function fmtMoney(n: number): string {
+  if (!Number.isFinite(n)) return "$0"
+  const sign = n < 0 ? "-" : ""
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) {
+    const m = abs / 1_000_000
+    const rounded = Math.round(m * 10) / 10
+    return `${sign}$${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)}M`
+  }
+  if (abs >= 1_000) {
+    return `${sign}$${Math.round(abs / 1_000)}K`
+  }
+  return `${sign}$${Math.round(abs).toLocaleString()}`
 }
 
 function SectionLabel({
@@ -72,6 +90,86 @@ function SectionLabel({
   )
 }
 
+function SectionLead({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: 12,
+        color: "var(--t3)",
+        fontStyle: "italic",
+        fontFamily: "Inter, sans-serif",
+        maxWidth: 640,
+        marginTop: -4,
+        marginBottom: 14,
+        lineHeight: 1.55,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+// Hover-to-peek, click-to-pin expandable state. Pinned overrides hover.
+function useExpandable() {
+  const [hover, setHover] = React.useState(false)
+  const [pinned, setPinned] = React.useState(false)
+  const expanded = pinned || hover
+  return {
+    expanded,
+    pinned,
+    handlers: {
+      onMouseEnter: () => setHover(true),
+      onMouseLeave: () => setHover(false),
+      onClick: () => setPinned((p) => !p),
+    },
+  }
+}
+
+function ExpandHint({
+  expanded,
+  pinned,
+  color = "var(--t3)",
+}: {
+  expanded: boolean
+  pinned: boolean
+  color?: string
+}) {
+  const label = pinned ? "Pinned · click to close" : expanded ? "Less" : "More"
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        fontSize: 9,
+        fontWeight: 600,
+        letterSpacing: ".6px",
+        textTransform: "uppercase",
+        color,
+        fontFamily: "Inter, sans-serif",
+        opacity: pinned ? 1 : 0.75,
+        transition: "opacity .2s ease",
+        pointerEvents: "none",
+        userSelect: "none",
+      }}
+    >
+      <span>{label}</span>
+      <svg
+        width={9}
+        height={9}
+        viewBox="0 0 10 10"
+        fill="none"
+        style={{
+          transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform .25s ease",
+        }}
+      >
+        <path d="M2 3.5l3 3 3-3" stroke={color} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  )
+}
+
 function parseNarrativeSections(md: string): Record<string, string> {
   const sections: Record<string, string> = {}
   const parts = ("\n" + md).split("\n## ")
@@ -85,26 +183,63 @@ function parseNarrativeSections(md: string): Record<string, string> {
   return sections
 }
 
+// Render inline markdown: **bold**, *italic*. Returns React nodes.
+function renderInlineMd(text: string, keyPrefix: string): React.ReactNode[] {
+  const out: React.ReactNode[] = []
+  let buf = ""
+  let i = 0
+  let k = 0
+  const flush = () => {
+    if (buf) {
+      out.push(buf)
+      buf = ""
+    }
+  }
+  while (i < text.length) {
+    // **bold**
+    if (text[i] === "*" && text[i + 1] === "*") {
+      const end = text.indexOf("**", i + 2)
+      if (end !== -1) {
+        flush()
+        out.push(<strong key={`${keyPrefix}-b${k++}`}>{text.slice(i + 2, end)}</strong>)
+        i = end + 2
+        continue
+      }
+    }
+    // *italic* (single asterisks, not adjacent to another *)
+    if (text[i] === "*" && text[i + 1] !== "*" && (i === 0 || text[i - 1] !== "*")) {
+      const end = text.indexOf("*", i + 1)
+      if (end !== -1 && text[end + 1] !== "*" && end > i + 1) {
+        flush()
+        out.push(<em key={`${keyPrefix}-i${k++}`}>{text.slice(i + 1, end)}</em>)
+        i = end + 1
+        continue
+      }
+    }
+    buf += text[i]
+    i++
+  }
+  flush()
+  return out
+}
+
 function NarrativeProse({ prose }: { prose?: string }) {
-  const paras = prose ? prose.split(/\n\n+/).filter(Boolean) : []
-  return (
-    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--div)" }}>
-      {paras.length > 0 ? (
-        paras.map((p, i) => (
-          <p
-            key={i}
-            style={{
-              fontSize: 13,
-              color: "var(--t2)",
-              lineHeight: 1.72,
-              fontFamily: "Inter, sans-serif",
-              marginBottom: i < paras.length - 1 ? 10 : 0,
-            }}
-          >
-            {p}
-          </p>
-        ))
-      ) : (
+  const paraStyle: React.CSSProperties = {
+    fontSize: 13,
+    color: "var(--t2)",
+    lineHeight: 1.72,
+    fontFamily: "Inter, sans-serif",
+    marginBottom: 10,
+  }
+  const hrStyle: React.CSSProperties = {
+    border: 0,
+    borderTop: "1px solid var(--div)",
+    margin: "14px 0",
+  }
+
+  if (!prose) {
+    return (
+      <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--div)" }}>
         <p
           style={{
             fontSize: 12,
@@ -115,55 +250,73 @@ function NarrativeProse({ prose }: { prose?: string }) {
         >
           Analysis not available
         </p>
-      )}
+      </div>
+    )
+  }
+
+  // First pass: produce a flat sequence of {paragraph text} or {hr} items.
+  type Item = { kind: "p"; text: string; id: string } | { kind: "hr"; id: string }
+  const items: Item[] = []
+  prose
+    .split(/\n\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .forEach((block, bi) => {
+      const lines = block.split("\n")
+      let para: string[] = []
+      const flushPara = (id: string) => {
+        if (para.length) {
+          const text = para.join(" ").trim()
+          if (text) items.push({ kind: "p", text, id })
+          para = []
+        }
+      }
+      lines.forEach((line, li) => {
+        if (/^-{3,}$/.test(line.trim())) {
+          flushPara(`${bi}-${li}`)
+          items.push({ kind: "hr", id: `${bi}-${li}` })
+        } else {
+          para.push(line)
+        }
+      })
+      flushPara(`${bi}-end`)
+    })
+
+  const lastParaIdx = (() => {
+    for (let i = items.length - 1; i >= 0; i--) if (items[i]?.kind === "p") return i
+    return -1
+  })()
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--div)" }}>
+      {items.map((item, i) => {
+        if (item.kind === "hr") return <hr key={`hr-${item.id}`} style={hrStyle} />
+        const style = i === lastParaIdx ? { ...paraStyle, marginBottom: 0 } : paraStyle
+        return (
+          <p key={`p-${item.id}`} style={style}>
+            {renderInlineMd(item.text, `p-${item.id}`)}
+          </p>
+        )
+      })}
     </div>
   )
 }
 
 // ── §01 Hero Scorecard ────────────────────────────────────────────────────────
 
-function SubscoreBar({ sub, delay }: { sub: ReportData["score"]["subscores"][number]; delay: number }) {
-  const v = useSpringNum(sub.value)
-  return (
-    <div style={{ animation: `slideUp .6s ${delay}ms cubic-bezier(.34,1.2,.64,1) both` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-        <div
-          style={{
-            fontSize: 9,
-            fontWeight: 600,
-            letterSpacing: ".6px",
-            textTransform: "uppercase",
-            color: "var(--t3)",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          {sub.label}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: sub.color,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          {Math.round(v)}
-        </div>
-      </div>
-      <div style={{ height: 4, background: "var(--s1)", borderRadius: 9999, overflow: "hidden" }}>
-        <div
-          style={{
-            height: "100%",
-            width: `${v}%`,
-            background: sub.color,
-            borderRadius: 9999,
-            boxShadow: `0 0 6px ${sub.color}`,
-            transition: "width .05s linear",
-          }}
-        />
-      </div>
-    </div>
-  )
+// Convert subscores into a 7-axis radar (0–1) keyed by READINESS_AXIS_KEYS.
+// The readiness path already emits 7 keys; the legacy 5-dim path is projected.
+function buildHeroRadarScores(subscores: ReportData["score"]["subscores"]): number[] {
+  const byKey = new Map(subscores.map((s) => [s.key, s.value]))
+  if (subscores.length === READINESS_AXIS_KEYS.length) {
+    return READINESS_AXIS_KEYS.map((k) => (byKey.get(k) ?? 0) / 100)
+  }
+  // 5-dim fallback → 7-axis projection
+  const f = (byKey.get("financial") ?? 0) / 100
+  const o = (byKey.get("operational") ?? 0) / 100
+  const mk = (byKey.get("market") ?? 0) / 100
+  const ba = (byKey.get("buyerAccess") ?? 0) / 100
+  return [f, o, f, mk, ba, o, mk]
 }
 
 function HeroScorecard({ data, prose }: { data: ReportData; prose?: string }) {
@@ -172,6 +325,16 @@ function HeroScorecard({ data, prose }: { data: ReportData; prose?: string }) {
   const r = 100
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - disp / 100)
+
+  const radarScores = React.useMemo(() => buildHeroRadarScores(score.subscores), [score.subscores])
+  const [hoverAxis, setHoverAxis] = React.useState<number | null>(null)
+  const [pinnedAxis, setPinnedAxis] = React.useState<number | null>(null)
+  const activeAxis = pinnedAxis ?? hoverAxis
+  const activeKey = activeAxis !== null ? READINESS_AXIS_KEYS[activeAxis] : null
+  const activeLabel = activeKey ? READINESS_AXIS_LABELS[activeKey] ?? activeKey : null
+  const activeDesc = activeKey ? READINESS_AXIS_DESCRIPTIONS[activeKey] : null
+  const activeScore =
+    activeAxis !== null ? Math.round((radarScores[activeAxis] ?? 0) * 100) : null
 
   return (
     <section style={{ marginBottom: 20 }}>
@@ -399,43 +562,189 @@ function HeroScorecard({ data, prose }: { data: ReportData; prose?: string }) {
                 </div>
                 <div style={{ fontSize: 13, color: "var(--t1)", lineHeight: 1.55, fontFamily: "Inter, sans-serif" }}>
                   {data.detractors[0].fix} This one deliverable could shift your enterprise value by{" "}
-                  <strong>{fmt$K(data.transferability.dollarImpact)}</strong>.
+                  <strong>{fmtMoney(data.transferability.dollarImpact * 1000)}</strong>.
                 </div>
               </div>
             )}
           </div>
 
-          {/* Stat strip */}
+          {/* Radar */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 14,
+              alignItems: "center",
+              gap: 6,
               paddingLeft: 24,
               borderLeft: "1px solid var(--div)",
             }}
           >
-            <StatItem label="Valuation midpoint" big={fmt$K(valuation.mid)} sub={`${fmt$K(valuation.lo)} – ${fmt$K(valuation.hi)}`} accent="var(--t1)" />
-            <StatItem label="Timeline runway" big={meta.timeline} sub="Seller window" accent="var(--lav)" />
-            <StatItem label="Buyer pool" big={data.sba.eligible ? "SBA-qualified" : "Conventional"} sub={data.sba.buyerPool} accent="var(--sky)" />
+            <RadarChart
+              scores={radarScores}
+              size={210}
+              axisLabelFontSize={8}
+              activeAxis={activeAxis}
+              onAxisHover={(i) => setHoverAxis(i)}
+              onAxisClick={(i) =>
+                setPinnedAxis((cur) => (cur === i ? null : i))
+              }
+              centerContent={
+                <div style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                      fontSize: 36,
+                      fontWeight: 300,
+                      color: "var(--t1)",
+                      letterSpacing: "-1px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {Math.round(disp)}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 8,
+                      fontWeight: 700,
+                      letterSpacing: "1.1px",
+                      textTransform: "uppercase",
+                      color: "var(--t3)",
+                      marginTop: 2,
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    Exit Readiness
+                  </div>
+                </div>
+              }
+            />
+            <div
+              style={{
+                fontSize: 10,
+                color: "var(--t4)",
+                fontFamily: "Inter, sans-serif",
+                textAlign: "center",
+                lineHeight: 1.4,
+              }}
+            >
+              Hover an axis · click to pin
+            </div>
           </div>
         </div>
 
-        {/* Subscore strip */}
+        {/* Stat strip — 3 stats in a row, where the subscore bars used to live */}
         <div
           style={{
             marginTop: 28,
             paddingTop: 20,
             borderTop: "1px solid var(--div)",
             display: "grid",
-            gridTemplateColumns: `repeat(${score.subscores.length}, 1fr)`,
-            gap: 14,
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 28,
           }}
         >
-          {score.subscores.map((s, i) => (
-            <SubscoreBar key={s.key} sub={s} delay={i * 60} />
-          ))}
+          <StatItem
+            label="Valuation midpoint"
+            big={fmtMoney(valuation.mid)}
+            sub={`${fmtMoney(valuation.lo)} – ${fmtMoney(valuation.hi)}`}
+            accent="var(--t1)"
+          />
+          <StatItem
+            label="Timeline runway"
+            big={meta.timeline}
+            sub="Seller window"
+            accent="var(--lav)"
+          />
+          <StatItem
+            label="Buyer pool"
+            big={data.sba.eligible ? "SBA-qualified" : "Conventional"}
+            sub={data.sba.buyerPool}
+            accent="var(--sky)"
+          />
         </div>
+
+        {/* Axis explanation — appears when an axis is hovered or pinned */}
+        {activeLabel && activeDesc !== null && (
+          <div
+            style={{
+              marginTop: 18,
+              padding: "13px 16px",
+              background: "var(--glass-bg)",
+              border: "1px solid var(--glass-edge)",
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 14,
+              animation: "fadeIn .25s ease",
+            }}
+          >
+            <div style={{ flexShrink: 0, minWidth: 140 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "1.1px",
+                  textTransform: "uppercase",
+                  color: "var(--mint)",
+                  fontFamily: "Inter, sans-serif",
+                  marginBottom: 3,
+                }}
+              >
+                About this axis
+              </div>
+              <div
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 17,
+                  fontWeight: 400,
+                  color: "var(--t1)",
+                  letterSpacing: "-.2px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {activeLabel}
+                {activeScore !== null && (
+                  <>
+                    {" · "}
+                    <span style={{ color: "var(--mint)", fontWeight: 500 }}>{activeScore}/100</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                fontSize: 12,
+                color: "var(--t2)",
+                lineHeight: 1.65,
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              {activeDesc}
+            </div>
+            {pinnedAxis !== null && (
+              <button
+                onClick={() => setPinnedAxis(null)}
+                className="no-print"
+                style={{
+                  flexShrink: 0,
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--t3)",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontFamily: "Inter, sans-serif",
+                  padding: "2px 6px",
+                  borderRadius: 6,
+                }}
+                aria-label="Unpin axis"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+
         <NarrativeProse prose={prose} />
       </div>
     </section>
@@ -478,23 +787,22 @@ function StatItem({ label, big, sub, accent }: { label: string; big: string; sub
 // ── §02 Valuation Analysis ────────────────────────────────────────────────────
 
 function MethodBar({ m, maxK, delay }: { m: ReportData["valuation"]["methods"][number]; maxK: number; delay: number }) {
-  const [hover, setHover] = React.useState(false)
+  const { expanded, pinned, handlers } = useExpandable()
   const loPct = (m.lo / maxK) * 100
   const hiPct = (m.hi / maxK) * 100
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      {...handlers}
       style={{
         padding: "13px 15px",
-        background: hover ? "var(--glass-bg-strong)" : "var(--glass-bg)",
-        border: "1px solid var(--glass-edge)",
+        background: expanded ? "var(--glass-bg-strong)" : "var(--glass-bg)",
+        border: `1px solid ${pinned ? "var(--mint-edge)" : "var(--glass-edge)"}`,
         borderRadius: 13,
         animation: `slideUp .6s ${delay}ms cubic-bezier(.34,1.2,.64,1) both`,
         transition: "all .25s ease",
-        transform: hover ? "translateY(-2px)" : "none",
-        boxShadow: hover ? "0 10px 24px rgba(0,0,0,.07)" : "none",
-        cursor: "default",
+        transform: expanded ? "translateY(-2px)" : "none",
+        boxShadow: expanded ? "0 10px 24px rgba(0,0,0,.07)" : "none",
+        cursor: "pointer",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
@@ -533,7 +841,7 @@ function MethodBar({ m, maxK, delay }: { m: ReportData["valuation"]["methods"][n
             color: "var(--t1)",
           }}
         >
-          {m.lo === m.hi ? fmt$K(m.lo) : `${fmt$K(m.lo)} – ${fmt$K(m.hi)}`}
+          {m.lo === m.hi ? fmtMoney(m.lo) : `${fmtMoney(m.lo)} – ${fmtMoney(m.hi)}`}
         </div>
       </div>
       <div style={{ position: "relative", height: 7, marginBottom: 8 }}>
@@ -558,14 +866,17 @@ function MethodBar({ m, maxK, delay }: { m: ReportData["valuation"]["methods"][n
           fontSize: 11,
           color: "var(--t3)",
           lineHeight: 1.55,
-          maxHeight: hover ? 80 : 0,
+          maxHeight: expanded ? 80 : 0,
           overflow: "hidden",
-          opacity: hover ? 1 : 0,
+          opacity: expanded ? 1 : 0,
           transition: "max-height .3s ease, opacity .2s ease",
           fontFamily: "Inter, sans-serif",
         }}
       >
         {m.note}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: expanded ? 6 : 0, transition: "margin .2s ease" }}>
+        <ExpandHint expanded={expanded} pinned={pinned} color={m.primary ? "var(--mint)" : "var(--t3)"} />
       </div>
     </div>
   )
@@ -579,6 +890,7 @@ function ValuationSection({ data, prose }: { data: ReportData; prose?: string })
     <section style={{ marginBottom: 20 }}>
       <div className="glass-r-strong" style={{ padding: "30px 36px", animation: "slideUpLg .8s .1s cubic-bezier(.34,1.1,.64,1) both" }}>
         <SectionLabel num={2} label="Valuation Analysis" />
+        <SectionLead>Three valuation lenses, blended into one defensible listing range buyers and lenders will recognize.</SectionLead>
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 32, alignItems: "flex-start" }}>
           <div>
             <h2
@@ -627,7 +939,7 @@ function ValuationSection({ data, prose }: { data: ReportData; prose?: string })
                   lineHeight: 1,
                 }}
               >
-                {fmt$K(valuation.lo)}
+                {fmtMoney(valuation.lo)}
               </span>
               <span style={{ fontSize: 16, color: "var(--t3)" }}>–</span>
               <span
@@ -640,11 +952,11 @@ function ValuationSection({ data, prose }: { data: ReportData; prose?: string })
                   lineHeight: 1,
                 }}
               >
-                {fmt$K(valuation.hi)}
+                {fmtMoney(valuation.hi)}
               </span>
             </div>
             <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 16, fontFamily: "Inter, sans-serif" }}>
-              Midpoint <span style={{ color: "var(--mint)", fontWeight: 600 }}>{fmt$K(valuation.mid)}</span>
+              Midpoint <span style={{ color: "var(--mint)", fontWeight: 600 }}>{fmtMoney(valuation.mid)}</span>
             </div>
             <div style={{ height: 1, background: "var(--div)", margin: "0 0 14px" }} />
             <div
@@ -739,6 +1051,7 @@ function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
         style={{ padding: "30px 36px", position: "relative", overflow: "hidden", animation: "slideUpLg .8s .15s cubic-bezier(.34,1.1,.64,1) both" }}
       >
         <SectionLabel num={3} label="SBA 7(a) Eligibility" />
+        <SectionLead>Whether a financing-eligible buyer can write the equity check needed to close this deal.</SectionLead>
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 36, alignItems: "center" }}>
           {/* Approval stamp */}
           <div style={{ position: "relative", width: 180, height: 180, flexShrink: 0 }}>
@@ -816,7 +1129,7 @@ function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
               }}
             >
               A qualified buyer can close this with{" "}
-              <span style={{ color: "var(--mint)" }}>{fmt$K(sba.downPayment)}</span> down.
+              <span style={{ color: "var(--mint)" }}>{fmtMoney(sba.downPayment)}</span> down.
             </h2>
             <p
               style={{
@@ -834,13 +1147,13 @@ function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
               <SBAStatCard
                 label="Down payment"
-                value={fmt$K(sba.downPayment)}
+                value={fmtMoney(sba.downPayment)}
                 sub={`${Math.round((sba.downPayment / sba.loan) * 100)}% of loan`}
                 accent="var(--mint)"
               />
               <SBAStatCard
                 label="Monthly payment"
-                value={`${fmt$K(sba.monthlyPayment)}/mo`}
+                value={`${fmtMoney(sba.monthlyPayment)}/mo`}
                 sub={`${sba.term}yr · ${sba.apr}% APR`}
                 accent="var(--t1)"
               />
@@ -850,7 +1163,7 @@ function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
                 sub={`Floor ${sba.dscrFloor}× — well above`}
                 accent="var(--mint)"
               />
-              <SBAStatCard label="Loan amount" value={fmt$K(sba.loan)} sub="Underwritable today" accent="var(--t1)" />
+              <SBAStatCard label="Loan amount" value={fmtMoney(sba.loan)} sub="Underwritable today" accent="var(--t1)" />
             </div>
           </div>
         </div>
@@ -876,7 +1189,7 @@ function SBASection({ data, prose }: { data: ReportData; prose?: string }) {
 
 function TransferabilitySection({ data, prose }: { data: ReportData; prose?: string }) {
   const { transferability: t } = data
-  const [hover, setHover] = React.useState(false)
+  const { expanded: hover, pinned, handlers } = useExpandable()
   const shown = hover ? t.target : t.current
   const curV = useSpringNum(shown, 0.07, 0.82)
   const r = 60
@@ -885,8 +1198,18 @@ function TransferabilitySection({ data, prose }: { data: ReportData; prose?: str
 
   return (
     <section style={{ marginBottom: 20 }}>
-      <div className="glass-r-strong" style={{ padding: "30px 36px", animation: "slideUpLg .8s .2s cubic-bezier(.34,1.1,.64,1) both" }}>
+      <div
+        {...handlers}
+        className="glass-r-strong"
+        style={{
+          padding: "30px 36px",
+          animation: "slideUpLg .8s .2s cubic-bezier(.34,1.1,.64,1) both",
+          cursor: "pointer",
+          border: pinned ? "1px solid var(--peach-edge)" : undefined,
+        }}
+      >
         <SectionLabel num={4} label="Transferability Score" accent="var(--peach)" />
+        <SectionLead>How easily this business runs without you — the variable buyers discount most aggressively.</SectionLead>
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 36, alignItems: "center" }}>
           {/* Gauge + toggle */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
@@ -946,18 +1269,16 @@ function TransferabilitySection({ data, prose }: { data: ReportData; prose?: str
                 </div>
               </div>
             </div>
-            {/* Toggle */}
+            {/* Toggle — passive indicator; hover/click target is section-wide */}
             <div
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
               style={{
                 display: "flex",
                 background: "var(--s1)",
                 borderRadius: 9999,
                 padding: 3,
-                cursor: "pointer",
                 position: "relative",
                 border: "1px solid var(--b2)",
+                pointerEvents: "none",
               }}
             >
               <div
@@ -992,7 +1313,7 @@ function TransferabilitySection({ data, prose }: { data: ReportData; prose?: str
               ))}
             </div>
             <div style={{ fontSize: 10, color: "var(--t4)", textAlign: "center", fontFamily: "Inter, sans-serif" }}>
-              Hover to compare
+              {pinned ? "Pinned · click anywhere to release" : "Hover or click to compare — current vs. fixed"}
             </div>
           </div>
 
@@ -1031,7 +1352,7 @@ function TransferabilitySection({ data, prose }: { data: ReportData; prose?: str
               }}
             >
               {hover
-                ? `At 60+, buyers stop pricing in transition risk and start paying at or above the multiple midpoint. The move from the low end to the midpoint is a +${fmt$K(t.dollarImpact)} swing in enterprise value.`
+                ? `At 60+, buyers stop pricing in transition risk and start paying at or above the multiple midpoint. The move from the low end to the midpoint is a +${fmtMoney(t.dollarImpact * 1000)} swing in enterprise value.`
                 : "Owner dependency, undocumented SOPs, and untested staff retention compound. To a buyer's underwriting model, \"not specified\" is treated the same as \"not present.\""}
             </p>
             <div
@@ -1071,19 +1392,18 @@ function TransferabilitySection({ data, prose }: { data: ReportData; prose?: str
 // ── §05/06 Drivers & Detractors ───────────────────────────────────────────────
 
 function DriverCard({ d, delay }: { d: ReportData["drivers"][number]; delay: number }) {
-  const [hover, setHover] = React.useState(false)
+  const { expanded, pinned, handlers } = useExpandable()
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      {...handlers}
       style={{
-        background: hover ? "var(--mint-soft)" : "var(--glass-bg)",
-        border: `1px solid ${hover ? "var(--mint-edge)" : "var(--glass-edge)"}`,
+        background: expanded ? "var(--mint-soft)" : "var(--glass-bg)",
+        border: `1px solid ${expanded ? "var(--mint-edge)" : "var(--glass-edge)"}`,
         borderRadius: 12,
         padding: "13px 15px",
         animation: `slideUp .55s ${delay}ms cubic-bezier(.34,1.2,.64,1) both`,
         transition: "all .25s ease",
-        cursor: "default",
+        cursor: "pointer",
       }}
     >
       <div
@@ -1091,7 +1411,7 @@ function DriverCard({ d, delay }: { d: ReportData["drivers"][number]; delay: num
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: hover ? 8 : 4,
+          marginBottom: expanded ? 8 : 4,
           transition: "margin .25s",
         }}
       >
@@ -1143,33 +1463,35 @@ function DriverCard({ d, delay }: { d: ReportData["drivers"][number]; delay: num
           fontSize: 12,
           color: "var(--t3)",
           lineHeight: 1.6,
-          maxHeight: hover ? 160 : 0,
+          maxHeight: expanded ? 160 : 0,
           overflow: "hidden",
-          opacity: hover ? 1 : 0,
+          opacity: expanded ? 1 : 0,
           transition: "max-height .35s ease, opacity .25s ease",
           fontFamily: "Inter, sans-serif",
         }}
       >
         {d.detail}
       </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: expanded ? 6 : 0, transition: "margin .2s ease" }}>
+        <ExpandHint expanded={expanded} pinned={pinned} color="var(--mint)" />
+      </div>
     </div>
   )
 }
 
 function DetractorCard({ d, delay }: { d: ReportData["detractors"][number]; delay: number }) {
-  const [hover, setHover] = React.useState(false)
+  const { expanded, pinned, handlers } = useExpandable()
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      {...handlers}
       style={{
-        background: hover ? "var(--peach-soft)" : "var(--glass-bg)",
-        border: `1px solid ${hover ? "var(--peach-edge)" : "var(--glass-edge)"}`,
+        background: expanded ? "var(--peach-soft)" : "var(--glass-bg)",
+        border: `1px solid ${expanded ? "var(--peach-edge)" : "var(--glass-edge)"}`,
         borderRadius: 12,
         padding: "13px 15px",
         animation: `slideUp .55s ${delay}ms cubic-bezier(.34,1.2,.64,1) both`,
         transition: "all .25s ease",
-        cursor: "default",
+        cursor: "pointer",
       }}
     >
       <div
@@ -1177,7 +1499,7 @@ function DetractorCard({ d, delay }: { d: ReportData["detractors"][number]; dela
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: hover ? 8 : 4,
+          marginBottom: expanded ? 8 : 4,
           transition: "margin .25s",
         }}
       >
@@ -1226,9 +1548,9 @@ function DetractorCard({ d, delay }: { d: ReportData["detractors"][number]; dela
       </div>
       <div
         style={{
-          maxHeight: hover ? 220 : 0,
+          maxHeight: expanded ? 220 : 0,
           overflow: "hidden",
-          opacity: hover ? 1 : 0,
+          opacity: expanded ? 1 : 0,
           transition: "max-height .35s ease, opacity .25s ease",
         }}
       >
@@ -1252,6 +1574,9 @@ function DetractorCard({ d, delay }: { d: ReportData["detractors"][number]; dela
           {d.fix}
         </div>
       </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: expanded ? 6 : 0, transition: "margin .2s ease" }}>
+        <ExpandHint expanded={expanded} pinned={pinned} color="var(--peach)" />
+      </div>
     </div>
   )
 }
@@ -1265,6 +1590,7 @@ function DriversDetractorsSection({ data, driversP, detractorsP }: { data: Repor
           style={{ padding: "26px 28px", animation: "slideUpLg .8s .22s cubic-bezier(.34,1.1,.64,1) both", overflow: "hidden" }}
         >
           <SectionLabel num={5} label="Value Drivers" />
+          <SectionLead>Strengths a sophisticated buyer will pay up for — make sure they're documented.</SectionLead>
           <h3
             style={{
               fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -1289,6 +1615,7 @@ function DriversDetractorsSection({ data, driversP, detractorsP }: { data: Repor
           style={{ padding: "26px 28px", animation: "slideUpLg .8s .26s cubic-bezier(.34,1.1,.64,1) both", overflow: "hidden" }}
         >
           <SectionLabel num={6} label="Value Detractors" accent="var(--peach)" />
+          <SectionLead>Discounts buyers will insist on at the table — and what to fix before listing.</SectionLead>
           <h3
             style={{
               fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -1321,6 +1648,7 @@ function DealStructureSection({ data, prose }: { data: ReportData; prose?: strin
     <section style={{ marginBottom: 20 }}>
       <div className="glass-r-strong" style={{ padding: "26px 32px", animation: "slideUpLg .8s .3s cubic-bezier(.34,1.1,.64,1) both" }}>
         <SectionLabel num={7} label="Recommended Deal Structure" accent="var(--lav)" />
+        <SectionLead>How this deal should be priced and financed to attract the strongest buyer pool.</SectionLead>
         <h3
           style={{
             fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
@@ -1389,6 +1717,7 @@ function GrowthSection({ data, prose }: { data: ReportData; prose?: string }) {
     <section style={{ marginBottom: 20 }}>
       <div className="glass-r-strong" style={{ padding: "26px 32px", animation: "slideUpLg .8s .34s cubic-bezier(.34,1.1,.64,1) both" }}>
         <SectionLabel num={8} label="Growth Levers" accent="var(--sky)" />
+        <SectionLead>Upside levers worth documenting for the buyer's underwriting model.</SectionLead>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 28, alignItems: "flex-start" }}>
           <div>
             <h3
@@ -1584,6 +1913,7 @@ function NextStepsSection({ data, prose }: { data: ReportData; prose?: string })
     <section style={{ marginBottom: 20 }}>
       <div className="glass-r-strong" style={{ padding: "30px 36px", animation: "slideUpLg .8s .38s cubic-bezier(.34,1.1,.64,1) both" }}>
         <SectionLabel num={9} label="Next Steps" />
+        <SectionLead>What to do this quarter to land the upper end of the range.</SectionLead>
         <h3
           style={{
             fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",

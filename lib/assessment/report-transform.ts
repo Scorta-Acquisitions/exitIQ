@@ -194,27 +194,17 @@ const SUBSCORE_LABELS: Record<string, string> = {
   buyerAccess: "Buyer Accessibility",
 }
 
-// Axis labels for the 7-axis Exit Readiness subscore strip. Order MUST match
-// the radarScores array in lib/exitiq/calculations.ts and RADAR_AXES.
-const READINESS_AXIS_KEYS = [
-  "finDocs",
-  "ownerDep",
-  "revQuality",
-  "custConc",
-  "longevity",
-  "opsDepth",
-  "positioning",
-] as const
+// Axis labels for the 7-axis Exit Readiness subscore strip live in
+// ./readiness-axes — a client-safe module so report-visual (Client Component)
+// can import them without pulling Node-only deps into the browser bundle.
+// Re-exported from this file so existing import paths keep working.
+import {
+  READINESS_AXIS_DESCRIPTIONS,
+  READINESS_AXIS_KEYS,
+  READINESS_AXIS_LABELS,
+} from "./readiness-axes"
 
-const READINESS_AXIS_LABELS: Record<string, string> = {
-  finDocs:     "Financial Documentation",
-  ownerDep:    "Owner Dependency",
-  revQuality:  "Revenue Quality",
-  custConc:    "Customer Concentration",
-  longevity:   "Business Longevity",
-  opsDepth:    "Operational Depth",
-  positioning: "Market Positioning",
-}
+export { READINESS_AXIS_DESCRIPTIONS, READINESS_AXIS_KEYS, READINESS_AXIS_LABELS }
 
 function readinessHeadline(score: number, grade: string, name: string): string {
   if (grade === "A") {

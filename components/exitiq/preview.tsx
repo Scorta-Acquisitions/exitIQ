@@ -6,10 +6,26 @@ import { workflowTraceClient } from "@/lib/debug/workflow-trace-client"
 import type { Derived, SdeMarginCheck } from "@/lib/exitiq/calculations"
 import { computeBuyerMatchLikelihoods, fmtMoney } from "@/lib/exitiq/calculations"
 import { RADAR_AXES } from "@/lib/exitiq/data"
+import { RadarChart } from "./radar"
 import { ScanLine } from "./ui"
 
 // ── Signal types & helpers ─────────────────────────────────────────────────────
 type Status = "bull" | "neutral" | "risk"
+
+// Strip a trailing plural "s" from the last word so a list-style buyerLead
+// ("RIA consolidators") reads as an adjective phrase ("RIA consolidator profile").
+// Leaves words ending in "ss", "us", or "is" alone, and no-ops on empty input.
+function singularizePhrase(phrase: string): string {
+  const trimmed = phrase.trim()
+  if (!trimmed) return ""
+  const words = trimmed.split(/\s+/)
+  const lastIdx = words.length - 1
+  const last = words[lastIdx]!
+  if (/[a-z]s$/.test(last) && !/(ss|us|is)$/i.test(last)) {
+    words[lastIdx] = last.slice(0, -1)
+  }
+  return words.join(" ")
+}
 
 function statusColors(s: Status) {
   if (s === "bull")
@@ -244,187 +260,7 @@ function getRisks(answers: Record<string, string>, radarScores: number[]) {
 }
 
 // ── Radar chart ───────────────────────────────────────────────────────────────
-function RadarChart({ scores, blurred }: { scores: number[]; blurred: boolean }) {
-  const [drawn, setDrawn] = React.useState(false)
-  const [polyVisible, setPolyVisible] = React.useState(false)
-  const W = 200,
-    CX = 100,
-    CY = 100,
-    R = 70,
-    N = RADAR_AXES.length
-
-  React.useEffect(() => {
-    const t1 = setTimeout(() => setDrawn(true), 300)
-    const t2 = setTimeout(() => setPolyVisible(true), 1100)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-    }
-  }, [])
-
-  const angleOf = (i: number) => (Math.PI * 2 * i) / N - Math.PI / 2
-  const pointFor = (score: number, i: number): [number, number] => {
-    const a = angleOf(i)
-    const r = R * Math.max(score, 0.05)
-    return [CX + r * Math.cos(a), CY + r * Math.sin(a)]
-  }
-
-  const polyPoints = scores.map((s, i) => pointFor(s, i).join(",")).join(" ")
-  const axisLines = RADAR_AXES.map((_, i) => {
-    const [x, y] = pointFor(1, i)
-    return { x, y, delay: i * 110 }
-  })
-  const estimatedCount = scores.filter((s) => s > 0).length
-
-  return (
-    <div style={{ position: "relative", width: W, height: W, flexShrink: 0 }}>
-      <svg width={W} height={W} viewBox={`0 0 ${W} ${W}`}>
-        {[0.25, 0.5, 0.75, 1].map((r, i) => (
-          <polygon
-            key={i}
-            points={Array.from({ length: N }, (_, j) => pointFor(r, j).join(",")).join(" ")}
-            fill="none"
-            stroke="var(--div)"
-            strokeWidth={1}
-          />
-        ))}
-        {axisLines.map(({ x, y, delay }, i) => (
-          <line
-            key={i}
-            x1={CX}
-            y1={CY}
-            x2={x}
-            y2={y}
-            stroke="var(--b3)"
-            strokeWidth={1}
-            style={{
-              strokeDasharray: R,
-              strokeDashoffset: drawn ? 0 : R,
-              transition: `stroke-dashoffset .55s ${delay}ms ease`,
-            }}
-          />
-        ))}
-        {polyVisible && (
-          <polygon
-            points={polyPoints}
-            fill="rgba(167,229,211,.1)"
-            stroke="rgba(167,229,211,.55)"
-            strokeWidth={1.5}
-            style={{
-              filter: "drop-shadow(0 0 5px rgba(167,229,211,.4))",
-              animation: "fadeIn .5s ease",
-            }}
-          />
-        )}
-        {polyVisible &&
-          scores.map((s, i) => {
-            const [x, y] = pointFor(s, i)
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r={3}
-                fill={s > 0 ? "#a7e5d3" : "var(--s1)"}
-                style={{
-                  filter: s > 0 ? "drop-shadow(0 0 4px rgba(167,229,211,.8))" : "none",
-                  animation: `fadeIn .4s ${i * 55}ms ease both`,
-                }}
-              />
-            )
-          })}
-        {RADAR_AXES.map((label, i) => {
-          const [x, y] = pointFor(1.26, i)
-          return (
-            <text
-              key={i}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={7.5}
-              fontWeight={600}
-              fill="var(--t4)"
-              fontFamily="Inter, sans-serif"
-              letterSpacing=".4"
-            >
-              {label.toUpperCase()}
-            </text>
-          )
-        })}
-      </svg>
-
-      {blurred && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: 12,
-            backdropFilter: "blur(9px)",
-            WebkitBackdropFilter: "blur(9px)",
-            background: "rgba(0,0,0,.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            animation: "fadeIn .5s ease",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%)",
-              animation: "shimmer 3.2s ease-in-out infinite",
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 6,
-              position: "relative",
-            }}
-          >
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <rect x={4} y={11} width={16} height={11} rx={2.5} fill="var(--s1)" stroke="var(--t3)" strokeWidth={1} />
-              <path d="M8 11V7.5a4 4 0 0 1 8 0V11" stroke="var(--t3)" strokeWidth={1.3} fill="none" />
-              <circle cx={12} cy={16.5} r={1.8} fill="var(--t3)" />
-            </svg>
-            <div
-              style={{
-                fontSize: 9,
-                fontWeight: 600,
-                letterSpacing: ".9px",
-                textTransform: "uppercase",
-                color: "var(--t4)",
-                fontFamily: "Inter, sans-serif",
-                textAlign: "center",
-                lineHeight: 1.4,
-              }}
-            >
-              Full score
-              <br />
-              locked
-            </div>
-            <div
-              style={{
-                fontSize: 9,
-                color: "rgba(167,229,211,.55)",
-                fontWeight: 500,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {estimatedCount} of {N} estimated
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+// Shared implementation lives in ./radar.tsx — preview imports it above.
 
 // ── Signal card ───────────────────────────────────────────────────────────────
 function SignalCard({
@@ -1673,6 +1509,12 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
   const industry = answers.industry ?? "your business"
   const estimatedDims = radarScores.filter((s) => s > 0).length
 
+  // Top archetype from the same scoring used by the right-rail Buyer Archetype Match,
+  // so the two tiles stay in lock-step.
+  const buyerMatches = computeBuyerMatchLikelihoods(answers)
+  const topBuyer = buyerMatches.reduce((best, m) => (m.likelihood > best.likelihood ? m : best), buyerMatches[0]!)
+  const buyerLeadPhrase = singularizePhrase(derived.industry?.buyerLead ?? "")
+
   return (
     <div
       key="gate-teaser"
@@ -1719,29 +1561,37 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
           >
             Est. valuation range
           </div>
-          <div
-            style={{
-              fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
-              fontSize: 17,
-              fontWeight: 300,
-              color: "var(--t1)",
-              letterSpacing: "-.15px",
-              animation: "numRoll .7s ease",
-            }}
-          >
-            $900K – $1.6M
-          </div>
-          {derived.multiple && (
-            <div
-              style={{
-                fontSize: 10,
-                color: "#10b981",
-                fontWeight: 500,
-                marginTop: 3,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {derived.multiple} SDE multiple
+          {valuationRange ? (
+            <>
+              <div
+                style={{
+                  fontFamily: "'EB Garamond', var(--font-eb-garamond, serif)",
+                  fontSize: 17,
+                  fontWeight: 300,
+                  color: "var(--t1)",
+                  letterSpacing: "-.15px",
+                  animation: "numRoll .7s ease",
+                }}
+              >
+                {valuationRange.text}
+              </div>
+              {derived.multiple && (
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "#10b981",
+                    fontWeight: 500,
+                    marginTop: 3,
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
+                  {derived.multiple} SDE multiple
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: "var(--t5)", fontFamily: "Inter, sans-serif" }}>
+              Add revenue to estimate
             </div>
           )}
         </div>
@@ -1824,10 +1674,11 @@ export function GateTeaserCard({ derived, answers, onUnlock }: GateTeaserCardPro
             Likely buyer pool
           </div>
           <div style={{ fontSize: 13, color: "var(--t2)", fontFamily: "Inter, sans-serif", lineHeight: 1.5 }}>
-            {derived.industry?.buyerLead ?? "Multiple buyer types"}
+            {topBuyer?.persona ?? "Multiple buyer types"}
           </div>
           <div style={{ fontSize: 10, color: "var(--t4)", fontFamily: "Inter, sans-serif", marginTop: 3 }}>
-            Also: SBA-backed operator, local strategic
+            {buyerLeadPhrase ? `${buyerLeadPhrase} profile` : "Mixed buyer profile"}
+            {topBuyer ? ` · ${topBuyer.likelihood}% match` : ""}
           </div>
         </div>
 
