@@ -159,7 +159,8 @@ export async function POST(req: Request) {
     session.stage3 ?? undefined,
     session.stage4 ?? undefined,
     { sessionId, origin: "api.generate" },
-    session.gate?.exitReadiness ?? undefined
+    session.gate?.exitReadiness ?? undefined,
+    s1Raw
   )
 
   const assessmentSession: AssessmentSession = {
