@@ -1,6 +1,6 @@
 import { findIndustry } from "@/lib/assessment/industries"
 import { computeSBASnapshot } from "@/lib/assessment/sba"
-import { computeScore, fmt, getValuationRange, getTeaserRange } from "@/lib/assessment/scoring"
+import { computeScore, fmt, getTeaserRange, getValuationRange } from "@/lib/assessment/scoring"
 import type {
   GateExitReadinessSnapshot,
   Stage1Answers,

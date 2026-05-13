@@ -2465,7 +2465,6 @@ export function FullReportVisual({
         sbaEligible: data.sba.eligible,
       },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]) // mount only
 
   // Fires when narrative parsing completes — confirms LLM sections mapped to visual cards

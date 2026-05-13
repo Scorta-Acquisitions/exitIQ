@@ -377,7 +377,6 @@ export function CinematicLoader({
       origin: "CinematicLoader",
       detail: { mountTs: mountTsRef.current },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]) // fire once on mount only
 
   // Fires when the Sonnet stream finishes and aiReady flips true
