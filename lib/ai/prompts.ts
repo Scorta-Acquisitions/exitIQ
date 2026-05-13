@@ -268,11 +268,15 @@ VALUATION — three independent methodologies (all pre-computed)
     VAL_M1_LO       = ${fmt(mSde.lo)}
     VAL_M1_HI       = ${fmt(mSde.hi)}
 
-  Method 2 — Revenue Multiple (secondary / sanity-check)
+  Method 2 — Revenue Multiple (SANITY REFERENCE — NOT signal-adjusted)
     REV_MULTI_LO    = ${meta.revenueMultiple[0]}×
     REV_MULTI_HI    = ${meta.revenueMultiple[1]}×
     VAL_M2_LO       = ${fmt(mRev.lo)}
     VAL_M2_HI       = ${fmt(mRev.hi)}
+    NOTE: Static industry-median band. Does NOT move with recurring revenue,
+    customer concentration, owner dependency, or any seller-specific signal.
+    Use ONLY to confirm Method 1 sits within an industry corridor — never as
+    a listing anchor and never as "upside" the seller can chase.
 
   Method 3 — Asset Floor (reference only)
     VAL_M3          = ${fmt(mAsset.lo)}  (25% of revenue)
@@ -396,13 +400,13 @@ Rules for every section:
 4–5 sentences. First sentence: introduce this business to a sophisticated buyer — name the INDUSTRY, revenue band, SDE band, employee count, and years in one tight clause, then state what type of buyer it attracts and why. Second sentence: state EXIT_IQ_SCORE and EXIT_IQ_GRADE with the single most important insight for this exit. Third sentence: name the listing range VALUATION_LO–VALUATION_HI and the primary factor driving the spread. Final sentence: state the one action that would move the needle most before listing.
 
 ## Valuation Analysis
-Open with exactly one bridge sentence that: (a) names the pre-gate estimate TEASER_LO–TEASER_HI the seller already saw, (b) states the refined analysis range VALUATION_LO–VALUATION_HI, and (c) cites TEASER_SIGNALS as the factor(s) that explain why buyers will anchor toward VALUATION_LO rather than VALUATION_HI. Use the exact figures from the registry — no rounding differently.
+Open with exactly one sentence that confirms the recommended listing range VALUATION_LO–VALUATION_HI — the same range the seller saw on the pre-gate — and cites TEASER_SIGNALS as the factor(s) that explain why buyers will anchor toward VALUATION_LO rather than VALUATION_HI. Use the exact figures from the registry — no rounding differently. Do not narrate the range as "narrowed" or "refined" from a wider pre-gate estimate; the pre-gate already showed this exact band.
 
 Then reference all three pre-computed methodologies as three separate paragraphs, each on its own line, separated by blank lines, in this exact format (preserve the bold pattern and the em-dash, and write one sentence of "why this matters for ${meta.industry}" after the bolded headline):
 
 **Method 1 — SDE × Industry Multiple (${fmt(mSde.lo)}–${fmt(mSde.hi)}).** One sentence on why this is the primary methodology for ${meta.industry} businesses.
 
-**Method 2 — Revenue Multiple (${fmt(mRev.lo)}–${fmt(mRev.hi)}).** One sentence on what this cross-check tells a buyer.
+**Method 2 — Revenue Multiple (${fmt(mRev.lo)}–${fmt(mRev.hi)}).** One sentence that explicitly frames this as a static industry-median sanity reference — NOT adjusted for this seller's specific signals (recurring revenue, customer concentration, owner dependency do not move it) — used only to confirm Method 1 sits within a reasonable industry corridor. Do NOT describe Method 2 as "upside," "ceiling," "embedded value," or anything the seller can chase; it is a confirmation check, not a target.
 
 **Method 3 — Asset Floor (${fmt(mAsset.lo)}).** One sentence framing this as the absolute floor / reference only.
 

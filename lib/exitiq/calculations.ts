@@ -336,6 +336,88 @@ export function computeSdeMultiple(answers: Record<string, string>): {
   }
 }
 
+// Inverse of the slug maps in components/exitiq/ExitIQApp.tsx (CUSTOMER_CONC_MAP,
+// RECURRING_REV_MAP, KEY_MAN_MAP). Lets the server reconstruct the client-side
+// signal codes from stage2/stage3 server slugs so it can call computeSdeMultiple
+// with the same inputs the pre-gate UI used.
+const CUSTOMER_CONC_INVERSE: Record<string, string> = {
+  under_10: "diversified",
+  "10_25": "moderate",
+  "25_50": "concentrated",
+  over_50: "high_risk",
+}
+
+const RECURRING_REV_INVERSE: Record<string, string> = {
+  over_75: "high",
+  "50_75": "medium_high",
+  "25_50": "medium",
+  under_10: "low",
+}
+
+// keyPersonRisk → keyMan numeric string. "two_three" is lossy (was 3 or 4); pick
+// the lower bound "3" so the multiple-adj branch (km === 4 || km === 5) is not
+// triggered — matches the conservative-toward-discount default.
+const KPR_INVERSE: Record<string, string> = {
+  none: "1",
+  one: "2",
+  two_three: "3",
+  four_plus: "5",
+}
+
+function yearsNumberToLabel(years: number | undefined): string {
+  if (years == null) return ""
+  if (years >= 10) return "10+ years"
+  if (years >= 5) return "5 – 10 years"
+  if (years >= 2) return "2 – 5 years"
+  return "Under 2 years"
+}
+
+/**
+ * Server-side valuation range that matches the pre-gate UI exactly.
+ *
+ * Returns the same `(adjusted ± 0.25) × SDE-midpoint` band the client computes
+ * in `calcDerived`, so the seller sees one number across both surfaces. Accepts
+ * raw stage1 (with frontend labels and numeric years) plus stage2/stage3 in
+ * their server-slug form; translates those slugs back to the client-side signal
+ * codes that `computeSdeMultiple` expects.
+ *
+ * Returns null if the industry or SDE bucket is unknown — caller should fall
+ * back to the legacy `getValuationRange` model.
+ */
+export function computeSignalAdjustedValuation(input: {
+  industryLabel?: string
+  sdeLabel?: string
+  yearsNumber?: number
+  facilityType?: string
+  docReadiness?: string
+  customerConcentration?: string // server stage2 slug
+  recurringRevenue?: string // server stage2 slug
+  keyPersonRisk?: string // server stage3 slug
+}): { lo: number; hi: number; adjustedMultiple: number; sdeMid: number } | null {
+  const sdeBucket = SDE_RANGES.find((r) => r.label === input.sdeLabel)
+  const industryEntry = INDUSTRY_MULTIPLES[input.industryLabel ?? ""]
+  if (!sdeBucket || !industryEntry) return null
+
+  const answers: Record<string, string> = {
+    industry: input.industryLabel ?? "",
+    sde: input.sdeLabel ?? "",
+    years: yearsNumberToLabel(input.yearsNumber),
+    facilityType: input.facilityType ?? "",
+    docReadiness: input.docReadiness ?? "",
+    customerConc: CUSTOMER_CONC_INVERSE[input.customerConcentration ?? ""] ?? "",
+    recurringRev: RECURRING_REV_INVERSE[input.recurringRevenue ?? ""] ?? "",
+    keyMan: KPR_INVERSE[input.keyPersonRisk ?? ""] ?? "",
+  }
+
+  const { adjusted, low: multiLo, high: multiHi } = computeSdeMultiple(answers)
+  return {
+    lo: Math.round(sdeBucket.mid * multiLo),
+    hi: Math.round(sdeBucket.mid * multiHi),
+    adjustedMultiple: adjusted,
+    sdeMid: sdeBucket.mid,
+  }
+}
+
 export function calcDerived(answers: Record<string, string>): Derived {
   const stepCount = Object.keys(answers).length
   const industry = INDUSTRIES.find((i) => i.label === answers.industry) ?? null

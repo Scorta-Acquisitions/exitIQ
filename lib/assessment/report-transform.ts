@@ -9,6 +9,7 @@ import type {
   Stage4Answers,
 } from "@/lib/assessment/session"
 import { appendWorkflowTrace, compactStagesForTrace } from "@/lib/debug/workflow-trace"
+import { computeSignalAdjustedValuation } from "@/lib/exitiq/calculations"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -134,7 +135,23 @@ const SDE_MIDS: Record<string, number> = {
   "5m_10m": 7500000,
 }
 
+// Legacy slug-keyed lookup retained as a fallback only — it shares its bucket
+// space with SDE, so slugs like `1m_2m` collapse the real `$1M – $3M` revenue
+// band ($2M mid) into a misleading $1.5M. Prefer RAW_REVENUE_MIDS below, keyed
+// by the actual frontend label, whenever raw stage1 is available.
 const REV_MIDS: Record<string, number> = { ...SDE_MIDS }
+
+// Source of truth for revenue band midpoints: matches REVENUE_RANGES in
+// lib/exitiq/data.ts (the same labels the seller picked from). Keyed by raw
+// label so the slug-collision problem can't reintroduce a wrong midpoint.
+const RAW_REVENUE_MIDS: Record<string, number> = {
+  "Under $250K":   175_000,
+  "$250K – $500K": 375_000,
+  "$500K – $1M":   750_000,
+  "$1M – $3M":     2_000_000,
+  "$3M – $10M":    5_000_000,
+  "$10M+":         12_000_000,
+}
 
 const REVENUE_LABELS: Record<string, string> = {
   under_250: "Under $250K",
@@ -617,7 +634,13 @@ export function buildReportData(
   // supplied, becomes the single source of truth for composite, grade, and the
   // 7-axis subscore strip — so the post-gate report shows the same number the
   // seller saw on the gate teaser. Falls back to computeScore when absent.
-  exitReadiness?: GateExitReadinessSnapshot
+  exitReadiness?: GateExitReadinessSnapshot,
+  // Raw stage1 (frontend labels + numeric years). Required to reconstruct the
+  // signal-adjusted SDE multiple the pre-gate UI displayed: SDE_MAP collapses
+  // "Under $100K" and "$100K – $250K" into a single scored bucket, so the
+  // post-gate model must consult the raw label to match. When absent, falls
+  // back to the legacy `getValuationRange` model.
+  s1Raw?: Partial<Stage1Answers>
 ): ReportData {
   if (trace) {
     appendWorkflowTrace({
@@ -648,12 +671,41 @@ export function buildReportData(
 
   const industry = findIndustry(s1Scored.industry ?? "other")
   const sdeMid = SDE_MIDS[s1Scored.sde ?? "500_1m"] ?? 750000
-  const revMid = REV_MIDS[s1Scored.revenue ?? "500_1m"] ?? 750000
+  // Revenue midpoint: prefer the raw-label lookup so `$1M – $3M` resolves to its
+  // real $2M mid instead of the slug-collision $1.5M. Slug-based fallback kept
+  // only for the (rare) path where s1Raw is absent or the label is unknown.
+  const rawRevMid = s1Raw?.revenue ? RAW_REVENUE_MIDS[s1Raw.revenue] : undefined
+  const revMid = rawRevMid ?? REV_MIDS[s1Scored.revenue ?? "500_1m"] ?? 750000
 
   // ── Scoring — full session so all collected signals are reflected ────────────
   const scoreResult = computeScore({ stage1: s1Scored, stage2: s2, stage3: s3, stage4: s4 })
   const sba = computeSBASnapshot(s1Scored)
-  const [valLo, valHi] = getValuationRange(s1Scored)
+
+  // Recommended listing range: signal-adjusted SDE×multiple band — same math the
+  // pre-gate UI runs, so the seller sees one number across both surfaces. Falls
+  // back to the legacy blended SDE+revenue model only if the raw stage1 labels
+  // aren't available (older sessions, defensive path).
+  const signalAdjusted = s1Raw
+    ? computeSignalAdjustedValuation({
+        industryLabel: s1Raw.industry,
+        sdeLabel: s1Raw.sde,
+        yearsNumber: s1Raw.years,
+        facilityType: s1Raw.facilityType,
+        docReadiness: s1Raw.docReadiness,
+        customerConcentration: s2.customerConcentration,
+        recurringRevenue: s2.recurringRevenue,
+        keyPersonRisk: s3.keyPersonRisk,
+      })
+    : null
+
+  let valLo: number
+  let valHi: number
+  if (signalAdjusted) {
+    valLo = signalAdjusted.lo
+    valHi = signalAdjusted.hi
+  } else {
+    ;[valLo, valHi] = getValuationRange(s1Scored)
+  }
   const valMid = Math.round((valLo + valHi) / 2)
 
   // ── Valuation methods ────────────────────────────────────────────────────────
@@ -674,10 +726,10 @@ export function buildReportData(
     },
     {
       name: "Revenue Multiple",
-      weight: "Secondary",
+      weight: "Sanity Check",
       lo: revMethodLo,
       hi: revMethodHi,
-      note: `${industry.revenueMultiple[0]}×–${industry.revenueMultiple[1]}× against ${fmt(revMid)} revenue midpoint. A floor-check and sanity test, not a listing anchor.`,
+      note: `Static industry-median range: ${industry.revenueMultiple[0]}×–${industry.revenueMultiple[1]}× against ${fmt(revMid)} revenue midpoint. NOT signal-adjusted — does not move with recurring revenue, customer concentration, owner dependency, or any other seller-specific factor. Used only to confirm Method 1 sits within a reasonable industry corridor. Never a listing anchor.`,
     },
     {
       name: "Asset Floor",
@@ -769,8 +821,11 @@ export function buildReportData(
   // ── Next steps ───────────────────────────────────────────────────────────────
   const nextSteps = buildNextSteps(scoreResult.checklist, scoreResult.dimensions, s1Scored)
 
-  // ── Teaser valuation (pre-gate estimate: getValuationRange ± 25%) ─────────────
-  const [teaserLo, teaserHi] = getTeaserRange(s1Scored)
+  // ── Teaser valuation ─────────────────────────────────────────────────────────
+  // When the signal-adjusted model is in use, teaser ≡ recommended: the pre-gate
+  // UI already showed the seller this exact range, so the report confirms rather
+  // than narrows. Legacy fallback keeps the ±25% widening.
+  const [teaserLo, teaserHi] = signalAdjusted ? [valLo, valHi] : getTeaserRange(s1Scored)
   const teaserBridgeNote = buildTeaserBridgeNote(detractors, s1Scored, s2)
 
   if (trace) {
@@ -803,6 +858,8 @@ export function buildReportData(
         visibleSubscores: Object.fromEntries(subscores.map((s) => [s.key, s.value])),
         valuationK: { lo: valLo, mid: valMid, hi: valHi },
         teaserK: { lo: teaserLo, hi: teaserHi },
+        valuationModel: signalAdjusted ? "signal_adjusted" : "legacy_blended",
+        adjustedMultiple: signalAdjusted?.adjustedMultiple ?? null,
         sbaEligible: sba.eligible,
         sba: { loan: sba.loanAmount, dscr, dscrFloor: 1.25 },
         driverTitles: drivers.map((d) => d.title),
