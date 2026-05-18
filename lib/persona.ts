@@ -152,7 +152,7 @@ export type Station = {
   agent: string
   /** Default state. The current route is always rendered as `active` regardless. */
   state: StationStatus
-  /** What the user must complete before ARIA unlocks this station — shown in the locked tooltip. */
+  /** What the user must complete before CASE unlocks this station — shown in the locked tooltip. */
   prereq?: string
 }
 

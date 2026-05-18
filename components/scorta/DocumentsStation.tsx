@@ -373,7 +373,7 @@ export function DocumentsStation({
       {!readOnly && (
         <>
           <StationHeader started={started} streaming={started && !streamComplete} />
-          <AriaIntroBanner
+          <CaseIntroBanner
             persona={persona}
             started={started}
             streaming={started && !streamComplete}
@@ -514,8 +514,8 @@ function StationHeader({ started, streaming }: { started: boolean; streaming: bo
   )
 }
 
-// ── ARIA intro banner ─────────────────────────────────────────────────
-function AriaIntroBanner({
+// ── CASE intro banner ─────────────────────────────────────────────────
+function CaseIntroBanner({
   persona,
   started,
   streaming,
@@ -548,7 +548,7 @@ function AriaIntroBanner({
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.45)",
           marginTop: 1,
-          animation: "cimAriaPulse 3.2s ease-in-out infinite",
+          animation: "cimCasePulse 3.2s ease-in-out infinite",
         }}
       />
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -563,7 +563,7 @@ function AriaIntroBanner({
             marginBottom: 4,
           }}
         >
-          ARIA · Case Manager
+          CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {!started ? (
@@ -1802,7 +1802,7 @@ function ApproveGate({
             background:
               "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
             boxShadow: "0 0 10px rgba(44,140,112,.55)",
-            animation: "cimAriaPulse 3.2s ease-in-out infinite",
+            animation: "cimCasePulse 3.2s ease-in-out infinite",
             flexShrink: 0,
           }}
         />
@@ -2019,7 +2019,7 @@ function Spinner({ light }: { light?: boolean }) {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes cimAriaPulse {
+      @keyframes cimCasePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }

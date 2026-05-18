@@ -105,7 +105,7 @@ export function RecastStation({
       {!readOnly && (
         <>
           <StationHeader working={working} />
-          <AriaIntroBanner persona={persona} working={working} cycleIdx={cycleIdx} />
+          <CaseIntroBanner persona={persona} working={working} cycleIdx={cycleIdx} />
         </>
       )}
 
@@ -211,8 +211,8 @@ function StationHeader({ working }: { working: boolean }) {
   )
 }
 
-// ── ARIA intro banner ─────────────────────────────────────────────────
-function AriaIntroBanner({
+// ── CASE intro banner ─────────────────────────────────────────────────
+function CaseIntroBanner({
   persona,
   working,
   cycleIdx,
@@ -245,7 +245,7 @@ function AriaIntroBanner({
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.45)",
           marginTop: 1,
-          animation: "recastAriaPulse 3.2s ease-in-out infinite",
+          animation: "recastCasePulse 3.2s ease-in-out infinite",
         }}
       />
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -260,7 +260,7 @@ function AriaIntroBanner({
             marginBottom: 4,
           }}
         >
-          ARIA · Case Manager
+          CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {working ? (
@@ -1192,7 +1192,7 @@ function ApproveGate({
             background:
               "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
             boxShadow: "0 0 10px rgba(44,140,112,.55)",
-            animation: "recastAriaPulse 3.2s ease-in-out infinite",
+            animation: "recastCasePulse 3.2s ease-in-out infinite",
             flexShrink: 0,
           }}
         />
@@ -1505,7 +1505,7 @@ function Td({
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes recastAriaPulse {
+      @keyframes recastCasePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }

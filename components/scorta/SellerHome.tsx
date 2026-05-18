@@ -3,7 +3,7 @@
 import Link from "next/link"
 import React from "react"
 
-import { AriaHero } from "@/components/scorta/AriaHero"
+import { CaseHero } from "@/components/scorta/CaseHero"
 import type { PERSONA as PersonaShape } from "@/lib/persona"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
@@ -21,7 +21,7 @@ export function SellerHome({ persona }: { persona: Persona }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <AriaHero
+      <CaseHero
         firstName={persona.identity.firstName}
         greeting={`Welcome, ${persona.identity.firstName}.`}
         subheading={`I've reviewed your ExitIQ answers and the locked report for ${persona.identity.businessName}.`}
@@ -48,6 +48,8 @@ export function SellerHome({ persona }: { persona: Persona }) {
         nextLabel="Platform Connectors"
       />
 
+      <CaseActionsStrip />
+
       <KpiRow persona={persona} ready={ready} />
       <RiskStrip persona={persona} />
 
@@ -56,6 +58,186 @@ export function SellerHome({ persona }: { persona: Persona }) {
         <NextStepsCard persona={persona} />
       </div>
     </div>
+  )
+}
+
+// ── Case actions strip ──────────────────────────────────────────────────────
+function CaseActionsStrip() {
+  return (
+    <section
+      style={{
+        padding: "14px 18px",
+        borderRadius: 14,
+        background: "rgba(255,255,255,.72)",
+        border: "1px solid var(--glass-edge, rgba(0,0,0,.06))",
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        flexWrap: "wrap",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flex: 1,
+          minWidth: 220,
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
+            boxShadow: "0 0 8px rgba(44,140,112,.45)",
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: ".8px",
+              textTransform: "uppercase",
+              color: "var(--t3)",
+              fontFamily: inter,
+            }}
+          >
+            Work with CASE
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              color: "var(--t2)",
+              marginTop: 2,
+              lineHeight: 1.4,
+              fontFamily: inter,
+            }}
+          >
+            Hand CASE more context, or ask her anything about your exit.
+          </div>
+        </div>
+      </div>
+
+      <Link
+        href="/upload"
+        className="case-action case-action-primary"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 9,
+          padding: "10px 16px",
+          borderRadius: 9999,
+          background: "var(--btn-bg)",
+          color: "var(--btn-fg)",
+          fontFamily: inter,
+          fontSize: 13,
+          fontWeight: 600,
+          letterSpacing: "-.05px",
+          textDecoration: "none",
+          boxShadow: "0 6px 18px rgba(12,10,9,.16)",
+          transition: "transform 180ms ease-out, box-shadow 180ms ease-out",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <UploadIcon />
+        <span>Add business context</span>
+        <span
+          style={{
+            padding: "1px 7px",
+            borderRadius: 9999,
+            background: "rgba(167,229,211,.22)",
+            color: "rgba(220,255,240,.95)",
+            fontFamily: mono,
+            fontSize: 9.5,
+            fontWeight: 700,
+            letterSpacing: ".6px",
+          }}
+        >
+          +SCORE
+        </span>
+      </Link>
+
+      <Link
+        href="/case"
+        className="case-action case-action-secondary"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 9,
+          padding: "10px 16px",
+          borderRadius: 9999,
+          background: "rgba(255,255,255,.7)",
+          color: "var(--t1)",
+          fontFamily: inter,
+          fontSize: 13,
+          fontWeight: 600,
+          letterSpacing: "-.05px",
+          textDecoration: "none",
+          border: "1px solid var(--glass-edge, rgba(0,0,0,.10))",
+          transition: "background 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <ChatIcon />
+        <span>Talk to CASE</span>
+      </Link>
+
+      <style>{`
+        .case-action-primary:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 26px rgba(12,10,9,.22);
+        }
+        .case-action-secondary:hover {
+          background: #fff;
+          border-color: rgba(0,0,0,.18);
+          transform: translateY(-1px);
+        }
+      `}</style>
+    </section>
+  )
+}
+
+function UploadIcon() {
+  return (
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 10V3" />
+      <path d="M4 5.6L7 2.6l3 3" />
+      <path d="M2.4 9.4v1.4A1.2 1.2 0 0 0 3.6 12h6.8a1.2 1.2 0 0 0 1.2-1.2V9.4" />
+    </svg>
+  )
+}
+
+function ChatIcon() {
+  return (
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M2 4.6A1.6 1.6 0 0 1 3.6 3h6.8A1.6 1.6 0 0 1 12 4.6v4.2A1.6 1.6 0 0 1 10.4 10.4H6.2L3.6 12.4V10.4A1.6 1.6 0 0 1 2 8.8z" />
+    </svg>
   )
 }
 

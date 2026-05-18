@@ -30,7 +30,7 @@ type Step = {
   body: string
 }
 
-export type AriaHeroProps = {
+export type CaseHeroProps = {
   firstName: string
   greeting: string
   subheading: string
@@ -43,7 +43,7 @@ export type AriaHeroProps = {
   nextLabel: string
 }
 
-export function AriaHero(props: AriaHeroProps) {
+export function CaseHero(props: CaseHeroProps) {
   const router = useRouter()
 
   // ── Cascade state machine ──────────────────────────────────────────
@@ -87,7 +87,7 @@ export function AriaHero(props: AriaHeroProps) {
 
   return (
     <section
-      className="aria-hero"
+      className="case-hero"
       style={{
         position: "relative",
         padding: "32px 36px 30px",
@@ -96,13 +96,13 @@ export function AriaHero(props: AriaHeroProps) {
         border: "1px solid var(--glass-edge, rgba(0,0,0,.07))",
         boxShadow: "0 1px 0 rgba(255,255,255,.92) inset, 0 -1px 0 rgba(0,0,0,.05) inset, 0 12px 36px rgba(12,10,9,.06), 0 2px 6px rgba(12,10,9,.03)",
         overflow: "hidden",
-        animation: "ariaHeroIn .55s cubic-bezier(.2,.7,.2,1)",
+        animation: "caseHeroIn .55s cubic-bezier(.2,.7,.2,1)",
       }}
     >
       <ScopedStyles />
 
       <div style={{ display: "flex", gap: 28, alignItems: "stretch", minHeight: 280 }}>
-        {/* ── Left rail: globe + ARIA orb ───────────────────────────── */}
+        {/* ── Left rail: globe + CASE orb ───────────────────────────── */}
         <div
           style={{
             width: 200,
@@ -116,7 +116,7 @@ export function AriaHero(props: AriaHeroProps) {
           }}
         >
           <Globe />
-          <AriaOrb />
+          <CaseOrb />
           <div style={{ textAlign: "center" }}>
             <div
               style={{
@@ -128,7 +128,7 @@ export function AriaHero(props: AriaHeroProps) {
                 fontWeight: 500,
               }}
             >
-              ARIA
+              CASE
             </div>
             <div
               style={{
@@ -291,7 +291,7 @@ function Typewriter({
             marginLeft: "2px",
             background: "var(--mint, #2c8c70)",
             opacity: 0.65,
-            animation: "ariaCaret 1s steps(1,end) infinite",
+            animation: "caseCaret 1s steps(1,end) infinite",
           }}
         />
       )}
@@ -425,7 +425,7 @@ function CtaCluster({
       <button
         onClick={onClick}
         disabled={phase !== "idle"}
-        className="aria-cta"
+        className="case-cta"
         style={{
           height: 46,
           padding: "0 22px",
@@ -454,7 +454,7 @@ function CtaCluster({
         )}
         <span>
           {phase === "idle" && label}
-          {working && "ARIA is working…"}
+          {working && "CASE is working…"}
           {done && "Unlocked"}
         </span>
         {phase === "idle" && <span style={{ transform: "translateY(-1px)" }}>→</span>}
@@ -488,7 +488,7 @@ function StatusLine({
 }) {
   let text = ""
   let color = "var(--t3)"
-  if (phase === "review") text = "ARIA is reviewing your profile…"
+  if (phase === "review") text = "CASE is reviewing your profile…"
   if (phase === "prepare") text = "Preparing your next step…"
   if (phase === "ready") {
     text = `${nextLabel} is ready — opening now.`
@@ -502,7 +502,7 @@ function StatusLine({
         color,
         opacity: text ? 1 : 0,
         transition: "opacity 220ms ease-out, color 220ms ease-out",
-        animation: text ? "ariaStatusFade .28s ease-out" : "none",
+        animation: text ? "caseStatusFade .28s ease-out" : "none",
         display: "inline-flex",
         alignItems: "center",
         gap: 7,
@@ -529,7 +529,7 @@ function DotPulse() {
         height: 7,
         borderRadius: "50%",
         background: "var(--mint, #2c8c70)",
-        animation: "ariaStatusDot 1s ease-in-out infinite",
+        animation: "caseStatusDot 1s ease-in-out infinite",
       }}
     />
   )
@@ -551,8 +551,8 @@ function Spinner() {
   )
 }
 
-// ── ARIA orb (avatar) ─────────────────────────────────────────────────────
-function AriaOrb() {
+// ── CASE orb (avatar) ─────────────────────────────────────────────────────
+function CaseOrb() {
   return (
     <div
       aria-hidden
@@ -564,7 +564,7 @@ function AriaOrb() {
         background:
           "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 38%, rgba(44,140,112,.95) 100%)",
         boxShadow: "0 0 12px rgba(44,140,112,.55), inset 0 -3px 6px rgba(0,0,0,.18)",
-        animation: "ariaOrbBreathe 3.2s ease-in-out infinite",
+        animation: "caseOrbBreathe 3.2s ease-in-out infinite",
       }}
     >
       <div
@@ -573,7 +573,7 @@ function AriaOrb() {
           inset: -8,
           borderRadius: "50%",
           border: "1px solid rgba(44,140,112,.35)",
-          animation: "ariaOrbRing 3.2s ease-in-out infinite",
+          animation: "caseOrbRing 3.2s ease-in-out infinite",
         }}
       />
     </div>
@@ -583,24 +583,24 @@ function AriaOrb() {
 // ── Globe ─────────────────────────────────────────────────────────────────
 function Globe() {
   return (
-    <div className="aria-globe-wrap" aria-hidden style={{ width: 132, height: 132, position: "relative" }}>
+    <div className="case-globe-wrap" aria-hidden style={{ width: 132, height: 132, position: "relative" }}>
       <svg viewBox="-50 -50 100 100" width="132" height="132" style={{ overflow: "visible", display: "block" }}>
         <defs>
-          <radialGradient id="ariaSphereFill" cx="0.35" cy="0.32" r="0.7">
+          <radialGradient id="caseSphereFill" cx="0.35" cy="0.32" r="0.7">
             <stop offset="0%" stopColor="rgba(255,255,255,.4)" />
             <stop offset="55%" stopColor="rgba(167,229,211,.12)" />
             <stop offset="100%" stopColor="rgba(44,140,112,0)" />
           </radialGradient>
-          <radialGradient id="ariaSphereGlow" cx="0.5" cy="0.5" r="0.5">
+          <radialGradient id="caseSphereGlow" cx="0.5" cy="0.5" r="0.5">
             <stop offset="55%" stopColor="rgba(44,140,112,0)" />
             <stop offset="100%" stopColor="rgba(44,140,112,.16)" />
           </radialGradient>
         </defs>
 
         {/* outer glow */}
-        <circle r="48" fill="url(#ariaSphereGlow)" />
+        <circle r="48" fill="url(#caseSphereGlow)" />
         {/* sphere fill */}
-        <circle r="42" fill="url(#ariaSphereFill)" />
+        <circle r="42" fill="url(#caseSphereFill)" />
 
         {/* latitude lines */}
         <ellipse rx="42" ry="6" fill="none" stroke="rgba(44,140,112,.18)" strokeWidth=".4" />
@@ -611,7 +611,7 @@ function Globe() {
         <line x1="-42" y1="0" x2="42" y2="0" stroke="rgba(44,140,112,.24)" strokeWidth=".4" />
 
         {/* meridians — staggered rx animation creates a believable rotation */}
-        <g className="aria-globe-meridians">
+        <g className="case-globe-meridians">
           <ellipse className="m m0" ry="42" rx="42" fill="none" stroke="rgba(44,140,112,.42)" strokeWidth=".55" />
           <ellipse className="m m1" ry="42" rx="42" fill="none" stroke="rgba(44,140,112,.36)" strokeWidth=".5" />
           <ellipse className="m m2" ry="42" rx="42" fill="none" stroke="rgba(44,140,112,.30)" strokeWidth=".5" />
@@ -626,10 +626,10 @@ function Globe() {
         <ellipse cx="-12" cy="-14" rx="9" ry="5" fill="rgba(255,255,255,.18)" />
 
         {/* pulsing data points */}
-        <g className="aria-globe-dot">
+        <g className="case-globe-dot">
           <circle cx="6" cy="-18" r="1.6" fill="var(--mint, #2c8c70)" />
         </g>
-        <g className="aria-globe-dot dot-b">
+        <g className="case-globe-dot dot-b">
           <circle cx="-20" cy="8" r="1.2" fill="var(--mint, #2c8c70)" />
         </g>
       </svg>
@@ -641,26 +641,26 @@ function Globe() {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes ariaHeroIn {
+      @keyframes caseHeroIn {
         from { opacity: 0; transform: translateY(10px); }
         to   { opacity: 1; transform: translateY(0); }
       }
-      @keyframes ariaCaret {
+      @keyframes caseCaret {
         50% { opacity: 0; }
       }
-      @keyframes ariaOrbBreathe {
+      @keyframes caseOrbBreathe {
         0%, 100% { transform: scale(1); }
         50%      { transform: scale(1.06); }
       }
-      @keyframes ariaOrbRing {
+      @keyframes caseOrbRing {
         0%, 100% { opacity: .35; transform: scale(1); }
         50%      { opacity: .9;  transform: scale(1.18); }
       }
-      @keyframes ariaStatusDot {
+      @keyframes caseStatusDot {
         0%, 100% { transform: scale(1);   opacity: 1;  }
         50%      { transform: scale(1.4); opacity: .55; }
       }
-      @keyframes ariaStatusFade {
+      @keyframes caseStatusFade {
         from { opacity: 0; transform: translateY(2px); }
         to   { opacity: 1; transform: translateY(0); }
       }
@@ -668,7 +668,7 @@ function ScopedStyles() {
       /* Rotating-sphere effect: each meridian ellipse animates its rx
          (and stroke opacity to fade meridians near the silhouette edge),
          staggered so the surface appears to rotate ~30s/turn. */
-      @keyframes ariaGlobeMeridian {
+      @keyframes caseGlobeMeridian {
         0%   { rx: 42px; opacity: .95; }
         20%  { rx: 24px; opacity: .80; }
         40%  { rx: 4px;  opacity: .35; }
@@ -677,17 +677,17 @@ function ScopedStyles() {
         80%  { rx: 24px; opacity: .80; }
         100% { rx: 42px; opacity: .95; }
       }
-      .aria-globe-meridians .m { animation: ariaGlobeMeridian 30s linear infinite; transform-box: fill-box; }
-      .aria-globe-meridians .m0 { animation-delay:  0s; }
-      .aria-globe-meridians .m1 { animation-delay: -6s; }
-      .aria-globe-meridians .m2 { animation-delay: -12s; }
-      .aria-globe-meridians .m3 { animation-delay: -18s; }
-      .aria-globe-meridians .m4 { animation-delay: -24s; }
+      .case-globe-meridians .m { animation: caseGlobeMeridian 30s linear infinite; transform-box: fill-box; }
+      .case-globe-meridians .m0 { animation-delay:  0s; }
+      .case-globe-meridians .m1 { animation-delay: -6s; }
+      .case-globe-meridians .m2 { animation-delay: -12s; }
+      .case-globe-meridians .m3 { animation-delay: -18s; }
+      .case-globe-meridians .m4 { animation-delay: -24s; }
 
-      .aria-globe-dot { animation: ariaStatusDot 1.8s ease-in-out infinite; }
-      .aria-globe-dot.dot-b { animation-delay: -.9s; }
+      .case-globe-dot { animation: caseStatusDot 1.8s ease-in-out infinite; }
+      .case-globe-dot.dot-b { animation-delay: -.9s; }
 
-      .aria-cta:hover:not(:disabled) {
+      .case-cta:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 10px 28px rgba(12,10,9,.22);
       }

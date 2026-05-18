@@ -9,7 +9,7 @@ import {
   type AgentKey,
   type AgentStatus,
   getAgentState,
-  getAriaTask,
+  getCaseTask,
 } from "@/lib/agentActivity"
 
 import { useAgentFleet } from "./AgentFleetContext"
@@ -53,7 +53,7 @@ export function AgentActivityPanel() {
     ? AGENT_DEFS.filter((d) => getAgentState(d.key, route, true).status === "running").length + 1
     : 1
 
-  const showOnlyAria = !dispatched
+  const showOnlyCase = !dispatched
 
   return (
     <>
@@ -130,7 +130,7 @@ export function AgentActivityPanel() {
         {collapsed ? (
           <CollapsedRail activeCount={activeCount} dispatched={dispatched} onExpand={toggle} />
         ) : (
-          <ExpandedBody route={route} dispatched={dispatched} showOnlyAria={showOnlyAria} />
+          <ExpandedBody route={route} dispatched={dispatched} showOnlyCase={showOnlyCase} />
         )}
       </aside>
     </>
@@ -227,11 +227,11 @@ function CollapsedRail({
 function ExpandedBody({
   route,
   dispatched,
-  showOnlyAria,
+  showOnlyCase,
 }: {
   route: string
   dispatched: boolean
-  showOnlyAria: boolean
+  showOnlyCase: boolean
 }) {
   const allComplete = React.useMemo(
     () =>
@@ -259,7 +259,7 @@ function ExpandedBody({
     >
       <Header allComplete={allComplete} runningCount={runningCount} dispatched={dispatched} />
 
-      <AriaRow route={route} />
+      <CaseRow route={route} />
 
       <div
         style={{
@@ -282,7 +282,7 @@ function ExpandedBody({
         }}
         className="aap-scroll"
       >
-        {showOnlyAria ? (
+        {showOnlyCase ? (
           <FleetStandbyHint />
         ) : (
           AGENT_DEFS.map((def, i) => (
@@ -411,9 +411,9 @@ function StatusDot({ kind }: { kind: "running" | "complete" | "muted" }) {
   )
 }
 
-// ── ARIA row ───────────────────────────────────────────────────────────────
-function AriaRow({ route }: { route: string }) {
-  const task = getAriaTask(route)
+// ── CASE row ───────────────────────────────────────────────────────────────
+function CaseRow({ route }: { route: string }) {
+  const task = getCaseTask(route)
   return (
     <div
       style={{
@@ -432,7 +432,7 @@ function AriaRow({ route }: { route: string }) {
           background:
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 10px rgba(44,140,112,.55)",
-          animation: "aapAria 3.2s ease-in-out infinite",
+          animation: "aapCase 3.2s ease-in-out infinite",
           flexShrink: 0,
           marginTop: 2,
         }}
@@ -455,7 +455,7 @@ function AriaRow({ route }: { route: string }) {
               lineHeight: 1.1,
             }}
           >
-            ARIA
+            CASE
           </div>
           <span
             style={{
@@ -502,7 +502,7 @@ function FleetStandbyHint() {
         fontFamily: inter,
       }}
     >
-      No agents dispatched yet. ARIA will spin up the fleet once you approve the
+      No agents dispatched yet. CASE will spin up the fleet once you approve the
       Boardroom&apos;s work orders.
     </div>
   )
@@ -761,7 +761,7 @@ const STATUS_META: Record<
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes aapAria {
+      @keyframes aapCase {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.12); opacity: .9; }
       }

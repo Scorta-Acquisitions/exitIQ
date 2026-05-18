@@ -9,7 +9,7 @@ const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', seri
 const inter = "Inter, var(--font-inter, sans-serif)"
 const mono = "'JetBrains Mono', var(--font-jetbrains-mono, monospace)"
 
-// ── Timing reference (same family as AriaHero T = {…}) ──────────────────
+// ── Timing reference (same family as CaseHero T = {…}) ──────────────────
 const T = {
   syncStepMs: 400, // delay between each cycling status line
   syncTailMs: 360, // pause after "Sync complete." before result card lands
@@ -124,7 +124,7 @@ export function ConnectStation({ persona }: { persona: Persona }) {
       <ScopedStyles />
 
       <StationHeader />
-      <AriaIntroBanner persona={persona} />
+      <CaseIntroBanner persona={persona} />
 
       <StatusStrip connectedCount={connectedCount} stripePhase={stripePhase} />
 
@@ -314,8 +314,8 @@ function StationHeader() {
   )
 }
 
-// ── ARIA intro banner ─────────────────────────────────────────────────
-function AriaIntroBanner({ persona }: { persona: Persona }) {
+// ── CASE intro banner ─────────────────────────────────────────────────
+function CaseIntroBanner({ persona }: { persona: Persona }) {
   return (
     <div
       style={{
@@ -340,7 +340,7 @@ function AriaIntroBanner({ persona }: { persona: Persona }) {
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.45)",
           marginTop: 1,
-          animation: "ariaPulseHero 3.2s ease-in-out infinite",
+          animation: "casePulseHero 3.2s ease-in-out infinite",
         }}
       />
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -355,7 +355,7 @@ function AriaIntroBanner({ persona }: { persona: Persona }) {
             marginBottom: 4,
           }}
         >
-          ARIA · Case Manager
+          CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           Two of {persona.identity.businessName.split(" ")[0]}'s four sources are already authorized.
@@ -1153,7 +1153,7 @@ function IngestionBanner({
           background:
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 10px rgba(44,140,112,.55)",
-          animation: "ariaPulseHero 3.2s ease-in-out infinite",
+          animation: "casePulseHero 3.2s ease-in-out infinite",
           flexShrink: 0,
         }}
       />
@@ -1169,7 +1169,7 @@ function IngestionBanner({
             marginBottom: 3,
           }}
         >
-          ARIA · ready to advance
+          CASE · ready to advance
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.5 }}>
           {connectedCount} of 4 sources connected — Ingestion Agent is ready to classify 36 months of activity.
@@ -1178,7 +1178,7 @@ function IngestionBanner({
       <button
         onClick={onClick}
         disabled={routing}
-        className="aria-cta"
+        className="case-cta"
         style={{
           height: 44,
           padding: "0 20px",
@@ -1268,7 +1268,7 @@ function DriveLogo() {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes ariaPulseHero {
+      @keyframes casePulseHero {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }
@@ -1289,7 +1289,7 @@ function ScopedStyles() {
         transform: translateY(-1px);
         box-shadow: 0 8px 22px rgba(12,10,9,.14);
       }
-      .aria-cta:hover:not(:disabled) {
+      .case-cta:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 10px 28px rgba(12,10,9,.22);
       }

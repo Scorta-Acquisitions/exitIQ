@@ -82,10 +82,10 @@ export const AGENT_DEFS: ReadonlyArray<AgentDef> = [
 ]
 
 /**
- * Route → ARIA task line. ARIA is always RUNNING during the demo;
+ * Route → CASE task line. CASE is always RUNNING during the demo;
  * her task copy reframes per station to match what the seller is doing.
  */
-export const ARIA_TASKS: Record<string, string> = {
+export const CASE_TASKS: Record<string, string> = {
   "/dashboard": "Reviewing intake · 2 gaps identified",
   "/connect": "Waiting on account connection",
   "/ingestion": "Supervising Ingestion Agent run",
@@ -99,8 +99,8 @@ export const ARIA_TASKS: Record<string, string> = {
   "/outreach": "Managing buyer outreach cadence",
 }
 
-export function getAriaTask(route: string): string {
-  return ARIA_TASKS[route] ?? "Coordinating deal state machine"
+export function getCaseTask(route: string): string {
+  return CASE_TASKS[route] ?? "Coordinating deal state machine"
 }
 
 export type AgentRouteState = {
@@ -189,7 +189,7 @@ const ROUTE_PHASE: Record<string, number> = {
 
 /**
  * Whether the panel should render the fleet rows. Before /boardroom dispatch,
- * only ARIA is shown.
+ * only CASE is shown.
  */
 export function shouldShowFleet(dispatched: boolean): boolean {
   return dispatched

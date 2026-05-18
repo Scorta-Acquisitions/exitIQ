@@ -1,11 +1,11 @@
 /**
- * ARIA Chat — Case Manager conversation data.
+ * CASE Chat — Case Manager conversation data.
  *
  * Demo-only, fully hard-coded. No AI provider, no API calls. All numbers
  * trace to `.exitiq-debug/sessions/DEMO_PERSONA.md` and upstream station
  * outputs (Recast, Risk, Boardroom, VDR).
  *
- * Spec: ARIA_CHAT.md (pasted into chat session 2026-05-18).
+ * Spec: CASE_CHAT.md (pasted into chat session 2026-05-18).
  */
 
 export type Trigger = ReadonlyArray<string>
@@ -244,7 +244,7 @@ export function matchResponse(input: string): string {
 
 /**
  * Typing-indicator timing — proportional to response length so longer
- * answers feel like ARIA is "reading and thinking" longer. Spec: 600ms /
+ * answers feel like CASE is "reading and thinking" longer. Spec: 600ms /
  * 750ms / 900ms by line count.
  */
 export function typingDelayFor(response: string): number {

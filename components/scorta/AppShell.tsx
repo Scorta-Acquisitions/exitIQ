@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 
 import { AgentActivityPanel } from "./AgentActivityPanel"
 import { AgentFleetProvider } from "./AgentFleetContext"
-import { ARIAChat } from "./ARIAChat"
+import { CASEChat } from "./CASEChat"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -121,7 +121,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
           </div>
         </Link>
 
-        {/* ARIA status strip */}
+        {/* CASE status strip */}
         <div
           style={{
             padding: "11px 13px",
@@ -142,13 +142,13 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
               background:
                 "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
               boxShadow: "0 0 8px rgba(44,140,112,.55)",
-              animation: "ariaPulse 3.2s ease-in-out infinite",
+              animation: "casePulse 3.2s ease-in-out infinite",
               flexShrink: 0,
             }}
           />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--t1)", fontFamily: inter, lineHeight: 1.2 }}>
-              ARIA
+              CASE
             </div>
             <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 1, fontFamily: inter }}>
               Case Manager · coordinating
@@ -294,7 +294,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
       </main>
 
       <AgentActivityPanel />
-      <ARIAChat currentRoute={pathname} />
+      <CASEChat currentRoute={pathname} />
     </div>
     </AgentFleetProvider>
   )
@@ -414,7 +414,7 @@ function RailTooltip({ prereq }: { prereq: string }) {
         zIndex: 60,
       }}
     >
-      ARIA will unlock this once {prereq}.
+      CASE will unlock this once {prereq}.
       <span
         aria-hidden
         style={{
@@ -593,7 +593,7 @@ function TopBar({ seller }: { seller: Seller }) {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes ariaPulse {
+      @keyframes casePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.12); opacity: .9; }
       }

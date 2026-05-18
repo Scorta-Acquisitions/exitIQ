@@ -394,7 +394,7 @@ export function OutreachStation({ persona }: { persona: Persona }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ScopedStyles />
       <StationHeader briefing={phase === "briefing"} />
-      <AriaIntro persona={persona} />
+      <CaseIntro persona={persona} />
 
       {phase === "briefing" ? (
         <BriefingSurface idx={briefingIdx} />
@@ -525,8 +525,8 @@ function StationHeader({ briefing }: { briefing: boolean }) {
   )
 }
 
-// ── ARIA intro ─────────────────────────────────────────────────────────────
-function AriaIntro({ persona }: { persona: Persona }) {
+// ── CASE intro ─────────────────────────────────────────────────────────────
+function CaseIntro({ persona }: { persona: Persona }) {
   void persona
   return (
     <div
@@ -552,7 +552,7 @@ function AriaIntro({ persona }: { persona: Persona }) {
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.45)",
           marginTop: 1,
-          animation: "outreachAriaPulse 3.2s ease-in-out infinite",
+          animation: "outreachCasePulse 3.2s ease-in-out infinite",
         }}
       />
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -567,7 +567,7 @@ function AriaIntro({ persona }: { persona: Persona }) {
             marginBottom: 4,
           }}
         >
-          ARIA · Case Manager
+          CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           The Lender Ops Agent has matched three SBA lenders against Palace&apos;s approved
@@ -2013,7 +2013,7 @@ function ApprovalGate({
             background:
               "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
             boxShadow: "0 0 10px rgba(44,140,112,.55)",
-            animation: "outreachAriaPulse 3.2s ease-in-out infinite",
+            animation: "outreachCasePulse 3.2s ease-in-out infinite",
             flexShrink: 0,
           }}
         />
@@ -2396,7 +2396,7 @@ function Spinner({ light, accentColor }: { light?: boolean; accentColor?: string
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes outreachAriaPulse {
+      @keyframes outreachCasePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }

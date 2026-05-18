@@ -2,14 +2,14 @@
 
 import React from "react"
 
-import { getAriaTask } from "@/lib/agentActivity"
+import { getCaseTask } from "@/lib/agentActivity"
 import {
   getProactiveMessage,
   getQuickChips,
   matchResponse,
   OPENING_MESSAGE,
   typingDelayFor,
-} from "@/lib/ariaChat"
+} from "@/lib/caseChat"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -20,7 +20,7 @@ const T = {
   openingTypingMs: 600,
 }
 
-type Role = "aria" | "user"
+type Role = "case" | "user"
 
 type Message = {
   id: string
@@ -33,7 +33,7 @@ function nextId() {
   return `m_${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 }
 
-export function ARIAChat({ currentRoute }: { currentRoute: string }) {
+export function CASEChat({ currentRoute }: { currentRoute: string }) {
   const [open, setOpen] = React.useState(false)
   const [messages, setMessages] = React.useState<Array<Message>>([])
   const [typing, setTyping] = React.useState(false)
@@ -54,7 +54,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
   }, [open])
 
   const chips = getQuickChips(currentRoute)
-  const taskLine = getAriaTask(currentRoute)
+  const taskLine = getCaseTask(currentRoute)
 
   // ── Opening message — fires the first time the panel opens ──────────
   React.useEffect(() => {
@@ -65,7 +65,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
       setTyping(false)
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "aria", text: OPENING_MESSAGE, ts: Date.now() },
+        { id: nextId(), role: "case", text: OPENING_MESSAGE, ts: Date.now() },
       ])
     }, T.openingTypingMs)
   }, [open])
@@ -85,7 +85,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
     const timer = setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "aria", text: msg, ts: Date.now() },
+        { id: nextId(), role: "case", text: msg, ts: Date.now() },
       ])
       if (!openRef.current) {
         setUnread((u) => u + 1)
@@ -136,7 +136,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
       setTyping(false)
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "aria", text: response, ts: Date.now() },
+        { id: nextId(), role: "case", text: response, ts: Date.now() },
       ])
     }, delay)
   }
@@ -154,7 +154,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
       <aside
         aria-hidden={!open}
         role="dialog"
-        aria-label="ARIA chat"
+        aria-label="CASE chat"
         style={{
           position: "fixed",
           bottom: 86,
@@ -198,10 +198,10 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
       {/* Collapsed launcher button ──────────────────────────────────── */}
       <button
         type="button"
-        aria-label={open ? "Close ARIA chat" : "Open ARIA chat"}
+        aria-label={open ? "Close CASE chat" : "Open CASE chat"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="aria-launcher"
+        className="case-launcher"
         style={{
           position: "fixed",
           bottom: 24,
@@ -229,7 +229,7 @@ export function ARIAChat({ currentRoute }: { currentRoute: string }) {
             background:
               "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
             boxShadow: "0 0 10px rgba(44,140,112,.65)",
-            animation: "ariaChatPulse 3.2s ease-in-out infinite",
+            animation: "caseChatPulse 3.2s ease-in-out infinite",
           }}
         />
         {unread > 0 && (
@@ -291,7 +291,7 @@ function Header({
           background:
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.55)",
-          animation: "ariaChatPulse 3.2s ease-in-out infinite",
+          animation: "caseChatPulse 3.2s ease-in-out infinite",
           flexShrink: 0,
         }}
       />
@@ -307,7 +307,7 @@ function Header({
               lineHeight: 1,
             }}
           >
-            ARIA
+            CASE
           </span>
           <span
             style={{
@@ -330,7 +330,7 @@ function Header({
                 borderRadius: "50%",
                 background: "var(--mint, #2c8c70)",
                 boxShadow: "0 0 5px var(--mint, #2c8c70)",
-                animation: "ariaChatBlink 1.8s ease-in-out infinite",
+                animation: "caseChatBlink 1.8s ease-in-out infinite",
               }}
             />
             Active · {taskLine}
@@ -351,9 +351,9 @@ function Header({
       <button
         type="button"
         onClick={onMinimize}
-        aria-label="Minimize ARIA chat"
+        aria-label="Minimize CASE chat"
         title="Minimize"
-        className="aria-chat-icon-btn"
+        className="case-chat-icon-btn"
         style={{
           width: 28,
           height: 28,
@@ -397,8 +397,8 @@ const MessageThread = React.forwardRef<
       }}
     >
       {messages.map((m) =>
-        m.role === "aria" ? (
-          <AriaMessage key={m.id} text={m.text} />
+        m.role === "case" ? (
+          <CaseMessage key={m.id} text={m.text} />
         ) : (
           <UserMessage key={m.id} text={m.text} />
         ),
@@ -408,7 +408,7 @@ const MessageThread = React.forwardRef<
   )
 })
 
-function AriaMessage({ text }: { text: string }) {
+function CaseMessage({ text }: { text: string }) {
   return (
     <div
       style={{
@@ -416,7 +416,7 @@ function AriaMessage({ text }: { text: string }) {
         flexDirection: "column",
         gap: 4,
         alignSelf: "stretch",
-        animation: "ariaChatFadeIn .26s ease-out",
+        animation: "caseChatFadeIn .26s ease-out",
       }}
     >
       <div
@@ -429,7 +429,7 @@ function AriaMessage({ text }: { text: string }) {
           fontWeight: 600,
         }}
       >
-        ARIA · Case Manager
+        CASE · Case Manager
       </div>
       <div
         style={{
@@ -456,7 +456,7 @@ function UserMessage({ text }: { text: string }) {
         alignItems: "flex-end",
         gap: 8,
         alignSelf: "stretch",
-        animation: "ariaChatFadeIn .22s ease-out",
+        animation: "caseChatFadeIn .22s ease-out",
       }}
     >
       <div
@@ -506,7 +506,7 @@ function TypingIndicator() {
         flexDirection: "column",
         gap: 4,
         alignSelf: "stretch",
-        animation: "ariaChatFadeIn .22s ease-out",
+        animation: "caseChatFadeIn .22s ease-out",
       }}
     >
       <div
@@ -519,7 +519,7 @@ function TypingIndicator() {
           fontWeight: 600,
         }}
       >
-        ARIA · Case Manager
+        CASE · Case Manager
       </div>
       <div style={{ display: "inline-flex", gap: 5, paddingTop: 4 }}>
         <Dot delay={0} />
@@ -539,7 +539,7 @@ function Dot({ delay }: { delay: number }) {
         height: 7,
         borderRadius: "50%",
         background: "rgba(44,140,112,.55)",
-        animation: "ariaChatDot 1.05s ease-in-out infinite",
+        animation: "caseChatDot 1.05s ease-in-out infinite",
         animationDelay: `${delay}ms`,
       }}
     />
@@ -587,7 +587,7 @@ function Composer({
             type="button"
             disabled={disabled}
             onClick={() => onChip(chip)}
-            className="aria-chat-chip"
+            className="case-chat-chip"
             style={{
               height: 26,
               padding: "0 11px",
@@ -626,7 +626,7 @@ function Composer({
           type="text"
           value={inputValue}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Ask ARIA about your deal..."
+          placeholder="Ask CASE about your deal..."
           disabled={disabled}
           style={{
             flex: 1,
@@ -674,31 +674,31 @@ function Composer({
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes ariaChatPulse {
+      @keyframes caseChatPulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }
-      @keyframes ariaChatBlink {
+      @keyframes caseChatBlink {
         0%, 100% { opacity: 1;  }
         50%      { opacity: .3; }
       }
-      @keyframes ariaChatFadeIn {
+      @keyframes caseChatFadeIn {
         from { opacity: 0; transform: translateY(4px); }
         to   { opacity: 1; transform: translateY(0); }
       }
-      @keyframes ariaChatDot {
+      @keyframes caseChatDot {
         0%, 80%, 100% { transform: translateY(0);    opacity: .35; }
         40%           { transform: translateY(-3px); opacity: 1;   }
       }
-      .aria-launcher:hover {
+      .case-launcher:hover {
         transform: translateY(-1px);
         box-shadow: 0 18px 36px rgba(12,10,9,.36);
       }
-      .aria-chat-chip:hover:not(:disabled) {
+      .case-chat-chip:hover:not(:disabled) {
         background: rgba(44,140,112,.22);
         border-color: rgba(44,140,112,.52);
       }
-      .aria-chat-icon-btn:hover {
+      .case-chat-icon-btn:hover {
         background: rgba(255,255,255,.08);
       }
     `}</style>

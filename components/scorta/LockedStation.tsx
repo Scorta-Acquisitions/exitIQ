@@ -83,7 +83,7 @@ export function LockedStation({
         {blurb}
       </p>
 
-      {/* ARIA unlock message — replaces the prior "Coming Soon" treatment. */}
+      {/* CASE unlock message — replaces the prior "Coming Soon" treatment. */}
       <div
         style={{
           display: "flex",
@@ -121,7 +121,7 @@ export function LockedStation({
               marginBottom: 4,
             }}
           >
-            ARIA · Case Manager
+            CASE · Case Manager
           </div>
           <div style={{ fontSize: 13, color: "var(--t1)", lineHeight: 1.55 }}>
             I'll unlock this workspace once {prereq}. Head back to the Seller Home to keep moving.

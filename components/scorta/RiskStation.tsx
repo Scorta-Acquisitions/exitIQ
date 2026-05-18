@@ -189,7 +189,7 @@ export function RiskStation({ persona }: { persona: Persona }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ScopedStyles />
       <StationHeader phase={phase} />
-      <AriaIntro persona={persona} phase={phase} />
+      <CaseIntro persona={persona} phase={phase} />
 
       {phase === "intake" && (
         <IntakeSurface
@@ -304,8 +304,8 @@ function StationHeader({ phase }: { phase: Phase }) {
   )
 }
 
-// ── ARIA intro banner ──────────────────────────────────────────────────────
-function AriaIntro({ persona, phase }: { persona: Persona; phase: Phase }) {
+// ── CASE intro banner ──────────────────────────────────────────────────────
+function CaseIntro({ persona, phase }: { persona: Persona; phase: Phase }) {
   const businessFirst = persona.identity.businessName.split(" ")[0]
   return (
     <div
@@ -331,7 +331,7 @@ function AriaIntro({ persona, phase }: { persona: Persona; phase: Phase }) {
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 8px rgba(44,140,112,.45)",
           marginTop: 1,
-          animation: "riskAriaPulse 3.2s ease-in-out infinite",
+          animation: "riskCasePulse 3.2s ease-in-out infinite",
         }}
       />
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -346,7 +346,7 @@ function AriaIntro({ persona, phase }: { persona: Persona; phase: Phase }) {
             marginBottom: 4,
           }}
         >
-          ARIA · Case Manager
+          CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {phase === "intake" && (
@@ -985,7 +985,7 @@ function SubmitBar({ submitting, onSubmit }: { submitting: boolean; onSubmit: ()
           background:
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 10px rgba(44,140,112,.55)",
-          animation: "riskAriaPulse 3.2s ease-in-out infinite",
+          animation: "riskCasePulse 3.2s ease-in-out infinite",
           flexShrink: 0,
         }}
       />
@@ -2135,7 +2135,7 @@ function BoardroomGate({
           background:
             "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
           boxShadow: "0 0 10px rgba(44,140,112,.55)",
-          animation: "riskAriaPulse 3.2s ease-in-out infinite",
+          animation: "riskCasePulse 3.2s ease-in-out infinite",
           flexShrink: 0,
         }}
       />
@@ -2151,7 +2151,7 @@ function BoardroomGate({
             marginBottom: 4,
           }}
         >
-          Risk profile complete · ARIA · Case Manager
+          Risk profile complete · CASE · Case Manager
         </div>
         <div style={{ fontSize: 14.5, color: "rgba(245,245,245,.97)", lineHeight: 1.45, fontWeight: 600 }}>
           The Boardroom is ready to review.
@@ -2233,7 +2233,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes riskAriaPulse {
+      @keyframes riskCasePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }

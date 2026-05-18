@@ -1461,7 +1461,7 @@ function DispatchGate({
             background:
               "radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(167,229,211,.55) 40%, rgba(44,140,112,.95) 100%)",
             boxShadow: "0 0 10px rgba(44,140,112,.55)",
-            animation: "boardAriaPulse 3.2s ease-in-out infinite",
+            animation: "boardCasePulse 3.2s ease-in-out infinite",
             flexShrink: 0,
           }}
         />
@@ -1483,7 +1483,7 @@ function DispatchGate({
             Authorize the agent fleet to execute the Boardroom&apos;s work orders.
           </div>
           <div style={{ fontSize: 12.5, color: "var(--t2)", lineHeight: 1.55, marginTop: 4 }}>
-            ARIA will dispatch four agents simultaneously. No buyer communication will be sent until the
+            CASE will dispatch four agents simultaneously. No buyer communication will be sent until the
             outreach strategy is separately approved. You can review each agent&apos;s output before it is
             published or shared.
           </div>
@@ -1669,7 +1669,7 @@ function Spinner({ light }: { light?: boolean }) {
 function ScopedStyles() {
   return (
     <style>{`
-      @keyframes boardAriaPulse {
+      @keyframes boardCasePulse {
         0%, 100% { transform: scale(1);    opacity: 1;  }
         50%      { transform: scale(1.10); opacity: .9; }
       }
