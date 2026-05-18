@@ -70,6 +70,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
           display: "flex",
           flexDirection: "column",
           gap: 22,
+          overflowX: "hidden",
         }}
       >
         {/* Wordmark */}
@@ -156,7 +157,16 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
         </div>
 
         {/* Stations list */}
-        <nav style={{ flex: 1, overflowY: "auto", paddingRight: 4, marginRight: -4 }}>
+        <nav
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+            marginRight: -4,
+            minWidth: 0,
+          }}
+        >
           <div
             style={{
               fontSize: 10,
