@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import React from "react"
 import {
   READINESS_AXIS_DESCRIPTIONS,
@@ -2065,6 +2066,7 @@ function BoardroomPreview({ data }: { data: ReportData }) {
 }
 
 function BoardroomCTACard({ data }: { data: ReportData }) {
+  const router = useRouter()
   return (
     <section style={{ marginBottom: 20 }}>
       <div
@@ -2196,7 +2198,7 @@ function BoardroomCTACard({ data }: { data: ReportData }) {
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <button
-                onClick={() => alert("Boardroom coming soon — this will link to your Scorta account.")}
+                onClick={() => router.push("/login")}
                 className="no-print"
                 style={{
                   height: 48,
@@ -2254,6 +2256,7 @@ function BoardroomCTACard({ data }: { data: ReportData }) {
 // ── Sticky CTA ────────────────────────────────────────────────────────────────
 
 function StickyCTA() {
+  const router = useRouter()
   const [visible, setVisible] = React.useState(false)
   const sentinelRef = React.useRef<HTMLDivElement>(null)
 
@@ -2332,7 +2335,7 @@ function StickyCTA() {
             </div>
           </div>
           <button
-            onClick={() => alert("Boardroom coming soon.")}
+            onClick={() => router.push("/login")}
             style={{
               height: 36,
               padding: "0 16px",

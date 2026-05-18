@@ -1,188 +1,276 @@
-# Scorta / ExitIQ — Demo Script
-**Format:** 3.5-minute screen recording (or live interview demo)
-**Audience:** YC partners, early customers, investors
-**URL to open:** scorta.co / localhost (ExitIQ assessment)
+## script
+Here is the fully rewritten script pulling directly from the agent-native architecture and weaving in the persona only where it illustrates a specific capability.
 
----
+***
 
-## Opening (0:00 – 0:30) — The Problem
+# Scorta — 2-Minute Demo Script (VC/Accelerator Final)
 
-> **[Screen: blank / title card or landing page]**
+**Format:** Loom screen recording, one take
+**Tone:** Technical founder, calm, showing a working system
+**Rule:** Agent architecture is the story. Chandan is the live data running through it.
 
-**Voiceover / spoken:**
+***
 
-> "There are 2.9 million owner-operated Main Street businesses in the US. Every day, 10,000 baby boomers retire. Most of the owners who want to sell — can't.
+## [0:00–0:18] — What Scorta Is
+
+*Screen: Scorta landing page*
+
+> "There are about 200,000 Main Street businesses under two million in revenue that will attempt to sell in the next five years. The vast majority will fail — not because the business isn't worth buying, but because no one ever made it lender-ready or buyer-ready before taking it to market.
 >
-> Not because there's no buyer. Buyers are everywhere.
+> Traditional brokers don't do that work. Scorta does. We are the underwriter, prep shop, and broker-of-record — run end-to-end by a coordinated fleet of specialized agents with a human approval layer on top. Not a tool for brokers. We are the broker."
+
+***
+
+## [0:18–0:40] — ExitIQ: Intake and Scoring
+
+*Screen: ExitIQ assessment — filling in answers live as Chandan*
+
+> "The entry point is ExitIQ. This is an LLM-based intake that intelligently determines three things about any business: exit readiness, lender readiness, and valuation range. The questions are dynamically selected by the model based on industry — a restaurant gets a different question set than a services firm.
 >
-> Because their business isn't sellable. Financials are a mess. SBA lenders reject them. Their broker quoted 10% and hasn't called back.
+> I'm running through a live scenario right now — a restaurant operator in New Jersey, fifteen years in business, owns the property, roughly two million in revenue."
+
+*Submit. Report generates.*
+
+> "We run those answers through models built on industry and deal data. The output is a gap report, lender financeability criteria, and a 90-day checklist. This operator scores 49 out of 100 — SBA eligible, but two gaps are compressing his multiple from 3x down to 1.5x. Undocumented operations and financials that haven't been normalized for a lender."
+
+*Scroll briefly through the score breakdown. Move on.*
+
+***
+
+## [0:40–1:00] — ARIA and the Case Manager Agent
+
+*Screen: /dashboard — ARIA animates in*
+
+> "When the seller signs in, the Case Manager Agent — ARIA — has already reviewed the intake and knows exactly what's blocking this deal. She owns the deal state machine. She identifies the blockers, dispatches the right agents, sends structured nudges to the seller when something is stalled, and escalates to a human operator when a judgment call is needed.
 >
-> Here's the real problem: the average broker won't even take a listing under $2M in revenue. They list and pray. They never tell the owner what's actually killing their deal value — because fixing it costs human time, and human time doesn't pencil on small transactions.
+> This is the coordination layer that traditionally lived in a junior banker's inbox — an agent that never drops context and runs across dozens of concurrent deals simultaneously. One operator on Scorta manages what would otherwise require a team of four to six."
+
+*Point to the left rail — locked stations. Show one locked hover tooltip.*
+
+> "Nothing unlocks until the prerequisite is done. ARIA decides when a station is ready — the seller never has to figure out where they are."
+
+***
+
+## [1:00–1:25] — Ingestion → Recast → Approval Layer
+
+*Screen: /connect → /ingestion log streaming → /recast table*
+
+> "Once financial accounts are connected — QuickBooks, bank feed, eventually POS and payroll — the Ingestion Agent pulls the raw data, classifies it, and extracts structured fields into Scorta's internal data model. No manual Excel work. The system builds the room for underwriting to happen.
 >
-> Suyash spent three years on the buy side, running a micro-PE fund. He watched deal after deal collapse in diligence — not because the business was bad, but because nobody had prepared it. No clean financials, no addback schedule, no SBA package. The seller lost the deal and didn't know why.
+> On this scenario, it identified $127,000 in add-backs across 36 months — owner comp, personal vehicle, a one-time equipment repair. That moves normalized SDE from what's on the books to $962,000.
 >
-> That's the problem Scorta exists to solve. We're an AI-native brokerage — we do everything a traditional broker does, but AI does the repeatable work. Sellers pay a flat fee instead of a 10% commission. And ExitIQ is the intake: a two-minute assessment that tells any owner exactly what their business is worth, what's killing their deal, and what to fix."
+> The Recast Agent then performs an SBA-style P&L recast. The architecture is deliberately hybrid — deterministic logic handles the math against SOP 50 10 8 constraints, because SBA underwriters don't care about a clever narrative, they care about the numbers being right. The LLM layer generates the recast narrative and the add-back justifications. That separation is what makes the output defensible in a lender's hands."
 
----
+*Show the Review & Approve button. Click it.*
 
-## The Assessment — Live Walkthrough (0:30 – 2:00)
+> "Every recast is staged for human approval before it reaches any buyer or lender. Agents propose. Humans sign off. Every action is logged with a named signatory and a timestamp. That's how we operate as a licensed brokerage while moving at agent speed."
 
-> **[Screen: ExitIQ app, step 0 — industry question visible, orb glowing in left column]**
+***
 
-**Narration:**
-> "Let's run a real assessment. I'm Marcus — I own an HVAC company in Texas. Seven years in business, $1.5M in revenue. I want to sell in the next two years, but I don't know if I'm ready or what it's worth."
+## [1:25–1:45] — Owner-Dependency + The Boardroom
 
-### Step-by-step answers (click through each question)
+*Screen: /risk — owner-dependency panel*
 
-| Step | Question | Answer to select |
-|------|----------|-----------------|
-| 0 | Industry | **Home Services** |
-| 1 | Years in business | **5 – 10 years** |
-| 2 | Annual Revenue | **$1M – $3M** |
-| 3 | SDE (owner earnings) | **$250K – $500K** |
-| 4 | Employees | **5 – 10** |
-| 5 | State | **Texas** |
-| 6 | Owner's role | **Owner-operator, handle most things** |
-| 7 | Revenue trend | **Growing year over year** |
-| 8 | Customer concentration | **No single customer > 20% of revenue** |
-| 9 | Recurring revenue | **Moderate — service contracts + repeat clients** |
-
-> **[Each click triggers the orb pulse animation and an AI insight chip appears below the question]**
-
-**Narration at step 0–1 (industry + years):**
-> "Notice the orb on the left — it's the confidence signal. Right now it's dim because we have one data point. The right column starts building the buyer profile immediately: Home Services with 5–10 years of operating history targets PE-backed rollup acquirers. That's who's buying right now."
-
-**Narration at step 2–3 (revenue + SDE):**
-> "Now watch the right panel. The valuation range just snapped live — three methodologies calculating in parallel: SDE multiple, revenue multiple, and broker comp. Marcus is at $1.1M–$1.85M. That's the first time he's ever seen an honest number. The orb is brighter now — we have enough signal to start modeling a deal."
-
-**Narration at step 4–5 (employees + state):**
-> "Five to ten employees is the sweet spot for SBA financing — enough depth that a buyer isn't taking on a solo-operator risk, small enough that the deal is clean. Texas matters too: active SBA lender market, no state income tax, high buyer demand in home services. The SBA snapshot in the right column just turned green."
-
-**Narration at step 6–9 (owner role, trend, concentration, recurring):**
-> "These last four are the ones brokers never ask. They feel soft — but they're the variables that determine whether an SBA lender will approve the loan.
+> "The Owner-Dependency Agent scored this business at 38 out of 100 on transferability — the single biggest drag on the multiple. It doesn't just flag the problem. It generates a structured remediation plan: the five specific tasks this owner needs to document for the business to be operable without him. The Case Manager Agent tracks completion. That fix alone is worth over $400,000 in deal value.
 >
-> Owner dependency is the single biggest deal-killer in this market. If the business runs because Marcus runs it — the buyer can't get financing for it. We're flagging that right now.
+> Behind that, we have the Boardroom — three strategic buyer personas running as independent agents, each with its own objection library and valuation heuristics. One reasons like an SBA-backed operator, one like a search fund, one like a micro-PE buyer. Each produces a valuation range, a deal structure, and 20 to 40 ranked objections.
 >
-> Revenue trend is growing — that's a green flag. Customer concentration is clean — no single account over 20%. And moderate recurring revenue from service contracts adds predictability for the buyer's underwriter.
+> But the Boardroom's outputs aren't a report. They're work orders. Objections become remediation tasks dispatched to the Owner-Dependency and Concentration agents. Recast narrative risks get handed back to the Recast Agent to harden. Buyer segment recommendations go directly to the Outreach Agent to begin building personalized sequences. The seller gets a red-team view of their own deal before a real buyer ever sees it — and the system has already started fixing the problems."
+
+***
+
+## [1:45–2:00] — The Moat + Close
+
+*Screen: Pull back to dashboard or go to blank*
+
+> "On our existing engagements we've recast financials, gotten sellers SBA pre-qualified with a New Jersey lender, and generated comps that have already had real buyer reception off-market.
 >
-> Most sellers find out their deal has these problems when it falls apart in diligence — three months in, with an LOI on the table. We surface them in 90 seconds."
-
----
-
-## The Gate — Email Unlock (2:00 – 2:20)
-
-> **[Screen: GateTeaserCard — valuation headline visible, rest of report blurred behind frosted glass]**
-
-**Narration:**
-> "After 10 signals, ExitIQ surfaces a teaser: the valuation headline, the single biggest strength, and the single biggest risk. We show just enough that a real owner can't look away.
+> And every engagement is feeding a proprietary dataset nobody else in this market has — structured failure-mode data on which add-backs got rejected, where SBA prequal hit friction, which objection killed the deal. That gets fed back into every agent and compounds with each transaction.
 >
-> The full AI report — score breakdown, SBA snapshot, 90-day fix checklist, buyer pool analysis, and the broker fee savings calculation — is one click away. No credit card. No broker call. Just an email."
+> We're not selling software to brokers. We are the broker. And the agents are how we make that economically defensible at scale. SBA-fundable, buyer-ready, term-sheet in hand — or we don't get paid."
 
-> **[Pause on the teaser for 2 seconds — let the blurred cards register visually]**
+***
 
-> **[Click 'Unlock My Full Report' → EmailGateModal slides in]**
+## Recording Notes
 
-**Narration while typing:**
-> "Marcus enters his name, email, and selling timeline. That timeline answer is how we segment — someone selling in 12–24 months is a qualified lead. Someone who's 'just curious' goes into a nurture sequence. The segmentation happens automatically, in real time."
+| Segment | Screen needed | Status needed |
+|---|---|---|
+| ExitIQ | Assessment wizard, live input | Must be clickable |
+| Report | Score 49, gap breakdown | Must render |
+| Dashboard | ARIA welcome, locked left rail | Must animate |
+| Ingestion | Streaming log, final summary card | Must stream visibly |
+| Recast | Before/after table, approve button | Must be clickable |
+| Risk | Owner-dependency score + task list | Must render |
+| Boardroom | Can be static screenshot or skipped | Reference verbally only |
 
-**Type in demo fields:**
-- First Name: `Marcus`
-- Email: `marcus@hvacpros.com`
-- Selling timeline: `12 – 24 months`
+The Boardroom, CIM, Lender Ops, and Outreach stations do not need to be clickable  — the script references them architecturally while the demo stays on the screens that are already built.
 
-> **[Click Submit → modal closes, PreviewCard loads with skeleton shimmer → AI data populates]**
 
----
+## demo workflow
+Here is the full end-to-end workflow for Chandan, mapped against every feature being demoed.
 
-## The Report — Output (2:20 – 3:00)
+***
 
-> **[Screen: PreviewCard — skeleton loading state → cards snap in one by one as AI streams]**
+# Scorta Workflow: Palace Kitchen & Catering
 
-**Narration as valuation card loads:**
-> "Claude Sonnet is generating the report live. It's not templating Marcus's answers into a PDF. It's reasoning through his deal the way an M&A advisor would — what does this business look like to a buyer, to a lender, to a rollup fund."
+**Seller:** Chandan Patel · **Business:** Palace Kitchen & Catering · **Goal:** SBA-funded, buyer-closed exit at $1.75M
 
-Point to each section and narrate as it renders:
+***
 
-**Valuation range card:**
-> "The valuation: $1.1M to $1.85M. Three methodologies — SDE multiple at 3.5–4.2x, revenue multiple, and broker comp from comparable exits. The midpoint is $1.47M. That's the first honest number Marcus has ever gotten. A broker would've given him a range 40% higher to win the listing — then negotiated him down."
+## Stage 0 — Intake
+**Screen:** ExitIQ assessment
 
-**SBA Snapshot card:**
-> "SBA-eligible. That's not a guess — it's mapped to the actual 7(a) loan structure for a deal of this size. Eligible means a buyer can put 10% down and finance the rest. That doubles the buyer pool overnight. Most sellers have no idea their business qualifies."
+Chandan answers 10 questions. The LLM scores his business at **49/100** — SBA eligible but two critical gaps identified immediately:
+- Documentation score: **3/10** — no SOPs, financials rated "fair"
+- Owner Independence score: **3/10** — business breaks without him
 
-**Strength card (green flag):**
-> "Top strength: service contract base reduces buyer risk. That's language directly out of how lenders underwrite deals — recurring revenue is the single biggest driver of SBA loan approval. Marcus has it. We're telling him to lean into it in every buyer conversation."
+**Output:** Gap report, lender financeability criteria, 90-day checklist
+**ARIA is initialized.** Deal state machine opens.
 
-**Risk card (red flag):**
-> "Top risk: owner-operator dependency. This is the honest answer Marcus needed. His score would jump 18 points if he can demonstrate the business runs without him for 90 days. We tell him exactly how to do that — delegate the dispatch function, hire a crew lead, document the SOPs. This is the 90-day fix plan."
+***
 
-**Broker fee card:**
-> "Broker fee saved: $110K to $185K. That's what a traditional broker would charge at 10% commission. Scorta charges a flat fee. The seller keeps that spread."
+## Stage 1 — ARIA Onboarding
+**Screen:** /dashboard
 
-**Buyer pool card:**
-> "Buyer pool: PE-backed rollup acquirers. Home services in Texas is one of the most active rollup markets in the country right now. We know who's buying — and we bring that context to every engagement."
+ARIA reviews the 10 answers and surfaces three honest next actions:
+1. Connect financial accounts — nothing downstream is possible without real data
+2. Begin owner-dependency documentation — can start today, no data needed
+3. Stand by for Recast Agent — unlocks after Step 1
 
-**Narration, final beat:**
-> "Marcus went from 'I don't know what my business is worth' to a full deal assessment — in under two minutes, with zero broker calls and zero email PDFs.
->
-> That's ExitIQ. And this is just the intake."
+**What's happening behind the scenes:** Case Manager Agent opens the deal file, logs intake data, sets SLA windows for Steps 1 and 2, and flags the deal as `hot_seller` — 6–12 month timeline means urgency is real.
 
----
+***
 
-## The Scorta Pitch — What Happens Next (3:00 – 3:20)
+## Stage 2 — Data Connection
+**Screen:** /connect
 
-> **[Screen: report bottom section — 'What Scorta does next' CTA, or cut to founder on camera]**
+Chandan connects QuickBooks Online and Plaid bank feed. Two of four connectors live. Stripe and Google Drive pending — not blockers for this stage.
 
-**Narration:**
-> "For Marcus, ExitIQ is the intake. What comes next is the full engagement: Scorta repackages his financials, builds the CIM, produces buyer materials, coordinates the SBA lender, qualifies inbound buyers, and runs the process from LOI to close. Everything a traditional broker does — but AI does the repeatable work, so we can do it profitably on a $1.5M deal where a broker won't even pick up the phone.
->
-> We charge a flat fee. Marcus keeps $150K he would have paid in commission.
->
-> Three paying customers so far. $11K collected. 167% month-over-month growth. Every single customer came inbound — no ads, no outbound, no broker network. They found us because they Googled 'how do I sell my business' and didn't want to give up 10%.
->
-> There are 2.9 million businesses like Marcus's. Ten thousand new ones enter the market every day as boomers retire. Most of them will never sell — not because there's no buyer, but because no one built the infrastructure to get them ready.
->
-> We're Scorta. We're building that infrastructure."
+**ARIA dispatches:** Ingestion Agent
 
----
+***
 
-## Interview / Q&A Talking Points
+## Stage 3 — Ingestion
+**Screen:** /ingestion
 
-**"What's the actual AI doing?"**
-> Claude Sonnet runs the valuation logic and generates the narrative report. Claude Haiku parses the teaser — fast and cheap for high-volume signals. The 10 questions map to the same variables SBA underwriters use. We're not summarizing a form — we're modeling a deal.
+Ingestion Agent pulls 36 months of transactions across QuickBooks and bank feed. Streams classification log live. Surfaces:
 
-**"Why does the seller care about the score?"**
-> The score is the hook but the fix is the product. Every red flag has a specific remediation — recast the financials this way, reduce owner hours to X, add a contract for recurring revenue. That's what the $3K–$5K concierge engagement delivers.
+- **1,247 transactions** analyzed
+- **$127,400** in add-backs identified across 3 years
+  - $120K owner compensation
+  - $18K personal vehicle
+  - $22K one-time equipment repair (Year 2)
+  - $9K personal travel
+- Revenue trend: **↑18% over 3 years**
+- **2 flags raised:** owner key-man dependency, top customer at 19% concentration
 
-**"How do you get distribution?"**
-> Two channels working now: direct inbound (zero paid acquisition to date) and B2B2C through advisors. Our third customer is a marketing consultant reselling Scorta to his SMB portfolio. CPAs, bookkeepers, and SBA lenders are next — they already advise these owners and have no tool to give them.
+**Human gate:** Chandan reviews the extracted data summary and approves ingestion output before anything moves forward.
 
-**"How is this defensible?"**
-> Every deal we run teaches us the patterns that make businesses sellable. The more deals, the better our underwriting. Traditional brokers can't replicate this — their model requires human time per deal. Ours scales with AI.
+**ARIA dispatches:** Recast Agent + Owner-Dependency Agent simultaneously
 
----
+***
 
-## Demo Setup Checklist (before recording)
+## Stage 4 — Financial Recast
+**Screen:** /recast
 
-- [ ] Open ExitIQ in a clean browser window (no prior session stored)
-- [ ] Set viewport to ~1280×800 (full HD cropped to app card)
-- [ ] Confirm WebGL orb loads (requires GPU — use Chrome)
-- [ ] Have demo answers memorized — no hovering/hesitation on options
-- [ ] Run a dry-run with `marcus@hvacpros.com` email first to confirm AI teaser generates
-- [ ] Dashboard panel visible on right at all times — shows live valuation updating
-- [ ] Record at 60fps, export at 1080p
+Recast Agent performs SBA-style P&L normalization across all 3 years. Deterministic math produces the numbers; LLM generates the lender-facing narrative for each add-back justification.
 
----
+| | Year 1 | Year 2 | Year 3 |
+|---|---|---|---|
+| Reported EBITDA | $680K | $765K | $815K |
+| Normalized SDE | $827K | $934K | **$962K** |
 
-## Key Numbers to Know Cold
+Recommended listing price moves to **$1.75M** at a 2.4x multiple on Year 3 SDE.
 
-| Metric | Value |
-|--------|-------|
-| Paying customers | 3 |
-| Total collected | $11K |
-| MoM growth | 167% (Mar $3K → Apr $8K) |
-| Largest customer | $5K — restaurant franchisee rollup |
-| Current pricing | $3K–$5K flat (moving to $15K–$30K) |
-| Broker alternative | 10% commission = $100K+ on a $1M deal |
-| TAM (direct) | ~$1B/yr in broker fees displaced |
-| TAM (expanded) | $500M+ ARR — making unsellable businesses sellable |
-| Founders | Suyash Agrawal (CEO, ex-micro-PE) + Puneet Gupta (CTO, ex-Atlassian) |
+**Human gate:** Chandan reviews the before/after recast table and approves. His name, timestamp, and approval are logged. Recast is now publishable to lenders and buyers.
+
+***
+
+## Stage 5 — Risk Analysis
+**Screen:** /risk
+
+Two agents report in parallel:
+
+**Owner-Dependency Agent**
+- Transferability score: **38/100** — HIGH risk
+- Chandan handles all catering sales relationships and vendor negotiations personally
+- Only 1 of 11 employees has 3+ years tenure
+- 0 documented SOPs
+- Fix: document top 5 owner-dependent tasks
+- Value unlock: **+$450K** in deal value, transferability target rises to 62/100
+
+**Concentration Agent**
+- Top customer (NJ Transit Corporate Catering): **19% of revenue**
+- Risk level: MODERATE — within SBA threshold, flagged for monitoring
+- Account tenure: 6 years — mitigating factor noted in lender narrative
+
+**Human gate:** Chandan reviews both remediation playbooks. Approves task list. Owner-dependency documentation begins — ARIA tracks completion.
+
+***
+
+## Stage 6 — The Boardroom
+**Screen:** /recast or Boardroom panel (static if not built)
+
+Three buyer personas red-team the deal simultaneously:
+
+- **SBA-Backed Operator** — DSCR at 4.4x is strong. Primary objection: owner-dependency at 38/100 is a lender concern for post-close operations. Verdict: proceed to LOI *conditional on* SOP documentation
+- **Search Fund Buyer** — recurring revenue at 38% is thin for a search fund thesis. Catering contract with NJ Transit is the asset. Wants 3-year contract locked before LOI
+- **Micro-PE Buyer** — property ownership is a balance sheet asset. Facility + brand + 15-year history = platform fit. Would structure with seller note of $175K–$229K
+
+**Boardroom outputs become work orders:**
+- Owner-Dependency Agent: draft SOP template for top 5 tasks → Chandan fills in
+- Concentration Agent: draft contract extension proposal for NJ Transit account
+- Recast Agent: harden add-back narrative against SBA-Backed Operator objections
+- Outreach Agent: target SBA-Backed Operator and Micro-PE buyer profiles first
+
+**Human gate:** Deal lead reviews LOI structure logic before any buyer communication reflects it.
+
+***
+
+## Stage 7 — Lender Package
+**Screen:** /marketplace → Lenders tab
+
+Lender Ops Agent assembles the full SBA 7(a) package:
+- Normalized 3-year P&L with approved recast narrative
+- DSCR: **4.4x** (floor 1.25x — well clear)
+- Buyer down payment: **$106K minimum**, $159K recommended
+- Monthly debt service: **$14,200/month**
+- Loan amount: **$1.09M** (87.5% SBA-financed)
+
+Three lenders matched and ranked:
+- Northeast Community Bank — **94% match** (NJ food service specialist)
+- First National Business Capital — **87% match** (15-day commitment)
+- ReadyCap Commercial — **81% match** (flexible down payment)
+
+**Human gate:** Deal lead approves lender package before submission. Lender Ops Agent then logs into lender portals, uploads the package, and tracks submission status.
+
+***
+
+## Stage 8 — Buyer Outreach
+**Screen:** /outreach → Kanban pipeline
+
+Outreach Agent, acting on Boardroom's buyer segment recommendations, runs personalized sequences against Scorta's verified network — SBA-pre-qualified buyers sourced from prior closed deals and their professional connections.
+
+Pipeline opens:
+- **Identified** → 12 buyers matched to deal profile
+- **Contacted** → 5 outreach sequences initiated by agent
+- **Interested** → 3 buyers opened CIM in VDR
+- **NDA Signed** → 2 NDAs returned
+
+**Human gate:** Deal lead approves outreach strategy before sequences run. Agent handles cadence, follow-up timing, and CIM access gating.
+
+***
+
+## Stage 9 — Exit Ready
+
+When Stage 5 remediation is complete (SOPs documented, NJ Transit contract extended), the Scorta Score updates:
+
+| Sub-score | Before | After |
+|---|---|---|
+| Transferability | 38/100 | 62/100 |
+| Documentation | 65/100 | 81/100 |
+| **Overall Scorta Score** | **71/100** | **84/100** |
+
+**Label moves from** "Strong SBA Candidate" → **"Scorta Certified"**
+
+Palace Kitchen & Catering is now SBA-fundable, buyer-ready, and listed. The agent fleet has moved Chandan from a 10-question assessment to a term-sheet pipeline — with a human approval signature on every material step.
