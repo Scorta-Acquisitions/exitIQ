@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 
 import { AgentActivityPanel } from "./AgentActivityPanel"
 import { AgentFleetProvider } from "./AgentFleetContext"
+import { ARIAChat } from "./ARIAChat"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -283,6 +284,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
       </main>
 
       <AgentActivityPanel />
+      <ARIAChat currentRoute={pathname} />
     </div>
     </AgentFleetProvider>
   )

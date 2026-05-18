@@ -76,7 +76,11 @@ export function AgentActivityPanel() {
           display: "flex",
           flexDirection: "column",
           zIndex: 40,
-          overflow: "hidden",
+          // overflow stays visible so the toggle button — positioned at
+          // left: -14 — can poke out past the panel's left edge. Inner
+          // content is bound by its own padding + flex layout, so removing
+          // the clip doesn't leak panel contents.
+          overflow: "visible",
         }}
       >
         {/* Collapse handle — sits below the TopBar so it never gets covered */}

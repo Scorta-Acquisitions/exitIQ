@@ -93,6 +93,7 @@ export const ARIA_TASKS: Record<string, string> = {
   "/risk": "Tracking owner-dependency remediation",
   "/boardroom": "Coordinating Boardroom investment committee",
   "/documents": "Supervising CIM assembly",
+  "/vdr": "Monitoring VDR access · 2 requests pending",
   "/score": "Calculating final Scorta Score",
   "/marketplace": "Routing lender package",
   "/outreach": "Managing buyer outreach cadence",
