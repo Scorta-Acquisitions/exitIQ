@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import React from "react"
 
 import { getCaseTask } from "@/lib/agentActivity"
@@ -18,7 +20,19 @@ const mono = "'JetBrains Mono', var(--font-jetbrains-mono, monospace)"
 const T = {
   panelEnterMs: 300,
   openingTypingMs: 600,
+  readinessUserDelayMs: 500,
+  readinessTypingMs: 1100,
 }
+
+const READINESS_USER_PROMPT = "Am I ready to sell?"
+
+const READINESS_RESPONSE = `Based on my read of your deal file — no, not yet.
+
+Your Scorta Score is 71/100, but Transferability is 38/100 and Owner-Dependency is also at 38. That tells me the deal is well-priced but not buyer-ready. Zero documented SOPs, one tenured staff member out of eleven, a business that still runs through you. Any buyer or SBA lender would see the same gap I do.
+
+Before I push the CIM out, I want to properly calibrate your readiness — and right now I don't have enough on the business itself. Head to /upload next. Twenty minutes on your top vendor relationships, the catering booking flow, and your day-to-day role gives me what I need. After that, /risk lets the Owner-Dependency Agent finish the 5 SOP templates that close the $450K transferability gap.
+
+You're closer than you think — but right now we'd leave money on the table.`
 
 type Role = "case" | "user"
 
@@ -34,18 +48,28 @@ function nextId() {
 }
 
 export function CASEChat({ currentRoute }: { currentRoute: string }) {
+  const searchParams = useSearchParams()
+  const fromSell = searchParams?.get("from") === "sell"
+
   const [open, setOpen] = React.useState(false)
   const [messages, setMessages] = React.useState<Array<Message>>([])
   const [typing, setTyping] = React.useState(false)
   const [unread, setUnread] = React.useState(0)
   const [inputValue, setInputValue] = React.useState("")
+  const [peek, setPeek] = React.useState(false)
+  const [readinessQueued, setReadinessQueued] = React.useState(false)
+  const [readinessCtaVisible, setReadinessCtaVisible] = React.useState(false)
 
   const firedProactiveRef = React.useRef<Set<string>>(new Set())
   const openingFiredRef = React.useRef(false)
+  const peekFiredRef = React.useRef(false)
+  const readinessFiredRef = React.useRef(false)
   const openRef = React.useRef(open)
   const threadRef = React.useRef<HTMLDivElement | null>(null)
   const inputRef = React.useRef<HTMLInputElement | null>(null)
   const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const peekTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const readinessTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Keep a ref so async timers can read the current open state without
   // re-firing on every render.
@@ -101,10 +125,56 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
   }, [messages, typing])
 
-  // Opening the panel clears the unread badge.
+  // Opening the panel clears the unread badge and dismisses the peek.
   React.useEffect(() => {
-    if (open) setUnread(0)
+    if (open) {
+      setUnread(0)
+      setPeek(false)
+    }
   }, [open])
+
+  // Sell-intent peek bubble — fires when the seller arrives at /documents
+  // from the home page "Ready to Sell?" CTA. Single-fire per session.
+  React.useEffect(() => {
+    if (peekFiredRef.current) return
+    if (currentRoute !== "/documents" || !fromSell) return
+    peekFiredRef.current = true
+    const timer = setTimeout(() => {
+      if (!openRef.current) setPeek(true)
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [currentRoute, fromSell])
+
+  React.useEffect(() => {
+    return () => {
+      if (peekTimerRef.current) clearTimeout(peekTimerRef.current)
+      if (readinessTimerRef.current) clearTimeout(readinessTimerRef.current)
+    }
+  }, [])
+
+  // Sell-intent readiness sequence — fires once after the bubble is clicked
+  // and the opening message has landed. Posts a user question, then CASE's
+  // readiness analysis pointing the seller to /upload as the next stage.
+  React.useEffect(() => {
+    if (!open || !readinessQueued || readinessFiredRef.current) return
+    if (messages.length < 1) return
+    readinessFiredRef.current = true
+    readinessTimerRef.current = setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { id: nextId(), role: "user", text: READINESS_USER_PROMPT, ts: Date.now() },
+      ])
+      setTyping(true)
+      readinessTimerRef.current = setTimeout(() => {
+        setTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "case", text: READINESS_RESPONSE, ts: Date.now() },
+        ])
+        setReadinessCtaVisible(true)
+      }, T.readinessTypingMs)
+    }, T.readinessUserDelayMs)
+  }, [open, readinessQueued, messages.length])
 
   // Focus the input on open.
   React.useEffect(() => {
@@ -182,6 +252,7 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
           ref={threadRef}
           messages={messages}
           typing={typing}
+          showReadinessCta={readinessCtaVisible}
         />
 
         <Composer
@@ -194,6 +265,102 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
           disabled={typing}
         />
       </aside>
+
+      {/* Peek bubble — surfaces above the launcher without opening the panel */}
+      {peek && !open && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="case-peek"
+          style={{
+            position: "fixed",
+            bottom: 86,
+            right: 24,
+            maxWidth: 280,
+            background: "#faf9f7",
+            color: "var(--t1)",
+            borderRadius: 14,
+            padding: "12px 38px 12px 14px",
+            boxShadow: "0 18px 38px rgba(12,10,9,.22), 0 1px 0 rgba(255,255,255,.7) inset",
+            border: "1px solid rgba(12,10,9,.08)",
+            zIndex: 9999,
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            setPeek(false)
+            setReadinessQueued(true)
+            setOpen(true)
+          }}
+        >
+          <div
+            style={{
+              fontFamily: mono,
+              fontSize: 9.5,
+              color: "var(--mint, #2c8c70)",
+              fontWeight: 700,
+              letterSpacing: ".7px",
+              textTransform: "uppercase",
+              marginBottom: 5,
+            }}
+          >
+            CASE · Case Manager
+          </div>
+          <div
+            style={{
+              fontFamily: garamond,
+              fontSize: 14.5,
+              lineHeight: 1.45,
+              color: "var(--t1)",
+              letterSpacing: ".05px",
+            }}
+          >
+            <strong>Important!</strong> Are you sure you&apos;re ready to sell?
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={(e) => {
+              e.stopPropagation()
+              setPeek(false)
+            }}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              border: "none",
+              background: "transparent",
+              color: "var(--t3)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "background 160ms ease-out, color 160ms ease-out",
+            }}
+            className="case-peek-close"
+          >
+            <svg width={10} height={10} viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+              <path d="M2 2l6 6M8 2l-6 6" />
+            </svg>
+          </button>
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              bottom: -7,
+              right: 22,
+              width: 0,
+              height: 0,
+              borderLeft: "7px solid transparent",
+              borderRight: "7px solid transparent",
+              borderTop: "7px solid #faf9f7",
+              filter: "drop-shadow(0 1px 0 rgba(12,10,9,.08))",
+            }}
+          />
+        </div>
+      )}
 
       {/* Collapsed launcher button ──────────────────────────────────── */}
       <button
@@ -380,8 +547,8 @@ function Header({
 // ── Message thread ────────────────────────────────────────────────────
 const MessageThread = React.forwardRef<
   HTMLDivElement,
-  { messages: Array<Message>; typing: boolean }
->(function MessageThread({ messages, typing }, ref) {
+  { messages: Array<Message>; typing: boolean; showReadinessCta: boolean }
+>(function MessageThread({ messages, typing, showReadinessCta }, ref) {
   return (
     <div
       ref={ref}
@@ -404,9 +571,96 @@ const MessageThread = React.forwardRef<
         ),
       )}
       {typing && <TypingIndicator />}
+      {showReadinessCta && !typing && <ReadinessCta />}
     </div>
   )
 })
+
+// ── Readiness CTA — surfaces under CASE's readiness analysis ──────────
+function ReadinessCta() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 7,
+        alignSelf: "stretch",
+        animation: "caseChatFadeIn .26s ease-out",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: 9.5,
+          color: "var(--mint, #2c8c70)",
+          letterSpacing: ".7px",
+          textTransform: "uppercase",
+          fontWeight: 600,
+        }}
+      >
+        Next step · recommended
+      </div>
+      <Link
+        href="/upload"
+        className="case-readiness-cta"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "11px 14px",
+          borderRadius: 12,
+          background: "var(--mint, #2c8c70)",
+          color: "#fff",
+          textDecoration: "none",
+          boxShadow: "0 8px 22px rgba(44,140,112,.30)",
+          transition: "transform 180ms ease-out, box-shadow 180ms ease-out",
+          alignSelf: "flex-start",
+          maxWidth: "100%",
+        }}
+      >
+        <svg
+          width={14}
+          height={14}
+          viewBox="0 0 14 14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M7 10V3" />
+          <path d="M4 5.6L7 2.6l3 3" />
+          <path d="M2.4 9.4v1.4A1.2 1.2 0 0 0 3.6 12h6.8a1.2 1.2 0 0 0 1.2-1.2V9.4" />
+        </svg>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
+          <span
+            style={{
+              fontFamily: inter,
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: "-.05px",
+              lineHeight: 1.2,
+            }}
+          >
+            Add Business Context
+          </span>
+          <span
+            style={{
+              fontFamily: mono,
+              fontSize: 10,
+              color: "rgba(255,255,255,.78)",
+              letterSpacing: ".4px",
+            }}
+          >
+            /upload · ~20 min · unlocks readiness calibration
+          </span>
+        </div>
+        <span style={{ marginLeft: 4, transform: "translateY(-1px)", fontSize: 15 }}>→</span>
+      </Link>
+    </div>
+  )
+}
 
 function CaseMessage({ text }: { text: string }) {
   return (
@@ -693,6 +947,26 @@ function ScopedStyles() {
       .case-launcher:hover {
         transform: translateY(-1px);
         box-shadow: 0 18px 36px rgba(12,10,9,.36);
+      }
+      @keyframes casePeekIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .case-peek {
+        animation: casePeekIn 280ms ease-out;
+      }
+      .case-peek:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 22px 44px rgba(12,10,9,.26);
+        transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+      }
+      .case-peek-close:hover {
+        background: rgba(12,10,9,.06);
+        color: var(--t1);
+      }
+      .case-readiness-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(44,140,112,.42);
       }
       .case-chat-chip:hover:not(:disabled) {
         background: rgba(44,140,112,.22);

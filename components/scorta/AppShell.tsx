@@ -4,11 +4,13 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import React from "react"
 
+import { AUDIT_TRAIL } from "@/lib/auditTrail"
 import { STATIONS, type Station, type StationStatus } from "@/lib/persona"
 import { createClient } from "@/lib/supabase/client"
 
 import { AgentActivityPanel } from "./AgentActivityPanel"
 import { AgentFleetProvider } from "./AgentFleetContext"
+import { AuditTrailModal } from "./AuditTrailModal"
 import { CASEChat } from "./CASEChat"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
@@ -30,6 +32,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
   const pathname = usePathname()
   const router = useRouter()
   const [signingOut, setSigningOut] = React.useState(false)
+  const [auditOpen, setAuditOpen] = React.useState(false)
 
   async function onSignOut() {
     if (signingOut) return
@@ -165,33 +168,22 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
             paddingRight: 4,
             marginRight: -4,
             minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
           }}
         >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "1.1px",
-              textTransform: "uppercase",
-              color: "var(--t3)",
-              marginBottom: 10,
-              paddingLeft: 4,
-              fontFamily: inter,
-            }}
-          >
-            Agent Stations
-          </div>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-            {STATIONS.map((s) => {
-              const isActive = pathname === s.href
-              const effective: StationStatus = isActive ? "active" : s.state
-              return (
-                <li key={s.href}>
-                  <RailItem station={s} effective={effective} isActive={isActive} />
-                </li>
-              )
-            })}
-          </ul>
+          <RailGroup
+            heading="Exit Prep & Readiness"
+            stations={STATIONS.filter((s) => s.group === "underwriting")}
+            pathname={pathname}
+          />
+          <div style={{ height: 1, background: "var(--div)", margin: "0 4px" }} aria-hidden />
+          <RailGroup
+            heading="Brokerage Services"
+            stations={STATIONS.filter((s) => s.group === "brokerage")}
+            pathname={pathname}
+          />
         </nav>
 
         {/* Seller footer */}
@@ -287,7 +279,11 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
 
       {/* ── Main column ───────────────────────────────────────────────── */}
       <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <TopBar seller={seller} />
+        <TopBar
+          seller={seller}
+          onOpenAudit={() => setAuditOpen(true)}
+          auditCount={AUDIT_TRAIL.length}
+        />
         <div style={{ flex: 1, padding: "28px 36px 72px", maxWidth: 1320, width: "100%", margin: "0 auto" }}>
           {children}
         </div>
@@ -295,8 +291,50 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
 
       <AgentActivityPanel />
       <CASEChat currentRoute={pathname} />
+      <AuditTrailModal open={auditOpen} onClose={() => setAuditOpen(false)} />
     </div>
     </AgentFleetProvider>
+  )
+}
+
+// ── Rail group (header + list) ──────────────────────────────────────────
+function RailGroup({
+  heading,
+  stations,
+  pathname,
+}: {
+  heading: string
+  stations: ReadonlyArray<Station>
+  pathname: string
+}) {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "1.1px",
+          textTransform: "uppercase",
+          color: "var(--t3)",
+          marginBottom: 10,
+          paddingLeft: 4,
+          fontFamily: inter,
+        }}
+      >
+        {heading}
+      </div>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+        {stations.map((s) => {
+          const isActive = pathname === s.href
+          const effective: StationStatus = isActive ? "active" : s.state
+          return (
+            <li key={s.href}>
+              <RailItem station={s} effective={effective} isActive={isActive} />
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
@@ -357,9 +395,10 @@ function RailItem({
     padding: "10px 11px",
     borderRadius: 10,
     textDecoration: "none",
-    background: isActive ? "rgba(12,10,9,.05)" : "transparent",
-    border: `1px solid ${isActive ? "rgba(12,10,9,.08)" : "transparent"}`,
-    transition: "background 180ms ease-out, border-color 180ms ease-out",
+    background: isActive ? "rgba(44,140,112,.08)" : "transparent",
+    border: `1px solid ${isActive ? "var(--mint-edge, rgba(44,140,112,.28))" : "transparent"}`,
+    boxShadow: isActive ? "0 4px 14px rgba(44,140,112,.10)" : "none",
+    transition: "background 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out",
     position: "relative",
     cursor: locked ? "not-allowed" : "pointer",
   }
@@ -498,7 +537,15 @@ function StationIndicator({ status }: { status: StationStatus }) {
 }
 
 // ── Top bar ────────────────────────────────────────────────────────────
-function TopBar({ seller }: { seller: Seller }) {
+function TopBar({
+  seller,
+  onOpenAudit,
+  auditCount,
+}: {
+  seller: Seller
+  onOpenAudit: () => void
+  auditCount: number
+}) {
   return (
     <header
       style={{
@@ -549,12 +596,61 @@ function TopBar({ seller }: { seller: Seller }) {
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button
+          type="button"
+          onClick={onOpenAudit}
+          className="scorta-audit-pill"
+          aria-label={`View audit trail · ${auditCount} entries`}
+          style={{
+            padding: "5px 12px",
+            borderRadius: 9999,
+            border: "1px solid var(--glass-edge, rgba(0,0,0,.10))",
+            background: "rgba(255,255,255,.7)",
+            color: "var(--t1)",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: inter,
+            transition:
+              "background 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out",
+          }}
+        >
+          <svg
+            width={12}
+            height={12}
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M3 1.5h6.5L11.5 3.5V12A.5.5 0 0 1 11 12.5H3a.5.5 0 0 1-.5-.5V2A.5.5 0 0 1 3 1.5z" />
+            <path d="M9.5 1.5V3.5h2" />
+            <path d="M4.5 6h5M4.5 8h5M4.5 10h3" />
+          </svg>
+          <span style={{ fontSize: 11.5, fontWeight: 600, lineHeight: 1 }}>Audit Trail</span>
+          <span
+            style={{
+              fontFamily: mono,
+              fontSize: 9.5,
+              color: "var(--t3)",
+              letterSpacing: ".4px",
+              lineHeight: 1,
+            }}
+          >
+            {auditCount}
+          </span>
+        </button>
         <div
           style={{
-            padding: "5px 11px",
+            padding: "5px 12px",
             borderRadius: 9999,
-            border: "1px solid var(--glass-edge, rgba(0,0,0,.08))",
-            background: "rgba(255,255,255,.6)",
+            border: "1px solid var(--mint-edge, rgba(44,140,112,.32))",
+            background: "rgba(255,255,255,.85)",
+            boxShadow: "0 4px 12px rgba(44,140,112,.10)",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -612,6 +708,16 @@ function ScopedStyles() {
         background: rgba(12,10,9,.04);
         border-color: rgba(12,10,9,.14);
         color: var(--t1);
+      }
+      .scorta-audit-pill:hover {
+        background: #fff;
+        border-color: var(--mint-edge, rgba(44,140,112,.32));
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(12,10,9,.06);
+      }
+      .scorta-audit-pill:focus-visible {
+        outline: 2px solid var(--mint, #2c8c70);
+        outline-offset: 2px;
       }
     `}</style>
   )

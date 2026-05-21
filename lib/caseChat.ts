@@ -309,13 +309,13 @@ const QUICK_CHIPS: Record<string, ReadonlyArray<string>> = {
     "What gets me to 84?",
     "What's Scorta Certified?",
   ],
-  "/marketplace": [
+  "/lenders": [
     "Which lender is best?",
-    "When does outreach launch?",
-    "What's the Search Fund hold?",
+    "What's the lender SLA?",
+    "When do we submit?",
   ],
-  "/outreach": [
-    "Which lender is best?",
+  "/buyers": [
+    "Who's on the buyer list?",
     "When does outreach launch?",
     "What's the Search Fund hold?",
   ],
@@ -335,8 +335,8 @@ const PROACTIVE_MESSAGES: Record<string, string> = {
   "/documents": `The CIM is being assembled from your approved financials and risk profile. 12 sections. Review Section 1 (Executive Summary) and Section 6 (Deal Structure) before approving — those are the two sections buyers read first.`,
   "/vdr": `Your VDR is live. Two access requests are pending — Marcus Rivera (buyer) and Northeast Community Bank (lender). Approve the lender first — their SLA clock starts on access, and 15 days to commitment means you want them reviewing now.`,
   "/score": `Scorta Score: 71/100. You're a Strong SBA Candidate. The 13 points between you and Scorta Certified are almost entirely owned by Transferability. Complete the 5 SOP tasks and you're at 84.`,
-  "/marketplace": `Lender package is ready. Northeast Community Bank is the highest match at 94% — NJ food service specialist, SBA preferred lender. Submit to them first. First National is the backup with a 15-day commitment SLA if you need a timeline anchor.`,
-  "/outreach": `Two buyer sequences are ready. Marcus Rivera (SBA-Backed Operator) and David Chen (Micro-PE). The Search Fund is held until the NJ Transit contract is confirmed. Authorize outreach and the deal is officially in market.`,
+  "/lenders": `Lender package is ready. Northeast Community Bank is the highest match at 94% — NJ food service specialist, SBA preferred lender. Submit to them first. First National is the backup with a 15-day commitment SLA if you need a timeline anchor.`,
+  "/buyers": `Two buyer sequences are ready. Marcus Rivera (SBA-Backed Operator) and David Chen (Micro-PE). The Search Fund is held until the NJ Transit contract is confirmed. Authorize outreach and the deal is officially in market.`,
 }
 
 export function getProactiveMessage(route: string): string | null {

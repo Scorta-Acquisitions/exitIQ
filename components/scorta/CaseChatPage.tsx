@@ -23,7 +23,11 @@ type Message = {
 
 const T = {
   openingTypingMs: 700,
+  seededQuestionDelayMs: 600,
+  seededAnswerTypingMs: 900,
 }
+
+const SEEDED_QUESTION = "What's my deal worth right now?"
 
 const STARTER_PROMPTS: ReadonlyArray<{ label: string; question: string; group: string }> = [
   { group: "Deal status", label: "Where does my deal stand today?", question: "Where does my deal stand right now?" },
@@ -50,19 +54,36 @@ export function CaseChatPage({ persona }: { persona: Persona }) {
   const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const openingFiredRef = React.useRef(false)
 
-  // Fire CASE's opening once on mount
+  // Fire CASE's opening once on mount, then a seeded Q&A so the surface
+  // doesn't feel empty. No cleanup — React StrictMode double-mount would
+  // otherwise cancel the timer chain and leave the typing indicator stuck.
   React.useEffect(() => {
     if (openingFiredRef.current) return
     openingFiredRef.current = true
     setTyping(true)
-    const id = setTimeout(() => {
+    setTimeout(() => {
       setTyping(false)
       setMessages((prev) => [
         ...prev,
         { id: nextId(), role: "case", text: OPENING_MESSAGE, ts: Date.now() },
       ])
+      // Seeded user question — CASE answers via the canonical hard-coded QA map.
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "user", text: SEEDED_QUESTION, ts: Date.now() },
+        ])
+        setTyping(true)
+        setTimeout(() => {
+          const answer = matchResponse(SEEDED_QUESTION)
+          setTyping(false)
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "case", text: answer, ts: Date.now() },
+          ])
+        }, T.seededAnswerTypingMs)
+      }, T.seededQuestionDelayMs)
     }, T.openingTypingMs)
-    return () => clearTimeout(id)
   }, [])
 
   // Auto-scroll on every new message / typing toggle
@@ -118,7 +139,7 @@ export function CaseChatPage({ persona }: { persona: Persona }) {
     }
   }
 
-  const showStarters = messages.length <= 1
+  const showStarters = messages.length <= 3
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -186,7 +207,7 @@ function PageHeader() {
           }}
         >
           Ask anything about your deal, your score, the remediation plan, lenders, or where the
-          agent fleet is in the cycle. CASE has the full deal file open in front of her.
+          agent fleet is in the cycle. CASE has the full deal file open in front of him.
         </p>
       </div>
       <Link
@@ -641,6 +662,21 @@ function Composer({
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   disabled: boolean
 }) {
+  const [attachTipShown, setAttachTipShown] = React.useState(false)
+  const attachTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  React.useEffect(() => {
+    return () => {
+      if (attachTimerRef.current) clearTimeout(attachTimerRef.current)
+    }
+  }, [])
+
+  function onAttach() {
+    setAttachTipShown(true)
+    if (attachTimerRef.current) clearTimeout(attachTimerRef.current)
+    attachTimerRef.current = setTimeout(() => setAttachTipShown(false), 2400)
+  }
+
   return (
     <form
       onSubmit={onSubmit}
@@ -689,6 +725,70 @@ function Composer({
             maxHeight: 120,
           }}
         />
+      </div>
+      <div style={{ position: "relative", flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={onAttach}
+          aria-label="Attach a document"
+          title="Attach a document"
+          className="case-attach-btn"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,.14)",
+            background: "rgba(255,255,255,.06)",
+            color: "rgba(245,245,245,.92)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M7 2.5v9M2.5 7h9" />
+          </svg>
+        </button>
+        {attachTipShown && (
+          <span
+            role="tooltip"
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 8px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+              padding: "8px 11px",
+              borderRadius: 10,
+              background: "rgba(250,249,247,.96)",
+              color: "#1a1612",
+              fontSize: 11.5,
+              lineHeight: 1.4,
+              fontFamily: inter,
+              whiteSpace: "nowrap",
+              boxShadow: "0 12px 28px rgba(0,0,0,.32)",
+              zIndex: 30,
+              animation: "casePageFadeIn .22s ease-out",
+            }}
+          >
+            Attach docs, PDFs, screenshots — CASE will classify and file them.
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "6px solid transparent",
+                borderRight: "6px solid transparent",
+                borderTop: "6px solid rgba(250,249,247,.96)",
+              }}
+            />
+          </span>
+        )}
       </div>
       <button
         type="submit"
@@ -941,6 +1041,11 @@ function ScopedStyles() {
       .case-send-btn:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 6px 18px rgba(44,140,112,.34);
+      }
+      .case-attach-btn:hover {
+        background: rgba(255,255,255,.12);
+        border-color: rgba(255,255,255,.22);
+        transform: translateY(-1px);
       }
     `}</style>
   )

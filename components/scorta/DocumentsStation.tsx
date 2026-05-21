@@ -331,7 +331,7 @@ export function DocumentsStation({
     setTimeout(() => {
       setApprovePhase("approved")
       setApprovedAt({ date, time })
-      setTimeout(() => router.push("/marketplace"), T.auditHoldMs)
+      setTimeout(() => router.push("/vdr"), T.auditHoldMs)
     }, T.approveSpinnerMs)
   }
 

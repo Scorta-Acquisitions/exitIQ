@@ -277,7 +277,7 @@ function StationHeader() {
             lineHeight: 1.1,
           }}
         >
-          Hand CASE anything she hasn&apos;t seen yet.
+          Hand CASE anything he hasn&apos;t seen yet.
         </h1>
         <p
           style={{
@@ -813,7 +813,7 @@ function NotesSurface({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Type anything CASE should know. Backstory on a contract, why a number looks high in a given month, the names of the staff who actually run the kitchen — she'll structure it."
+        placeholder="Type anything CASE should know. Backstory on a contract, why a number looks high in a given month, the names of the staff who actually run the kitchen — he'll structure it."
         rows={6}
         style={{
           width: "100%",

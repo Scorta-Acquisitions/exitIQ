@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React from "react"
 
@@ -236,6 +237,8 @@ export function ConnectStation({ persona }: { persona: Persona }) {
           }
         />
       </section>
+
+      <ManualUploadCard />
 
       {/* Sync result card (slides in after QB completes) ────────────── */}
       <SyncResultCard visible={qbPhase === "synced"} persona={persona} />
@@ -896,6 +899,79 @@ function Spinner({ light }: { light?: boolean }) {
 }
 
 // ── Sync result card ─────────────────────────────────────────────────
+// ── Manual upload card ───────────────────────────────────────────────────
+function ManualUploadCard() {
+  return (
+    <Link
+      href="/upload"
+      className="connect-manual-link"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "14px 18px",
+        borderRadius: 14,
+        background: "rgba(255,255,255,.72)",
+        border: "1px dashed var(--mint-edge, rgba(44,140,112,.36))",
+        textDecoration: "none",
+        color: "var(--t1)",
+        transition: "background 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          background: "var(--mint-soft, rgba(44,140,112,.12))",
+          border: "1px solid var(--mint-edge, rgba(44,140,112,.32))",
+          color: "var(--mint, #2c8c70)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <svg width={16} height={16} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 10V3" />
+          <path d="M4 5.6L7 2.6l3 3" />
+          <path d="M2.4 9.4v1.4A1.2 1.2 0 0 0 3.6 12h6.8a1.2 1.2 0 0 0 1.2-1.2V9.4" />
+        </svg>
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontFamily: mono,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: ".8px",
+            textTransform: "uppercase",
+            color: "var(--mint, #2c8c70)",
+            marginBottom: 3,
+          }}
+        >
+          Manual upload · CASE will classify
+        </div>
+        <div style={{ fontFamily: inter, fontSize: 13, color: "var(--t1)", lineHeight: 1.45 }}>
+          Need to upload physical documents, screenshots, or anything else the connectors can&apos;t pull? Use this link — CASE will figure out what it is and route it downstream.
+        </div>
+      </div>
+      <span
+        style={{
+          fontFamily: inter,
+          fontSize: 12,
+          fontWeight: 600,
+          color: "var(--t1)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Open upload →
+      </span>
+    </Link>
+  )
+}
+
 function SyncResultCard({ visible, persona }: { visible: boolean; persona: Persona }) {
   return (
     <section
@@ -1292,6 +1368,12 @@ function ScopedStyles() {
       .case-cta:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 10px 28px rgba(12,10,9,.22);
+      }
+      .connect-manual-link:hover {
+        background: #fff;
+        border-color: var(--mint, #2c8c70);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(44,140,112,.14);
       }
     `}</style>
   )

@@ -83,7 +83,7 @@ export const AGENT_DEFS: ReadonlyArray<AgentDef> = [
 
 /**
  * Route → CASE task line. CASE is always RUNNING during the demo;
- * her task copy reframes per station to match what the seller is doing.
+ * his task copy reframes per station to match what the seller is doing.
  */
 export const CASE_TASKS: Record<string, string> = {
   "/dashboard": "Reviewing intake · 2 gaps identified",
@@ -92,11 +92,11 @@ export const CASE_TASKS: Record<string, string> = {
   "/recast": "Reviewing recast output",
   "/risk": "Tracking owner-dependency remediation",
   "/boardroom": "Coordinating Boardroom investment committee",
+  "/score": "Calculating final Scorta Score",
   "/documents": "Supervising CIM assembly",
   "/vdr": "Monitoring VDR access · 2 requests pending",
-  "/score": "Calculating final Scorta Score",
-  "/marketplace": "Routing lender package",
-  "/outreach": "Managing buyer outreach cadence",
+  "/lenders": "Routing lender package",
+  "/buyers": "Managing buyer outreach cadence",
 }
 
 export function getCaseTask(route: string): string {
@@ -138,11 +138,11 @@ export function getAgentState(
       return { status: "running", task: null, amber: false }
 
     case "concentration":
-      // Reviewing once the lender/marketplace station opens, then completes by outreach.
-      if (phase >= PHASE.OUTREACH) {
+      // Reviewing once the lender station opens, then completes by buyer outreach.
+      if (phase >= PHASE.BUYERS) {
         return { status: "complete", task: "NJ Transit contract extension drafted", amber: false }
       }
-      if (phase >= PHASE.MARKETPLACE) {
+      if (phase >= PHASE.LENDERS) {
         return {
           status: "reviewing",
           task: "NJ Transit draft ready · awaiting your review",
@@ -152,8 +152,8 @@ export function getAgentState(
       return { status: "running", task: null, amber: false }
 
     case "owner_dep":
-      // Reviewing once outreach station opens (SOPs ready for Chandan to fill in).
-      if (phase >= PHASE.OUTREACH) {
+      // Reviewing once lender outreach opens (SOPs ready for Chandan to fill in).
+      if (phase >= PHASE.LENDERS) {
         return {
           status: "reviewing",
           task: "SOP templates ready · Chandan to fill in",
@@ -163,8 +163,8 @@ export function getAgentState(
       return { status: "running", task: null, amber: false }
 
     case "outreach":
-      // Activates once the Outreach station is opened.
-      if (phase >= PHASE.OUTREACH) {
+      // Activates once the Buyer Outreach station is opened.
+      if (phase >= PHASE.BUYERS) {
         return { status: "running", task: null, amber: false }
       }
       return { status: "waiting", task: null, amber: false }
@@ -173,18 +173,20 @@ export function getAgentState(
 
 const PHASE = {
   DISPATCH: 1,
-  DOCUMENTS: 2,
-  SCORE: 3,
-  MARKETPLACE: 4,
-  OUTREACH: 5,
+  SCORE: 2,
+  DOCUMENTS: 3,
+  VDR: 4,
+  LENDERS: 5,
+  BUYERS: 6,
 } as const
 
 const ROUTE_PHASE: Record<string, number> = {
   "/boardroom": PHASE.DISPATCH,
-  "/documents": PHASE.DOCUMENTS,
   "/score": PHASE.SCORE,
-  "/marketplace": PHASE.MARKETPLACE,
-  "/outreach": PHASE.OUTREACH,
+  "/documents": PHASE.DOCUMENTS,
+  "/vdr": PHASE.VDR,
+  "/lenders": PHASE.LENDERS,
+  "/buyers": PHASE.BUYERS,
 }
 
 /**

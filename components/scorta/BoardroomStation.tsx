@@ -365,7 +365,7 @@ export function BoardroomStation({ persona }: { persona: Persona }) {
       const time = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
       const auditAt = T.dispatchStaggerMs * WORK_ORDERS.length + 240
       setTimeout(() => setApprovedAt({ date, time }), auditAt)
-      setTimeout(() => router.push("/documents"), auditAt + T.auditHoldMs)
+      setTimeout(() => router.push("/dashboard"), auditAt + T.auditHoldMs)
     }, T.approveSpinnerMs)
   }
 
@@ -1601,7 +1601,7 @@ function DispatchGate({
               {phase === "dispatching"
                 ? DISPATCH_LINES[dispatchLineIdx]
                 : phase === "dispatched"
-                ? "Fleet dispatched · routing to CIM & Docs"
+                ? "Fleet dispatched · routing to your command center"
                 : "Dispatch Agent Fleet"}
             </span>
             {phase === "idle" && <span style={{ transform: "translateY(-1px)" }}>→</span>}

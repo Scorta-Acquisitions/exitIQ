@@ -31,6 +31,8 @@ type LaunchPhase = "idle" | "launching" | "launched"
 type ApprovePhase = "idle" | "approving" | "approved"
 type BuyerColumn = "identified" | "contacted" | "interested" | "nda"
 
+export type OutreachMode = "lenders" | "buyers"
+
 // ── Lender data (DEMO_PERSONA.md Section 7 + 11) ────────────────────────────
 type Lender = {
   id: string
@@ -213,15 +215,15 @@ const DEAL_STRIP: ReadonlyArray<string> = [
   "Recast",
   "Risk",
   "Boardroom",
-  "CIM",
   "Score",
+  "CIM",
   "VDR",
   "Lenders",
-  "Outreach",
+  "Buyers",
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-export function OutreachStation({ persona }: { persona: Persona }) {
+export function OutreachStation({ persona, mode }: { persona: Persona; mode: OutreachMode }) {
   const router = useRouter()
   void router // reserved — this is a terminal station; no nav
 
@@ -393,15 +395,16 @@ export function OutreachStation({ persona }: { persona: Persona }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <ScopedStyles />
-      <StationHeader briefing={phase === "briefing"} />
-      <CaseIntro persona={persona} />
+      <StationHeader briefing={phase === "briefing"} mode={mode} />
+      <CaseIntro persona={persona} mode={mode} />
 
       {phase === "briefing" ? (
-        <BriefingSurface idx={briefingIdx} />
+        <BriefingSurface idx={briefingIdx} mode={mode} />
       ) : (
         <>
           <TwoColumnSurface
             visible={surfaceVisible}
+            mode={mode}
             lenderSelected={lenderSelected}
             lenderSubmitted={lenderSubmitted}
             submitPhase={submitPhase}
@@ -423,6 +426,7 @@ export function OutreachStation({ persona }: { persona: Persona }) {
             <ApprovalGate
               visible={surfaceVisible}
               persona={persona}
+              mode={mode}
               phase={approvePhase}
               lineIdx={approveLineIdx}
               approvedAt={approvedAt}
@@ -433,6 +437,7 @@ export function OutreachStation({ persona }: { persona: Persona }) {
           ) : (
             <PostApprovalBar
               persona={persona}
+              mode={mode}
               approvedAt={approvedAt}
               lenderSubmittedCount={Object.keys(lenderSubmitted).length}
               activeSequenceCount={
@@ -449,7 +454,14 @@ export function OutreachStation({ persona }: { persona: Persona }) {
 }
 
 // ── Station header ─────────────────────────────────────────────────────────
-function StationHeader({ briefing }: { briefing: boolean }) {
+function StationHeader({ briefing, mode }: { briefing: boolean; mode: OutreachMode }) {
+  const isLenders = mode === "lenders"
+  const stationLabel = isLenders ? "Station 10 · /lenders" : "Station 11 · /buyers"
+  const agentLabel = isLenders ? "Lender Ops Agent" : "Outreach Agent"
+  const title = isLenders ? "Lender Outreach" : "Buyer Outreach"
+  const blurb = isLenders
+    ? "The Lender Ops Agent assembles your SBA 7(a) package and submits it to matched lenders. Every commitment routes back here for your review. Nothing leaves without your approval."
+    : "The Outreach Agent runs personalized buyer sequences against Scorta's verified network. Every reply, NDA, and LOI routes back here for your review. Nothing leaves without your approval."
   return (
     <header style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -463,7 +475,7 @@ function StationHeader({ briefing }: { briefing: boolean }) {
             textTransform: "uppercase",
           }}
         >
-          Station 10 · /outreach
+          {stationLabel}
         </div>
         <div style={{ height: 1, width: 22, background: "var(--div)" }} />
         <div
@@ -479,7 +491,7 @@ function StationHeader({ briefing }: { briefing: boolean }) {
             gap: 8,
           }}
         >
-          Lender Ops · Outreach Agents
+          {agentLabel}
           {briefing && (
             <span
               aria-hidden
@@ -506,7 +518,7 @@ function StationHeader({ briefing }: { briefing: boolean }) {
           marginTop: 4,
         }}
       >
-        Lenders, Buyers & Outreach
+        {title}
       </h1>
       <p
         style={{
@@ -517,17 +529,19 @@ function StationHeader({ briefing }: { briefing: boolean }) {
           fontFamily: inter,
         }}
       >
-        Two coordinated agents run this station. The Lender Ops Agent assembles and submits the
-        SBA package to matched lenders. The Outreach Agent runs personalized buyer sequences
-        against Scorta&apos;s verified network. Nothing leaves without your approval.
+        {blurb}
       </p>
     </header>
   )
 }
 
 // ── CASE intro ─────────────────────────────────────────────────────────────
-function CaseIntro({ persona }: { persona: Persona }) {
+function CaseIntro({ persona, mode }: { persona: Persona; mode: OutreachMode }) {
   void persona
+  const body =
+    mode === "lenders"
+      ? "The Lender Ops Agent has matched three SBA lenders against Palace's approved financials. Northeast Community Bank is the top match with a 94% deal-profile fit. Review the package, choose which lenders to include, and authorize submission."
+      : "The Outreach Agent has built sequences for two buyer profiles — SBA-Backed Operator and Micro-PE. Search Fund outreach is held pending the NJ Transit contract confirmation. Review the pipeline and authorize launch."
   return (
     <div
       style={{
@@ -570,11 +584,7 @@ function CaseIntro({ persona }: { persona: Persona }) {
           CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
-          The Lender Ops Agent has matched three SBA lenders against Palace&apos;s approved
-          financials. The Outreach Agent has built sequences for two buyer profiles — SBA-Backed
-          Operator and Micro-PE. Search Fund outreach is held pending the NJ Transit contract
-          confirmation. Nothing goes out until you approve it. Review both pipelines and
-          authorize.
+          {body}
         </div>
       </div>
     </div>
@@ -582,18 +592,21 @@ function CaseIntro({ persona }: { persona: Persona }) {
 }
 
 // ── Briefing surface (dual stream) ─────────────────────────────────────────
-function BriefingSurface({ idx }: { idx: number }) {
+function BriefingSurface({ idx, mode }: { idx: number; mode: OutreachMode }) {
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gridTemplateColumns: "minmax(0, 1fr)",
         gap: 16,
         animation: "outreachFadeIn .32s ease-out",
       }}
     >
-      <BriefingThread title="LENDER OPS AGENT" lines={BRIEFING_LENDER} idx={idx} />
-      <BriefingThread title="OUTREACH AGENT" lines={BRIEFING_BUYER} idx={idx} />
+      {mode === "lenders" ? (
+        <BriefingThread title="LENDER OPS AGENT" lines={BRIEFING_LENDER} idx={idx} />
+      ) : (
+        <BriefingThread title="OUTREACH AGENT" lines={BRIEFING_BUYER} idx={idx} />
+      )}
     </div>
   )
 }
@@ -672,6 +685,7 @@ function BriefingThread({
 // ── Two-column main surface ────────────────────────────────────────────────
 function TwoColumnSurface({
   visible,
+  mode,
   lenderSelected,
   lenderSubmitted,
   submitPhase,
@@ -689,6 +703,7 @@ function TwoColumnSurface({
   toggleExpanded,
 }: {
   visible: boolean
+  mode: OutreachMode
   lenderSelected: Record<string, boolean>
   lenderSubmitted: Record<string, string>
   submitPhase: SubmitPhase
@@ -717,25 +732,28 @@ function TwoColumnSurface({
         transition: `opacity ${T.surfaceRevealMs}ms ease-out, transform ${T.surfaceRevealMs}ms ease-out`,
       }}
     >
-      <LenderColumn
-        lenderSelected={lenderSelected}
-        lenderSubmitted={lenderSubmitted}
-        submitPhase={submitPhase}
-        onToggle={onToggleLender}
-        onSubmit={onSubmitLenders}
-        onVdrTip={onVdrTip}
-        vdrTipShown={vdrTipShown}
-      />
-      <BuyerColumnPanel
-        buyerColumn={buyerColumn}
-        launchPhase={launchPhase}
-        launchedAt={launchedAt}
-        expanded={expanded}
-        onLaunch={onLaunchBuyer}
-        onOverride={onOverrideHold}
-        overrideTipShown={overrideTipShown}
-        toggleExpanded={toggleExpanded}
-      />
+      {mode === "lenders" ? (
+        <LenderColumn
+          lenderSelected={lenderSelected}
+          lenderSubmitted={lenderSubmitted}
+          submitPhase={submitPhase}
+          onToggle={onToggleLender}
+          onSubmit={onSubmitLenders}
+          onVdrTip={onVdrTip}
+          vdrTipShown={vdrTipShown}
+        />
+      ) : (
+        <BuyerColumnPanel
+          buyerColumn={buyerColumn}
+          launchPhase={launchPhase}
+          launchedAt={launchedAt}
+          expanded={expanded}
+          onLaunch={onLaunchBuyer}
+          onOverride={onOverrideHold}
+          overrideTipShown={overrideTipShown}
+          toggleExpanded={toggleExpanded}
+        />
+      )}
     </section>
   )
 }
@@ -1973,6 +1991,7 @@ function HoldBlock({
 function ApprovalGate({
   visible,
   persona,
+  mode,
   phase,
   lineIdx,
   approvedAt,
@@ -1982,6 +2001,7 @@ function ApprovalGate({
 }: {
   visible: boolean
   persona: Persona
+  mode: OutreachMode
   phase: ApprovePhase
   lineIdx: number
   approvedAt: { date: string; time: string } | null
@@ -1989,6 +2009,21 @@ function ApprovalGate({
   onReviewPlan: () => void
   reviewTipShown: boolean
 }) {
+  const isLenders = mode === "lenders"
+  const eyebrow = isLenders
+    ? "Lender Ops Agent · awaiting your approval"
+    : "Outreach Agent · awaiting your approval"
+  const headline = isLenders
+    ? "Authorize lender package submission."
+    : "Authorize buyer outreach sequences."
+  const body = isLenders
+    ? "Approving this plan authorizes the Lender Ops Agent to submit the SBA package to your selected lenders. Every commitment and term sheet will route back here for your review. You can pause or revoke access at any time from the VDR."
+    : "Approving this plan authorizes the Outreach Agent to launch buyer sequences against Scorta's verified network. Every reply, NDA, and LOI will route back here for your review. You can pause or revoke any sequence at any time."
+  const reviewLabel = isLenders ? "Review lender plan" : "Review outreach plan"
+  const auditCopy = isLenders
+    ? "Lender submission authorized"
+    : "Buyer outreach authorized"
+  const agentsLabel = isLenders ? "Lender Ops Agent active" : "Outreach Agent active"
   return (
     <section
       aria-hidden={!visible}
@@ -2029,16 +2064,13 @@ function ApprovalGate({
               marginBottom: 4,
             }}
           >
-            Lender Ops Agent + Outreach Agent · awaiting your approval
+            {eyebrow}
           </div>
           <div style={{ fontSize: 14.5, color: "var(--t1)", lineHeight: 1.45, fontWeight: 600 }}>
-            Authorize the full outreach and lender submission strategy.
+            {headline}
           </div>
           <div style={{ fontSize: 12.5, color: "var(--t2)", lineHeight: 1.55, marginTop: 4 }}>
-            Approving this plan authorizes the Lender Ops Agent to submit the SBA package to
-            selected lenders and the Outreach Agent to launch buyer sequences. Every response,
-            NDA, and lender communication will route back here for your review. You can pause or
-            revoke access at any time from the VDR.
+            {body}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
@@ -2062,7 +2094,7 @@ function ApprovalGate({
                 transition: "transform 180ms ease-out, box-shadow 180ms ease-out",
               }}
             >
-              Review outreach plan
+              {reviewLabel}
             </button>
             {reviewTipShown && (
               <span
@@ -2124,7 +2156,7 @@ function ApprovalGate({
               {phase === "approving"
                 ? APPROVE_LINES[lineIdx]
                 : phase === "approved"
-                ? "Outreach authorized"
+                ? auditCopy
                 : "Authorize & Launch"}
             </span>
             {phase === "idle" && <span style={{ transform: "translateY(-1px)" }}>→</span>}
@@ -2152,10 +2184,9 @@ function ApprovalGate({
             <path d="M2 6.4L4.6 9 10 3.4" />
           </svg>
           <span>
-            Lender submission and buyer outreach authorized by {persona.identity.displayName} ·{" "}
-            {approvedAt.date} · {approvedAt.time} · Lender Ops Agent and Outreach Agent active. All
-            responses route to {persona.identity.firstName} for review before any commitment is
-            made.
+            {auditCopy} by {persona.identity.displayName} ·{" "}
+            {approvedAt.date} · {approvedAt.time} · {agentsLabel}. All responses route to{" "}
+            {persona.identity.firstName} for review before any commitment is made.
           </span>
         </div>
       )}
@@ -2166,11 +2197,13 @@ function ApprovalGate({
 // ── Post-approval status bar ──────────────────────────────────────────────
 function PostApprovalBar({
   persona,
+  mode,
   approvedAt,
   lenderSubmittedCount,
   activeSequenceCount,
 }: {
   persona: Persona
+  mode: OutreachMode
   approvedAt: { date: string; time: string }
   lenderSubmittedCount: number
   activeSequenceCount: number
@@ -2204,12 +2237,15 @@ function PostApprovalBar({
             Deal · IN MARKET
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <StatusLine
-              label={`Lender Ops Agent — monitoring ${lenderSubmittedCount} ${lenderSubmittedCount === 1 ? "submission" : "submissions"}`}
-            />
-            <StatusLine
-              label={`Outreach Agent — ${activeSequenceCount} ${activeSequenceCount === 1 ? "sequence" : "sequences"} active · 1 held`}
-            />
+            {mode === "lenders" ? (
+              <StatusLine
+                label={`Lender Ops Agent — monitoring ${lenderSubmittedCount} ${lenderSubmittedCount === 1 ? "submission" : "submissions"}`}
+              />
+            ) : (
+              <StatusLine
+                label={`Outreach Agent — ${activeSequenceCount} ${activeSequenceCount === 1 ? "sequence" : "sequences"} active · 1 held`}
+              />
+            )}
           </div>
         </div>
         <div

@@ -140,16 +140,20 @@ export const PERSONA = {
 } as const
 
 /**
- * Station Wayfinder — the 9-route platform shell.
- * Order matches DEMO_SPRINT.md Section 5. Mirrors the demo's left-rail spine.
+ * Station Wayfinder — the platform shell.
+ * Mirrors the demo's left-rail spine, grouped into two stages:
+ * Exit Prep & Readiness (underwriting) and Brokerage Services.
  */
 export type StationStatus = "shipped" | "active" | "locked"
+
+export type StationGroup = "underwriting" | "brokerage"
 
 export type Station = {
   href: string
   label: string
   sublabel: string
   agent: string
+  group: StationGroup
   /** Default state. The current route is always rendered as `active` regardless. */
   state: StationStatus
   /** What the user must complete before CASE unlocks this station — shown in the locked tooltip. */
@@ -157,15 +161,18 @@ export type Station = {
 }
 
 export const STATIONS: ReadonlyArray<Station> = [
-  { href: "/dashboard", label: "Seller Home", sublabel: "Station 02", agent: "Case Manager", state: "shipped" },
-  { href: "/connect", label: "Platform Connectors", sublabel: "Station 03", agent: "Ingestion", state: "shipped", prereq: "you approve the prep plan" },
-  { href: "/ingestion", label: "Data Processing", sublabel: "Station 04", agent: "Ingestion", state: "shipped", prereq: "Platform Connectors are authorized" },
-  { href: "/recast", label: "Financials Recast", sublabel: "Station 05", agent: "Recast · Boardroom", state: "shipped", prereq: "the Ingestion Agent finishes classifying" },
-  { href: "/risk", label: "Risk Analysis", sublabel: "Station 06", agent: "Owner-Dependency · Concentration", state: "shipped", prereq: "the Recast Agent posts add-backs" },
-  { href: "/boardroom", label: "The Boardroom", sublabel: "Station 06b", agent: "Boardroom", state: "active", prereq: "the Owner-Dependency remediation plan is reviewed" },
-  { href: "/documents", label: "CIM & Docs", sublabel: "Station 07", agent: "CIM Agent", state: "active", prereq: "the Boardroom dispatches the agent fleet" },
-  { href: "/vdr", label: "Virtual Data Room", sublabel: "Station 07b", agent: "VDR · Case Manager", state: "active" },
-  { href: "/score", label: "Scorta Score", sublabel: "Station 08", agent: "Case Manager", state: "locked", prereq: "the CIM draft is reviewed" },
-  { href: "/marketplace", label: "Lenders / Listings", sublabel: "Station 09", agent: "Lender Ops", state: "locked", prereq: "your Scorta Score is finalized" },
-  { href: "/outreach", label: "Buyer & Lender Outreach", sublabel: "Station 10", agent: "Lender Ops · Outreach", state: "active", prereq: "lenders are matched" },
+  // ── Exit Prep & Readiness (underwriting) ─────────────────────────────────
+  { href: "/dashboard", label: "Seller Home", sublabel: "Station 02", agent: "Case Manager", group: "underwriting", state: "shipped" },
+  { href: "/connect", label: "Platform Connectors", sublabel: "Station 03", agent: "Ingestion", group: "underwriting", state: "shipped", prereq: "you approve the prep plan" },
+  { href: "/ingestion", label: "Data Processing", sublabel: "Station 04", agent: "Ingestion", group: "underwriting", state: "shipped", prereq: "Platform Connectors are authorized" },
+  { href: "/recast", label: "Financials Recast", sublabel: "Station 05", agent: "Recast · Boardroom", group: "underwriting", state: "shipped", prereq: "the Ingestion Agent finishes classifying" },
+  { href: "/risk", label: "Risk Analysis", sublabel: "Station 06", agent: "Owner-Dependency · Concentration", group: "underwriting", state: "shipped", prereq: "the Recast Agent posts add-backs" },
+  { href: "/boardroom", label: "The Boardroom", sublabel: "Station 06b", agent: "Boardroom", group: "underwriting", state: "active", prereq: "the Owner-Dependency remediation plan is reviewed" },
+  { href: "/score", label: "Scorta Score", sublabel: "Station 07", agent: "Case Manager", group: "underwriting", state: "locked", prereq: "the Boardroom dispatches the agent fleet" },
+
+  // ── Brokerage Services ───────────────────────────────────────────────────
+  { href: "/documents", label: "CIM & Docs", sublabel: "Station 08", agent: "CIM Agent", group: "brokerage", state: "active", prereq: "the Boardroom dispatches the agent fleet" },
+  { href: "/vdr", label: "Virtual Data Room", sublabel: "Station 09", agent: "VDR · Case Manager", group: "brokerage", state: "active" },
+  { href: "/lenders", label: "Lender Outreach", sublabel: "Station 10", agent: "Lender Ops", group: "brokerage", state: "active", prereq: "the CIM is published to the VDR" },
+  { href: "/buyers", label: "Buyer Outreach", sublabel: "Station 11", agent: "Outreach", group: "brokerage", state: "active", prereq: "lenders are matched" },
 ]

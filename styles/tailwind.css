@@ -31,9 +31,9 @@
 
 /* ── Cream theme ───────────────────────────────────────────────────────────── */
 [data-theme="cream"] {
-  --t1: rgba(12,10,9,.9);
-  --t2: rgba(12,10,9,.58);
-  --t3: rgba(12,10,9,.4);
+  --t1: rgba(12,10,9,.95);
+  --t2: rgba(12,10,9,.62);
+  --t3: rgba(12,10,9,.42);
   --t4: rgba(12,10,9,.28);
   --t5: rgba(12,10,9,.16);
   --s1: rgba(0,0,0,.055);
@@ -42,28 +42,30 @@
   --b2: rgba(0,0,0,.1);
   --b3: rgba(0,0,0,.07);
   --div: rgba(0,0,0,.07);
-  --btn-bg: rgba(12,10,9,.9);
+  --btn-bg: rgba(12,10,9,.92);
   --btn-fg: rgba(245,245,245,.95);
-  --page-bg: #f2f0eb;
+  --page-bg: #f4efe5;
   --footer-bg: #e8e4da;
   --footer-border: rgba(0,0,0,.08);
-  --glass-bg: rgba(255,255,255,.72);
-  --glass-bg-strong: rgba(255,255,255,.82);
+  --glass-bg: rgba(255,255,255,.74);
+  --glass-bg-strong: rgba(255,255,255,.86);
   --glass-border: rgba(0,0,0,.08);
   --glass-edge: rgba(0,0,0,.07);
-  --glass-top: rgba(255,255,255,.9);
-  --glass-shadow: 0 8px 32px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(0,0,0,.04);
-  --glass-shadow-strong: 0 1px 0 rgba(255,255,255,.92) inset, 0 -1px 0 rgba(0,0,0,.06) inset, 0 12px 36px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.04);
-  --panel-glow-on: 0 8px 32px rgba(0,0,0,.07), 0 0 40px rgba(16,185,129,.06), inset 0 1px 0 rgba(255,255,255,.9);
-  --panel-glow-off: 0 8px 32px rgba(0,0,0,.07), inset 0 1px 0 rgba(255,255,255,.9);
-  --scan-color: rgba(16,185,129,.18);
+  --glass-top: rgba(255,255,255,.92);
+  --glass-shadow: 0 10px 36px rgba(20,15,8,.09), inset 0 1px 0 rgba(255,255,255,.92), inset 0 -1px 0 rgba(0,0,0,.05);
+  --glass-shadow-strong: 0 1px 0 rgba(255,255,255,.94) inset, 0 -1px 0 rgba(0,0,0,.07) inset, 0 18px 44px rgba(20,15,8,.10), 0 3px 8px rgba(20,15,8,.05);
+  --panel-glow-on: 0 10px 36px rgba(20,15,8,.09), 0 0 48px rgba(31,142,112,.10), inset 0 1px 0 rgba(255,255,255,.92);
+  --panel-glow-off: 0 10px 36px rgba(20,15,8,.09), inset 0 1px 0 rgba(255,255,255,.92);
+  --scan-color: rgba(44,140,112,.26);
   --inp-bg: rgba(255,255,255,.7);
   --inp-border: rgba(0,0,0,.12);
   --dd-bg: rgba(245,243,238,.97);
   /* ── Report accent palette ── */
   --mint:       #2c8c70;
-  --mint-soft:  rgba(44,140,112,.10);
-  --mint-edge:  rgba(44,140,112,.28);
+  --mint-deep:  #1d7d62;
+  --mint-soft:  rgba(44,140,112,.12);
+  --mint-edge:  rgba(44,140,112,.32);
+  --mint-glow:  0 0 0 1px rgba(44,140,112,.20), 0 8px 20px rgba(44,140,112,.22);
   --peach:      #b86a3e;
   --peach-soft: rgba(184,106,62,.10);
   --peach-edge: rgba(184,106,62,.28);
@@ -74,6 +76,35 @@
   --sky-soft:   rgba(74,123,168,.10);
   --sky-edge:   rgba(74,123,168,.26);
   --crit:       #c44e2c;
+  --crit-soft:  rgba(196,78,44,.10);
+  --crit-edge:  rgba(196,78,44,.28);
+  --gold:       #b6892c;
+  --gold-soft:  rgba(182,137,44,.12);
+  --gold-edge:  rgba(182,137,44,.34);
+}
+
+/* ── Emphasis utilities (cream theme) ───────────────────────────────────────── */
+[data-theme="cream"] .spotlight {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.94) inset,
+    0 0 0 1px var(--mint-edge),
+    0 22px 50px rgba(20,15,8,.10),
+    0 6px 14px rgba(44,140,112,.12);
+}
+[data-theme="cream"] .cta-glow {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.20) inset,
+    0 10px 24px rgba(44,140,112,.34),
+    0 2px 6px rgba(44,140,112,.20);
+}
+[data-theme="cream"] .live-pulse {
+  box-shadow: 0 0 0 0 rgba(44,140,112,.55);
+  animation: livePulse 2.2s ease-out infinite;
+}
+@keyframes livePulse {
+  0%   { box-shadow: 0 0 0 0   rgba(44,140,112,.55); }
+  70%  { box-shadow: 0 0 0 12px rgba(44,140,112,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(44,140,112,0);   }
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────────── */

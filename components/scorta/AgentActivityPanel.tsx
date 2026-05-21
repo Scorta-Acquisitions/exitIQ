@@ -130,7 +130,11 @@ export function AgentActivityPanel() {
         {collapsed ? (
           <CollapsedRail activeCount={activeCount} dispatched={dispatched} onExpand={toggle} />
         ) : (
-          <ExpandedBody route={route} dispatched={dispatched} showOnlyCase={showOnlyCase} />
+          <ExpandedBody
+            route={route}
+            dispatched={dispatched}
+            showOnlyCase={showOnlyCase}
+          />
         )}
       </aside>
     </>
@@ -257,7 +261,11 @@ function ExpandedBody({
         padding: `${TOPBAR_CLEARANCE}px 18px 18px 22px`,
       }}
     >
-      <Header allComplete={allComplete} runningCount={runningCount} dispatched={dispatched} />
+      <Header
+        allComplete={allComplete}
+        runningCount={runningCount}
+        dispatched={dispatched}
+      />
 
       <CaseRow route={route} />
 

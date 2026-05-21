@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import React from "react"
 
+import { RECAST_THINKING_FLAG } from "@/lib/auditTrail"
 import type { PERSONA as PersonaShape } from "@/lib/persona"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
@@ -51,6 +52,10 @@ export function RecastStation({
   const [pdfTipShown, setPdfTipShown] = React.useState(false)
   const pdfTipTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Edit Recast tooltip
+  const [editTipShown, setEditTipShown] = React.useState(false)
+  const editTipTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Add-back collapse
   const [narrativesOpen, setNarrativesOpen] = React.useState(true)
 
@@ -64,7 +69,18 @@ export function RecastStation({
     timers.push(
       setTimeout(() => {
         setWorking(false)
-        setTimeout(() => setSurfaceVisible(true), 60)
+        setTimeout(() => {
+          setSurfaceVisible(true)
+          // Log the Recast Agent's thought-process trace to the permanent
+          // audit trail. The modal reads this flag to mark the entry as
+          // "Just logged" and auto-expand it.
+          try {
+            sessionStorage.setItem(RECAST_THINKING_FLAG, "1")
+          } catch {
+            // sessionStorage may be unavailable; the audit entry is still
+            // present in the trail, just without the freshly-logged badge.
+          }
+        }, 60)
       }, T.agentWorkingMs),
     )
     return () => timers.forEach(clearTimeout)
@@ -98,6 +114,12 @@ export function RecastStation({
     pdfTipTimerRef.current = setTimeout(() => setPdfTipShown(false), T.pdfTipMs)
   }
 
+  function onEditRecast() {
+    setEditTipShown(true)
+    if (editTipTimerRef.current) clearTimeout(editTipTimerRef.current)
+    editTipTimerRef.current = setTimeout(() => setEditTipShown(false), T.pdfTipMs)
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       <ScopedStyles />
@@ -127,6 +149,8 @@ export function RecastStation({
           onApprove={onApprove}
           onDownloadPdf={onDownloadPdf}
           pdfTipShown={pdfTipShown}
+          onEditRecast={onEditRecast}
+          editTipShown={editTipShown}
         />
       )}
     </div>
@@ -1155,6 +1179,8 @@ function ApproveGate({
   onApprove,
   onDownloadPdf,
   pdfTipShown,
+  onEditRecast,
+  editTipShown,
 }: {
   visible: boolean
   persona: Persona
@@ -1163,6 +1189,8 @@ function ApproveGate({
   onApprove: () => void
   onDownloadPdf: () => void
   pdfTipShown: boolean
+  onEditRecast: () => void
+  editTipShown: boolean
 }) {
   return (
     <section
@@ -1228,6 +1256,73 @@ function ApproveGate({
             position: "relative",
           }}
         >
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={onEditRecast}
+              disabled={phase !== "idle"}
+              className="recast-secondary"
+              style={{
+                height: 44,
+                padding: "0 16px",
+                borderRadius: 9999,
+                background: "rgba(255,255,255,.85)",
+                color: "var(--t1)",
+                border: "1px solid var(--glass-edge, rgba(0,0,0,.10))",
+                fontSize: 12.5,
+                fontWeight: 600,
+                fontFamily: inter,
+                cursor: phase === "idle" ? "pointer" : "default",
+                opacity: phase === "idle" ? 1 : 0.55,
+                transition: "transform 180ms ease-out, box-shadow 180ms ease-out",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              <svg width={13} height={13} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M2 12h10" />
+                <path d="M9 2.5l2.5 2.5L5 11.5H2.5V9z" />
+              </svg>
+              Edit Recast
+            </button>
+            {editTipShown && (
+              <span
+                role="tooltip"
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  bottom: "calc(100% + 8px)",
+                  padding: "9px 12px",
+                  borderRadius: 10,
+                  background: "rgba(12,10,9,.92)",
+                  color: "rgba(245,245,245,.95)",
+                  fontSize: 11.5,
+                  lineHeight: 1.45,
+                  fontFamily: inter,
+                  whiteSpace: "normal",
+                  width: 260,
+                  boxShadow: "0 10px 30px rgba(0,0,0,.18)",
+                  animation: "recastLineIn .22s ease-out",
+                  zIndex: 30,
+                }}
+              >
+                Open the editable add-back schedule. Changes route back to the Recast Agent for re-normalization.
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 18,
+                    width: 0,
+                    height: 0,
+                    borderLeft: "6px solid transparent",
+                    borderRight: "6px solid transparent",
+                    borderTop: "6px solid rgba(12,10,9,.92)",
+                  }}
+                />
+              </span>
+            )}
+          </div>
           <div style={{ position: "relative" }}>
             <button
               onClick={onDownloadPdf}
