@@ -12,6 +12,7 @@ import {
   type AgentStatus,
   getAgentState,
 } from "@/lib/agentActivity"
+import { getDealClock } from "@/lib/dealClock"
 import type { PERSONA as PersonaShape } from "@/lib/persona"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
@@ -135,6 +136,7 @@ function DealInMotionBanner({ persona }: { persona: Persona }) {
           The fleet is dispatched and working on your exit. Here&apos;s where each agent is right now.
         </div>
       </div>
+      <DealClockStats />
       <Link
         href="/boardroom"
         className="scorta-rail-link"
@@ -160,6 +162,41 @@ function DealInMotionBanner({ persona }: { persona: Persona }) {
         }
       `}</style>
     </section>
+  )
+}
+
+// ── Deal Clock stats — speed-to-close proof, inline in the dashboard banner ──
+function DealClockStats() {
+  const clock = getDealClock()
+  return (
+    <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+      <DealClockStat value={String(clock.dayNumber)} label="Day" />
+      <DealClockStat value={String(clock.agentActionCount)} label="Agent actions logged" />
+      <DealClockStat value={`${clock.brokerAvgDaysToClose}d`} label="Broker avg to close" />
+    </div>
+  )
+}
+
+function DealClockStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontFamily: garamond, fontSize: 20, fontWeight: 500, color: "var(--t1)", lineHeight: 1 }}>
+        {value}
+      </div>
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: 9,
+          color: "var(--t3)",
+          letterSpacing: ".5px",
+          textTransform: "uppercase",
+          marginTop: 3,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {label}
+      </div>
+    </div>
   )
 }
 

@@ -254,7 +254,7 @@ function Typewriter({
 
   React.useEffect(() => {
     setN(0)
-    let raf = 0
+    const raf = 0
     let mounted = true
     const timers: Array<ReturnType<typeof setTimeout>> = []
     const start = setTimeout(() => {

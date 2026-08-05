@@ -6,12 +6,14 @@ import React from "react"
 
 import { getCaseTask } from "@/lib/agentActivity"
 import {
+  FALLBACK_RESPONSE,
   getProactiveMessage,
   getQuickChips,
-  matchResponse,
+  matchQAEntry,
   OPENING_MESSAGE,
   typingDelayFor,
 } from "@/lib/caseChat"
+import { streamCaseAnswer } from "@/lib/caseChatClient"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -70,6 +72,7 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
   const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const peekTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const readinessTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const liveAbortRef = React.useRef<AbortController | null>(null)
 
   // Keep a ref so async timers can read the current open state without
   // re-firing on every render.
@@ -149,6 +152,7 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
     return () => {
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current)
       if (readinessTimerRef.current) clearTimeout(readinessTimerRef.current)
+      liveAbortRef.current?.abort()
     }
   }, [])
 
@@ -189,26 +193,64 @@ export function CASEChat({ currentRoute }: { currentRoute: string }) {
     }
   }, [])
 
-  function sendQuestion(text: string) {
+  async function sendQuestion(text: string) {
     const trimmed = text.trim()
     if (!trimmed) return
-    const response = matchResponse(trimmed)
-    const delay = typingDelayFor(response)
 
     setMessages((prev) => [
       ...prev,
       { id: nextId(), role: "user", text: trimmed, ts: Date.now() },
     ])
     setInputValue("")
+
+    // Fast path — the hand-written QA_MAP resolves instantly with no network call.
+    const cached = matchQAEntry(trimmed)
+    if (cached) {
+      const delay = typingDelayFor(cached)
+      setTyping(true)
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      typingTimerRef.current = setTimeout(() => {
+        setTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "case", text: cached, ts: Date.now() },
+        ])
+      }, delay)
+      return
+    }
+
+    // Live path — anything the fast-path cache misses goes to the Case Manager Agent.
+    liveAbortRef.current?.abort()
+    const controller = new AbortController()
+    liveAbortRef.current = controller
     setTyping(true)
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-    typingTimerRef.current = setTimeout(() => {
+    const liveId = nextId()
+    let started = false
+
+    try {
+      await streamCaseAnswer({
+        message: trimmed,
+        route: currentRoute,
+        signal: controller.signal,
+        onDelta: (accumulated) => {
+          setMessages((prev) => {
+            if (!started) {
+              started = true
+              setTyping(false)
+              return [...prev, { id: liveId, role: "case", text: accumulated, ts: Date.now() }]
+            }
+            return prev.map((m) => (m.id === liveId ? { ...m, text: accumulated } : m))
+          })
+        },
+      })
+    } catch {
+      if (controller.signal.aborted) return
       setTyping(false)
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "case", text: response, ts: Date.now() },
+        { id: nextId(), role: "case", text: FALLBACK_RESPONSE, ts: Date.now() },
       ])
-    }, delay)
+    }
   }
 
   function onSubmit(e: React.FormEvent) {

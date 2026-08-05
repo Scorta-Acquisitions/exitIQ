@@ -3,8 +3,17 @@
 import Link from "next/link"
 import React from "react"
 
-import { matchResponse, OPENING_MESSAGE, typingDelayFor } from "@/lib/caseChat"
+import {
+  FALLBACK_RESPONSE,
+  matchQAEntry,
+  matchResponse,
+  OPENING_MESSAGE,
+  typingDelayFor,
+} from "@/lib/caseChat"
+import { streamCaseAnswer } from "@/lib/caseChatClient"
 import type { PERSONA as PersonaShape } from "@/lib/persona"
+
+const CASE_PAGE_ROUTE = "/case"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -53,6 +62,7 @@ export function CaseChatPage({ persona }: { persona: Persona }) {
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null)
   const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const openingFiredRef = React.useRef(false)
+  const liveAbortRef = React.useRef<AbortController | null>(null)
 
   // Fire CASE's opening once on mount, then a seeded Q&A so the surface
   // doesn't feel empty. No cleanup — React StrictMode double-mount would
@@ -102,29 +112,68 @@ export function CaseChatPage({ persona }: { persona: Persona }) {
   React.useEffect(() => {
     return () => {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      liveAbortRef.current?.abort()
     }
   }, [])
 
-  function sendQuestion(text: string) {
+  async function sendQuestion(text: string) {
     const trimmed = text.trim()
     if (!trimmed) return
-    const response = matchResponse(trimmed)
-    const delay = typingDelayFor(response)
 
     setMessages((prev) => [
       ...prev,
       { id: nextId(), role: "user", text: trimmed, ts: Date.now() },
     ])
     setInputValue("")
+
+    // Fast path — the hand-written QA_MAP resolves instantly with no network call.
+    const cached = matchQAEntry(trimmed)
+    if (cached) {
+      const delay = typingDelayFor(cached)
+      setTyping(true)
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      typingTimerRef.current = setTimeout(() => {
+        setTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "case", text: cached, ts: Date.now() },
+        ])
+      }, delay)
+      return
+    }
+
+    // Live path — anything the fast-path cache misses goes to the Case Manager Agent.
+    liveAbortRef.current?.abort()
+    const controller = new AbortController()
+    liveAbortRef.current = controller
     setTyping(true)
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
-    typingTimerRef.current = setTimeout(() => {
+    const liveId = nextId()
+    let started = false
+
+    try {
+      await streamCaseAnswer({
+        message: trimmed,
+        route: CASE_PAGE_ROUTE,
+        signal: controller.signal,
+        onDelta: (accumulated) => {
+          setMessages((prev) => {
+            if (!started) {
+              started = true
+              setTyping(false)
+              return [...prev, { id: liveId, role: "case", text: accumulated, ts: Date.now() }]
+            }
+            return prev.map((m) => (m.id === liveId ? { ...m, text: accumulated } : m))
+          })
+        },
+      })
+    } catch {
+      if (controller.signal.aborted) return
       setTyping(false)
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "case", text: response, ts: Date.now() },
+        { id: nextId(), role: "case", text: FALLBACK_RESPONSE, ts: Date.now() },
       ])
-    }, delay)
+    }
   }
 
   function onSubmit(e: React.FormEvent) {

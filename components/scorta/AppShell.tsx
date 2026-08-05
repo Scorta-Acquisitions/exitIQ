@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation"
 import React from "react"
 
 import { AUDIT_TRAIL } from "@/lib/auditTrail"
-import { STATIONS, type Station, type StationStatus } from "@/lib/persona"
+import { getDealClock } from "@/lib/dealClock"
+import { type Station, STATIONS, type StationStatus } from "@/lib/persona"
 import { createClient } from "@/lib/supabase/client"
 
 import { AgentActivityPanel } from "./AgentActivityPanel"
@@ -644,6 +645,7 @@ function TopBar({
             {auditCount}
           </span>
         </button>
+        <DealClockPill />
         <div
           style={{
             padding: "5px 12px",
@@ -682,6 +684,41 @@ function TopBar({
         </div>
       </div>
     </header>
+  )
+}
+
+// ── Deal Clock pill — the "speed to close" claim, on screen on every station ──
+function DealClockPill() {
+  const clock = getDealClock()
+  return (
+    <div
+      title={`Traditional-broker benchmark: ~${clock.brokerAvgDaysToClose} days to close and ~${clock.brokerAvgHumanHours} human hours on a deal this size.`}
+      style={{
+        padding: "5px 12px",
+        borderRadius: 9999,
+        border: "1px solid var(--glass-edge, rgba(0,0,0,.10))",
+        background: "rgba(255,255,255,.7)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: 10,
+          color: "var(--t3)",
+          letterSpacing: ".6px",
+          textTransform: "uppercase",
+        }}
+      >
+        Day
+      </div>
+      <div style={{ fontFamily: garamond, fontSize: 16, fontWeight: 500, color: "var(--t1)", lineHeight: 1 }}>
+        {clock.dayNumber}
+      </div>
+      <div style={{ fontSize: 11, color: "var(--t2)" }}>· vs {clock.brokerAvgDaysToClose}-day broker avg</div>
+    </div>
   )
 }
 

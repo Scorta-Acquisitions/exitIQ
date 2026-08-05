@@ -1,12 +1,18 @@
 /**
  * CASE Chat — Case Manager conversation data.
  *
- * Demo-only, fully hard-coded. No AI provider, no API calls. All numbers
- * trace to `.exitiq-debug/sessions/DEMO_PERSONA.md` and upstream station
- * outputs (Recast, Risk, Boardroom, VDR).
+ * The hand-written QA_MAP below is a fast-path cache: seeded questions and
+ * the starter chips resolve instantly against it. Anything that doesn't
+ * match falls through to a live model call (see buildCaseSystemPrompt below
+ * and app/api/case/chat/route.ts) grounded in the same persona/audit-trail
+ * facts. All numbers here trace to `.exitiq-debug/sessions/DEMO_PERSONA.md`
+ * and upstream station outputs (Recast, Risk, Boardroom, VDR).
  *
  * Spec: CASE_CHAT.md (pasted into chat session 2026-05-18).
  */
+
+import { AUDIT_TRAIL } from "@/lib/auditTrail"
+import { PERSONA } from "@/lib/persona"
 
 export type Trigger = ReadonlyArray<string>
 
@@ -232,14 +238,19 @@ Critical path: approve the two VDR access requests, then authorize lender + buye
 export const FALLBACK_RESPONSE =
   `I don't have a specific answer for that right now — but I can walk you through your deal status, your score, the remediation tasks, or the lender package. What do you need?`
 
-export function matchResponse(input: string): string {
+/** Fast-path cache lookup only — returns `null` (no fallback) when nothing matches. */
+export function matchQAEntry(input: string): string | null {
   const lower = input.toLowerCase()
   for (const entry of QA_MAP) {
     for (const trigger of entry.triggers) {
       if (lower.includes(trigger)) return entry.response
     }
   }
-  return FALLBACK_RESPONSE
+  return null
+}
+
+export function matchResponse(input: string): string {
+  return matchQAEntry(input) ?? FALLBACK_RESPONSE
 }
 
 /**
@@ -341,6 +352,45 @@ const PROACTIVE_MESSAGES: Record<string, string> = {
 
 export function getProactiveMessage(route: string): string | null {
   return PROACTIVE_MESSAGES[route] ?? null
+}
+
+// ── Live fallback path — system prompt for questions the QA_MAP misses ──────
+/** Most recent audit-trail entries carried into the live prompt, oldest last. */
+const LIVE_PROMPT_AUDIT_ENTRIES = 8
+
+/**
+ * System prompt for the live model path (app/api/case/chat/route.ts). Grounds
+ * the answer in the same persona and audit-trail facts the QA_MAP draws from,
+ * so a question that falls through the fast-path cache still gets an answer
+ * consistent with everything else CASE has said.
+ */
+export function buildCaseSystemPrompt(route: string): string {
+  const p = PERSONA
+  const recentActions = AUDIT_TRAIL.slice(-LIVE_PROMPT_AUDIT_ENTRIES)
+    .map((e) => `- [${e.dateLabel}] ${e.agent}: ${e.action} — ${e.detail}${e.output ? ` → ${e.output}` : ""}`)
+    .join("\n")
+  const proactive = getProactiveMessage(route)
+
+  return `You are CASE, the Case Manager Agent inside Scorta — the AI-native brokerage running ${p.identity.businessName}'s exit for its owner, ${p.identity.firstName}. You are talking directly to ${p.identity.firstName}.
+
+Answer in CASE's voice: concise, confident, grounded in the deal's real numbers, never generic. Reference specific figures and station routes (e.g. "/risk", "/boardroom") the way a coordinator who has read the whole file would. Keep answers under ~120 words unless the question genuinely needs more.
+
+DEAL FACTS (do not contradict these):
+- Business: ${p.identity.businessName}, ${p.business.industry}, ${p.business.yearsOperating} years operating, ${p.identity.location}
+- Revenue: ${p.financials.revenueDisplay} · Normalized SDE: ${p.financials.sdeDisplay} (Year 3: ${p.financials.normalizedSDEYear3Display}, +${p.financials.revenueTrend3yr}% 3yr trend)
+- Valuation range: ${p.financials.valuationLowDisplay}–${p.financials.valuationHighDisplay} · Recommended listing: ${p.financials.recommendedListingDisplay} · Applied multiple: ${p.financials.appliedMultiple}×
+- Scorta Score: ${p.scorta.overall}/100 (${p.scorta.label}) · Original Exit IQ score: ${p.exitIQ.score}/100 (Grade ${p.exitIQ.grade})
+- Owner-dependency: ${p.risk.ownerDependencyScore}/100, ${p.risk.staffTenuredCount}/${p.risk.staffTotal} tenured staff, ${p.risk.sopsDocumented} SOPs documented — closing this gap unlocks ${p.risk.fixValueUnlockDisplay}
+- Customer concentration: top account ${p.risk.topAccountName} at ${p.risk.topCustomerShare}% (${p.risk.concentrationLevel})
+- SBA: ${p.sba.eligible ? "eligible" : "not eligible"}, DSCR ${p.sba.dscr}×, loan amount ${p.sba.loanAmountDisplay}
+- Seller's timeline: ${p.business.sellingTimeline}
+
+RECENT AGENT ACTIVITY (most recent last):
+${recentActions}
+
+${proactive ? `CONTEXT FOR THE CURRENT SCREEN (${route}): ${proactive}` : `The seller is currently on ${route}.`}
+
+If asked something outside this deal file, or something you have no basis for, say so plainly rather than inventing numbers.`
 }
 
 // ── Opening message (always the first message in the thread) ──────────
