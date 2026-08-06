@@ -199,14 +199,20 @@ export const LOI_COPY = {
   sent: "Delivered to the seller's Case Manager",
 } as const
 
-/** Screen Score methodology drawer. */
+/** Screen Score surface copy. */
 export const SCORE_COPY = {
+  eyebrow: "Case Manager · buy-side",
+  title: "Screen Score",
+  conditionsTitle: "What this verdict rests on",
   methodologyTitle: "How this score is produced",
   methodologyLead: "Six weighted sub-scores, each computed from the deal's own figures.",
   noModelLine: "No model produced this number.",
   crossProductLead: "Same engine, opposite objective",
   crossProductBody:
     "The sell side runs these rules to find what a seller should fix before listing. The buy side runs them to find what a buyer should not pay for.",
+  summaryOnlyNote:
+    "This deal was screened earlier in the pipeline. The score and verdict are recorded; the full sub-score breakdown runs on deals screened in this session.",
+  notScreenedNote: "This deal has not been screened yet. Run it through the Deal Inbox to produce a score.",
 } as const
 
 /** Pipeline board copy. */

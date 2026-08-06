@@ -39,7 +39,7 @@ this document → the code.
 | 4 | Buyer sign-in & standalone entry | 2h | ✅ **Done** | `f299e58` |
 | 14 | Landing-page buy-side entry | 2.5h | ✅ **Done** | — |
 | 5 | Deal Inbox | 4h | ✅ **Done** | — |
-| 6 | Screen Score | 4h | ⬜ | — |
+| 6 | Screen Score | 4h | ✅ **Done** | — |
 | 7 | Reverse Recast *(highest polish budget)* | 6h | ⬜ | — |
 | 8 | Returns Model | 5h | ⬜ | — |
 | 11 | Capital Verification | 2.5h | ⬜ | — |
@@ -330,6 +330,23 @@ extraction all work; bad body → 400; unknown URL → `needsText` guidance.
 28. **Fixture text is detected by `SAMPLE_LISTING_MARKER`** (exported from `data/copy.ts`); on a
     fixture match the route still calls the model but returns the seed card and logs any divergence
     — the fixture is the source document. `FIXTURE_LISTING_URLS` (same file) is the URL fixture set.
+
+### Item 6 — Screen Score ✅
+
+`components/shared/ScoreDial.tsx` (rAF sweep drives arc + number together, once per mount,
+reduced-motion renders final state) · `ScreenScorePanel.tsx` (server component; sub-score rows mapped
+off the engine array, conditions deep-link via `dealPath`, cross-product strip hidden until props
+arrive, methodology drawer renders `WEIGHTS`/`VERDICT_BANDS` in a native `<details>`) · score tab
+wired in `deal/[id]/page.tsx`. `pnpm build` clean.
+
+**New standing decisions:**
+
+29. **Non-focus deals get `ScoreSummary`, not the full panel.** The stepper visits every board deal,
+    so the score tab must render for deals without a seed: recorded score + verdict for screened
+    ones, a not-screened state otherwise. Items 7–10 need the same split — full surface for the
+    focus deal, honest reduced state for the rest.
+30. **Panel colors only via `verdictAccentVar` / `bandAccentVar`** — no verdict→color mapping was
+    added in any component.
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer

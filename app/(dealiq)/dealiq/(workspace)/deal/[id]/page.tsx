@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 
 import { DealWorkspace } from "@/components/dealiq/DealWorkspace"
 import { PendingSurface } from "@/components/dealiq/PendingSurface"
+import { ScoreSummary, ScreenScorePanel } from "@/components/dealiq/ScreenScorePanel"
+import { analyzeDeal } from "@/lib/dealiq/analyze"
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
 import { DEAL_TABS, resolveDealTab } from "@/lib/dealiq/navigation"
@@ -19,11 +21,7 @@ import type { DealTabKey } from "@/lib/dealiq/types"
 
 const VALID_DEAL_IDS: ReadonlySet<string> = new Set([...PIPELINE_DEALS.map((deal) => deal.id), FOCUS_DEAL.card.id])
 
-const TAB_NOTES: Record<DealTabKey, { eyebrow: string; note: string }> = {
-  score: {
-    eyebrow: "Case Manager · buy-side",
-    note: "The Screen Score lands with item 6: an animated dial, six weighted sub-scores each showing the basis that produced it, and a PASS / DIG / PURSUE verdict with the conditions it rests on.",
-  },
+const TAB_NOTES: Record<Exclude<DealTabKey, "score">, { eyebrow: string; note: string }> = {
   recast: {
     eyebrow: "Recast Agent · buy-side",
     note: "The Reverse Recast lands with item 7: the seller's add-back schedule taken apart line by line, with the defensible SDE, the adjustment total, and the negotiation delta — plus a streamed challenge memo that never blocks the table.",
@@ -57,11 +55,32 @@ export default async function DealPage({
   const rawTab = query.tab
   const activeTab = resolveDealTab(Array.isArray(rawTab) ? rawTab[0] : rawTab)
   const tabMeta = DEAL_TABS.find((tab) => tab.key === activeTab)
-  const note = TAB_NOTES[activeTab]
 
   return (
     <DealWorkspace dealId={id} activeTab={activeTab}>
-      <PendingSurface eyebrow={note.eyebrow} title={tabMeta?.label ?? "Deal"} note={note.note} />
+      {activeTab === "score" ? (
+        <ScoreTab dealId={id} />
+      ) : (
+        <PendingSurface
+          eyebrow={TAB_NOTES[activeTab].eyebrow}
+          title={tabMeta?.label ?? "Deal"}
+          note={TAB_NOTES[activeTab].note}
+        />
+      )}
     </DealWorkspace>
   )
+}
+
+/**
+ * Only the focus deal has a seed, so only it gets the full engine-driven panel.
+ * Seeded board deals visited via the stepper render their recorded score; a deal
+ * with no score yet renders the not-screened state.
+ */
+function ScoreTab({ dealId }: { dealId: string }) {
+  if (dealId === FOCUS_DEAL.card.id) {
+    const analysis = analyzeDeal(FOCUS_DEAL)
+    return <ScreenScorePanel result={analysis.score} dealId={dealId} />
+  }
+  const deal = PIPELINE_DEALS.find((candidate) => candidate.id === dealId)
+  return <ScoreSummary score={deal?.score ?? null} verdict={deal?.verdict ?? null} />
 }
