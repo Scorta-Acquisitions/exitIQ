@@ -23,6 +23,9 @@ this document → the code.
 - **Never record a business fact here.** Names, figures, and copy live in `lib/dealiq/data/` behind
   the placeholder banner. If a number appears in this document it is illustrative and explicitly
   labelled as such.
+- **Keep entries short.** Item-1's entry is longer than any future one should be. A new item adds a
+  status row, any *new* standing decisions (one or two lines each), and a ≤6-line item-log entry.
+  This document is loaded into agent context — length is a real cost.
 
 ---
 
@@ -31,8 +34,8 @@ this document → the code.
 | # | Item | Est. | Status | Commit |
 |---|---|---|---|---|
 | 1 | Data layer & types | 2h | ✅ **Done** | `8adcf6e` |
-| 2 | Engines: `reverseRecast` · `returns` · `screenScore` (+ Vitest) | 4h | ⬜ Next | — |
-| 3 | Standalone app shell & IA | 4h | ⬜ | — |
+| 2 | Engines: `reverseRecast` · `returns` · `screenScore` (+ Vitest) | 4h | ✅ **Done** | `1e13244` |
+| 3 | Standalone app shell & IA | 4h | ⬜ Next | — |
 | 4 | Buyer sign-in & standalone entry | 2h | ⬜ | — |
 | 14 | Landing-page buy-side entry | 2.5h | ⬜ | — |
 | 5 | Deal Inbox | 4h | ⬜ | — |
@@ -233,6 +236,29 @@ categories and tagging every promotable recast rule · log script, fallback memo
 
 **Deferred to later items:** nothing. Item 1 is closed.
 
+### Item 2 — Engines ✅
+
+`reverseRecast.ts` · `returns.ts` · `screenScore.ts` + three test files. 191 tests total, green.
+
+**New standing decisions:**
+
+16. **Acceptance rules compose multiplicatively**; the row names whichever reduced the claim most.
+    Replacement cost and reserve emit their own `omitted_cost` lines instead of reducing acceptance.
+17. **Debt service is steady-state** — `annualDebtService === monthlyDebtService × 12`. Seller-note
+    standby shows in the segment's terms string, not in a year-one figure that would disagree with
+    the monthly number beside it.
+18. **`applyScenario(input, scenario, uncoveredOccupancy)`** is how item 8 drives the four chips —
+    one engine, four input sets, no UI branching.
+19. **Owner-dependency coefficients are deliberately gentle.** An owner-operated business is
+    *expected* to be owner-dependent; a typical one must land low without pinning at 0, or the axis
+    stops telling deals apart.
+
+**Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
+PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer
+through Returns → Diligence → LOI, which reads oddly on a deal the score says to kill. Fix is a seed
+tweak in `data/deal.ts` (softer ask or less extreme concentration), **not** an engine or band change.
+Flagged for the content pass; nothing is blocked.
+
 ---
 
 ## Open decisions for the owner
@@ -241,7 +267,7 @@ Tracking §9 of the execution plan. **Item 3 cannot start until #1 is answered.*
 
 | # | Decision | Recommendation | Status |
 |---|---|---|---|
-| 1 | **DealIQ IA** — global top bar + deal context bar with prev/next stepper, vs. a slim left icon rail | Top bar. Built for triage and structurally unlike the seller's station rail. `navigation.ts` is written assuming it, but nothing is locked yet. | ⏳ **Blocks item 3** |
+| 1 | **DealIQ IA** — global top bar vs. slim left icon rail | Top bar | ✅ **Settled 2026-08-05 — top bar.** No rail is ever created. Item 3 builds the 56px global bar + deal context bar with prev/next stepper. |
 | 2 | How the presenter moves between products during the demo | Second tab live; landing page when the story needs telling | ⏳ Open (no build impact) |
 | 3 | Where item 13 lands | `OutreachStation`'s third buyer slot today, adapter ready for `/network` if DEMO P1.2 ships | ⏳ Open (blocks item 13 only) |
 | 4 | Whether DealIQ needs its own copilot | Not this sprint. Wave-3 stretch reusing `/api/case/chat` with a buy-side system prompt (~3h) | ⏳ Open (out of scope) |
