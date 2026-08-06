@@ -19,6 +19,7 @@ import React from "react"
 
 import { VerdictChip } from "@/components/dealiq/DealContextBar"
 import { useDealIQSession } from "@/components/dealiq/DealIQSessionContext"
+import { NewDealSection } from "@/components/dealiq/NewDealSection"
 import { usePipelineDeals } from "@/components/dealiq/usePipelineDeals"
 import { BUYER } from "@/lib/dealiq/data/buyer"
 import { PIPELINE_COPY } from "@/lib/dealiq/data/copy"
@@ -95,10 +96,10 @@ export function PipelineBoard() {
   }
 
   return (
-    <div style={{ padding: "28px 22px 56px", fontFamily: inter, position: "relative" }}>
+    <div style={{ fontFamily: inter, position: "relative" }}>
       <AmbientBackdrop />
 
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div className="dq-screen" style={{ position: "relative", zIndex: 1, maxWidth: 1340 }}>
         {/* ── Hero — headline, live funnel, buyer stats ─────────────────── */}
         <div
           style={{
@@ -233,6 +234,11 @@ export function PipelineBoard() {
               />
             ) : null}
           </div>
+        </div>
+
+        {/* ── New deal — the two ways a deal enters the pipeline ────────── */}
+        <div className="dq-rise" style={{ marginBottom: 24, animationDelay: "150ms" }}>
+          <NewDealSection variant="compact" />
         </div>
 
         {/* ── Board ─────────────────────────────────────────────────────── */}
@@ -535,11 +541,10 @@ function EmptyPipeline() {
   return (
     <div
       style={{
-        padding: "96px 22px",
+        padding: "72px 22px 96px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        textAlign: "center",
         fontFamily: inter,
         position: "relative",
       }}
@@ -550,37 +555,16 @@ function EmptyPipeline() {
         style={{
           position: "relative",
           zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "36px 40px",
+          width: "100%",
+          maxWidth: 720,
+          padding: "40px 36px 36px",
           borderRadius: 18,
           border: "1px solid var(--glass-border)",
           background: "var(--glass-bg)",
           boxShadow: "var(--glass-shadow)",
         }}
       >
-        <h1 style={{ margin: 0, fontFamily: garamond, fontSize: 24, fontWeight: 500, color: "var(--t1)" }}>
-          {PIPELINE_COPY.emptyTitle}
-        </h1>
-        <p style={{ margin: "8px 0 20px", fontSize: 13, color: "var(--t2)", maxWidth: 380, lineHeight: 1.5 }}>
-          {PIPELINE_COPY.emptyBody}
-        </p>
-        <Link
-          href="/dealiq/screen"
-          className="dq-cta dq-focus"
-          style={{
-            padding: "10px 18px",
-            borderRadius: 10,
-            background: "var(--dq-accent)",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          {PIPELINE_COPY.emptyCta}
-        </Link>
+        <NewDealSection variant="full" />
       </div>
     </div>
   )

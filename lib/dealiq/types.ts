@@ -151,6 +151,19 @@ export type PipelineDeal = {
   readonly killReason?: string
 }
 
+/**
+ * Where a seeded deal currently sits on the board. Stage state is a *fact* about
+ * the buyer's process — score and verdict are not stored here; the board derives
+ * them by running the engines on the deal's seed.
+ */
+export type DealPlacement = {
+  readonly dealId: string
+  readonly stage: PipelineStage
+  readonly daysInStage: number
+  readonly lastAgentAction: string
+  readonly killReason?: string
+}
+
 /** One computed funnel step. Counts are derived from the deal list, never typed. */
 export type FunnelStep = {
   readonly key: PipelineStage

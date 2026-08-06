@@ -239,7 +239,7 @@ function setupTeaserWebGL(canvas: HTMLCanvasElement): WebGLControls {
 const TEASER_QUESTIONS = [
   {
     q: "What kind of business do you own?",
-    chips: ["HVAC", "Plumbing", "Landscaping", "Auto Repair", "Cleaning", "Other"],
+    chips: ["HVAC", "Restaurant", "Digital agency", "Landscaping", "Auto repair", "Other"],
   },
   { q: "What is your annual revenue?", chips: ["Under $500K", "$500K – $1M", "$1M – $3M", "$3M – $7M", "$7M+"] },
   { q: "How long have you been operating?", chips: ["Under 5 years", "5 – 10 years", "10 – 20 years", "20+ years"] },
@@ -249,11 +249,11 @@ const TEASER_QUESTIONS = [
 const TEASER_INSIGHTS = [
   [
     "HVAC commands 2.6× SDE on average. SBA buyers active in this band.",
-    "Plumbing rolls up well: strategic acquirers actively consolidating.",
+    "Restaurants sell on defensible SDE and transferable ops — not just revenue.",
+    "Agencies: client concentration and owner dependency drive the multiple.",
     "Landscaping buyers prize recurring contracts. Recurring share matters.",
     "Auto repair: location and licenses drive multiple compression.",
-    "Cleaning is a hot rollup category right now.",
-    "Diversified profile: multiple frameworks apply.",
+    "Diversified Main Street profile: multiple frameworks apply.",
   ],
   [
     "Sub-$500K narrows the buyer pool. Individual searchers dominate this band.",
@@ -1474,24 +1474,24 @@ function SHero({ onOpen }: { onOpen: () => void }) {
 function SIndustryMarquee() {
   const items = [
     "HVAC",
-    "Plumbing",
-    "Roofing",
+    "Restaurants",
+    "Digital agencies",
     "Landscaping",
     "Auto repair",
+    "Plumbing",
+    "Quick service",
+    "Roofing",
     "Cleaning",
     "Pest control",
     "Electrical",
-    "Restoration",
-    "Concrete",
-    "Locksmith",
-    "Tree care",
+    "Retail",
   ]
   const repeated = [...items, ...items]
   return (
     <section style={{ padding: "64px 0 32px", background: C.canvas }}>
       <div className="s-rv" style={{ textAlign: "center", marginBottom: 28 }}>
         <span style={{ fontFamily: inter, fontSize: 13, color: C.muted }}>
-          Built for the trades on every Main Street.
+          Built for Main Street businesses.
         </span>
       </div>
       <div className="s-mqf" style={{ overflow: "hidden" }}>
@@ -1855,8 +1855,8 @@ function SSpeedCompare() {
 
 // ─── Industry Switcher ────────────────────────────────────────────────────────
 function SIndustrySwitcher() {
-  type TradeData = { mult: number; vlo: number; vhi: number; sde: number; days: number; note: string }
-  const data: Record<string, TradeData> = {
+  type IndustryData = { mult: number; vlo: number; vhi: number; sde: number; days: number; note: string }
+  const data: Record<string, IndustryData> = {
     HVAC: {
       mult: 2.6,
       vlo: 1.4,
@@ -1865,13 +1865,21 @@ function SIndustrySwitcher() {
       days: 38,
       note: "Strong searcher demand. Recurring service contracts add 0.4× multiple.",
     },
-    Plumbing: {
-      mult: 2.4,
-      vlo: 0.88,
-      vhi: 1.6,
-      sde: 420,
-      days: 41,
-      note: "Strategic acquirers consolidating. License transfer is the #1 gating item.",
+    Restaurant: {
+      mult: 2.2,
+      vlo: 0.72,
+      vhi: 1.5,
+      sde: 380,
+      days: 52,
+      note: "Defensible SDE and transferable ops matter more than top-line revenue.",
+    },
+    "Digital agency": {
+      mult: 2.8,
+      vlo: 1.0,
+      vhi: 2.0,
+      sde: 460,
+      days: 34,
+      note: "Client concentration and owner dependency are the primary multiple drivers.",
     },
     Landscaping: {
       mult: 2.1,
@@ -1905,21 +1913,13 @@ function SIndustrySwitcher() {
       days: 44,
       note: "B2B contract base preferred over residential. Recurring share drives multiple.",
     },
-    "Pest control": {
-      mult: 3.1,
-      vlo: 1.3,
-      vhi: 2.2,
-      sde: 520,
-      days: 32,
-      note: "High recurring revenue makes this a hot rollup category.",
-    },
-    Electrical: {
-      mult: 2.7,
-      vlo: 1.1,
-      vhi: 1.9,
-      sde: 490,
-      days: 40,
-      note: "Master license transfer + commercial mix matters most.",
+    Plumbing: {
+      mult: 2.4,
+      vlo: 0.88,
+      vhi: 1.6,
+      sde: 420,
+      days: 41,
+      note: "Strategic acquirers consolidating. License transfer is the #1 gating item.",
     },
   }
   const keys = Object.keys(data)
@@ -1961,11 +1961,11 @@ function SIndustrySwitcher() {
               color: C.ink,
             }}
           >
-            Pick your trade. <em>See your number.</em>
+            Pick your industry. <em>See your number.</em>
           </h2>
         </div>
 
-        {/* Trade chips */}
+        {/* Industry chips */}
         <div
           className="s-rv s-d1"
           style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 32 }}
@@ -2029,7 +2029,7 @@ function SIndustrySwitcher() {
             }}
           >
             <div>
-              <div style={{ ...eyebrow(), fontSize: 10 }}>Active trade</div>
+              <div style={{ ...eyebrow(), fontSize: 10 }}>Active industry</div>
               <div
                 style={{
                   fontFamily: garamond,
@@ -3317,7 +3317,7 @@ function SFooter() {
               </span>
             </div>
             <p style={{ fontFamily: inter, fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 320 }}>
-              An AI-native broker for Main Street home-service businesses.
+              An AI-native broker for Main Street businesses.
             </p>
           </div>
 

@@ -94,10 +94,9 @@ Decisions that bind every item after the one that made them. Item number in brac
    never a defensible SDE, fair value, score, or verdict. A test greps the serialized seed for those
    keys and fails if one appears.
 
-6. **The focus deal is absent from `data/pipeline.ts`.** [1]
-   It arrives during the demo when the Inbox screens it and writes `scorta:dealiq:screened`, so the
-   board *visibly gains* a card. Item 3's pipeline surface and item 5's success path both depend on
-   this; a structural test asserts the id is not in the pipeline list.
+6. ~~**The focus deal is absent from `data/pipeline.ts`.**~~ [1] **SUPERSEDED 2026-08-06** — see
+   *Post-sprint: three seeded deals*. All seeds are placed on the board; screening the sample listing
+   now marks the existing card "new" instead of adding one.
 
 7. **The sample listing is built from the seed, not typed.** [1]
    `buildSampleListing(seed)` in `data/copy.ts` interpolates the fixture's own figures, so the
@@ -515,6 +514,82 @@ rail colored only via `verdictAccentVar` (decision 14). All motion is CSS/rAF wi
 Verified: typecheck clean, lint at the 14-warning baseline, 258 dealiq tests green; both surfaces
 render live (signin 200 with grid + vignette markup, board 200 under a buyer session) with zero
 server errors.
+
+### Post-sprint — Dashboard new-deal entry (2026-08-06)
+
+Owner-requested landing flow: the dashboard greets the buyer with existing deals **plus** an explicit
+"start a new deal" choice; with zero deals the dashboard *is* that choice. New
+`components/dealiq/NewDealSection.tsx` (two path cards: **Import a deal** → `/dealiq/screen`,
+**Search the verified seller network** → `/dealiq/flow`; copy in `NEW_DEAL_COPY`, `data/copy.ts`).
+`PipelineBoard` renders it `compact` between hero and board, and `full` inside the (previously
+single-CTA) empty state — `PIPELINE_COPY.empty*` keys retired. Both paths land in the existing
+per-deal feature walk (score → recast → returns → diligence → LOI) unchanged.
+
+**New standing decision:**
+
+44. **A deal enters DealIQ through exactly two doors — import (`/dealiq/screen`) and certified flow
+    (`/dealiq/flow`) — and the dashboard presents both.** Any future entry point (e.g. item 13's
+    handoff seam) should surface as a third `NEW_DEAL_COPY.paths` entry, not a separate bespoke CTA.
+
+Verified: typecheck clean, lint at the 14-warning baseline, 259 dealiq tests green (1 new structural
+test on `NEW_DEAL_COPY`), prettier clean, `pnpm build` clean.
+
+### Post-sprint — Three seeded deals + Case Manager (2026-08-06)
+
+Owner-requested content-and-depth pass: the 12 shallow pipeline cards are gone. The board now carries
+**three deals, each with a complete `DealSeed`** — Gulf Coast Mechanical (screened, the focus/sample
+deal, all six challenge rules fire, occupancy flag, ~46 DIG), Bluebonnet Facility Group (diligence,
+DSCR just misses the floor at the ask, ~53 DIG), Lone Star Route Distribution (LOI, clean schedule,
+~85 PURSUE, earnout bridges ask−fair-value). Verdicts are engine outputs; the figures here are
+illustrative, no test asserts them. Every workspace tab (score · recast · returns · diligence · LOI)
+renders the full engine-driven surface for every deal. Buyer mandate and certified-flow listings were
+re-vocabularied (Texas metros / real industry strings) so matching stays meaningful. New floating
+**Case Manager** agent (bottom right, all workspace surfaces): one computed next step per deal,
+closest-to-money first, deep-linked to the tab where the work happens.
+
+**New standing decisions:**
+
+44. *(re-stated from the dashboard entry)* A deal enters DealIQ through exactly two doors — import
+    and certified flow — and the dashboard presents both.
+45. **Pipeline cards are derived, never stored.** `data/pipeline.ts` holds `DEAL_PLACEMENTS`
+    (stage, days, last action — process facts only); `buildPipelineDeals(DEAL_SEEDS, DEAL_PLACEMENTS)`
+    in `analyze.ts` joins and runs the engines. `PIPELINE_DEALS` no longer exists; a stored
+    score/verdict in the data seam is now a contract violation everywhere, not just on the focus deal.
+46. **Every seeded deal gets the full five-tab workspace.** The item-6 full-vs-summary split
+    (`ScoreSummary` / `PendingSurface`) is retired from the deal page; those components remain only
+    for a future non-seeded surface. `POST /api/dealiq/narrate` accepts any seeded deal id.
+47. **Case Manager semantics live in `lib/dealiq/caseManager.ts`** (`nextStepFor`, `caseBriefing`,
+    `STAGE_PRIORITY`; step prose is trade craft, figure-free, tested with synthetic fixtures).
+    Widget chrome copy lives in `CASE_MANAGER_COPY`; the widget mounts in `DealIQShell` and reads
+    `usePipelineDeals`, so it can never disagree with the board. LOI-stage steps are `waiting`, not
+    `act` — the badge counts only actionable steps.
+48. **`usePipelineDeals` session merge is generic:** a session-screened deal already in the seed set
+    is marked "new", not duplicated; `loiSentDealId` moves *any* matching card to the LOI stage.
+
+Verified: typecheck clean, lint at the 14-warning baseline, 284 dealiq tests green (26 new:
+caseManager suite + generalized per-seed structure suite), prettier clean, `pnpm build` clean
+(all 35 pages). Live-session browser walk still outstanding for the same reason as item 3 — no
+recorded buyer password in the repo.
+
+### Post-sprint — Framed-surface visual pass (2026-08-06)
+
+Owner-requested beautification. Every workspace screen now renders inside the **`dq-screen`
+frame** — a centered, bordered glass envelope with one shared margin rhythm (defined once in
+`DealIQScopedStyles`; each surface's top-level element carries the class plus its own `maxWidth`).
+The pipeline board adopts the same frame at 1340px. Interactive clusters are **encased** in the new
+`SurfaceCard` (`components/dealiq/Surface.tsx`): the Returns price slider + scenario chips share one
+card (divider between), capital stack and metric row are carded, the Inbox form, the Score dial +
+conditions, and the Recast/LOI gate buttons each sit in their own bordered card. No engine, copy, or
+route changes; `ScreenScorePanel`/`CertifiedFlow` dropped now-unused `inter` consts.
+
+**New standing decision:**
+
+49. **Screens are framed, controls are encased.** A new DealIQ surface's top-level element takes
+    `className="dq-screen"` + inline `maxWidth`; any control cluster (form, slider, chip group,
+    gate) goes inside a `SurfaceCard`. Don't reintroduce bare `padding:"26px 22px 48px"` containers.
+
+Verified: typecheck clean, lint at the 14-warning baseline, 284 tests green, prettier clean,
+`pnpm build` clean.
 
 ---
 

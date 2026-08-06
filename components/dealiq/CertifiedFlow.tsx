@@ -24,7 +24,6 @@ import { rankListings } from "@/lib/dealiq/matching"
 import type { MatchComponent } from "@/lib/dealiq/types"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
-const inter = "Inter, var(--font-inter, sans-serif)"
 const mono = "'JetBrains Mono', var(--font-jetbrains-mono, monospace)"
 
 function componentTone(score: number): string {
@@ -40,7 +39,7 @@ export function CertifiedFlow() {
   const ranked = React.useMemo(() => rankListings(CERTIFIED_LISTINGS, BUYER.mandate), [])
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 980 }}>
+    <div className="dq-screen" style={{ maxWidth: 980 }}>
       <div
         style={{
           fontFamily: mono,

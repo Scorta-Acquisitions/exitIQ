@@ -20,6 +20,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import React from "react"
 
+import { DealIQCaseManager } from "@/components/dealiq/DealIQCaseManager"
 import { useDealIQSession } from "@/components/dealiq/DealIQSessionContext"
 import { BUYER } from "@/lib/dealiq/data/buyer"
 import { formatCompactCurrency } from "@/lib/dealiq/format"
@@ -420,6 +421,9 @@ export function DealIQShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
+
+      {/* The floating Case Manager — next steps for every deal, on every workspace surface */}
+      <DealIQCaseManager />
     </div>
   )
 }
@@ -451,6 +455,17 @@ function MenuLink({ href, label }: { href: string; label: string }) {
 export function DealIQScopedStyles() {
   return (
     <style>{`
+      .dq-screen {
+        font-family: Inter, var(--font-inter, sans-serif);
+        width: calc(100% - clamp(28px, 6vw, 64px));
+        margin: 28px auto 64px;
+        padding: 30px clamp(20px, 3.4vw, 38px) 40px;
+        border-radius: 18px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        box-shadow: var(--glass-shadow);
+        animation: dqRiseIn .55s cubic-bezier(.22,1,.36,1) both;
+      }
       .dq-nav-item { transition: background .15s ease, color .15s ease, border-color .15s ease; }
       .dq-nav-item:hover { background: rgba(12,10,9,.045); }
       .dq-nav-item[aria-current="page"]:hover { background: var(--dq-accent-soft); }
@@ -512,7 +527,7 @@ export function DealIQScopedStyles() {
       .dq-rise { animation: dqRiseIn .55s cubic-bezier(.22,1,.36,1) both; }
       .dq-tick { animation: dqTickIn .38s ease-out both; }
       @media (prefers-reduced-motion: reduce) {
-        .dq-enter, .dq-rise, .dq-tick, .dq-menu-pop { animation: none; }
+        .dq-enter, .dq-rise, .dq-tick, .dq-menu-pop, .dq-screen { animation: none; }
         .dq-card:hover, .dq-stat:hover, .dq-avatar:hover,
         .dq-primary:hover, .dq-cta:hover:not(:disabled) { transform: none; }
         .dq-bar-fill { transition: none; }

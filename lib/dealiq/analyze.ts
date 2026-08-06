@@ -14,6 +14,7 @@ import { computeReturns, DEFAULT_FINANCING } from "@/lib/dealiq/returns"
 import { reverseRecast } from "@/lib/dealiq/reverseRecast"
 import { screenScore } from "@/lib/dealiq/screenScore"
 import type {
+  DealPlacement,
   DealSeed,
   FinancingTerms,
   PipelineDeal,
@@ -84,6 +85,31 @@ export type PipelinePlacement = {
   readonly stage: PipelineStage
   readonly daysInStage: number
   readonly lastAgentAction: string
+}
+
+/**
+ * The board's deal list, derived. Each placement is joined to its seed and run
+ * through the engines, so the card's score and verdict come from the same call
+ * that powers the deal's workspace tabs. A placement without a seed is a
+ * content error and is dropped rather than rendered half-empty.
+ */
+export function buildPipelineDeals(
+  seeds: ReadonlyArray<DealSeed>,
+  placements: ReadonlyArray<DealPlacement>
+): ReadonlyArray<PipelineDeal> {
+  const seedsById = new Map(seeds.map((seed) => [seed.card.id, seed]))
+  const deals: PipelineDeal[] = []
+  for (const placement of placements) {
+    const seed = seedsById.get(placement.dealId)
+    if (!seed) continue
+    const deal = analysisToPipelineDeal(analyzeDeal(seed), {
+      stage: placement.stage,
+      daysInStage: placement.daysInStage,
+      lastAgentAction: placement.lastAgentAction,
+    })
+    deals.push(placement.killReason ? { ...deal, killReason: placement.killReason } : deal)
+  }
+  return deals
 }
 
 /**

@@ -12,6 +12,7 @@ import Link from "next/link"
 import React from "react"
 
 import { useDealIQSession } from "@/components/dealiq/DealIQSessionContext"
+import { SurfaceCard } from "@/components/dealiq/Surface"
 import { FOCUS_DEAL_ID } from "@/components/dealiq/usePipelineDeals"
 import { StreamingLog } from "@/components/shared/StreamingLog"
 import { INBOX_COPY, INGESTION_LOG, LOG_STEP_MS, SAMPLE_LISTING_TEXT } from "@/lib/dealiq/data/copy"
@@ -143,7 +144,7 @@ export function DealInbox({ initialText }: { initialText?: string }) {
   const card = phase === "done" && result ? result.deal : null
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 760 }}>
+    <div className="dq-screen" style={{ maxWidth: 760 }}>
       <div
         style={{
           fontFamily: mono,
@@ -170,110 +171,112 @@ export function DealInbox({ initialText }: { initialText?: string }) {
       <p style={{ margin: "6px 0 20px", fontSize: 13, lineHeight: 1.55, color: "var(--t2)" }}>{INBOX_COPY.subtitle}</p>
 
       {!card && (
-        <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label
-            htmlFor="dq-listing"
-            style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}
-          >
-            {INBOX_COPY.title}
-          </label>
-          <textarea
-            id="dq-listing"
-            value={value}
-            maxLength={MAX_LISTING_CHARS}
-            disabled={running}
-            onChange={(event) => setValue(event.target.value)}
-            placeholder={INBOX_COPY.placeholder}
-            rows={9}
-            className="dq-focus"
-            style={{
-              resize: "vertical",
-              padding: "12px 14px",
-              borderRadius: 11,
-              border: "1px solid var(--inp-border)",
-              background: "var(--inp-bg)",
-              color: "var(--t1)",
-              fontSize: 12.5,
-              lineHeight: 1.6,
-              fontFamily: mono,
-            }}
-          />
-
-          {error ? (
-            <p
-              role="alert"
-              style={{
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.45,
-                color: "var(--crit)",
-                background: "var(--crit-soft)",
-                border: "1px solid var(--crit-edge)",
-                borderRadius: 8,
-                padding: "8px 10px",
-              }}
+        <SurfaceCard>
+          <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label
+              htmlFor="dq-listing"
+              style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}
             >
-              {error}
-            </p>
-          ) : null}
-          {guidance ? (
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: "var(--t2)",
-                background: "var(--s2)",
-                border: "1px dashed var(--b2)",
-                borderRadius: 8,
-                padding: "8px 10px",
-              }}
-            >
-              {guidance}
-            </p>
-          ) : null}
-
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button
-              type="submit"
+              {INBOX_COPY.title}
+            </label>
+            <textarea
+              id="dq-listing"
+              value={value}
+              maxLength={MAX_LISTING_CHARS}
               disabled={running}
-              className="dq-primary dq-focus"
-              style={{
-                padding: "9px 16px",
-                borderRadius: 9,
-                border: "none",
-                background: "var(--dq-accent)",
-                color: "#fff",
-                fontSize: 12.5,
-                fontWeight: 600,
-                fontFamily: inter,
-                cursor: running ? "default" : "pointer",
-                opacity: running ? 0.72 : 1,
-              }}
-            >
-              {running ? INBOX_COPY.submitting : INBOX_COPY.submit}
-            </button>
-            <button
-              type="button"
-              disabled={running}
-              onClick={() => setValue(SAMPLE_LISTING_TEXT)}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder={INBOX_COPY.placeholder}
+              rows={9}
               className="dq-focus"
               style={{
-                padding: "8px 12px",
-                borderRadius: 9,
-                border: "1px solid var(--dq-accent-edge)",
-                background: "var(--dq-accent-soft)",
-                color: "var(--dq-accent)",
-                fontSize: 11.5,
-                fontWeight: 500,
-                fontFamily: inter,
-                cursor: running ? "default" : "pointer",
+                resize: "vertical",
+                padding: "12px 14px",
+                borderRadius: 11,
+                border: "1px solid var(--inp-border)",
+                background: "var(--inp-bg)",
+                color: "var(--t1)",
+                fontSize: 12.5,
+                lineHeight: 1.6,
+                fontFamily: mono,
               }}
-            >
-              {INBOX_COPY.sampleChip}
-            </button>
-          </div>
-        </form>
+            />
+
+            {error ? (
+              <p
+                role="alert"
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  color: "var(--crit)",
+                  background: "var(--crit-soft)",
+                  border: "1px solid var(--crit-edge)",
+                  borderRadius: 8,
+                  padding: "8px 10px",
+                }}
+              >
+                {error}
+              </p>
+            ) : null}
+            {guidance ? (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  color: "var(--t2)",
+                  background: "var(--s2)",
+                  border: "1px dashed var(--b2)",
+                  borderRadius: 8,
+                  padding: "8px 10px",
+                }}
+              >
+                {guidance}
+              </p>
+            ) : null}
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button
+                type="submit"
+                disabled={running}
+                className="dq-primary dq-focus"
+                style={{
+                  padding: "9px 16px",
+                  borderRadius: 9,
+                  border: "none",
+                  background: "var(--dq-accent)",
+                  color: "#fff",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  fontFamily: inter,
+                  cursor: running ? "default" : "pointer",
+                  opacity: running ? 0.72 : 1,
+                }}
+              >
+                {running ? INBOX_COPY.submitting : INBOX_COPY.submit}
+              </button>
+              <button
+                type="button"
+                disabled={running}
+                onClick={() => setValue(SAMPLE_LISTING_TEXT)}
+                className="dq-focus"
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 9,
+                  border: "1px solid var(--dq-accent-edge)",
+                  background: "var(--dq-accent-soft)",
+                  color: "var(--dq-accent)",
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  fontFamily: inter,
+                  cursor: running ? "default" : "pointer",
+                }}
+              >
+                {INBOX_COPY.sampleChip}
+              </button>
+            </div>
+          </form>
+        </SurfaceCard>
       )}
 
       {(running || card) && (

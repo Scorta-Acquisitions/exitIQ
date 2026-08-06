@@ -88,7 +88,7 @@ export function DiligencePanel({
   }
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 860 }}>
+    <div className="dq-screen" style={{ maxWidth: 860 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div

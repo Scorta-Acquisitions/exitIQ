@@ -15,6 +15,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React from "react"
 
+import { SurfaceCard } from "@/components/dealiq/Surface"
 import { BUYER } from "@/lib/dealiq/data/buyer"
 import { FALLBACK_CHALLENGE_MEMO, RECAST_COPY } from "@/lib/dealiq/data/copy"
 import { formatCurrency, formatMultiple, formatMultipleBand, formatSignedCurrency } from "@/lib/dealiq/format"
@@ -91,7 +92,7 @@ export function ReverseRecastPanel({
   const omitted = recast.lines.filter((line) => line.kind === "omitted_cost")
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 880 }}>
+    <div className="dq-screen" style={{ maxWidth: 880 }}>
       <div
         style={{
           fontFamily: mono,
@@ -629,7 +630,7 @@ function AcceptGate({ dealId }: { dealId: string }) {
   }
 
   return (
-    <section style={{ marginTop: 24 }}>
+    <SurfaceCard style={{ marginTop: 26, display: "flex", justifyContent: "flex-end", padding: "14px 18px" }}>
       {phase === "approved" && signedAt ? (
         <div
           className="dq-enter"
@@ -669,6 +670,6 @@ function AcceptGate({ dealId }: { dealId: string }) {
           {phase === "approving" ? RECAST_COPY.accepting : RECAST_COPY.acceptGate}
         </button>
       )}
-    </section>
+    </SurfaceCard>
   )
 }

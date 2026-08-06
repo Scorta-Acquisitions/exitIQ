@@ -10,6 +10,7 @@
 
 import Link from "next/link"
 
+import { SurfaceCard } from "@/components/dealiq/Surface"
 import { ScoreDial } from "@/components/shared/ScoreDial"
 import { SCORE_COPY } from "@/lib/dealiq/data/copy"
 import { bandAccentVar, formatPercent, formatScore, verdictAccentVar } from "@/lib/dealiq/format"
@@ -18,7 +19,6 @@ import { SUB_SCORE_LABEL, VERDICT_BANDS, WEIGHTS } from "@/lib/dealiq/screenScor
 import type { ScreenScoreResult, SubScoreKey, Verdict } from "@/lib/dealiq/types"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
-const inter = "Inter, var(--font-inter, sans-serif)"
 const mono = "'JetBrains Mono', var(--font-jetbrains-mono, monospace)"
 
 export function ScreenScorePanel({
@@ -34,19 +34,29 @@ export function ScreenScorePanel({
   const accent = verdictAccentVar(result.verdict)
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 880 }}>
+    <div className="dq-screen" style={{ maxWidth: 880 }}>
       <Header />
 
       <div style={{ display: "flex", gap: 28, alignItems: "flex-start", flexWrap: "wrap", marginTop: 18 }}>
         {/* Dial + verdict */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <SurfaceCard
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 14,
+            padding: "24px 30px 22px",
+            alignSelf: "stretch",
+            justifyContent: "center",
+          }}
+        >
           <ScoreDial
             value={result.composite}
             accentColor={accent}
             label={`Screen score ${formatScore(result.composite)} of 100 — verdict ${result.verdict}`}
           />
           <VerdictBadge verdict={result.verdict} />
-        </div>
+        </SurfaceCard>
 
         {/* Sub-score rows — rendered off the engine's array, never enumerated by hand */}
         <div style={{ flex: 1, minWidth: 320, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -81,7 +91,7 @@ export function ScreenScorePanel({
       </div>
 
       {result.conditions.length > 0 && (
-        <section style={{ marginTop: 26 }}>
+        <SurfaceCard tone="soft" style={{ marginTop: 28 }}>
           <SectionLabel>{SCORE_COPY.conditionsTitle}</SectionLabel>
           <ul
             style={{
@@ -111,7 +121,7 @@ export function ScreenScorePanel({
               </li>
             ))}
           </ul>
-        </section>
+        </SurfaceCard>
       )}
 
       {crossProduct ? <CrossProductStrip buyScore={crossProduct.buyScore} sellScore={crossProduct.sellScore} /> : null}
@@ -127,7 +137,7 @@ export function ScreenScorePanel({
  */
 export function ScoreSummary({ score, verdict }: { score: number | null; verdict: Verdict | null }) {
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 880 }}>
+    <div className="dq-screen" style={{ maxWidth: 880 }}>
       <Header />
       {score != null && verdict != null ? (
         <div style={{ display: "flex", alignItems: "center", gap: 24, marginTop: 18 }}>

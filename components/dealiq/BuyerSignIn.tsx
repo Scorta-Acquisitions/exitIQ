@@ -15,6 +15,7 @@
  * this component never reads `?next=` itself.
  */
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React from "react"
 
@@ -91,6 +92,10 @@ export function BuyerSignIn({ destination = DEALIQ_ROOT }: { destination?: strin
       <div className="dq-auth-grid" style={{ position: "relative", zIndex: 1 }}>
         {/* ── Credentials column ─────────────────────────────────────────── */}
         <div style={{ width: "100%", maxWidth: 420, justifySelf: "center" }}>
+          <div className="dq-rise" style={{ animationDelay: "0ms", marginBottom: 22 }}>
+            <BackLink />
+          </div>
+
           <div className="dq-rise" style={{ animationDelay: "0ms" }}>
             <Wordmark />
           </div>
@@ -493,6 +498,33 @@ function FeatureIcon({ index }: { index: number }) {
       <path d="M2 12.5 6.2 8l2.6 2.4 5-5.6" />
       <path d="M10.6 4.8h3.2V8" />
     </svg>
+  )
+}
+
+function BackLink() {
+  const [hovered, setHovered] = React.useState(false)
+  return (
+    <Link
+      href="/"
+      className="dq-focus"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontFamily: inter,
+        fontSize: 12.5,
+        fontWeight: 500,
+        color: hovered ? "var(--t1)" : "var(--t3)",
+        textDecoration: "none",
+        borderRadius: 6,
+        transition: "color .16s ease",
+      }}
+    >
+      <span aria-hidden>←</span>
+      <span>Back to Scorta</span>
+    </Link>
   )
 }
 

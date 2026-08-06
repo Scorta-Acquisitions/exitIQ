@@ -19,68 +19,96 @@ Memorize these three before the rest:
 
 ---
 
-## Speakable Scripts — “Tell me about the product / ExitIQ / DealIQ”
+## Speakable Scripts — conversational
 
-Use the matching opener, then stop. Expand only if they ask how it works.
+Say the **Answer** out loud. Stop. Use **If they push** only if they keep going.
+ExitIQ and DealIQ are written as full standalone answers — do not require Scorta context first.
 
-### “Tell me about your product” / “What are you building?” / “What does Scorta do?”
+---
 
-- Scorta replaces the small business broker for $500K–$2M businesses
-- Two agent teams run the sale end to end
-- Prep team: recast financials, owner dependency, SBA package → financeable asset
-- Market team: match capital-verified buyers, deal room, lender process, close
-- Owners pay $3K–$5K upfront and 5% on close
-- Same engine powers DealIQ on the buy side to grow the verified buyer pool
-- **Stop.** If they want proof → first closed deal ($950K failed listing → $1.3M close)
+### A. “Tell me about your product” / “What are you building?” / “What does Scorta do?”
 
-### “How does the product work?” / “Walk me through the system”
+**Answer (20–30s):**
+> Scorta is replacing the small business broker. We work with owners of $500K to $2M businesses and run the sale end to end with two teams of AI agents.
+>
+> The first team turns a messy owner-operated business into something a lender and buyer can actually finance — we recast the financials, map owner dependency, and package the SBA pre-qualification.
+>
+> The second team matches it to our pool of capital-verified buyers and runs the deal room, diligence, lender process, and close.
+>
+> Owners pay us $3K to $5K upfront and 5% when it sells.
 
-- Prep agents ingest books/contracts → rebuild P&L the way a lender sees it → flag concentration + owner dependency → remediation + financeable package
-- Market agents run buyer red-team → match verified pool → outreach, VDR, lender submissions, close workflow
-- Humans approve every material action before it goes out
-- Numbers are deterministic and source-traced; LLM writes the explanation, not the math
-- Operator-facing first — seller buys a managed outcome, not a dashboard
-- **If they ask agents by name:** Ingestion, Recast, Owner-Dependency, Concentration, Case Manager, Boardroom, Lender Ops, Outreach
+**If they push — how it works:**
+> Prep agents ingest the books and rebuild the P&L the way a lender will view it. Market agents red-team the deal, match buyers, run outreach and the data room. We approve every material action before it goes out. The numbers are deterministic — the model writes the explanation, not the math.
 
-### “What is ExitIQ?” / “How do sellers find you?” / “What’s the assessment?”
+**If they push — proof:**
+> Our first closed client had already failed with a traditional broker at $950K. We signed it, rebuilt the package, matched it through the buyer pool, and closed at $1.3M — about 37% higher.
 
-- ExitIQ is the free intake assessment — top of the seller funnel
-- ~6 minutes; adapts by answer; not a generic form
-- Output is a GAP Report: valuation, buyer view, lendability roadmap, 90-day fix list
-- Converts to a founder call → paid Diagnostic → brokerage if ready
-- Also the CPA channel surface (white-label / co-branded)
-- ExitIQ is intake. Scorta is the paid prep + brokerage that actually sells the business
+**Do not volunteer ExitIQ or DealIQ** unless they ask. If they ask “is that software?” → jump to E.
 
-### “What is DealIQ?” / “What’s the buyer product?” / “Why a second product?”
+---
 
-- DealIQ is the same recast/diligence engine pointed at buyers
-- Customer: searchers, ETA, search funds, independent sponsors under $5M — not big PE
-- Reverse-recasts claimed SDE, screens deals PASS/DIG/PURSUE, models SBA returns, drafts diligence + LOI
-- Three search funds on $1,250 pilots
-- Revenue is small; strategic job is capital-verified buyer pool for the sell-side
-- **Clean line:** Buy side is acquisition. Sell side is the business.
+### B. “What is ExitIQ?” *(standalone — works alone)*
 
-### “How do ExitIQ and DealIQ relate?” / “Are these two products?”
+**Answer (20–25s):**
+> ExitIQ is our free assessment for business owners who are thinking about selling. It takes about six minutes, and it’s conversational — it adapts based on their answers instead of being a generic form.
+>
+> At the end they get a GAP Report: what the business is worth, who would actually buy it, what’s broken from a buyer or lender’s point of view, and a 90-day list of what to fix.
+>
+> That’s usually the first useful answer they’ve gotten. From there they book a call with us. If it makes sense, they move into a paid prep engagement and eventually brokerage.
 
-- One company, one engine, two surfaces
-- ExitIQ → sellers into prep/brokerage
-- DealIQ → buyers into the capital-verified pool
-- No in-app switcher; landing page is the only bridge
-- Data that crosses: verified buyer profile into sell-side outreach — not deal data both ways
+**If they push — how it fits the business:**
+> ExitIQ is the front door. It’s how most sellers find us, and it’s also what we white-label for CPAs. The money is still in the prep and the close — ExitIQ is how we earn the right to do that work.
 
-### “Is this AI / agents / software / services?”
+**If they push — what it is *not*:**
+> It’s not the full product. It’s intake. Scorta is the system that actually underwrites and sells the business.
 
-- AI-native services company — unit is a closed transaction, not a seat
-- Agents do the mechanical underwriting and coordination work
-- Humans own judgment: don’t-list calls, negotiation, approval of anything external
-- First cradle-to-close: under 45 human hours, ~$600 inference
-- Software changes the labor curve; revenue is still $50K–$70K per close
+---
 
-### One-liner ladder (pick one)
+### C. “What is DealIQ?” *(standalone — works alone)*
 
-- **Scorta:** Agent-native broker that makes a Main Street business financeable, then sells it into verified demand
-- **ExitIQ:** Free assessment that answers worth / who buys / what to fix — then becomes intake
-- **DealIQ:** Buy-side of the same engine — reverse-recast deals and grow the verified buyer pool
+**Answer (20–25s):**
+> DealIQ is our buy-side product. It gives searchers and acquisition entrepreneurs the same analysis engine we use on the sell side — just pointed the other way.
+>
+> They paste a listing or a CIM, and it reverse-recasts the claimed earnings, tells them whether to pass or dig deeper, models the SBA returns, and drafts diligence questions and an LOI.
+>
+> Three search funds are already paying $1,250 each for pilots. The revenue is useful but small. The real job is that every serious buyer who uses it joins our capital-verified pool — so when we take a seller to market, we already know who’s looking for that exact business.
+
+**If they push — why not just be a SaaS?**
+> Because a subscription is a bad trade for $50K to $70K on a closed deal. Buy side is how we acquire and understand buyers. Sell side is the business.
+
+**If they push — who it’s for:**
+> Searchers, ETA buyers, search funds, independent sponsors — mostly sub-$5M. Not large PE. Those buyers don’t buy in our segment.
+
+---
+
+### D. “How do ExitIQ and DealIQ relate?” / “So you have two products?”
+
+**Answer (15–20s):**
+> One company, one engine, two doors.
+>
+> ExitIQ is the seller door — free assessment into prep and brokerage.
+> DealIQ is the buyer door — analysis tool that feeds our verified buyer pool.
+>
+> They don’t share a dashboard or a switcher. Sellers aren’t buyers. The only thing that crosses is a capital-verified buyer profile into our sell-side outreach when there’s a real match.
+
+---
+
+### E. “Is this AI / software / a services business?”
+
+**Answer (15–20s):**
+> We’re an AI-native services company. The unit of revenue is a closed transaction — typically $50K to $70K — not a software seat.
+>
+> Agents do the mechanical underwriting and coordination. Humans keep the judgment calls: don’t-list conversations, negotiation, and approving anything that leaves the system.
+>
+> Our first full close took under 45 hours of human time and about $600 of inference. Software changes the labor curve. It doesn’t change what we sell.
+
+---
+
+### Quick one-liners *(if you only get one breath)*
+
+- **Scorta:** We make a Main Street business financeable, then sell it into buyers we’ve already verified.
+- **ExitIQ:** Free assessment that tells an owner what it’s worth, who would buy it, and what to fix — then becomes our intake.
+- **DealIQ:** Same engine for buyers — reverse-recast a deal, and grow our capital-verified buyer pool.
 
 ---
 

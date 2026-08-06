@@ -4,7 +4,7 @@ import { z } from "zod"
 import { anthropic, SONNET_MODEL } from "@/lib/ai"
 import { buildChallengeMemoPrompt } from "@/lib/ai/prompts"
 import { analyzeDeal } from "@/lib/dealiq/analyze"
-import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
+import { DEAL_SEEDS } from "@/lib/dealiq/data/deal"
 import { logger } from "@/lib/logger"
 
 /**
@@ -32,21 +32,22 @@ export async function POST(req: Request) {
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 })
   }
 
-  // Only the focus deal carries a seed the engines can run on.
-  if (parsed.data.dealId !== FOCUS_DEAL.card.id) {
+  // Any seeded deal can be narrated — the seed is what grounds the memo.
+  const seed = DEAL_SEEDS.find((candidate) => candidate.card.id === parsed.data.dealId)
+  if (!seed) {
     return Response.json({ error: "not_found" }, { status: 404 })
   }
 
   try {
-    const { recast } = analyzeDeal(FOCUS_DEAL)
+    const { recast } = analyzeDeal(seed)
     const result = streamText({
       model: anthropic(SONNET_MODEL),
       prompt: buildChallengeMemoPrompt({
-        dealName: FOCUS_DEAL.card.name,
+        dealName: seed.card.name,
         claimedSde: recast.claimedSde,
         defensibleSde: recast.defensibleSde,
         totalAdjusted: recast.totalAdjusted,
-        ask: FOCUS_DEAL.card.ask,
+        ask: seed.card.ask,
         fairValue: recast.fairValue,
         negotiationDelta: recast.negotiationDelta,
         lines: recast.lines,

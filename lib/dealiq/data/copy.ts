@@ -83,8 +83,7 @@ export function buildSampleListing(seed: DealSeed): string {
  * uses it to pin extraction output to the seed — the fixture is the source
  * document, so the model may narrate it but never overrule it.
  */
-export const SAMPLE_LISTING_MARKER =
-  "PROVISIONAL LISTING TEXT — this is placeholder prose used to demonstrate ingestion."
+export const SAMPLE_LISTING_MARKER = "Sample listing provided by DealIQ for demonstration screening."
 
 export const SAMPLE_LISTING_TEXT = buildSampleListing(FOCUS_DEAL)
 
@@ -119,7 +118,7 @@ export const INBOX_COPY = {
   title: "Screen a deal",
   subtitle: "Paste a listing. Get a structured deal card, a score, and a verdict.",
   placeholder:
-    "Paste the listing text — description, asking price, cash flow, and the add-back schedule if the broker provided one.",
+    "Paste the listing text — description, asking price, cash flow, and the add-back schedule if the broker provided one. Then add your requirements: what you're looking for in a business your estimated range the factors you are placing importance on when deal searching",
   sampleChip: "Load sample listing",
   submit: "Screen this deal",
   submitting: "Screening…",
@@ -342,15 +341,61 @@ export const SCORE_COPY = {
   notScreenedNote: "This deal has not been screened yet. Run it through the Deal Inbox to produce a score.",
 } as const
 
+/**
+ * Case Manager widget chrome — the floating agent, bottom right, that tracks
+ * the next step for every deal. Step prose itself is computed in
+ * `lib/dealiq/caseManager.ts`; this is only the widget's own vocabulary.
+ */
+export const CASE_MANAGER_COPY = {
+  name: "Case Manager",
+  role: "Buy-side agent",
+  tagline: "One next step per deal. Closest to money first.",
+  openLabel: "Case Manager",
+  openAria: "Open the Case Manager — next steps for every deal",
+  closeAria: "Close the Case Manager",
+  panelTitle: "Next steps",
+  emptyState: "No deals on the board yet. Start one and the next step appears here.",
+  stepCta: "Go",
+  urgencyLabels: {
+    act: "Act",
+    waiting: "Waiting",
+    watch: "Watch",
+  },
+} as const
+
 /** Pipeline board copy. */
 export const PIPELINE_COPY = {
   eyebrow: "Pipeline",
-  emptyTitle: "Nothing screened yet",
-  emptyBody: "Paste a listing into the Deal Inbox and it lands here with a score and a verdict.",
-  emptyCta: "Screen a deal",
   /** Stamped on the pipeline card the moment the Inbox lands a deal. */
   justScreenedAction: "Screened just now — recast, returns and score computed",
   justScreenedBadge: "New",
   /** Stamped on the card when the LOI gate fires and the card moves to the LOI stage. */
   loiSentAction: "LOI drafted and delivered to the seller's Case Manager",
+} as const
+
+/**
+ * The dashboard's "start a new deal" surface — the greeting when the pipeline
+ * is empty, and the compact strip above the board once deals exist. Two paths
+ * in: import a deal you already have (the Deal Inbox) or search the verified
+ * seller network (Certified Deal Flow). Both are structural entries; the
+ * surfaces they route to carry the numbers.
+ */
+export const NEW_DEAL_COPY = {
+  eyebrow: "New deal",
+  stripTitle: "Start a new deal",
+  emptyTitle: "Start your first deal",
+  emptyBody:
+    "Bring a deal into DealIQ and it comes back screened — recast, returns, score and verdict, all computed. Two ways in:",
+  paths: {
+    import: {
+      title: "Import a deal",
+      body: "Paste a listing, teaser, or CIM excerpt you already have. The Ingestion Agent extracts the deal card and screens it.",
+      cta: "Import & screen",
+    },
+    network: {
+      title: "Search the verified seller network",
+      body: "Browse certified, pre-screened listings matched against your mandate — every one carries verified financials.",
+      cta: "Browse certified flow",
+    },
+  },
 } as const

@@ -118,7 +118,7 @@ export function CapitalVerification() {
   }
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 760 }}>
+    <div className="dq-screen" style={{ maxWidth: 760 }}>
       <ScopedStyles />
 
       <div

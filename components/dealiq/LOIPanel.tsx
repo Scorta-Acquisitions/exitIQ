@@ -16,6 +16,7 @@
 import React from "react"
 
 import { useDealIQSession } from "@/components/dealiq/DealIQSessionContext"
+import { SurfaceCard } from "@/components/dealiq/Surface"
 import { LOI_COPY } from "@/lib/dealiq/data/copy"
 import { formatCurrency } from "@/lib/dealiq/format"
 import { SECTION_LABEL } from "@/lib/dealiq/loi"
@@ -63,7 +64,7 @@ export function LOIPanel({ draft }: { draft: LoiDraft }) {
   }
 
   return (
-    <div style={{ padding: "26px 22px 48px", fontFamily: inter, maxWidth: 760 }}>
+    <div className="dq-screen" style={{ maxWidth: 760 }}>
       <div
         style={{
           fontFamily: mono,
@@ -196,7 +197,7 @@ export function LOIPanel({ draft }: { draft: LoiDraft }) {
       </p>
 
       {/* Send gate */}
-      <section style={{ marginTop: 24 }}>
+      <SurfaceCard style={{ marginTop: 26, display: "flex", justifyContent: "flex-end", padding: "14px 18px" }}>
         {phase === "approved" && signedAt ? (
           <div
             className="dq-enter"
@@ -252,7 +253,7 @@ export function LOIPanel({ draft }: { draft: LoiDraft }) {
             {phase === "approving" ? LOI_COPY.sending : LOI_COPY.sendGate}
           </button>
         )}
-      </section>
+      </SurfaceCard>
 
       {toast ? (
         <div

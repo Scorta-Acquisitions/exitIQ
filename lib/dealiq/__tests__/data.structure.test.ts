@@ -18,20 +18,15 @@ import { describe, expect, it } from "vitest"
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
+import { buildPipelineDeals } from "@/lib/dealiq/analyze"
 import { BUYER } from "@/lib/dealiq/data/buyer"
-import { INGESTION_LOG, LOG_STEP_MS, SAMPLE_LISTING_TEXT } from "@/lib/dealiq/data/copy"
-import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
+import { INGESTION_LOG, LOG_STEP_MS, NEW_DEAL_COPY, SAMPLE_LISTING_TEXT } from "@/lib/dealiq/data/copy"
+import { DEAL_SEEDS, FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { DILIGENCE_BANK } from "@/lib/dealiq/data/diligence"
 import { CERTIFIED_LISTINGS, FLOW_AS_OF } from "@/lib/dealiq/data/flow"
-import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
+import { DEAL_PLACEMENTS } from "@/lib/dealiq/data/pipeline"
 import { countByStage, funnel, orderedDeals } from "@/lib/dealiq/pipeline"
-import {
-  DOCUMENTATION_QUALITIES,
-  PIPELINE_STAGE_KEYS,
-  type PipelineDeal,
-  type Verdict,
-  VERDICTS,
-} from "@/lib/dealiq/types"
+import { DOCUMENTATION_QUALITIES, PIPELINE_STAGE_KEYS } from "@/lib/dealiq/types"
 
 const DATA_DIR = join(process.cwd(), "lib", "dealiq", "data")
 const BANNER = "PLACEHOLDER CONTENT — provisional values, authored separately and swapped wholesale."
@@ -115,100 +110,67 @@ describe("BUYER", () => {
   })
 })
 
-describe("PIPELINE_DEALS", () => {
-  it("gives every deal a unique id", () => {
-    expectUniqueIds(PIPELINE_DEALS)
+describe("DEAL_SEEDS × DEAL_PLACEMENTS", () => {
+  it("gives every seed a unique id", () => {
+    expectUniqueIds(DEAL_SEEDS.map((seed) => seed.card))
   })
 
-  it("uses only stages and verdicts from their unions", () => {
-    for (const deal of PIPELINE_DEALS) {
-      expect(PIPELINE_STAGE_KEYS).toContain(deal.stage)
-      if (deal.verdict !== null) expect(VERDICTS).toContain(deal.verdict)
+  it("places every seed exactly once, and places nothing else", () => {
+    const seedIds = ids(DEAL_SEEDS.map((seed) => seed.card))
+    const placedIds = DEAL_PLACEMENTS.map((placement) => placement.dealId)
+    expect(new Set(placedIds).size).toBe(placedIds.length)
+    expect(new Set(placedIds)).toEqual(new Set(seedIds))
+  })
+
+  it("uses only stages from the union, with sane process facts", () => {
+    for (const placement of DEAL_PLACEMENTS) {
+      expect(PIPELINE_STAGE_KEYS).toContain(placement.stage)
+      expect(placement.daysInStage).toBeGreaterThanOrEqual(0)
+      expect(placement.lastAgentAction.trim().length).toBeGreaterThan(0)
     }
   })
 
-  it("pairs score and verdict — a deal has both or neither", () => {
-    for (const deal of PIPELINE_DEALS) {
-      expect(deal.score === null).toBe(deal.verdict === null)
-    }
+  it("spreads the deals across distinct active stages", () => {
+    const stages = new Set(DEAL_PLACEMENTS.map((placement) => placement.stage))
+    expect(stages.size).toBe(DEAL_PLACEMENTS.length)
   })
 
-  it("scores every deal that has moved past sourced", () => {
-    for (const deal of PIPELINE_DEALS) {
-      if (deal.stage !== "sourced") expect(deal.score).not.toBeNull()
-    }
-  })
-
-  it("keeps scores inside 0-100 and day counts non-negative", () => {
-    for (const deal of PIPELINE_DEALS) {
+  it("derives a complete, scored board — one card per placement, engines agreeing", () => {
+    const deals = buildPipelineDeals(DEAL_SEEDS, DEAL_PLACEMENTS)
+    expect(deals).toHaveLength(DEAL_PLACEMENTS.length)
+    for (const deal of deals) {
+      expect(deal.score).not.toBeNull()
+      expect(deal.verdict).not.toBeNull()
       if (deal.score !== null) {
         expect(deal.score).toBeGreaterThanOrEqual(0)
         expect(deal.score).toBeLessThanOrEqual(100)
       }
-      expect(deal.daysInStage).toBeGreaterThanOrEqual(0)
-      expect(deal.ask).toBeGreaterThan(0)
-      expect(deal.claimedSde).toBeGreaterThan(0)
     }
+    const counts = countByStage(deals)
+    expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe(deals.length)
+    expect(funnel(deals).reduce((sum, step) => sum + step.count, 0)).toBe(deals.length)
+    expect(orderedDeals(deals)).toHaveLength(deals.length)
   })
 
-  it("orders verdicts monotonically against score, without hardcoding the bands", () => {
-    // Band thresholds live in `screenScore.ts`. This asserts only that the seed
-    // cannot contradict whatever they are: no PASS may outscore a DIG, and no
-    // DIG may outscore a PURSUE.
-    const scoresFor = (verdict: Verdict) =>
-      PIPELINE_DEALS.filter(
-        (d): d is PipelineDeal & { score: number } => d.verdict === verdict && d.score !== null
-      ).map((d) => d.score)
-    const pass = scoresFor("PASS")
-    const dig = scoresFor("DIG")
-    const pursue = scoresFor("PURSUE")
-    if (pass.length && dig.length) expect(Math.max(...pass)).toBeLessThan(Math.min(...dig))
-    if (dig.length && pursue.length) expect(Math.max(...dig)).toBeLessThan(Math.min(...pursue))
-  })
-
-  it("attaches a kill reason only where the verdict is PASS", () => {
-    for (const deal of PIPELINE_DEALS) {
-      if (deal.killReason !== undefined) expect(deal.verdict).toBe("PASS")
-    }
-  })
-
-  it("is internally consistent with its derived counts", () => {
-    const counts = countByStage(PIPELINE_DEALS)
-    expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe(PIPELINE_DEALS.length)
-    expect(funnel(PIPELINE_DEALS).reduce((sum, step) => sum + step.count, 0)).toBe(PIPELINE_DEALS.length)
-    expect(orderedDeals(PIPELINE_DEALS)).toHaveLength(PIPELINE_DEALS.length)
-  })
-
-  it("has the distribution shape a real search pipeline has — heaviest at screened", () => {
-    const counts = countByStage(PIPELINE_DEALS)
-    expect(counts.screened).toBeGreaterThanOrEqual(counts.sourced)
-    expect(counts.screened).toBeGreaterThan(counts.loi)
-  })
-
-  it("populates every stage so the board never renders an empty column", () => {
-    const counts = countByStage(PIPELINE_DEALS)
-    for (const stage of PIPELINE_STAGE_KEYS) expect(counts[stage]).toBeGreaterThan(0)
+  it("includes the focus deal — the Deal Inbox's sample listing is a board deal", () => {
+    expect(ids(DEAL_SEEDS.map((seed) => seed.card))).toContain(FOCUS_DEAL.card.id)
   })
 })
 
-describe("FOCUS_DEAL", () => {
-  it("is absent from the pipeline so the board visibly gains it during the demo", () => {
-    expect(ids(PIPELINE_DEALS)).not.toContain(FOCUS_DEAL.card.id)
-  })
-
+describe.each(DEAL_SEEDS.map((seed) => [seed.card.id, seed] as const))("seed %s", (_id, seed) => {
   it("gives every claimed add-back a unique id and a positive amount", () => {
-    expectUniqueIds(FOCUS_DEAL.addBacks)
-    for (const line of FOCUS_DEAL.addBacks) expect(line.annualAmount).toBeGreaterThan(0)
+    expectUniqueIds(seed.addBacks)
+    for (const line of seed.addBacks) expect(line.annualAmount).toBeGreaterThan(0)
   })
 
   it("uses only documentation qualities from the union", () => {
-    for (const line of FOCUS_DEAL.addBacks) {
+    for (const line of seed.addBacks) {
       expect(DOCUMENTATION_QUALITIES).toContain(line.documentation)
     }
   })
 
   it("keeps every optional share inside 0-1", () => {
-    for (const line of FOCUS_DEAL.addBacks) {
+    for (const line of seed.addBacks) {
       for (const share of [line.businessUseShare, line.roleVacatedShare]) {
         if (share !== undefined) {
           expect(share).toBeGreaterThanOrEqual(0)
@@ -219,45 +181,36 @@ describe("FOCUS_DEAL", () => {
   })
 
   it("cannot claim an expense recurred more often than the history window allows", () => {
-    expect(FOCUS_DEAL.historyWindowYears).toBeGreaterThan(0)
-    for (const line of FOCUS_DEAL.addBacks) {
+    expect(seed.historyWindowYears).toBeGreaterThan(0)
+    for (const line of seed.addBacks) {
       if (line.recurredYears !== undefined) {
         expect(line.recurredYears).toBeGreaterThanOrEqual(0)
-        expect(line.recurredYears).toBeLessThanOrEqual(FOCUS_DEAL.historyWindowYears)
+        expect(line.recurredYears).toBeLessThanOrEqual(seed.historyWindowYears)
       }
     }
   })
 
   it("claims add-backs that fit inside the claimed SDE", () => {
-    const claimed = FOCUS_DEAL.addBacks.reduce((sum, line) => sum + line.annualAmount, 0)
+    const claimed = seed.addBacks.reduce((sum, line) => sum + line.annualAmount, 0)
     expect(claimed).toBeGreaterThan(0)
-    expect(claimed).toBeLessThanOrEqual(FOCUS_DEAL.card.claimedSde)
-  })
-
-  it("gives each of the six challenge rules something to fire on", () => {
-    const { addBacks, occupancy } = FOCUS_DEAL
-    expect(addBacks.some((l) => l.roleVacatedShare !== undefined)).toBe(true) // role_split
-    expect(addBacks.some((l) => l.businessUseShare !== undefined)).toBe(true) // mixed_use
-    expect(addBacks.some((l) => l.documentation !== "verified")).toBe(true) // documentation
-    expect(addBacks.some((l) => l.replacementCost !== undefined)).toBe(true) // replacement_cost
-    expect(addBacks.some((l) => (l.recurredYears ?? 0) > 1)).toBe(true) // reserve
-    expect(occupancy.costInPandL === 0 || occupancy.premisesOwnedBySeller).toBe(true) // occupancy
+    expect(claimed).toBeLessThanOrEqual(seed.card.claimedSde)
   })
 
   it("leaves at least one claim intact so the recast can visibly agree", () => {
-    const unchallengeable = FOCUS_DEAL.addBacks.filter(
+    const unchallengeable = seed.addBacks.filter(
       (l) =>
         l.documentation === "verified" &&
         l.businessUseShare === undefined &&
-        l.roleVacatedShare === undefined &&
-        (l.recurredYears ?? 0) <= 1
+        (l.roleVacatedShare === undefined || l.roleVacatedShare === 1) &&
+        (l.recurredYears ?? 0) <= 1 &&
+        l.replacementCost === undefined
     )
     expect(unchallengeable.length).toBeGreaterThan(0)
   })
 
   it("declares a coherent comp band and risk profile", () => {
-    expect(FOCUS_DEAL.compMultiple.low).toBeLessThan(FOCUS_DEAL.compMultiple.high)
-    const { risk } = FOCUS_DEAL
+    expect(seed.compMultiple.low).toBeLessThan(seed.compMultiple.high)
+    const { risk } = seed
     for (const share of [risk.topCustomerShare, risk.topThreeCustomerShare, risk.recurringRevenueShare]) {
       expect(share).toBeGreaterThanOrEqual(0)
       expect(share).toBeLessThanOrEqual(1)
@@ -266,11 +219,34 @@ describe("FOCUS_DEAL", () => {
     expect(risk.employees).toBeGreaterThanOrEqual(risk.longTenuredStaff)
   })
 
-  it("asserts no conclusion — no defensible SDE, fair value, score, or verdict in the seed", () => {
-    const seed = JSON.stringify(FOCUS_DEAL)
-    for (const forbidden of ["defensibleSde", "fairValue", "verdict", "score", "impliedMultiple"]) {
-      expect(seed).not.toContain(forbidden)
+  it("gives the card the workspace's header facts — name, place, prose, both sides of the story", () => {
+    expect(seed.card.name.trim().length).toBeGreaterThan(0)
+    expect(seed.card.industry.trim().length).toBeGreaterThan(0)
+    expect(seed.card.geography.trim().length).toBeGreaterThan(0)
+    expect(seed.card.highlights.length).toBeGreaterThanOrEqual(3)
+    expect(seed.card.concerns.length).toBeGreaterThanOrEqual(2)
+    for (const line of seed.addBacks) {
+      expect((line.sourceNote ?? "").trim().length).toBeGreaterThan(0)
     }
+  })
+
+  it("asserts no conclusion — no defensible SDE, fair value, score, or verdict in the seed", () => {
+    const serialized = JSON.stringify(seed)
+    for (const forbidden of ["defensibleSde", "fairValue", "verdict", "score", "impliedMultiple"]) {
+      expect(serialized).not.toContain(forbidden)
+    }
+  })
+})
+
+describe("FOCUS_DEAL", () => {
+  it("gives each of the six challenge rules something to fire on", () => {
+    const { addBacks, occupancy } = FOCUS_DEAL
+    expect(addBacks.some((l) => l.roleVacatedShare !== undefined)).toBe(true) // role_split
+    expect(addBacks.some((l) => l.businessUseShare !== undefined)).toBe(true) // mixed_use
+    expect(addBacks.some((l) => l.documentation !== "verified")).toBe(true) // documentation
+    expect(addBacks.some((l) => l.replacementCost !== undefined)).toBe(true) // replacement_cost
+    expect(addBacks.some((l) => (l.recurredYears ?? 0) > 1)).toBe(true) // reserve
+    expect(occupancy.costInPandL === 0 || occupancy.premisesOwnedBySeller).toBe(true) // occupancy
   })
 })
 
@@ -373,6 +349,17 @@ describe("copy", () => {
   it("states no figure in the log — every number on screen is derived", () => {
     for (const line of INGESTION_LOG) {
       expect(line.text).not.toMatch(/\$\s?[\d.]/)
+    }
+  })
+
+  it("offers both new-deal paths with non-empty copy and no figures", () => {
+    const paths = [NEW_DEAL_COPY.paths.import, NEW_DEAL_COPY.paths.network]
+    for (const path of paths) {
+      expect(path.title.trim().length).toBeGreaterThan(0)
+      expect(path.body.trim().length).toBeGreaterThan(0)
+      expect(path.cta.trim().length).toBeGreaterThan(0)
+      // Entry copy states no figure — every number on screen is derived.
+      expect(`${path.title} ${path.body} ${path.cta}`).not.toMatch(/\$\s?[\d.]/)
     }
   })
 

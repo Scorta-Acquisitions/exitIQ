@@ -513,7 +513,7 @@ function AHero() {
             letterSpacing: ".16px",
           }}
         >
-          Scorta is rebuilding the broker — for the millions of small home-service businesses whose owners are ready to
+          Scorta is rebuilding the broker — for the millions of Main Street businesses whose owners are ready to
           retire, and whose books were never built to be sold.
         </p>
       </div>
