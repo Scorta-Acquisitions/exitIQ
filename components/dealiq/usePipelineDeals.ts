@@ -43,11 +43,19 @@ export type PipelineView = {
 }
 
 export function usePipelineDeals(): PipelineView {
-  const { screened, hydrated } = useDealIQSession()
+  const { screened, loiSentDealId, hydrated } = useDealIQSession()
 
   const deals = React.useMemo<ReadonlyArray<PipelineDeal>>(() => {
     if (!screened) return PIPELINE_DEALS
-    if (screened.card.id === FOCUS_DEAL_ID) return [...PIPELINE_DEALS, FOCUS_PIPELINE_DEAL]
+    if (screened.card.id === FOCUS_DEAL_ID) {
+      // The LOI gate (item 10) moves the card; the funnel counters derive from
+      // the stage, so the LOI column increments with no counter stored anywhere.
+      const focus =
+        loiSentDealId === FOCUS_DEAL_ID
+          ? { ...FOCUS_PIPELINE_DEAL, stage: "loi" as const, lastAgentAction: PIPELINE_COPY.loiSentAction }
+          : FOCUS_PIPELINE_DEAL
+      return [...PIPELINE_DEALS, focus]
+    }
     // A card the fixture set does not cover still belongs on the board; it simply
     // has no engine result behind it yet, which the board renders as unscored.
     return [
@@ -66,7 +74,7 @@ export function usePipelineDeals(): PipelineView {
         lastAgentAction: PIPELINE_COPY.justScreenedAction,
       },
     ]
-  }, [screened])
+  }, [screened, loiSentDealId])
 
   return { deals, screenedId: screened?.card.id ?? null, hydrated }
 }

@@ -521,6 +521,17 @@ export type LoiDraft = {
   readonly terms: ReadonlyArray<LoiTerm>
 }
 
+export type LoiInput = {
+  readonly dealId: string
+  readonly dealName: string
+  readonly ask: number
+  readonly buyerName: string
+  readonly firmName: string
+  readonly recast: ReverseRecastResult
+  /** Financing assumptions — the LOI reprices the stack at the offer, not the ask. */
+  readonly financing: FinancingTerms
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Certified Deal Flow
 // ─────────────────────────────────────────────────────────────────────────────

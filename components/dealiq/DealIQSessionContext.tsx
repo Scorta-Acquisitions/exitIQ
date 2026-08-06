@@ -19,6 +19,7 @@ import type { SessionScreenedDeal } from "@/lib/dealiq/types"
 
 const SCREENED_KEY = "scorta:dealiq:screened"
 const VERIFIED_KEY = "scorta:dealiq:verified"
+const LOI_SENT_KEY = "scorta:dealiq:loi-sent"
 
 type DealIQSessionState = {
   /** The deal screened in this session, or `null` before the Inbox has run. */
@@ -26,6 +27,9 @@ type DealIQSessionState = {
   setScreened: (deal: SessionScreenedDeal | null) => void
   capitalVerified: boolean
   setCapitalVerified: (verified: boolean) => void
+  /** Deal whose LOI was sent this session — moves its pipeline card to the LOI stage. */
+  loiSentDealId: string | null
+  setLoiSent: (dealId: string | null) => void
   /** `false` until the sessionStorage read has run on the client. */
   hydrated: boolean
 }
@@ -49,12 +53,14 @@ function readScreened(): SessionScreenedDeal | null {
 export function DealIQSessionProvider({ children }: { children: React.ReactNode }) {
   const [screened, setScreenedState] = React.useState<SessionScreenedDeal | null>(null)
   const [capitalVerified, setCapitalVerifiedState] = React.useState(false)
+  const [loiSentDealId, setLoiSentState] = React.useState<string | null>(null)
   const [hydrated, setHydrated] = React.useState(false)
 
   React.useEffect(() => {
     setScreenedState(readScreened())
     try {
       setCapitalVerifiedState(sessionStorage.getItem(VERIFIED_KEY) === "1")
+      setLoiSentState(sessionStorage.getItem(LOI_SENT_KEY))
     } catch {
       // sessionStorage may be unavailable; the session continues with defaults.
     }
@@ -81,9 +87,19 @@ export function DealIQSessionProvider({ children }: { children: React.ReactNode 
     }
   }, [])
 
+  const setLoiSent = React.useCallback((dealId: string | null) => {
+    setLoiSentState(dealId)
+    try {
+      if (dealId) sessionStorage.setItem(LOI_SENT_KEY, dealId)
+      else sessionStorage.removeItem(LOI_SENT_KEY)
+    } catch {
+      // no-op
+    }
+  }, [])
+
   const value = React.useMemo<DealIQSessionState>(
-    () => ({ screened, setScreened, capitalVerified, setCapitalVerified, hydrated }),
-    [screened, setScreened, capitalVerified, setCapitalVerified, hydrated]
+    () => ({ screened, setScreened, capitalVerified, setCapitalVerified, loiSentDealId, setLoiSent, hydrated }),
+    [screened, setScreened, capitalVerified, setCapitalVerified, loiSentDealId, setLoiSent, hydrated]
   )
 
   return <DealIQSessionContext.Provider value={value}>{children}</DealIQSessionContext.Provider>
@@ -99,6 +115,8 @@ export function useDealIQSession(): DealIQSessionState {
       setScreened: () => {},
       capitalVerified: false,
       setCapitalVerified: () => {},
+      loiSentDealId: null,
+      setLoiSent: () => {},
       hydrated: false,
     }
   }

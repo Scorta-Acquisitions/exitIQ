@@ -261,9 +261,14 @@ export const LOI_COPY = {
   disclaimer:
     "This is a draft letter of intent generated for discussion. It is non-binding, does not constitute legal advice, and must be reviewed by counsel before it is sent.",
   whyThisPrice: "Why this price, not the ask",
+  calloutAsk: "The ask",
+  calloutOffer: "This offer",
+  calloutGap: "The gap",
   sendGate: "Send to seller's Case Manager",
   sending: "Sending…",
   sent: "Delivered to the seller's Case Manager",
+  notAvailableNote:
+    "The LOI drafter runs on deals screened in this session. Screen this deal through the Deal Inbox to derive an offer.",
 } as const
 
 /** Screen Score surface copy. */
@@ -291,4 +296,6 @@ export const PIPELINE_COPY = {
   /** Stamped on the pipeline card the moment the Inbox lands a deal. */
   justScreenedAction: "Screened just now — recast, returns and score computed",
   justScreenedBadge: "New",
+  /** Stamped on the card when the LOI gate fires and the card moves to the LOI stage. */
+  loiSentAction: "LOI drafted and delivered to the seller's Case Manager",
 } as const

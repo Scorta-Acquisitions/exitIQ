@@ -45,7 +45,7 @@ this document → the code.
 | 11 | Capital Verification | 2.5h | ✅ **Done** | — |
 | 13 | Cross-product handoff seam | 1.5h | ⏭ **Deferred** (owner, 2026-08-05) | — |
 | 9 | Diligence Pack | 3h | ✅ **Done** | — |
-| 10 | LOI Drafter | 4h | ⬜ | — |
+| 10 | LOI Drafter | 4h | ✅ **Done** | — |
 | 12 | Certified Deal Flow | 2.5h | ⬜ | — |
 
 Build order is the plan's serial spine: **1 → 2 → 3 → 4 → 14 → 5 → 6 → 7 → 8 → 11 → 13 → 9 → 10 → 12.**
@@ -425,6 +425,27 @@ split; the pack markdown is pre-built server-side from the same ranked list the 
     definition; item 10's contingencies should reuse it rather than re-deriving.
 37. **`CATEGORY_LABEL` / `ASK_OF_LABEL` live in `diligence.ts`** — same pattern as `RULE_LABEL`
     (standing decision 31): enum display names are engine-module exports, not copy.
+
+### Item 10 — LOI Drafter ✅
+
+`lib/dealiq/loi.ts` (`buildLoi` — price = fair value, structure = capital stack, contingencies =
+fired recast rules via `firedRules()`, exclusivity/deposit/earnout from exported constants; every
+term carries a rationale naming its source metric) + 10 tests, synthetic fixtures (242 total green) ·
+`LOIPanel.tsx` (term-sheet layout, expandable rationale rows, why-this-price callout, unconditional
+non-binding badge + disclaimer, ~700ms send gate → signature + toast) · `loiSentDealId` added to
+`DealIQSessionContext` (key `scorta:dealiq:loi-sent`); `usePipelineDeals` moves the focus card to the
+LOI stage on that flag, so the funnel counter increments by derivation, not storage. LOI tab wired;
+the last `PendingSurface` tab note is gone. `pnpm build` clean.
+
+**New standing decisions:**
+
+38. **`buildLoi` takes the recast + financing terms and reprices the stack itself** (via
+    `computeReturns` at `fairValue`) rather than accepting a `ReturnsResult` — the analysis's returns
+    are priced at the *ask*, and an LOI whose structure sums to the ask instead of the offer would be
+    wrong by construction. The plan's `buildLoi(returns, recast, mandate)` sketch is superseded;
+    mandate turned out to be unused (the DSCR floor arrives inside `FinancingTerms`).
+39. **The earnout is the bridge term**: `min(ask − fairValue, EARNOUT_CAP_SHARE × price)`, emitted
+    only when the ask exceeds the offer — the term exists precisely when there is a gap to argue about.
 
 ---
 

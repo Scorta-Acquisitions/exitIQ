@@ -2,18 +2,20 @@ import { notFound } from "next/navigation"
 
 import { DealWorkspace } from "@/components/dealiq/DealWorkspace"
 import { DiligencePanel } from "@/components/dealiq/DiligencePanel"
+import { LOIPanel } from "@/components/dealiq/LOIPanel"
 import { PendingSurface } from "@/components/dealiq/PendingSurface"
 import { ReturnsPanel } from "@/components/dealiq/ReturnsPanel"
 import { ReverseRecastPanel } from "@/components/dealiq/ReverseRecastPanel"
 import { ScoreSummary, ScreenScorePanel } from "@/components/dealiq/ScreenScorePanel"
 import { analyzeDeal } from "@/lib/dealiq/analyze"
-import { DILIGENCE_COPY, RECAST_COPY, RETURNS_COPY } from "@/lib/dealiq/data/copy"
+import { BUYER } from "@/lib/dealiq/data/buyer"
+import { DILIGENCE_COPY, LOI_COPY, RECAST_COPY, RETURNS_COPY } from "@/lib/dealiq/data/copy"
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { DILIGENCE_BANK } from "@/lib/dealiq/data/diligence"
 import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
 import { diligencePackMarkdown, firedRules, rankQuestions } from "@/lib/dealiq/diligence"
-import { DEAL_TABS, resolveDealTab } from "@/lib/dealiq/navigation"
-import type { DealTabKey } from "@/lib/dealiq/types"
+import { buildLoi } from "@/lib/dealiq/loi"
+import { resolveDealTab } from "@/lib/dealiq/navigation"
 
 /**
  * The deal workspace. Server component by design: `?tab=` is read from
@@ -26,16 +28,6 @@ import type { DealTabKey } from "@/lib/dealiq/types"
  */
 
 const VALID_DEAL_IDS: ReadonlySet<string> = new Set([...PIPELINE_DEALS.map((deal) => deal.id), FOCUS_DEAL.card.id])
-
-const TAB_NOTES: Record<
-  Exclude<DealTabKey, "score" | "recast" | "returns" | "diligence">,
-  { eyebrow: string; note: string }
-> = {
-  loi: {
-    eyebrow: "LOI Drafter",
-    note: "The LOI Drafter lands with item 10: a non-binding term sheet derived from the returns model and the recast, with a negotiation rationale attached to every term.",
-  },
-}
 
 export default async function DealPage({
   params,
@@ -51,7 +43,6 @@ export default async function DealPage({
 
   const rawTab = query.tab
   const activeTab = resolveDealTab(Array.isArray(rawTab) ? rawTab[0] : rawTab)
-  const tabMeta = DEAL_TABS.find((tab) => tab.key === activeTab)
 
   return (
     <DealWorkspace dealId={id} activeTab={activeTab}>
@@ -64,11 +55,7 @@ export default async function DealPage({
       ) : activeTab === "diligence" ? (
         <DiligenceTab dealId={id} />
       ) : (
-        <PendingSurface
-          eyebrow={TAB_NOTES[activeTab].eyebrow}
-          title={tabMeta?.label ?? "Deal"}
-          note={TAB_NOTES[activeTab].note}
-        />
+        <LoiTab dealId={id} />
       )}
     </DealWorkspace>
   )
@@ -123,6 +110,28 @@ function DiligenceTab({ dealId }: { dealId: string }) {
       note={DILIGENCE_COPY.notAvailableNote}
     />
   )
+}
+
+/**
+ * Same split. The draft derives server-side from the same analysis as every
+ * other tab — `buildLoi` reprices the stack at the offer, so the terms shown
+ * are the ones that finance the price being offered, not the ask.
+ */
+function LoiTab({ dealId }: { dealId: string }) {
+  if (dealId === FOCUS_DEAL.card.id) {
+    const analysis = analyzeDeal(FOCUS_DEAL)
+    const draft = buildLoi({
+      dealId,
+      dealName: FOCUS_DEAL.card.name,
+      ask: FOCUS_DEAL.card.ask,
+      buyerName: BUYER.name,
+      firmName: BUYER.firmName,
+      recast: analysis.recast,
+      financing: analysis.terms,
+    })
+    return <LOIPanel draft={draft} />
+  }
+  return <PendingSurface eyebrow={LOI_COPY.eyebrow} title={LOI_COPY.title} note={LOI_COPY.notAvailableNote} />
 }
 
 /** Same split again: the live model for the focus deal, an honest note for the rest. */
