@@ -37,7 +37,7 @@ this document → the code.
 | 2 | Engines: `reverseRecast` · `returns` · `screenScore` (+ Vitest) | 4h | ✅ **Done** | `1e13244` |
 | 3 | Standalone app shell & IA | 4h | ✅ **Done** | `3ea5aca` |
 | 4 | Buyer sign-in & standalone entry | 2h | ✅ **Done** | `f299e58` |
-| 14 | Landing-page buy-side entry | 2.5h | ⬜ | — |
+| 14 | Landing-page buy-side entry | 2.5h | ✅ **Done** | — |
 | 5 | Deal Inbox | 4h | ⬜ | — |
 | 6 | Screen Score | 4h | ⬜ | — |
 | 7 | Reverse Recast *(highest polish budget)* | 6h | ⬜ | — |
@@ -299,6 +299,16 @@ Verified live: `curl /dealiq/deal/x?tab=recast` → 307 to `/dealiq/signin?next=
     `lib/dealiq/navigation` — safe because that module's imports are type-only. `?next=` is only
     ever consumed through `safeDealIqPath` (rejects `//`, absolute URLs, `\`, `:`, `..`, encoded
     variants, and any path outside `/dealiq`).
+
+### Item 14 — Landing-page buy-side entry ✅
+
+Four additive insertions to `LandingPage.tsx`, no restructuring: "For buyers" nav link (desktop +
+mobile — the links array already routes `/`-prefixed hrefs through `<Link>`, bypassing the anchor
+handler) · quiet hero line under the microcopy · `SBuySide()` band between `SProductSurfaces` and
+`SRoadmap` (three tiles matching the product-surfaces card treatment, `C.sky`/`C.lav` accents,
+`useReveal` classes, CTA → `/dealiq`, secondary link → `#exitiq`) · footer "DealIQ for buyers" link.
+All copy `TODO(content)`-marked. No `lib/dealiq/` import in the landing bundle. Every entry points at
+`/dealiq`; item 4's middleware handles the signed-out case.
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer

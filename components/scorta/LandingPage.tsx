@@ -237,7 +237,10 @@ function setupTeaserWebGL(canvas: HTMLCanvasElement): WebGLControls {
 
 // ─── Teaser data ──────────────────────────────────────────────────────────────
 const TEASER_QUESTIONS = [
-  { q: "What kind of business do you own?", chips: ["HVAC", "Plumbing", "Landscaping", "Auto Repair", "Cleaning", "Other"] },
+  {
+    q: "What kind of business do you own?",
+    chips: ["HVAC", "Plumbing", "Landscaping", "Auto Repair", "Cleaning", "Other"],
+  },
   { q: "What is your annual revenue?", chips: ["Under $500K", "$500K – $1M", "$1M – $3M", "$3M – $7M", "$7M+"] },
   { q: "How long have you been operating?", chips: ["Under 5 years", "5 – 10 years", "10 – 20 years", "20+ years"] },
   { q: "What is your owner earnings (SDE) margin?", chips: ["Under 10%", "10 – 20%", "20 – 30%", "30%+"] },
@@ -372,7 +375,13 @@ function TeaserConfMeter({ value }: { value: number }) {
         </svg>
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           <div style={{ fontFamily: inter, fontSize: 11, color: "rgba(245,245,245,.45)", lineHeight: 1.4 }}>
-            {value === 0 ? "Awaiting input" : value < 40 ? "Calibrating…" : value < 70 ? "Pattern matched" : "High confidence"}
+            {value === 0
+              ? "Awaiting input"
+              : value < 40
+                ? "Calibrating…"
+                : value < 70
+                  ? "Pattern matched"
+                  : "High confidence"}
           </div>
           <div style={{ display: "flex", gap: 4 }}>
             {[...Array(5)].map((_, i) => (
@@ -508,8 +517,22 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
         }}
       >
         {/* Left: question + chips */}
-        <div style={{ padding: isMobile ? "20px 16px" : "28px", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 22 }}>
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 10 : 18 }}>
+        <div
+          style={{
+            padding: isMobile ? "20px 16px" : "28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: isMobile ? 16 : 22,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "flex-start" : "center",
+              gap: isMobile ? 10 : 18,
+            }}
+          >
             <TeaserSignalOrb phase={phase} />
             <div>
               <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 4 }}>
@@ -578,7 +601,15 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <p style={{ fontFamily: inter, fontSize: 14, color: "rgba(245,245,245,.55)", lineHeight: 1.6, maxWidth: 420 }}>
+              <p
+                style={{
+                  fontFamily: inter,
+                  fontSize: 14,
+                  color: "rgba(245,245,245,.55)",
+                  lineHeight: 1.6,
+                  maxWidth: 420,
+                }}
+              >
                 We&apos;ve matched your business to live M&A market data and deal comps. Your full Gap Report includes
                 buyer offer scenarios, SBA pre-screen, and a 90-day fix list.
               </p>
@@ -655,129 +686,131 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
         </div>
 
         {/* Right: dashboard — hidden on mobile */}
-        {!isMobile && <div
-          style={{
-            padding: "28px 24px",
-            borderLeft: "1px solid rgba(245,245,245,.08)",
-            background: "rgba(0,0,0,.18)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 18,
-            position: "relative",
-          }}
-        >
-          {/* Scan line */}
+        {!isMobile && (
           <div
             style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              height: 1,
-              background: "linear-gradient(90deg,transparent,rgba(167,229,211,.35),transparent)",
-              animation: "sScanDown 4s linear infinite",
-              pointerEvents: "none",
+              padding: "28px 24px",
+              borderLeft: "1px solid rgba(245,245,245,.08)",
+              background: "rgba(0,0,0,.18)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
+              position: "relative",
             }}
-          />
-
-          <TeaserConfMeter value={dash.conf} />
-
-          <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
-
-          <div>
-            <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Estimated Value</div>
+          >
+            {/* Scan line */}
             <div
-              key={dash.val ?? "empty-val"}
               style={{
-                fontFamily: garamond,
-                fontSize: 26,
-                fontWeight: 300,
-                letterSpacing: "-.4px",
-                color: dash.val ? "rgba(245,245,245,.95)" : "rgba(245,245,245,.2)",
-                lineHeight: 1,
-                animation: dash.val ? "sNumRoll .55s cubic-bezier(.34,1.3,.64,1)" : "none",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: 1,
+                background: "linear-gradient(90deg,transparent,rgba(167,229,211,.35),transparent)",
+                animation: "sScanDown 4s linear infinite",
+                pointerEvents: "none",
               }}
-            >
-              {dash.val ?? "—"}
-            </div>
-            {dash.mult && (
+            />
+
+            <TeaserConfMeter value={dash.conf} />
+
+            <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
+
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Estimated Value</div>
               <div
-                key={dash.mult}
-                style={{
-                  fontFamily: inter,
-                  fontSize: 12,
-                  color: C.mint,
-                  fontWeight: 500,
-                  marginTop: 4,
-                  animation: "sSlideUp .4s",
-                }}
-              >
-                {dash.mult} SDE multiple
-              </div>
-            )}
-          </div>
-
-          <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
-
-          <div>
-            <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Broker fee eliminated</div>
-            <div
-              key={dash.fee ?? "empty-fee"}
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 6,
-                animation: dash.fee ? "sNumRoll .5s cubic-bezier(.34,1.3,.64,1)" : "none",
-              }}
-            >
-              <span
+                key={dash.val ?? "empty-val"}
                 style={{
                   fontFamily: garamond,
                   fontSize: 26,
                   fontWeight: 300,
                   letterSpacing: "-.4px",
-                  color: dash.fee ? C.mint : "rgba(245,245,245,.2)",
+                  color: dash.val ? "rgba(245,245,245,.95)" : "rgba(245,245,245,.2)",
+                  lineHeight: 1,
+                  animation: dash.val ? "sNumRoll .55s cubic-bezier(.34,1.3,.64,1)" : "none",
                 }}
               >
-                {dash.fee ?? "—"}
-              </span>
-              {dash.fee && (
-                <span style={{ fontFamily: inter, fontSize: 11, color: "rgba(167,229,211,.6)" }}>saved</span>
+                {dash.val ?? "—"}
+              </div>
+              {dash.mult && (
+                <div
+                  key={dash.mult}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: 12,
+                    color: C.mint,
+                    fontWeight: 500,
+                    marginTop: 4,
+                    animation: "sSlideUp .4s",
+                  }}
+                >
+                  {dash.mult} SDE multiple
+                </div>
               )}
             </div>
-            {dash.fee && (
-              <div style={{ fontFamily: inter, fontSize: 11, color: "rgba(245,245,245,.3)", marginTop: 4 }}>
-                vs. 8–12% traditional broker fee
+
+            <div style={{ height: 1, background: "rgba(245,245,245,.07)" }} />
+
+            <div>
+              <div style={{ ...eyebrowOnDark, fontSize: 10, marginBottom: 6 }}>Broker fee eliminated</div>
+              <div
+                key={dash.fee ?? "empty-fee"}
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 6,
+                  animation: dash.fee ? "sNumRoll .5s cubic-bezier(.34,1.3,.64,1)" : "none",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: garamond,
+                    fontSize: 26,
+                    fontWeight: 300,
+                    letterSpacing: "-.4px",
+                    color: dash.fee ? C.mint : "rgba(245,245,245,.2)",
+                  }}
+                >
+                  {dash.fee ?? "—"}
+                </span>
+                {dash.fee && (
+                  <span style={{ fontFamily: inter, fontSize: 11, color: "rgba(167,229,211,.6)" }}>saved</span>
+                )}
+              </div>
+              {dash.fee && (
+                <div style={{ fontFamily: inter, fontSize: 11, color: "rgba(245,245,245,.3)", marginTop: 4 }}>
+                  vs. 8–12% traditional broker fee
+                </div>
+              )}
+            </div>
+
+            {answers.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
+                <div style={{ height: 1, background: "rgba(245,245,245,.07)", marginBottom: 6 }} />
+                <div style={{ ...eyebrowOnDark, fontSize: 10 }}>Signal profile</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {answers.map((a, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontFamily: inter,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "rgba(245,245,245,.6)",
+                        background: "rgba(245,245,245,.06)",
+                        border: "1px solid rgba(245,245,245,.1)",
+                        borderRadius: 9999,
+                        padding: "3px 9px",
+                        animation: "sChipFloat .4s",
+                      }}
+                    >
+                      {a}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-
-          {answers.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: "auto" }}>
-              <div style={{ height: 1, background: "rgba(245,245,245,.07)", marginBottom: 6 }} />
-              <div style={{ ...eyebrowOnDark, fontSize: 10 }}>Signal profile</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {answers.map((a, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      fontFamily: inter,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: "rgba(245,245,245,.6)",
-                      background: "rgba(245,245,245,.06)",
-                      border: "1px solid rgba(245,245,245,.1)",
-                      borderRadius: 9999,
-                      padding: "3px 9px",
-                      animation: "sChipFloat .4s",
-                    }}
-                  >
-                    {a}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>}
+        )}
       </div>
     </div>
   )
@@ -914,7 +947,8 @@ function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
       style={{
-        background: "linear-gradient(90deg, rgba(167,229,211,.18) 0%, rgba(200,184,224,.14) 50%, rgba(168,200,232,.14) 100%)",
+        background:
+          "linear-gradient(90deg, rgba(167,229,211,.18) 0%, rgba(200,184,224,.14) 50%, rgba(168,200,232,.14) 100%)",
         borderBottom: `1px solid rgba(167,229,211,.35)`,
         display: "flex",
         alignItems: "center",
@@ -996,7 +1030,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
     const id = href.replace("#", "")
     const target = document.getElementById(id)
     if (!target) return
-    const stickyHeader = document.querySelector<HTMLElement>('[data-sticky-header]')
+    const stickyHeader = document.querySelector<HTMLElement>("[data-sticky-header]")
     const offset = stickyHeader ? stickyHeader.offsetHeight : 64
     const top = target.getBoundingClientRect().top + window.scrollY - offset
     window.scrollTo({ top, behavior: "smooth" })
@@ -1005,6 +1039,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
   const links = [
     { l: "How it works", href: "#how" },
     { l: "Products", href: "#products" },
+    { l: "For buyers", href: "/dealiq" },
     { l: "About", href: "/about" },
   ]
 
@@ -1351,6 +1386,16 @@ function SHero({ onOpen }: { onOpen: () => void }) {
           </div>
           <div style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginTop: 2 }}>
             Free assessment. No login. ~3 minutes.
+          </div>
+          {/* TODO(content): buy-side hero line — final wording lands in the content pass */}
+          <div style={{ fontFamily: inter, fontSize: 13, color: C.muted, marginTop: -6 }}>
+            Buying a business, not selling?{" "}
+            <Link
+              href="/dealiq"
+              style={{ color: C.sky, fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }}
+            >
+              See DealIQ →
+            </Link>
           </div>
         </div>
 
@@ -2924,6 +2969,124 @@ function SProductSurfaces() {
   )
 }
 
+// ─── Buy-side band (DealIQ entry) ─────────────────────────────────────────────
+// TODO(content): all copy in this section is placeholder — final wording lands in the content pass.
+function SBuySide() {
+  const tiles = [
+    {
+      accent: C.sky,
+      t: "Screen any listing in seconds",
+      d: "Paste a listing and get a structured deal card, a screen score, and a PASS / DIG / PURSUE verdict.",
+    },
+    {
+      accent: C.lav,
+      t: "Challenge the seller's add-backs",
+      d: "The add-back schedule taken apart line by line — the defensible SDE, and the delta off the ask.",
+    },
+    {
+      accent: C.sky,
+      t: "Model SBA returns and DSCR",
+      d: "Capital stack, debt service, cash-on-cash, and a price sensitivity slider that recomputes live.",
+    },
+  ]
+  return (
+    <section style={{ padding: "96px 24px", borderTop: `1px solid ${C.hairline}` }}>
+      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="s-rv" style={{ textAlign: "center", maxWidth: 720, margin: "0 auto 48px" }}>
+          <div style={{ ...eyebrow(), marginBottom: 16 }}>The other side of the table</div>
+          <h2
+            style={{
+              fontFamily: garamond,
+              fontSize: "clamp(32px, 4vw, 52px)",
+              fontWeight: 300,
+              letterSpacing: "-.96px",
+              lineHeight: 1.08,
+              color: C.ink,
+              margin: 0,
+            }}
+          >
+            Buying a business? That&apos;s DealIQ.
+          </h2>
+          <p
+            style={{
+              fontFamily: inter,
+              fontSize: 16,
+              color: C.body,
+              lineHeight: 1.6,
+              margin: "16px auto 0",
+              maxWidth: 560,
+            }}
+          >
+            The same underwriting engine, pointed the other way — built for searchers who triage many deals fast.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {tiles.map((tile, i) => (
+            <div
+              key={tile.t}
+              className={["s-rv", i === 1 ? "s-d1" : i === 2 ? "s-d2" : "", "s-ch"].join(" ")}
+              style={{
+                background: C.card,
+                border: `1px solid ${C.hairline}`,
+                borderRadius: 20,
+                padding: 28,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle at 35% 35%, ${tile.accent} 0%, transparent 75%)`,
+                }}
+              />
+              <div
+                style={{ fontFamily: garamond, fontSize: 24, fontWeight: 300, color: C.ink, letterSpacing: "-.32px" }}
+              >
+                {tile.t}
+              </div>
+              <p style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55, margin: 0 }}>{tile.d}</p>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="s-rv s-d2"
+          style={{
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 40,
+            flexWrap: "wrap",
+          }}
+        >
+          <Link href="/dealiq" style={btnPrimary}>
+            Open DealIQ →
+          </Link>
+          <a
+            href="#exitiq"
+            style={{
+              fontFamily: inter,
+              fontSize: 14,
+              color: C.muted,
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
+          >
+            Selling instead? Take the free assessment
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Roadmap ──────────────────────────────────────────────────────────────────
 function SRoadmap() {
   const items = [
@@ -3082,6 +3245,7 @@ function SFooter() {
       { l: "Gap Report", h: "#products" },
       { l: "SBA Pre-Screen", h: "#products" },
       { l: "Document Vault", h: "#products" },
+      { l: "DealIQ for buyers", h: "/dealiq" },
     ],
     Company: [
       { l: "About", h: "/about" },
@@ -3258,6 +3422,7 @@ export function ScortaLanding() {
         <SBoardroom />
         <SGapReport />
         <SProductSurfaces />
+        <SBuySide />
         <SRoadmap />
         <SFinalCTA onOpen={handleOpen} />
         <SFooter />
