@@ -1387,12 +1387,38 @@ function SHero({ onOpen }: { onOpen: () => void }) {
           <div style={{ fontFamily: inter, fontSize: 13, color: C.mutedSoft, marginTop: 2 }}>
             Free assessment. No login. ~3 minutes.
           </div>
-          {/* TODO(content): buy-side hero line — final wording lands in the content pass */}
-          <div style={{ fontFamily: inter, fontSize: 13, color: C.muted, marginTop: -6 }}>
-            Buying a business, not selling?{" "}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 6,
+              padding: "7px 8px 7px 16px",
+              borderRadius: 9999,
+              background: "rgba(168,200,232,.14)",
+              border: "1px solid rgba(168,200,232,.4)",
+              fontFamily: inter,
+              fontSize: 13.5,
+              color: C.body,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            Buying a business, not selling? DealIQ is our software for buyers.
             <Link
               href="/dealiq"
-              style={{ color: C.sky, fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "5px 13px",
+                borderRadius: 9999,
+                background: C.sky,
+                color: C.ink2,
+                fontWeight: 700,
+                fontSize: 12.5,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
             >
               See DealIQ →
             </Link>
@@ -3017,7 +3043,8 @@ function SBuySide() {
               maxWidth: 560,
             }}
           >
-            The same underwriting engine, pointed the other way — built for searchers who triage many deals fast.
+            The same underwriting engine, pointed the other way. Self-serve software for searchers who triage many
+            deals fast — no broker, no service fee, just the tool.
           </p>
         </div>
 
@@ -3079,7 +3106,7 @@ function SBuySide() {
               textUnderlineOffset: 3,
             }}
           >
-            Selling instead? Take the free assessment
+            Selling instead? We&apos;re the full-service brokerage — take the free assessment
           </a>
         </div>
       </div>
@@ -3415,6 +3442,7 @@ export function ScortaLanding() {
           <SNav onOpen={handleOpen} />
         </div>
         <SHero onOpen={handleOpen} />
+        <SBuySide />
         <SIndustryMarquee />
         <SSignalsBand />
         <SSpeedCompare />
@@ -3422,7 +3450,6 @@ export function ScortaLanding() {
         <SBoardroom />
         <SGapReport />
         <SProductSurfaces />
-        <SBuySide />
         <SRoadmap />
         <SFinalCTA onOpen={handleOpen} />
         <SFooter />
