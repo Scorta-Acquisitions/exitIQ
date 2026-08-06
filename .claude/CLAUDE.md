@@ -30,6 +30,20 @@ Build plans live in [`plans/`](../plans):
 - `plans/Scorta Brokerage Build.md` — strategic pivot + broker responsibility map
 - `plans/Phase 1 — Intake & Valuation.md`, `Phase 2 — Listing Preparation.md`, `Phase 3 — Buyer Outreach & Qualification.md`
 
+**DealIQ (buy-side, in progress).** A standalone buyer application under `lib/dealiq/` +
+`components/dealiq/` + `app/(dealiq)/` — separate IA, separate sign-in, *no* product switcher and no
+link from the seller workspace into it. Three documents, read in this order:
+- `plans/DealIQ — Product Boundary & Data Flow.md` — what DealIQ is and where its edges are
+- `plans/DealIQ — Execution Plan.md` — the 14 build items, the data seam (§1), and the settled
+  architecture decisions (§2). **Do not relitigate §2 mid-build.**
+- `plans/DealIQ — Build Log.md` — **running decision record.** Standing decisions that bind later
+  items, engine semantics, repo gotchas, and per-item status. Read it before starting any DealIQ
+  item, and append to it when you finish one.
+
+Two DealIQ rules worth stating here because they are easy to break by habit: nothing under
+`lib/dealiq/` may import anything outside `lib/dealiq/` (enforced by a test), and no business fact
+may appear in a component — all content lives in `lib/dealiq/data/` behind a placeholder banner.
+
 ---
 
 ## Engineering standards (non-negotiable)
