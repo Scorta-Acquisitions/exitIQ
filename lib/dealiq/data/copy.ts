@@ -197,4 +197,7 @@ export const PIPELINE_COPY = {
   emptyTitle: "Nothing screened yet",
   emptyBody: "Paste a listing into the Deal Inbox and it lands here with a score and a verdict.",
   emptyCta: "Screen a deal",
+  /** Stamped on the pipeline card the moment the Inbox lands a deal. */
+  justScreenedAction: "Screened just now — recast, returns and score computed",
+  justScreenedBadge: "New",
 } as const
