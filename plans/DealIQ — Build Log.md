@@ -41,7 +41,7 @@ this document → the code.
 | 5 | Deal Inbox | 4h | ✅ **Done** | — |
 | 6 | Screen Score | 4h | ✅ **Done** | — |
 | 7 | Reverse Recast *(highest polish budget)* | 6h | ✅ **Done** | — |
-| 8 | Returns Model | 5h | ⬜ | — |
+| 8 | Returns Model | 5h | ✅ **Done** | — |
 | 11 | Capital Verification | 2.5h | ⬜ | — |
 | 13 | Cross-product handoff seam | 1.5h | ⬜ | — |
 | 9 | Diligence Pack | 3h | ⬜ | — |
@@ -370,6 +370,17 @@ is instructed to explain, never compute. Verified live: 404 path and a grounded 
 33. **The "Screening Log" surface does not exist yet**; gate signatures render in place (timestamped
     line in the gate). If a log surface lands later, items 7/10 signatures should be recorded in
     `DealIQSessionContext` — not built now to avoid speculative state.
+
+### Item 8 — Returns Model ✅
+
+`ReturnsPanel.tsx` (client): native range slider (±25% off the ask, widened downward when fair value
+sits below the band so its tick stays on the track; `aria-valuetext` in dollars) · four scenario
+chips through `applyScenario` — one engine, no UI branches · capital stack bar + per-segment terms ·
+six-metric row with the precise labels from `RETURNS_COPY` · constraint line off
+`maxPriceAtDscrFloor`. All figures are one `useMemo` over `computeReturns`; `null` payback renders
+as "never recovers at this price"; non-finite values render as em dash via `format.ts` (standing
+decision 12), so slider extremes cannot show NaN. Returns tab wired with the item-6 split (full
+panel for the focus deal). `pnpm build` clean.
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer

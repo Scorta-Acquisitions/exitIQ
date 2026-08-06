@@ -2,10 +2,11 @@ import { notFound } from "next/navigation"
 
 import { DealWorkspace } from "@/components/dealiq/DealWorkspace"
 import { PendingSurface } from "@/components/dealiq/PendingSurface"
+import { ReturnsPanel } from "@/components/dealiq/ReturnsPanel"
 import { ReverseRecastPanel } from "@/components/dealiq/ReverseRecastPanel"
 import { ScoreSummary, ScreenScorePanel } from "@/components/dealiq/ScreenScorePanel"
 import { analyzeDeal } from "@/lib/dealiq/analyze"
-import { RECAST_COPY } from "@/lib/dealiq/data/copy"
+import { RECAST_COPY, RETURNS_COPY } from "@/lib/dealiq/data/copy"
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
 import { DEAL_TABS, resolveDealTab } from "@/lib/dealiq/navigation"
@@ -23,11 +24,7 @@ import type { DealTabKey } from "@/lib/dealiq/types"
 
 const VALID_DEAL_IDS: ReadonlySet<string> = new Set([...PIPELINE_DEALS.map((deal) => deal.id), FOCUS_DEAL.card.id])
 
-const TAB_NOTES: Record<Exclude<DealTabKey, "score" | "recast">, { eyebrow: string; note: string }> = {
-  returns: {
-    eyebrow: "Returns Model",
-    note: "The Returns Model lands with item 8: the capital stack, DSCR against its floor, cash-on-cash, payback, and a sensitivity slider that recomputes every metric live across four scenarios.",
-  },
+const TAB_NOTES: Record<Exclude<DealTabKey, "score" | "recast" | "returns">, { eyebrow: string; note: string }> = {
   diligence: {
     eyebrow: "Diligence Pack",
     note: "The Diligence Pack lands with item 9: roughly twenty-five questions ranked by which kill the deal fastest, with the ones the recast findings promoted floated to the top.",
@@ -60,6 +57,8 @@ export default async function DealPage({
         <ScoreTab dealId={id} />
       ) : activeTab === "recast" ? (
         <RecastTab dealId={id} />
+      ) : activeTab === "returns" ? (
+        <ReturnsTab dealId={id} />
       ) : (
         <PendingSurface
           eyebrow={TAB_NOTES[activeTab].eyebrow}
@@ -99,4 +98,23 @@ function RecastTab({ dealId }: { dealId: string }) {
     )
   }
   return <PendingSurface eyebrow={RECAST_COPY.eyebrow} title={RECAST_COPY.title} note={RECAST_COPY.notAvailableNote} />
+}
+
+/** Same split again: the live model for the focus deal, an honest note for the rest. */
+function ReturnsTab({ dealId }: { dealId: string }) {
+  if (dealId === FOCUS_DEAL.card.id) {
+    const analysis = analyzeDeal(FOCUS_DEAL)
+    return (
+      <ReturnsPanel
+        ask={FOCUS_DEAL.card.ask}
+        fairValue={analysis.recast.fairValue}
+        defensibleSde={analysis.recast.defensibleSde}
+        terms={analysis.terms}
+        uncoveredOccupancy={analysis.uncoveredOccupancy}
+      />
+    )
+  }
+  return (
+    <PendingSurface eyebrow={RETURNS_COPY.eyebrow} title={RETURNS_COPY.title} note={RETURNS_COPY.notAvailableNote} />
+  )
 }

@@ -198,6 +198,28 @@ export const RECAST_COPY = {
     "The challenge table runs on deals screened in this session. Screen this deal through the Deal Inbox to take its add-back schedule apart.",
 } as const
 
+/** Returns Model surface copy. Labels are deliberately precise — precision is what makes the figures credible. */
+export const RETURNS_COPY = {
+  eyebrow: "Returns Model",
+  title: "What the deal earns at this price",
+  stackTitle: "Capital stack",
+  sliderLabel: "Purchase price",
+  tickFair: "Fair value",
+  tickAsk: "Ask",
+  metricDebtService: "Monthly debt service, steady-state",
+  metricDscr: "DSCR against the lender floor",
+  metricCoc: "Year-1 cash-on-cash, pre-transition-risk",
+  metricPayback: "Years to payback on cash invested",
+  metricSalary: "Buyer salary, drawn before coverage",
+  metricCashRequired: "Cash required at close",
+  neverRecovers: "never recovers at this price",
+  constraintTitle: "Ceiling at the DSCR floor",
+  constraintBody:
+    "The highest price at which this scenario's cash flow still clears the lender floor. Above it, the structure does not finance — whatever the ask says.",
+  notAvailableNote:
+    "The returns model runs on deals screened in this session. Screen this deal through the Deal Inbox to model the structure.",
+} as const
+
 /** LOI surface copy. Non-binding labelling is not optional. */
 export const LOI_COPY = {
   eyebrow: "LOI Drafter",
