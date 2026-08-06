@@ -118,7 +118,7 @@ export const INBOX_COPY = {
   title: "Screen a deal",
   subtitle: "Paste a listing. Get a structured deal card, a score, and a verdict.",
   placeholder:
-    "Paste the listing text — description, asking price, cash flow, and the add-back schedule if the broker provided one. Then add your requirements: what you're looking for in a business your estimated range the factors you are placing importance on when deal searching",
+    "Paste the listing text — description, asking price, cash flow, and add-back schedule if available.\nAdd your requirements: what you’re looking for, your target range, and key deal factors.",
   sampleChip: "Load sample listing",
   submit: "Screen this deal",
   submitting: "Screening…",
@@ -305,6 +305,14 @@ export const DILIGENCE_COPY = {
   askLead: "Ask",
   notAvailableNote:
     "The diligence pack runs on deals screened in this session. Screen this deal through the Deal Inbox to generate its question pack.",
+  uploadSectionTitle: "Attach supporting documents",
+  uploadContext:
+    "As the seller answers these questions, the proof usually comes back as documents — financials, contracts, the lease, licenses. Attach them here so the evidence sits next to the questions it answers, instead of scattered across email.",
+  uploadButton: "Upload document",
+  uploadHint: "Read in your browser only — never uploaded, stored, or sent anywhere.",
+  uploadedTitle: "Attached this session",
+  wrongType: "That file type can't be read here. Use a PDF, image, or document file.",
+  removeAria: "Remove",
 } as const
 
 /** LOI surface copy. Non-binding labelling is not optional. */
