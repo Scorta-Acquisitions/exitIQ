@@ -34,10 +34,10 @@ function looksLikeUrl(value: string): boolean {
   return !trimmed.includes("\n") && /^(https?:\/\/|www\.)/i.test(trimmed)
 }
 
-export function DealInbox() {
+export function DealInbox({ initialText }: { initialText?: string }) {
   const { setScreened } = useDealIQSession()
 
-  const [value, setValue] = React.useState("")
+  const [value, setValue] = React.useState(initialText ?? "")
   const [phase, setPhase] = React.useState<Phase>("idle")
   const [error, setError] = React.useState<string | null>(null)
   const [guidance, setGuidance] = React.useState<string | null>(null)

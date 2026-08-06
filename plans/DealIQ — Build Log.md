@@ -46,7 +46,7 @@ this document → the code.
 | 13 | Cross-product handoff seam | 1.5h | ⏭ **Deferred** (owner, 2026-08-05) | — |
 | 9 | Diligence Pack | 3h | ✅ **Done** | — |
 | 10 | LOI Drafter | 4h | ✅ **Done** | — |
-| 12 | Certified Deal Flow | 2.5h | ⬜ | — |
+| 12 | Certified Deal Flow | 2.5h | ✅ **Done** | — |
 
 Build order is the plan's serial spine: **1 → 2 → 3 → 4 → 14 → 5 → 6 → 7 → 8 → 11 → 13 → 9 → 10 → 12.**
 
@@ -446,6 +446,26 @@ the last `PendingSurface` tab note is gone. `pnpm build` clean.
     mandate turned out to be unused (the DSCR floor arrives inside `FinancingTerms`).
 39. **The earnout is the bridge term**: `min(ask − fairValue, EARNOUT_CAP_SHARE × price)`, emitted
     only when the ask exceeds the offer — the term exists precisely when there is a gap to argue about.
+
+### Item 12 — Certified Deal Flow ✅
+
+`lib/dealiq/matching.ts` (`matchScore` — four weighted components with per-component `basis` lines;
+EV fit decays linearly over one band-width outside the band, SDE near-misses score proportionally;
+`rankListings` stable-sorts descending) + 10 tests, synthetic fixtures (252 total green) ·
+`CertifiedFlow.tsx` (cards sorted by computed match: countdown strip off `FLOW_AS_OF`, certification
+seal + basis, why-it-matched breakdown, match %) · card CTA → `/dealiq/screen?listing=<id>`; the
+screen page resolves it server-side and prefills the Inbox via `buildCertifiedListingText` (new in
+`data/copy.ts`, seed-interpolated like `buildSampleListing`) — the loop back to item 5. Locked state
++ verify CTA exist behind the same verification condition as the shell badge. `pnpm build` clean.
+
+**New standing decisions:**
+
+40. **The flow lock gates on `BUYER.capitalVerified || session flag`** — identical to the shell
+    badge (item 11), so the two can never disagree. With the pre-verified seed the lock never
+    renders; it activates if the content pass flips the seed. Not a bug — consistency was chosen
+    over demonstrability, since `/dealiq/verify` already demos the earn path.
+41. **`DealInbox` takes `initialText`** — prefill arrives as a server-read prop
+    (`?listing=` per standing decision 21), never via client-side URL parsing.
 
 ---
 

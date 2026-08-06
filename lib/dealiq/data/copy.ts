@@ -5,7 +5,7 @@
 
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { formatCompactCurrency, formatCount } from "@/lib/dealiq/format"
-import type { DealSeed, LogLine, VerificationMethod } from "@/lib/dealiq/types"
+import type { CertifiedListing, DealSeed, LogLine, VerificationMethod } from "@/lib/dealiq/types"
 
 /**
  * The Ingestion Agent's log script — fourteen lines, one every `LOG_STEP_MS`,
@@ -183,9 +183,40 @@ export const FLOW_COPY = {
     "Deals that cleared certification on the sell side, ranked against your mandate, before they list publicly.",
   lockedTitle: "Verify capital to view",
   lockedBody: "Certified listings are released to capital-verified buyers first. Verification takes one document.",
+  verifyCta: "Verify capital →",
   emptyMandate:
     "No certified listing currently matches your mandate. Widen the industry or geography criteria to see more.",
+  sealLabel: "Scorta-certified",
+  matchLabel: "Mandate match",
+  openMarketIn: "Open market in",
+  basisTitle: "Certification basis",
+  breakdownTitle: "Why it matched",
+  askLabel: "Asking",
+  sdeLabel: "SDE",
+  sbaChip: "SBA-eligible",
+  cta: "Screen this deal →",
 } as const
+
+/**
+ * Listing text for a certified-flow card's CTA into the Deal Inbox — closing
+ * the loop back to the screen (item 12 → item 5). Built from the listing rather
+ * than typed, same rule as `buildSampleListing`: the content pass rewrites the
+ * prose around the interpolations, never replaces them with literals.
+ */
+export function buildCertifiedListingText(listing: CertifiedListing): string {
+  return [
+    `${listing.name} — ${listing.industry}`,
+    listing.geography,
+    "",
+    `Asking: ${formatCompactCurrency(listing.ask)}`,
+    `Seller's discretionary earnings: ${formatCompactCurrency(listing.sde)}`,
+    "",
+    "Certification basis:",
+    ...listing.certificationBasis.map((line) => `  · ${line}`),
+    "",
+    "Pre-market certified listing shared through Scorta's Certified Deal Flow.",
+  ].join("\n")
+}
 
 /** Reverse Recast surface copy. */
 export const RECAST_COPY = {
