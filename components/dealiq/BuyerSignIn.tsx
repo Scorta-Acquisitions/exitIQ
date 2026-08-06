@@ -7,8 +7,8 @@
  * borrowing its auth call and error handling, not its layout or copy. A buyer
  * must never see a seller-branded sign-in, and must never land on `/dashboard`.
  *
- * Item 4 adds `?next=` deep-link preservation through `safeDealIqPath`; until
- * then every successful sign-in lands on the pipeline.
+ * `destination` arrives pre-validated by `safeDealIqPath` on the server page —
+ * this component never reads `?next=` itself.
  */
 
 import { useRouter } from "next/navigation"

@@ -12,8 +12,9 @@ import { createClient } from "@/lib/supabase/server"
  * The redirect target is DealIQ's own door — never `/login`. A buyer must not be
  * handed a seller-branded sign-in.
  *
- * Deep-link preservation (`?next=`) lands with item 4, together with
- * `safeDealIqPath`, which is what makes an unvalidated redirect param safe.
+ * Deep-link preservation happens in the root middleware, which is the layer that
+ * knows the requested path and forwards it as `?next=`; this guard is the backstop
+ * for anything the middleware matcher misses.
  */
 export default async function DealIQWorkspaceLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()

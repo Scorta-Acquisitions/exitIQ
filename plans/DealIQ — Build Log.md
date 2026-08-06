@@ -36,7 +36,7 @@ this document → the code.
 | 1 | Data layer & types | 2h | ✅ **Done** | `8adcf6e` |
 | 2 | Engines: `reverseRecast` · `returns` · `screenScore` (+ Vitest) | 4h | ✅ **Done** | `1e13244` |
 | 3 | Standalone app shell & IA | 4h | ✅ **Done** | `3ea5aca` |
-| 4 | Buyer sign-in & standalone entry | 2h | 🟡 Next — *partly landed in item 3* | — |
+| 4 | Buyer sign-in & standalone entry | 2h | ✅ **Done** | `f299e58` |
 | 14 | Landing-page buy-side entry | 2.5h | ⬜ | — |
 | 5 | Deal Inbox | 4h | ⬜ | — |
 | 6 | Screen Score | 4h | ⬜ | — |
@@ -283,6 +283,22 @@ rendered content, zero server errors — with the guard temporarily bypassed loc
 
 **Noted for item 13:** `/network` now exists in the route table, so DEMO P1.2 shipped after the plan
 was written. The adapter's secondary target is available.
+
+### Item 4 — Buyer sign-in & entry ✅
+
+`lib/dealiq/nextPath.ts` (`safeDealIqPath`) + tests (206 total green) · signed-out `/dealiq/*`
+requests now redirect with `?next=` · `signin/page.tsx` validates it and threads the destination
+through redirect and `BuyerSignIn`. Sign-out → `/dealiq/signin` already landed in item 3.
+Verified live: `curl /dealiq/deal/x?tab=recast` → 307 to `/dealiq/signin?next=…` with full path+query.
+
+**New standing decision:**
+
+25. **The `?next=` redirect lives in root `middleware.ts`, not the workspace layout.** Layouts
+    cannot see the requested path; middleware can. The layout guard stays as backstop (plain
+    redirect, no `next`). Middleware imports `DEALIQ_ROOT`/`DEALIQ_SIGNIN_PATH` from
+    `lib/dealiq/navigation` — safe because that module's imports are type-only. `?next=` is only
+    ever consumed through `safeDealIqPath` (rejects `//`, absolute URLs, `\`, `:`, `..`, encoded
+    variants, and any path outside `/dealiq`).
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer
