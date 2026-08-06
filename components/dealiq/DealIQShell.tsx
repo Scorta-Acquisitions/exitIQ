@@ -364,6 +364,7 @@ export function DealIQShell({ children }: { children: React.ReactNode }) {
             <div
               role="menu"
               aria-label="Account"
+              className="dq-menu-pop"
               style={{
                 position: "absolute",
                 top: 38,
@@ -450,28 +451,71 @@ function MenuLink({ href, label }: { href: string; label: string }) {
 export function DealIQScopedStyles() {
   return (
     <style>{`
+      .dq-nav-item { transition: background .15s ease, color .15s ease, border-color .15s ease; }
       .dq-nav-item:hover { background: rgba(12,10,9,.045); }
       .dq-nav-item[aria-current="page"]:hover { background: var(--dq-accent-soft); }
+      .dq-menu-item { transition: background .13s ease, color .13s ease; }
       .dq-menu-item:hover { background: rgba(12,10,9,.05); color: var(--t1); }
-      .dq-primary:hover { filter: brightness(1.08); }
-      .dq-avatar:hover { border-color: var(--dq-accent-edge); }
+      .dq-primary, .dq-cta { transition: filter .16s ease, transform .16s ease, box-shadow .16s ease; }
+      .dq-primary:hover, .dq-cta:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px var(--dq-accent-edge);
+      }
+      .dq-primary:active, .dq-cta:active:not(:disabled) { transform: none; }
+      .dq-avatar { transition: border-color .15s ease, transform .15s ease; }
+      .dq-avatar:hover { border-color: var(--dq-accent-edge); transform: scale(1.06); }
+      .dq-menu-pop { animation: dqFadeUp .16s ease-out both; transform-origin: top right; }
       .dq-focus:focus-visible {
         outline: 2px solid var(--dq-accent);
         outline-offset: 2px;
         border-radius: 8px;
       }
-      .dq-card:hover { border-color: var(--dq-accent-edge); transform: translateY(-1px); }
-      .dq-card { transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease; }
+      .dq-card {
+        transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease, background .18s ease;
+      }
+      .dq-card:hover {
+        border-color: var(--dq-accent-edge);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 26px rgba(20,15,8,.10);
+      }
+      .dq-stat { transition: border-color .18s ease, transform .18s ease; }
+      .dq-stat:hover { border-color: var(--dq-accent-edge); transform: translateY(-2px); }
       .dq-tab:hover { color: var(--t1); }
       .dq-step:hover:not(:disabled) { background: rgba(12,10,9,.06); color: var(--t1); }
+      .dq-bar-fill { transition: width .9s cubic-bezier(.22,1,.36,1); }
+      .dq-auth-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 40px;
+        width: min(1040px, 100%);
+        align-items: center;
+      }
+      .dq-auth-vignette { display: none; }
+      @media (min-width: 980px) {
+        .dq-auth-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .dq-auth-vignette { display: flex; }
+      }
       @keyframes dqFadeUp {
         from { opacity: 0; transform: translateY(4px); }
         to   { opacity: 1; transform: none; }
       }
+      @keyframes dqRiseIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: none; }
+      }
+      @keyframes dqTickIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: none; }
+      }
       .dq-enter { animation: dqFadeUp .28s ease-out both; }
+      .dq-rise { animation: dqRiseIn .55s cubic-bezier(.22,1,.36,1) both; }
+      .dq-tick { animation: dqTickIn .38s ease-out both; }
       @media (prefers-reduced-motion: reduce) {
-        .dq-enter { animation: none; }
-        .dq-card:hover { transform: none; }
+        .dq-enter, .dq-rise, .dq-tick, .dq-menu-pop { animation: none; }
+        .dq-card:hover, .dq-stat:hover, .dq-avatar:hover,
+        .dq-primary:hover, .dq-cta:hover:not(:disabled) { transform: none; }
+        .dq-bar-fill { transition: none; }
       }
     `}</style>
   )

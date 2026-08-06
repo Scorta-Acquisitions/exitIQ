@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { AppShell } from "@/components/scorta/AppShell"
 import { PERSONA } from "@/lib/persona"
+import { hasExitIqAccess } from "@/lib/productAccess"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/login")
+  // A session is necessary but not sufficient — the shared Supabase project means a
+  // buyer (DealIQ) session reaches this guard too. The seller workspace requires
+  // its product grant.
+  if (!hasExitIqAccess(user)) redirect("/login")
 
   return (
     <AppShell

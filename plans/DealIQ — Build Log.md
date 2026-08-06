@@ -467,6 +467,55 @@ screen page resolves it server-side and prefills the Inbox via `buildCertifiedLi
 41. **`DealInbox` takes `initialText`** — prefill arrives as a server-read prop
     (`?listing=` per standing decision 21), never via client-side URL parsing.
 
+### Post-sprint — Buyer demo credential & product-scoped access (2026-08-06)
+
+The gap item 3 flagged ("the repo has no demo credentials") is closed. A buyer user
+`buyer@placeholderholdings.com` now exists in Supabase auth (created via the Supabase MCP, mirroring
+the seller user's row shape: confirmed email, `email` provider identity, bcrypt password). The
+password is **not** recorded here or anywhere in the repo — ask the owner.
+
+**New standing decision:**
+
+42. **A session alone does not grant DealIQ — the user's `app_metadata.products` must contain
+    `"dealiq"`.** Both products share one Supabase project, so before this a seller session walked
+    straight past the guard into the buyer workspace. `hasDealIqAccess()` in `lib/dealiq/access.ts`
+    (structurally typed; no supabase-js import, keeping standing decision 1) is the one definition,
+    consumed by the root middleware, the `(workspace)` layout backstop, the signin page's
+    skip-the-form check, and `BuyerSignIn` — which signs a grant-less session out and reports the
+    credentials as unrecognised. The grant lives in `app_metadata` (server-controlled) and is set at
+    provisioning time via SQL: `raw_app_meta_data || '{"products":["dealiq"]}'`.
+
+43. **The seller side is scoped symmetrically** (owner request, same day): `hasExitIqAccess()` in
+    `lib/productAccess.ts` requires `"exitiq"` in `app_metadata.products`, consumed by the `(app)`
+    layout guard, `/login`'s skip-the-form check, and `LoginPanel` (grant-less sign-in → sign out +
+    unrecognised). It deliberately duplicates rather than shares `lib/dealiq/access.ts` — standing
+    decision 1 forbids `lib/dealiq/` importing a shared module — so the two files cross-reference
+    each other; change one, check the other. The seller user carries the grant. Neither product's
+    session can now enter the other's workspace, in either direction.
+
+Verified live with real minted sessions replayed as `@supabase/ssr` cookies: no-grant session →
+`/dealiq` 307s to signin and signin renders the form; buyer session → `/dealiq` 200 and signin 307s
+to the workspace; signed-out deep links still carry `?next=`. Quality gates: typecheck clean, lint
+at the 14-warning baseline, 258 dealiq tests green (6 new in `access.test.ts`).
+
+### Post-sprint — Sign-in & board visual overhaul (2026-08-06)
+
+Owner-requested modernization pass on `BuyerSignIn` and `PipelineBoard` (+ `DealIQShell` scoped
+styles). Same tokens, same IA, no engine or copy-contract changes. Sign-in became a split portal:
+form card + a product vignette that reuses `ScoreDial` and replays `INGESTION_LOG` as a ticker
+(figure-free by construction, decision 8); its decorative score/verdict/features live in
+`SIGNIN_COPY.vignette` in `data/copy.ts`, not the component. Board gained a glass hero (count-up
+headline off the derived deal count, animated funnel fills, buyer stat tiles matching the shell
+badge's verified condition, decision 40), staggered `dq-rise` card entrances, and a verdict accent
+rail colored only via `verdictAccentVar` (decision 14). All motion is CSS/rAF with
+`prefers-reduced-motion` fallbacks; ambient orbs reuse the global keyframes with sky/lav rgba
+(precedent: `LoginPanel`). New scoped classes: `dq-rise`, `dq-tick`, `dq-cta`, `dq-stat`,
+`dq-bar-fill`, `dq-menu-pop`, `dq-auth-grid`/`dq-auth-vignette`.
+
+Verified: typecheck clean, lint at the 14-warning baseline, 258 dealiq tests green; both surfaces
+render live (signin 200 with grid + vignette markup, board 200 under a buyer session) with zero
+server errors.
+
 ---
 
 ## Open decisions for the owner

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { BuyerSignIn } from "@/components/dealiq/BuyerSignIn"
 import { DealIQScopedStyles } from "@/components/dealiq/DealIQShell"
+import { hasDealIqAccess } from "@/lib/dealiq/access"
 import { safeDealIqPath } from "@/lib/dealiq/nextPath"
 import { createClient } from "@/lib/supabase/server"
 
@@ -26,7 +27,9 @@ export default async function BuyerSignInPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user) redirect(destination)
+  // Only a session with the DealIQ product grant skips the form. A seller session
+  // sees the buyer door and must sign in with buyer credentials.
+  if (hasDealIqAccess(user)) redirect(destination)
 
   return (
     <>

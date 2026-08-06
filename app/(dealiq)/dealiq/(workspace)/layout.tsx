@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { DealIQSessionProvider } from "@/components/dealiq/DealIQSessionContext"
 import { DealIQShell } from "@/components/dealiq/DealIQShell"
+import { hasDealIqAccess } from "@/lib/dealiq/access"
 import { DEALIQ_SIGNIN_PATH } from "@/lib/dealiq/navigation"
 import { createClient } from "@/lib/supabase/server"
 
@@ -22,7 +23,9 @@ export default async function DealIQWorkspaceLayout({ children }: { children: Re
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect(DEALIQ_SIGNIN_PATH)
+  // A session is necessary but not sufficient — the shared Supabase project means a
+  // seller session reaches this guard too. DealIQ requires its product grant.
+  if (!hasDealIqAccess(user)) redirect(DEALIQ_SIGNIN_PATH)
 
   return (
     <DealIQSessionProvider>

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
+import { hasDealIqAccess } from "@/lib/dealiq/access"
 import { DEALIQ_ROOT, DEALIQ_SIGNIN_PATH } from "@/lib/dealiq/navigation"
 import { createMiddlewareClient } from "@/lib/supabase/middleware"
 
@@ -16,9 +17,11 @@ export async function middleware(request: NextRequest) {
   // Signed-out DealIQ requests redirect here (not in the workspace layout) because
   // only the middleware knows the requested path — `?next=` is what lets a deep link
   // survive the sign-in round-trip. The layout guard remains as the backstop.
+  // A session alone is not enough: both products share one Supabase project, so a
+  // seller session exists but carries no DealIQ product grant.
   const { pathname, search } = request.nextUrl
   const inDealIq = pathname === DEALIQ_ROOT || pathname.startsWith(`${DEALIQ_ROOT}/`)
-  if (!user && inDealIq && pathname !== DEALIQ_SIGNIN_PATH) {
+  if (inDealIq && pathname !== DEALIQ_SIGNIN_PATH && !hasDealIqAccess(user)) {
     const url = request.nextUrl.clone()
     url.pathname = DEALIQ_SIGNIN_PATH
     url.search = `next=${encodeURIComponent(pathname + search)}`

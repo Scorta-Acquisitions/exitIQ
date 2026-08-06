@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import React from "react"
 
+import { hasExitIqAccess } from "@/lib/productAccess"
 import { createClient } from "@/lib/supabase/client"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
@@ -22,8 +23,18 @@ export function LoginPanel() {
     setSubmitting(true)
     setErrorMsg(null)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      setErrorMsg("Email or password didn't match. Try again.")
+      setSubmitting(false)
+      return
+    }
+    // Valid Supabase credentials without the seller product grant (a DealIQ buyer
+    // account) are not a seller sign-in. End the session — leaving it live would
+    // bounce every workspace request off the guard — and report the credentials
+    // as unrecognised, which on this product they are.
+    if (!hasExitIqAccess(data.user)) {
+      await supabase.auth.signOut()
       setErrorMsg("Email or password didn't match. Try again.")
       setSubmitting(false)
       return
@@ -133,8 +144,8 @@ export function LoginPanel() {
             maxWidth: 360,
           }}
         >
-          Sign in to save your Exit IQ report and unlock the Scorta Boardroom — your AI-guided
-          workspace where the agent fleet preps your business for an SBA-funded exit.
+          Sign in to save your Exit IQ report and unlock the Scorta Boardroom — your AI-guided workspace where the agent
+          fleet preps your business for an SBA-funded exit.
         </p>
 
         <form onSubmit={onSubmit} noValidate>
@@ -219,8 +230,7 @@ export function LoginPanel() {
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background:
-                    "linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%)",
+                  background: "linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%)",
                   animation: "shimmer 3.2s ease-in-out infinite",
                   pointerEvents: "none",
                 }}
@@ -244,9 +254,7 @@ export function LoginPanel() {
           }}
         >
           <div>Free during private beta</div>
-          <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: ".5px" }}>
-            scorta.boardroom · v1.0
-          </div>
+          <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: ".5px" }}>scorta.boardroom · v1.0</div>
         </div>
       </div>
     </div>

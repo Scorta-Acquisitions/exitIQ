@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { LoginPanel } from "@/components/scorta/LoginPanel"
+import { hasExitIqAccess } from "@/lib/productAccess"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
@@ -14,7 +15,9 @@ export default async function LoginPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user) redirect("/dashboard")
+  // Only a session with the seller product grant skips the form. A buyer session
+  // sees the seller door and must sign in with seller credentials.
+  if (hasExitIqAccess(user)) redirect("/dashboard")
 
   return <LoginPanel />
 }

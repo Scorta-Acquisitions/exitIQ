@@ -167,12 +167,36 @@ export const VERIFY_COPY = {
 export const SIGNIN_COPY = {
   wordmark: "DealIQ",
   mark: "Buy-side",
+  headline: "Underwrite before you fall in love.",
   positioning:
     "Screen any listing in seconds. Take the seller's add-backs apart line by line. Know what the deal actually earns before you spend a week on it.",
   submit: "Sign in",
   submitting: "Signing in…",
   invalidCredentials: "That email and password combination was not recognised.",
   networkError: "Sign-in could not complete. Check the connection and try again.",
+  betaTag: "Private beta · invitation only",
+  versionTag: "dealiq.buyside · v1.0",
+  /** The sign-in page's product vignette — decorative, engine-shaped, no real deal. */
+  vignette: {
+    eyebrow: "Screening engine",
+    score: 82,
+    scoreCaption: "Sample screen",
+    verdictLabel: "Worth pursuing",
+    features: [
+      {
+        title: "Screen in seconds",
+        body: "Paste any listing — the agent extracts, recasts and scores it before you finish reading it.",
+      },
+      {
+        title: "Challenge every add-back",
+        body: "Six acceptance rules take the seller's schedule apart line by line, evidence shown.",
+      },
+      {
+        title: "Model the real return",
+        body: "SBA structure, DSCR floor and payback at the price the numbers defend — not the ask.",
+      },
+    ],
+  },
 } as const
 
 /** Certified Deal Flow surface copy. */
