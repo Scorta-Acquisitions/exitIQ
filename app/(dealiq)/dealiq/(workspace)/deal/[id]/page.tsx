@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation"
 
 import { DealWorkspace } from "@/components/dealiq/DealWorkspace"
+import { DiligencePanel } from "@/components/dealiq/DiligencePanel"
 import { PendingSurface } from "@/components/dealiq/PendingSurface"
 import { ReturnsPanel } from "@/components/dealiq/ReturnsPanel"
 import { ReverseRecastPanel } from "@/components/dealiq/ReverseRecastPanel"
 import { ScoreSummary, ScreenScorePanel } from "@/components/dealiq/ScreenScorePanel"
 import { analyzeDeal } from "@/lib/dealiq/analyze"
-import { RECAST_COPY, RETURNS_COPY } from "@/lib/dealiq/data/copy"
+import { DILIGENCE_COPY, RECAST_COPY, RETURNS_COPY } from "@/lib/dealiq/data/copy"
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
+import { DILIGENCE_BANK } from "@/lib/dealiq/data/diligence"
 import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
+import { diligencePackMarkdown, firedRules, rankQuestions } from "@/lib/dealiq/diligence"
 import { DEAL_TABS, resolveDealTab } from "@/lib/dealiq/navigation"
 import type { DealTabKey } from "@/lib/dealiq/types"
 
@@ -24,11 +27,10 @@ import type { DealTabKey } from "@/lib/dealiq/types"
 
 const VALID_DEAL_IDS: ReadonlySet<string> = new Set([...PIPELINE_DEALS.map((deal) => deal.id), FOCUS_DEAL.card.id])
 
-const TAB_NOTES: Record<Exclude<DealTabKey, "score" | "recast" | "returns">, { eyebrow: string; note: string }> = {
-  diligence: {
-    eyebrow: "Diligence Pack",
-    note: "The Diligence Pack lands with item 9: roughly twenty-five questions ranked by which kill the deal fastest, with the ones the recast findings promoted floated to the top.",
-  },
+const TAB_NOTES: Record<
+  Exclude<DealTabKey, "score" | "recast" | "returns" | "diligence">,
+  { eyebrow: string; note: string }
+> = {
   loi: {
     eyebrow: "LOI Drafter",
     note: "The LOI Drafter lands with item 10: a non-binding term sheet derived from the returns model and the recast, with a negotiation rationale attached to every term.",
@@ -59,6 +61,8 @@ export default async function DealPage({
         <RecastTab dealId={id} />
       ) : activeTab === "returns" ? (
         <ReturnsTab dealId={id} />
+      ) : activeTab === "diligence" ? (
+        <DiligenceTab dealId={id} />
       ) : (
         <PendingSurface
           eyebrow={TAB_NOTES[activeTab].eyebrow}
@@ -98,6 +102,27 @@ function RecastTab({ dealId }: { dealId: string }) {
     )
   }
   return <PendingSurface eyebrow={RECAST_COPY.eyebrow} title={RECAST_COPY.title} note={RECAST_COPY.notAvailableNote} />
+}
+
+/**
+ * Same split again. The ranking runs server-side off the same analysis the other
+ * tabs read, and the markdown for "Copy pack" is pre-built from that ranked
+ * list so the clipboard payload can never diverge from what is on screen.
+ */
+function DiligenceTab({ dealId }: { dealId: string }) {
+  if (dealId === FOCUS_DEAL.card.id) {
+    const analysis = analyzeDeal(FOCUS_DEAL)
+    const ranked = rankQuestions(DILIGENCE_BANK, firedRules(analysis.recast))
+    const packMarkdown = diligencePackMarkdown(ranked, `${FOCUS_DEAL.card.name} — ${DILIGENCE_COPY.eyebrow}`)
+    return <DiligencePanel ranked={ranked} flags={analysis.recast.flags} dealId={dealId} packMarkdown={packMarkdown} />
+  }
+  return (
+    <PendingSurface
+      eyebrow={DILIGENCE_COPY.eyebrow}
+      title={DILIGENCE_COPY.title}
+      note={DILIGENCE_COPY.notAvailableNote}
+    />
+  )
 }
 
 /** Same split again: the live model for the focus deal, an honest note for the rest. */

@@ -232,6 +232,27 @@ export const RETURNS_COPY = {
     "The returns model runs on deals screened in this session. Screen this deal through the Deal Inbox to model the structure.",
 } as const
 
+/** Diligence Pack surface copy. The ordering is the product — the copy says so. */
+export const DILIGENCE_COPY = {
+  eyebrow: "Diligence Pack",
+  title: "Ranked by what kills the deal fastest",
+  subtitle:
+    "Not a checklist. Every question carries a computed kill score, and the ones the recast findings promoted float to the top.",
+  flagsTitle: "Red flags from the recast",
+  flagLink: "See the finding →",
+  promotedBadge: "From the recast",
+  promotedLead: "Promoted by the recast finding:",
+  copyButton: "Copy pack",
+  copied: "Copied to clipboard",
+  copyFailed: "Copy failed — select the pack and copy manually.",
+  filterAll: "All",
+  emptyFilter: "No questions in this category for this pack.",
+  killSpeedLabel: "Kill speed",
+  askLead: "Ask",
+  notAvailableNote:
+    "The diligence pack runs on deals screened in this session. Screen this deal through the Deal Inbox to generate its question pack.",
+} as const
+
 /** LOI surface copy. Non-binding labelling is not optional. */
 export const LOI_COPY = {
   eyebrow: "LOI Drafter",

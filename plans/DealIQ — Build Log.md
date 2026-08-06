@@ -43,8 +43,8 @@ this document → the code.
 | 7 | Reverse Recast *(highest polish budget)* | 6h | ✅ **Done** | — |
 | 8 | Returns Model | 5h | ✅ **Done** | — |
 | 11 | Capital Verification | 2.5h | ✅ **Done** | — |
-| 13 | Cross-product handoff seam | 1.5h | ⬜ | — |
-| 9 | Diligence Pack | 3h | ⬜ | — |
+| 13 | Cross-product handoff seam | 1.5h | ⏭ **Deferred** (owner, 2026-08-05) | — |
+| 9 | Diligence Pack | 3h | ✅ **Done** | — |
 | 10 | LOI Drafter | 4h | ⬜ | — |
 | 12 | Certified Deal Flow | 2.5h | ⬜ | — |
 
@@ -408,6 +408,24 @@ strings and discarded; an explicit comment states no upload occurs. Writes
     capitalVerified`); the seed's standing verification renders the seeded date. First paint is
     deterministic (seed only), so there is no hydration mismatch.
 
+### Item 9 — Diligence Pack ✅
+
+`lib/dealiq/diligence.ts` (`rankQuestions` — `killSpeed × CATEGORY_WEIGHT × UNRESOLVED_FINDING_MULTIPLIER`,
+stable sort, never hand-ordered · `firedRules` off challenged lines + flags · `diligencePackMarkdown`)
++ 13 tests, all synthetic fixtures (232 total green) · `DiligencePanel.tsx` (kill-speed bars, category
+filter chips with counts + empty state, native-`<details>` rationale rows, red-flag strip and promoted
+rows deep-linking to the recast tab, clipboard-only Copy pack) · diligence tab wired with the item-6
+split; the pack markdown is pre-built server-side from the same ranked list the panel renders.
+`pnpm build` clean.
+
+**New standing decisions:**
+
+36. **A rule "fires" for promotion when it produced a non-accepted line or a flag.** An accepted
+    claim resolved its question, so it does not promote. `firedRules()` in `diligence.ts` is the one
+    definition; item 10's contingencies should reuse it rather than re-deriving.
+37. **`CATEGORY_LABEL` / `ASK_OF_LABEL` live in `diligence.ts`** — same pattern as `RULE_LABEL`
+    (standing decision 31): enum display names are engine-module exports, not copy.
+
 ---
 
 ## Open decisions for the owner
@@ -418,7 +436,7 @@ Tracking §9 of the execution plan. **Item 3 cannot start until #1 is answered.*
 |---|---|---|---|
 | 1 | **DealIQ IA** — global top bar vs. slim left icon rail | Top bar | ✅ **Settled 2026-08-05 — top bar.** No rail is ever created. Item 3 builds the 56px global bar + deal context bar with prev/next stepper. |
 | 2 | How the presenter moves between products during the demo | Second tab live; landing page when the story needs telling | ⏳ Open (no build impact) |
-| 3 | Where item 13 lands | `OutreachStation`'s third buyer slot today, adapter ready for `/network` if DEMO P1.2 ships | ⏳ Open (blocks item 13 only) |
+| 3 | Where item 13 lands | `OutreachStation`'s third buyer slot today, adapter ready for `/network` if DEMO P1.2 ships | ✅ **Settled 2026-08-05 — the `/network` shortlist** (the alternate; `/network` shipped after the plan was written). Item 13 itself then **deferred by the owner** — it sits after 10 and 12 now. Note for whoever builds it: the shortlist renders `NetworkBuyer` from `lib/buyerNetwork.ts`, so the adapter targets that shape, not `OutreachStation`'s `Buyer`. |
 | 4 | Whether DealIQ needs its own copilot | Not this sprint. Wave-3 stretch reusing `/api/case/chat` with a buy-side system prompt (~3h) | ⏳ Open (out of scope) |
 | 5 | Live LLM before content exists | Build the plumbing now with placeholder prompts; the fallback contract is the hard part and is content-independent | ✅ **Settled — proceeding** |
 
