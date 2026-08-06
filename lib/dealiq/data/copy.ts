@@ -5,7 +5,7 @@
 
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { formatCompactCurrency, formatCount } from "@/lib/dealiq/format"
-import type { DealSeed, LogLine } from "@/lib/dealiq/types"
+import type { DealSeed, LogLine, VerificationMethod } from "@/lib/dealiq/types"
 
 /**
  * The Ingestion Agent's log script — fourteen lines, one every `LOG_STEP_MS`,
@@ -147,6 +147,18 @@ export const VERIFY_COPY = {
     "Recording verification against the buyer profile…",
   ],
   reverify: "Re-verify / update proof",
+  keepCurrent: "Keep current verification",
+  badge: "Capital-Verified",
+  verifiedThisSession: "Verified this session",
+  statRank: "Pool rank",
+  statCommitted: "Committed capital",
+  statMethod: "Method",
+  statVerified: "Verified",
+  methodLabels: {
+    proof_of_funds: "Proof of funds",
+    sba_prequal: "SBA pre-qualification",
+    fund_commitment: "Fund commitment",
+  } satisfies Record<VerificationMethod, string>,
   productionNote:
     "In production, verification documents are reviewed by a Scorta analyst before a badge is issued. This surface demonstrates the flow.",
 } as const

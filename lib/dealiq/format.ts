@@ -148,6 +148,14 @@ export function formatDayCount(days: number): string {
   return `${decimal0.format(Math.abs(whole))} ${Math.abs(whole) === 1 ? "day" : "days"}`
 }
 
+/** `1.2 MB` / `84 KB` / `312 B` — the funding-document chip's size half. */
+export function formatFileSize(bytes: number): string {
+  if (!isRenderable(bytes) || bytes < 0) return EM_DASH
+  if (bytes >= 1_048_576) return `${decimal1.format(bytes / 1_048_576)} MB`
+  if (bytes >= 1_024) return `${decimal0.format(Math.round(bytes / 1_024))} KB`
+  return `${decimal0.format(Math.round(bytes))} B`
+}
+
 /** `1.8s` / `840ms` — the provenance chip's latency half. */
 export function formatLatency(ms: number): string {
   if (!isRenderable(ms) || ms < 0) return EM_DASH

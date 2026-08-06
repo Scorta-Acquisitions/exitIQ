@@ -9,6 +9,7 @@ import {
   formatDate,
   formatDayCount,
   formatDscr,
+  formatFileSize,
   formatLatency,
   formatMultiple,
   formatMultipleBand,
@@ -129,6 +130,20 @@ describe("dates", () => {
     expect(formatDayCount(0)).toBe("today")
     expect(formatDayCount(1)).toBe("1 day")
     expect(formatDayCount(18)).toBe("18 days")
+  })
+})
+
+describe("formatFileSize", () => {
+  it("scales through B, KB, and MB", () => {
+    expect(formatFileSize(312)).toBe("312 B")
+    expect(formatFileSize(86_016)).toBe("84 KB")
+    expect(formatFileSize(1_258_291)).toBe("1.2 MB")
+  })
+
+  it("renders an em dash for negative or non-finite sizes", () => {
+    expect(formatFileSize(-1)).toBe("—")
+    expect(formatFileSize(Number.NaN)).toBe("—")
+    expect(formatFileSize(Number.POSITIVE_INFINITY)).toBe("—")
   })
 })
 
