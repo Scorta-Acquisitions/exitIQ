@@ -38,7 +38,7 @@ this document → the code.
 | 3 | Standalone app shell & IA | 4h | ✅ **Done** | `3ea5aca` |
 | 4 | Buyer sign-in & standalone entry | 2h | ✅ **Done** | `f299e58` |
 | 14 | Landing-page buy-side entry | 2.5h | ✅ **Done** | — |
-| 5 | Deal Inbox | 4h | ⬜ | — |
+| 5 | Deal Inbox | 4h | ✅ **Done** | — |
 | 6 | Screen Score | 4h | ⬜ | — |
 | 7 | Reverse Recast *(highest polish budget)* | 6h | ⬜ | — |
 | 8 | Returns Model | 5h | ⬜ | — |
@@ -309,6 +309,27 @@ handler) · quiet hero line under the microcopy · `SBuySide()` band between `SP
 `useReveal` classes, CTA → `/dealiq`, secondary link → `#exitiq`) · footer "DealIQ for buyers" link.
 All copy `TODO(content)`-marked. No `lib/dealiq/` import in the landing bundle. Every entry points at
 `/dealiq`; item 4's middleware handles the signed-out case.
+
+### Item 5 — Deal Inbox ✅
+
+`POST/GET /api/dealiq/screen` (Haiku `generateObject`, 6s abort → placeholder card + `provenance:
+"fallback"` + HTTP 200) · `components/shared/StreamingLog.tsx` (copied from `IngestionStation`,
+presentational, accent color as prop) · `DealInbox.tsx` (log mask, card reveals on log-done AND
+response-resolved, writes `scorta:dealiq:screened`) · extraction prompt in `lib/ai/prompts.ts`.
+Verified live: fallback path (200 + card), fixture-pinned live path (~2s), and arbitrary-text
+extraction all work; bad body → 400; unknown URL → `needsText` guidance.
+
+**New standing decisions:**
+
+26. **`generateObject` takes a hand-written `jsonSchema`, not the zod object.** This zod/ai version
+    pair trips TS2589 through the schema generic (`zodSchema()` too); zod stays as the runtime
+    validator on the result. Also: Anthropic's structured-output schema support **rejects
+    `maxItems`** — list caps go in the prompt, not the schema. Item 7's narrate route: take note.
+27. **`StreamingLog` declares its own `StreamingLogLine` type** (structurally compatible with both
+    products' scripts) so the sell side can adopt it without importing `lib/dealiq/types`.
+28. **Fixture text is detected by `SAMPLE_LISTING_MARKER`** (exported from `data/copy.ts`); on a
+    fixture match the route still calls the model but returns the seed card and logs any divergence
+    — the fixture is the source document. `FIXTURE_LISTING_URLS` (same file) is the URL fixture set.
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer
