@@ -3066,8 +3066,8 @@ function SBuySide() {
             flexWrap: "wrap",
           }}
         >
-          <Link href="/dealiq" style={btnPrimary}>
-            Open DealIQ →
+          <Link href="/dealiq/signin" style={btnPrimary}>
+            Sign in to DealIQ →
           </Link>
           <a
             href="#exitiq"
