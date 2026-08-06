@@ -495,3 +495,50 @@ export function buildDealExtractionPrompt(listing: string): string {
     listing,
   ].join("\n")
 }
+
+// ─── DealIQ: challenge memo narration (Reverse Recast, item 7) ───────────────
+// TODO(content): placeholder wording — the content pass sharpens this prompt.
+// The prompt receives the computed lines and is instructed to explain, never
+// compute — the figures on screen are the engine's and the memo is additive.
+export function buildChallengeMemoPrompt(input: {
+  dealName: string
+  claimedSde: number
+  defensibleSde: number
+  totalAdjusted: number
+  ask: number
+  fairValue: number
+  negotiationDelta: number
+  lines: ReadonlyArray<{
+    label: string
+    verdict: string
+    claimed: number
+    accepted: number
+    adjusted: number
+    rule: string
+    rationale: string
+  }>
+}): string {
+  const lineBlock = input.lines
+    .map(
+      (line) =>
+        `- ${line.label} [${line.verdict} · rule: ${line.rule}] claimed ${line.claimed}, accepted ${line.accepted}, adjusted ${line.adjusted}. ${line.rationale}`
+    )
+    .join("\n")
+
+  return [
+    "You are the buy-side Recast Agent for DealIQ. A deterministic engine has already challenged the",
+    `seller's add-back schedule for "${input.dealName}". Write a short challenge memo (120-180 words, 2-3`,
+    "paragraphs, no headings, no bullet lists) a buyer could read to the broker.",
+    "",
+    "Hard rules:",
+    "- Explain the computed results below. NEVER recompute, round differently, or introduce any figure not present here.",
+    "- Acknowledge what was accepted as readily as what was challenged — credibility comes from agreeing too.",
+    "- End on the negotiation: the gap between the ask and fair value is the conversation, not an accusation.",
+    "",
+    `Computed results (USD): claimed SDE ${input.claimedSde} → defensible SDE ${input.defensibleSde}`,
+    `(total adjusted ${input.totalAdjusted}). Ask ${input.ask}, fair value ${input.fairValue}, negotiation delta ${input.negotiationDelta}.`,
+    "",
+    "Lines:",
+    lineBlock,
+  ].join("\n")
+}

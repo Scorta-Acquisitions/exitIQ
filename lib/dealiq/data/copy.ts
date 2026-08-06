@@ -179,11 +179,23 @@ export const FLOW_COPY = {
 export const RECAST_COPY = {
   eyebrow: "Recast Agent · buy-side",
   title: "The seller's add-backs, line by line",
+  ledgerClaimed: "Claimed SDE",
+  ledgerDefensible: "Defensible SDE",
+  ledgerAdjusted: "Total adjusted",
+  groupChallenges: "Add-back challenges",
+  groupOmitted: "Omitted costs",
+  flagsTitle: "Flags",
+  flagScenarioLink: "Priced in the Returns model →",
+  negotiationTitle: "The negotiation",
+  negotiationBasis:
+    "Fair value applies the comp multiple band to the defensible SDE. The delta is the ask minus that value — it is not an accusation, it is the negotiation.",
   acceptGate: "Accept this challenge → carry the defensible SDE into the Returns model",
   accepting: "Recording…",
   accepted: "Challenge accepted",
   memoHeading: "Challenge memo",
   memoPending: "Drafting the challenge memo…",
+  notAvailableNote:
+    "The challenge table runs on deals screened in this session. Screen this deal through the Deal Inbox to take its add-back schedule apart.",
 } as const
 
 /** LOI surface copy. Non-binding labelling is not optional. */

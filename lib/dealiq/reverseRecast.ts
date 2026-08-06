@@ -197,6 +197,16 @@ export function occupancyRule(occupancy: OccupancyInput): RecastFlag | null {
   }
 }
 
+/** Display labels for the rule chips. Structural vocabulary, not content. */
+export const RULE_LABEL: Record<RecastRule, string> = {
+  role_split: "Role split",
+  mixed_use: "Mixed use",
+  documentation: "Documentation",
+  replacement_cost: "Replacement cost",
+  reserve: "Reserve",
+  occupancy: "Occupancy",
+}
+
 // ─── Orchestrator ────────────────────────────────────────────────────────────
 
 function verdictFor(claimed: number, accepted: number): RecastVerdict {

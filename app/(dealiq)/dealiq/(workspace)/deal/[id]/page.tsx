@@ -2,8 +2,10 @@ import { notFound } from "next/navigation"
 
 import { DealWorkspace } from "@/components/dealiq/DealWorkspace"
 import { PendingSurface } from "@/components/dealiq/PendingSurface"
+import { ReverseRecastPanel } from "@/components/dealiq/ReverseRecastPanel"
 import { ScoreSummary, ScreenScorePanel } from "@/components/dealiq/ScreenScorePanel"
 import { analyzeDeal } from "@/lib/dealiq/analyze"
+import { RECAST_COPY } from "@/lib/dealiq/data/copy"
 import { FOCUS_DEAL } from "@/lib/dealiq/data/deal"
 import { PIPELINE_DEALS } from "@/lib/dealiq/data/pipeline"
 import { DEAL_TABS, resolveDealTab } from "@/lib/dealiq/navigation"
@@ -21,11 +23,7 @@ import type { DealTabKey } from "@/lib/dealiq/types"
 
 const VALID_DEAL_IDS: ReadonlySet<string> = new Set([...PIPELINE_DEALS.map((deal) => deal.id), FOCUS_DEAL.card.id])
 
-const TAB_NOTES: Record<Exclude<DealTabKey, "score">, { eyebrow: string; note: string }> = {
-  recast: {
-    eyebrow: "Recast Agent · buy-side",
-    note: "The Reverse Recast lands with item 7: the seller's add-back schedule taken apart line by line, with the defensible SDE, the adjustment total, and the negotiation delta — plus a streamed challenge memo that never blocks the table.",
-  },
+const TAB_NOTES: Record<Exclude<DealTabKey, "score" | "recast">, { eyebrow: string; note: string }> = {
   returns: {
     eyebrow: "Returns Model",
     note: "The Returns Model lands with item 8: the capital stack, DSCR against its floor, cash-on-cash, payback, and a sensitivity slider that recomputes every metric live across four scenarios.",
@@ -60,6 +58,8 @@ export default async function DealPage({
     <DealWorkspace dealId={id} activeTab={activeTab}>
       {activeTab === "score" ? (
         <ScoreTab dealId={id} />
+      ) : activeTab === "recast" ? (
+        <RecastTab dealId={id} />
       ) : (
         <PendingSurface
           eyebrow={TAB_NOTES[activeTab].eyebrow}
@@ -83,4 +83,20 @@ function ScoreTab({ dealId }: { dealId: string }) {
   }
   const deal = PIPELINE_DEALS.find((candidate) => candidate.id === dealId)
   return <ScoreSummary score={deal?.score ?? null} verdict={deal?.verdict ?? null} />
+}
+
+/** Same split as the score tab: full challenge table for the focus deal only. */
+function RecastTab({ dealId }: { dealId: string }) {
+  if (dealId === FOCUS_DEAL.card.id) {
+    const analysis = analyzeDeal(FOCUS_DEAL)
+    return (
+      <ReverseRecastPanel
+        recast={analysis.recast}
+        dealId={dealId}
+        ask={FOCUS_DEAL.card.ask}
+        compMultiple={FOCUS_DEAL.compMultiple}
+      />
+    )
+  }
+  return <PendingSurface eyebrow={RECAST_COPY.eyebrow} title={RECAST_COPY.title} note={RECAST_COPY.notAvailableNote} />
 }

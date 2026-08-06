@@ -40,7 +40,7 @@ this document → the code.
 | 14 | Landing-page buy-side entry | 2.5h | ✅ **Done** | — |
 | 5 | Deal Inbox | 4h | ✅ **Done** | — |
 | 6 | Screen Score | 4h | ✅ **Done** | — |
-| 7 | Reverse Recast *(highest polish budget)* | 6h | ⬜ | — |
+| 7 | Reverse Recast *(highest polish budget)* | 6h | ✅ **Done** | — |
 | 8 | Returns Model | 5h | ⬜ | — |
 | 11 | Capital Verification | 2.5h | ⬜ | — |
 | 13 | Cross-product handoff seam | 1.5h | ⬜ | — |
@@ -347,6 +347,29 @@ wired in `deal/[id]/page.tsx`. `pnpm build` clean.
     focus deal, honest reduced state for the rest.
 30. **Panel colors only via `verdictAccentVar` / `bandAccentVar`** — no verdict→color mapping was
     added in any component.
+
+### Item 7 — Reverse Recast ✅
+
+`ReverseRecastPanel.tsx` (client): count-up ledger (claimed → defensible → adjusted), flag strip
+linking to the Returns scenario, challenge table grouped by `line.kind` with expandable
+provenance rows (rationale + `sourceNote`), negotiation block, streamed memo, accept gate →
+`?tab=returns` with a timestamped `BUYER.name` signature. `POST /api/dealiq/narrate` recomputes
+`analyzeDeal(FOCUS_DEAL)` server-side (never trusts client figures), unknown id → 404, Sonnet
+`streamText` → text stream; client falls back to `FALLBACK_CHALLENGE_MEMO` on 8s-to-first-token or
+any failure — the table never waits. Memo prompt in `lib/ai/prompts.ts` receives computed lines and
+is instructed to explain, never compute. Verified live: 404 path and a grounded Sonnet stream.
+`pnpm build` clean.
+
+**New standing decisions:**
+
+31. **`RULE_LABEL` lives in `reverseRecast.ts`** — the display name for each challenge rule, reused
+    by item 9's promoted-question links.
+32. **Streaming routes keep the `case/chat` error shape** (502 on failure, client-side fallback),
+    not the screen route's 200-fallback — a stream cannot swap payloads mid-flight, so the fallback
+    lives in the client. The §2 contract's "never 5xx" holds at the surface: the memo always renders.
+33. **The "Screening Log" surface does not exist yet**; gate signatures render in place (timestamped
+    line in the gate). If a log surface lands later, items 7/10 signatures should be recorded in
+    `DealIQSessionContext` — not built now to avoid speculative state.
 
 **Open for the owner (content, not code):** against the current seed the focus deal scores **~40 →
 PASS**, driven by a 4.1× implied multiple against a 2.0×–3.0× comp band. Items 7–10 walk the buyer
