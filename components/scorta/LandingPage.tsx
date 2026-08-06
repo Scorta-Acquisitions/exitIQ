@@ -249,11 +249,11 @@ const TEASER_QUESTIONS = [
 const TEASER_INSIGHTS = [
   [
     "HVAC commands 2.6× SDE on average. SBA buyers active in this band.",
-    "Plumbing rolls up well — strategic acquirers actively consolidating.",
+    "Plumbing rolls up well: strategic acquirers actively consolidating.",
     "Landscaping buyers prize recurring contracts. Recurring share matters.",
     "Auto repair: location and licenses drive multiple compression.",
     "Cleaning is a hot rollup category right now.",
-    "Diversified profile — multiple frameworks apply.",
+    "Diversified profile: multiple frameworks apply.",
   ],
   [
     "Sub-$500K narrows the buyer pool. Individual searchers dominate this band.",
@@ -265,14 +265,14 @@ const TEASER_INSIGHTS = [
   [
     "Early-stage may discount value. Growth story becomes the lead asset.",
     "5–10 years shows operational proof. Buyers will model retention.",
-    "Operational maturity — a meaningful multiple driver.",
+    "Operational maturity: a meaningful multiple driver.",
     "20+ years signals durable demand. Premium multiples likely.",
   ],
   [
-    "Sub-10% SDE margin — buyers will model an operational upside story.",
+    "Sub-10% SDE margin: buyers will model an operational upside story.",
     "10–20% SDE puts you in the competitive band for SBA exits.",
     "Above 20% signals premium quality. Top-tier buyers prioritize this.",
-    "Exceptional margins — premium exit multiples in scope.",
+    "Exceptional margins: premium exit multiples in scope.",
   ],
 ]
 
@@ -486,7 +486,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
               animation: "sLiveBlink 2s infinite",
             }}
           />
-          <div style={{ ...eyebrow(true), fontSize: 10 }}>ExitIQ — Live Valuation Engine</div>
+          <div style={{ ...eyebrow(true), fontSize: 10 }}>ExitIQ: Live Valuation Engine</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {TEASER_QUESTIONS.map((_, i) => (
@@ -685,7 +685,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
           )}
         </div>
 
-        {/* Right: dashboard — hidden on mobile */}
+        {/* Right: dashboard - hidden on mobile */}
         {!isMobile && (
           <div
             style={{
@@ -729,7 +729,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
                   animation: dash.val ? "sNumRoll .55s cubic-bezier(.34,1.3,.64,1)" : "none",
                 }}
               >
-                {dash.val ?? "—"}
+                {dash.val ?? "-"}
               </div>
               {dash.mult && (
                 <div
@@ -770,7 +770,7 @@ function ExitIQTeaser({ onComplete }: { onComplete: () => void }) {
                     color: dash.fee ? C.mint : "rgba(245,245,245,.2)",
                   }}
                 >
-                  {dash.fee ?? "—"}
+                  {dash.fee ?? "-"}
                 </span>
                 {dash.fee && (
                   <span style={{ fontFamily: inter, fontSize: 11, color: "rgba(167,229,211,.6)" }}>saved</span>
@@ -968,7 +968,7 @@ function SAnnouncementBar({ onDismiss }: { onDismiss: () => void }) {
           letterSpacing: ".01em",
         }}
       >
-        ✦ ExitIQ is free to use — no broker call required
+        ✦ ExitIQ is free to use; no broker call required
       </span>
       <a
         href="#exitiq"
@@ -1089,7 +1089,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
           </Link>
         </div>
 
-        {/* Links — hidden on mobile */}
+        {/* Links - hidden on mobile */}
         {!isMobile && (
           <div style={{ display: "flex", gap: 26, flex: 1 }}>
             {links.map(({ l, href }) =>
@@ -1151,7 +1151,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
           <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
             Try ExitIQ
           </button>
-          {/* Hamburger — mobile only */}
+          {/* Hamburger - mobile only */}
           {isMobile && (
             <button
               onClick={() => setMenuOpen((o) => !o)}
@@ -1373,12 +1373,12 @@ function SHero({ onOpen }: { onOpen: () => void }) {
               letterSpacing: ".16px",
             }}
           >
-            Scorta turns a few questions about your business into a buyer-ready exit profile — with valuation, SBA
+            Scorta turns a few questions about your business into a buyer-ready exit profile, with valuation, SBA
             pre-screen, and a fix list. No 10% broker fee.
           </p>
           <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap", justifyContent: "center" }}>
             <button onClick={onOpen} style={btnPrimary}>
-              Start ExitIQ — free →
+              Start ExitIQ - free →
             </button>
             <a href="#how" style={btnOutline}>
               See how it works
@@ -1462,7 +1462,7 @@ function SHero({ onOpen }: { onOpen: () => void }) {
               letterSpacing: ".2px",
             }}
           >
-            ↓ Try the assessment — values are illustrative
+            ↓ Try the assessment; values are illustrative
           </div>
         </div>
       </div>
@@ -1590,7 +1590,7 @@ function SSignalsBand() {
             Buyers see <em>signals,</em> not stories.
           </h2>
           <p style={{ fontFamily: inter, fontSize: 17, color: C.onDarkBody, marginTop: 18, lineHeight: 1.55 }}>
-            Twelve things kill 70% of small-business sales. Scorta finds yours, ranks them, and tells you what to fix —
+            Twelve things kill 70% of small-business sales. Scorta finds yours, ranks them, and tells you what to fix
             before you ever talk to a buyer.
           </p>
         </div>
@@ -1701,7 +1701,7 @@ function SSpeedCompare() {
             <em>5×</em> faster. Zero broker commission.
           </h2>
           <p style={{ fontFamily: inter, fontSize: 17, color: C.body, marginTop: 18, lineHeight: 1.55 }}>
-            Traditional brokers list and pray. Scorta runs the deal, prices the deal, and qualifies the buyer — for a
+            Traditional brokers list and pray. Scorta runs the deal, prices the deal, and qualifies the buyer for a
             fixed fee.
           </p>
         </div>
@@ -2242,7 +2242,7 @@ function SBoardroom() {
           </h2>
           <p style={{ fontFamily: inter, fontSize: 17, color: C.onDarkBody, marginTop: 18, lineHeight: 1.55 }}>
             Before you hear &quot;no&quot; from a real one. Scorta simulates how each buyer type prices, structures, and
-            objects — so you walk into negotiation already prepared.
+            objects, so you walk into negotiation already prepared.
           </p>
         </div>
 
@@ -2273,7 +2273,7 @@ function SBoardroom() {
           ))}
         </div>
 
-        {/* Persona panel — key forces remount on toggle so sFadeIn replays */}
+        {/* Persona panel - key forces remount on toggle so sFadeIn replays */}
         <div
           className="s-glass s-chd"
           key={active}
@@ -2935,7 +2935,7 @@ function SProductSurfaces() {
               Run the deal in one place.
             </div>
             <p style={{ fontFamily: inter, fontSize: 14, color: C.body, lineHeight: 1.55, marginBottom: 20 }}>
-              NDA flow, buyer qualification, diligence Q&A, and human approval — every action logged.
+              NDA flow, buyer qualification, diligence Q&A, and human approval; every action logged.
             </p>
             <div style={{ flex: 1 }} />
             <div
@@ -2996,7 +2996,7 @@ function SProductSurfaces() {
 }
 
 // ─── Buy-side band (DealIQ entry) ─────────────────────────────────────────────
-// TODO(content): all copy in this section is placeholder — final wording lands in the content pass.
+// TODO(content): all copy in this section is placeholder - final wording lands in the content pass.
 function SBuySide() {
   const tiles = [
     {
@@ -3007,7 +3007,7 @@ function SBuySide() {
     {
       accent: C.lav,
       t: "Challenge the seller's add-backs",
-      d: "The add-back schedule taken apart line by line — the defensible SDE, and the delta off the ask.",
+      d: "The add-back schedule taken apart line by line: the defensible SDE, and the delta off the ask.",
     },
     {
       accent: C.sky,
@@ -3044,7 +3044,7 @@ function SBuySide() {
             }}
           >
             The same underwriting engine, pointed the other way. Self-serve software for searchers who triage many
-            deals fast — no broker, no service fee, just the tool.
+            deals fast: no broker, no service fee, just the tool.
           </p>
         </div>
 
@@ -3106,7 +3106,7 @@ function SBuySide() {
               textUnderlineOffset: 3,
             }}
           >
-            Selling instead? We&apos;re the full-service brokerage — take the free assessment
+            Selling instead? We&apos;re the full-service brokerage; take the free assessment
           </a>
         </div>
       </div>
@@ -3252,11 +3252,11 @@ function SFinalCTA({ onOpen }: { onOpen: () => void }) {
             lineHeight: 1.55,
           }}
         >
-          Start with ExitIQ. We&apos;ll generate your Gap Report and tell you the truth — even if you&apos;re not ready
+          Start with ExitIQ. We&apos;ll generate your Gap Report and tell you the truth, even if you&apos;re not ready
           to sell yet.
         </p>
         <button onClick={onOpen} style={{ ...btnLight, height: 52, fontSize: 16, padding: "12px 28px" }}>
-          Start ExitIQ — free →
+          Start ExitIQ - free →
         </button>
       </div>
     </section>

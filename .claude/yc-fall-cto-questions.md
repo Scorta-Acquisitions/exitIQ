@@ -19,6 +19,71 @@ Memorize these three before the rest:
 
 ---
 
+## Speakable Scripts — “Tell me about the product / ExitIQ / DealIQ”
+
+Use the matching opener, then stop. Expand only if they ask how it works.
+
+### “Tell me about your product” / “What are you building?” / “What does Scorta do?”
+
+- Scorta replaces the small business broker for $500K–$2M businesses
+- Two agent teams run the sale end to end
+- Prep team: recast financials, owner dependency, SBA package → financeable asset
+- Market team: match capital-verified buyers, deal room, lender process, close
+- Owners pay $3K–$5K upfront and 5% on close
+- Same engine powers DealIQ on the buy side to grow the verified buyer pool
+- **Stop.** If they want proof → first closed deal ($950K failed listing → $1.3M close)
+
+### “How does the product work?” / “Walk me through the system”
+
+- Prep agents ingest books/contracts → rebuild P&L the way a lender sees it → flag concentration + owner dependency → remediation + financeable package
+- Market agents run buyer red-team → match verified pool → outreach, VDR, lender submissions, close workflow
+- Humans approve every material action before it goes out
+- Numbers are deterministic and source-traced; LLM writes the explanation, not the math
+- Operator-facing first — seller buys a managed outcome, not a dashboard
+- **If they ask agents by name:** Ingestion, Recast, Owner-Dependency, Concentration, Case Manager, Boardroom, Lender Ops, Outreach
+
+### “What is ExitIQ?” / “How do sellers find you?” / “What’s the assessment?”
+
+- ExitIQ is the free intake assessment — top of the seller funnel
+- ~6 minutes; adapts by answer; not a generic form
+- Output is a GAP Report: valuation, buyer view, lendability roadmap, 90-day fix list
+- Converts to a founder call → paid Diagnostic → brokerage if ready
+- Also the CPA channel surface (white-label / co-branded)
+- ExitIQ is intake. Scorta is the paid prep + brokerage that actually sells the business
+
+### “What is DealIQ?” / “What’s the buyer product?” / “Why a second product?”
+
+- DealIQ is the same recast/diligence engine pointed at buyers
+- Customer: searchers, ETA, search funds, independent sponsors under $5M — not big PE
+- Reverse-recasts claimed SDE, screens deals PASS/DIG/PURSUE, models SBA returns, drafts diligence + LOI
+- Three search funds on $1,250 pilots
+- Revenue is small; strategic job is capital-verified buyer pool for the sell-side
+- **Clean line:** Buy side is acquisition. Sell side is the business.
+
+### “How do ExitIQ and DealIQ relate?” / “Are these two products?”
+
+- One company, one engine, two surfaces
+- ExitIQ → sellers into prep/brokerage
+- DealIQ → buyers into the capital-verified pool
+- No in-app switcher; landing page is the only bridge
+- Data that crosses: verified buyer profile into sell-side outreach — not deal data both ways
+
+### “Is this AI / agents / software / services?”
+
+- AI-native services company — unit is a closed transaction, not a seat
+- Agents do the mechanical underwriting and coordination work
+- Humans own judgment: don’t-list calls, negotiation, approval of anything external
+- First cradle-to-close: under 45 human hours, ~$600 inference
+- Software changes the labor curve; revenue is still $50K–$70K per close
+
+### One-liner ladder (pick one)
+
+- **Scorta:** Agent-native broker that makes a Main Street business financeable, then sells it into verified demand
+- **ExitIQ:** Free assessment that answers worth / who buys / what to fix — then becomes intake
+- **DealIQ:** Buy-side of the same engine — reverse-recast deals and grow the verified buyer pool
+
+---
+
 ## 1. How does the product actually work?
 
 **Answer:** There are two agent teams. The prep team ingests the books and contracts, rebuilds the P&L the way a lender will view it, identifies concentration and owner-dependency risks, and produces the remediation plan and financeable deal package. The market team runs the buyer red-team, matches the company to the verified pool, manages outreach, the data room, lender submissions, and the closing workflow. We approve every material action before it goes out.
