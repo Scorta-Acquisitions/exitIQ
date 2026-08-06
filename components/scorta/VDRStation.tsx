@@ -127,7 +127,7 @@ export function VDRStation({ persona }: { persona: Persona }) {
 
   const deal = {
     name: persona.identity.businessName,
-    location: `${persona.identity.location} · Food Service`,
+    location: `${persona.identity.location} · ${persona.business.industry}`,
     listingDisplay: persona.financials.recommendedListingDisplay,
     multiple: persona.financials.appliedMultiple,
     dscr: persona.sba.dscr,

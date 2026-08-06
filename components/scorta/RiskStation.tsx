@@ -37,8 +37,8 @@ type OwnerDepAnswers = {
 }
 
 const OWNER_DEP_DEFAULTS: OwnerDepAnswers = {
-  q1: "Catering sales would stop. All new catering inquiries and quotes come directly to me. No one else has the client relationships or knows our pricing model.",
-  q2: "Catering client calls and contract negotiations, vendor price negotiations, daily bank deposits, staff scheduling decisions, health inspection responses.",
+  q1: "Client account management and new-business pitching would stop. All new client inquiries, pitches, and proposals come directly to me. No one else has the client relationships or knows our pricing model.",
+  q2: "Client account calls and contract negotiations, vendor price negotiations, invoice & AR reconciliation, account staffing decisions, client data & compliance responses.",
   q3: "1",
   q4: "1–2",
   q5: "None",
@@ -57,23 +57,26 @@ type ConcentrationAnswers = {
 
 const CONCENTRATION_DEFAULTS: ConcentrationAnswers = {
   q1: "10–25%",
-  q2: "NJ Transit Corporate Catering — we provide lunch and event catering for their Northern NJ offices. 6-year relationship, monthly invoicing, no formal multi-year contract in place.",
+  q2: "Garden State Auto Group — we run digital marketing and paid media campaigns for their Northern NJ dealership locations. 6-year relationship, monthly invoicing, no formal multi-year contract in place.",
   q3: "Month-to-month",
   q4: "2",
   q5: "3–6 months",
 }
 
 // ── Owner-Dependency remediation tasks (derived from Q2 answer, per spec) ───
-type RemediationTask = {
+// Exported so ScortaScoreStation.tsx can deep-link the same 5 tasks under the
+// "13 points to Scorta Certified" framing — single source of truth, no
+// re-invented task list.
+export type RemediationTask = {
   title: string
   body: string
   scoreLift: number // points added to transferability
 }
 
-const REMEDIATION_TASKS: ReadonlyArray<RemediationTask> = [
+export const REMEDIATION_TASKS: ReadonlyArray<RemediationTask> = [
   {
-    title: "Document catering sales & contract negotiation playbook",
-    body: "Codify the pricing model, client intake flow, and contract terms so a successor can quote catering inquiries without owner involvement.",
+    title: "Document client account management & new-business pitching playbook",
+    body: "Codify the pricing model, client intake flow, and contract terms so a successor can manage client relationships and pitch new business without owner involvement.",
     scoreLift: 8,
   },
   {
@@ -82,26 +85,26 @@ const REMEDIATION_TASKS: ReadonlyArray<RemediationTask> = [
     scoreLift: 5,
   },
   {
-    title: "Delegate daily bank deposit & cash handling",
-    body: "Move daily deposit responsibility to a tenured manager with documented controls. Owner reviews weekly instead of executing daily.",
+    title: "Delegate invoice & AR reconciliation",
+    body: "Move monthly invoicing and AR reconciliation to a tenured manager with documented controls. Owner reviews monthly instead of executing it directly.",
     scoreLift: 4,
   },
   {
-    title: "Build staff scheduling SOP & decision matrix",
-    body: "Replace ad-hoc scheduling with a documented matrix covering shift coverage rules, time-off requests, and seasonal staffing patterns.",
+    title: "Build account staffing SOP & decision matrix",
+    body: "Replace ad-hoc account coverage with a documented matrix covering client-coverage rules, time-off requests, and seasonal staffing patterns.",
     scoreLift: 4,
   },
   {
-    title: "Document health inspection response protocol",
-    body: "Written protocol for NJ health department interactions — first responder, escalation path, and remediation timeline. Removes owner from the inspection-day path.",
+    title: "Document client data & compliance response protocol",
+    body: "Written protocol for client data-privacy and ad-platform compliance interactions — first responder, escalation path, and remediation timeline. Removes owner from the response path.",
     scoreLift: 3,
   },
 ]
 
 // ── Concentration single task ──────────────────────────────────────────────
 const CONCENTRATION_TASK = {
-  title: "Convert NJ Transit relationship into a 3-year written contract",
-  body: "Draft a multi-year extension proposal for NJ Transit Corporate Catering. Document the 6-year tenure, monthly invoicing history, and on-time delivery record for the lender package.",
+  title: "Convert Garden State Auto Group relationship into a 3-year written contract",
+  body: "Draft a multi-year extension proposal for Garden State Auto Group. Document the 6-year tenure, monthly invoicing history, and on-time delivery record for the lender package.",
   trigger: "Search Fund deal-breaker · Lender monitoring flag",
 }
 
@@ -297,7 +300,7 @@ function StationHeader({ phase }: { phase: Phase }) {
       >
         Two specialized agents will read your answers, score the business against SBA and
         buyer-thesis thresholds, and produce a remediation plan. Their output becomes the
-        Boardroom&apos;s view of how transferable Palace Kitchen is today — and what it would
+        Boardroom&apos;s view of how transferable Fieldstone is today — and what it would
         take to close the gap.
       </p>
     </header>
@@ -306,7 +309,7 @@ function StationHeader({ phase }: { phase: Phase }) {
 
 // ── CASE intro banner ──────────────────────────────────────────────────────
 function CaseIntro({ persona, phase }: { persona: Persona; phase: Phase }) {
-  const businessFirst = persona.identity.businessName.split(" ")[0]
+  const businessFirst = persona.identity.shortName
   return (
     <div
       style={{
@@ -620,7 +623,7 @@ function OwnerDepIntake({
       </QField>
 
       <QField
-        label="How many of your staff could open and run the kitchen for a full day without you present?"
+        label="How many of your staff could run client accounts for a full day without you present?"
         index={4}
       >
         <SelectInput
@@ -1103,7 +1106,7 @@ function AnalysisSurface({ streamIdx }: { streamIdx: number }) {
             letterSpacing: ".4px",
           }}
         >
-          palace-kitchen · live
+          fieldstone-digital · live
         </div>
       </header>
 
@@ -1929,7 +1932,7 @@ function ConcentrationOutput({ persona }: { persona: Persona }) {
         </article>
         <ReviewApproveStrip
           label="Review & Approve Concentration Playbook"
-          hint="Approving the playbook authorizes the Concentration Agent to draft the NJ Transit extension proposal for review."
+          hint="Approving the playbook authorizes the Concentration Agent to draft the Garden State Auto Group extension proposal for review."
           tone="sky"
         />
       </div>

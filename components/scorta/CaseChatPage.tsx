@@ -437,7 +437,7 @@ function ChatHeader() {
             marginTop: 4,
           }}
         >
-          Case Manager · Palace Kitchen &amp; Catering · full deal file open
+          Case Manager · Fieldstone Digital Marketing · full deal file open
         </div>
       </div>
     </header>
@@ -935,7 +935,7 @@ function AgentFleetCard() {
     { name: "Ingestion Agent", status: "Idle · books reconciled" },
     { name: "Recast Agent", status: "Idle · add-backs posted" },
     { name: "Owner-Dependency Agent", status: "Active · 5 SOPs pending" },
-    { name: "Concentration Agent", status: "Active · NJ Transit confirm" },
+    { name: "Concentration Agent", status: "Active · Garden State Auto confirm" },
     { name: "CIM Agent", status: "Active · drafting" },
     { name: "Lender Ops Agent", status: "Holding · pending your approval" },
   ]

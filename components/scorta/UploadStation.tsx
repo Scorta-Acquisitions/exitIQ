@@ -27,8 +27,8 @@ const SEED_QUEUE: ReadonlyArray<QueuedItem> = [
   {
     id: "q_lease",
     modality: "files",
-    title: "Lease_Palace_Kitchen_2023.pdf",
-    meta: "Property lease · 14 pages · 1.8 MB",
+    title: "Office_Sublease_Fieldstone_2023.pdf",
+    meta: "Office lease · 14 pages · 1.8 MB",
     status: "classified",
     agent: "Ingestion Agent",
     impact: "+1 Documentation Quality",
@@ -36,16 +36,16 @@ const SEED_QUEUE: ReadonlyArray<QueuedItem> = [
   {
     id: "q_voice_sops",
     modality: "voice",
-    title: "Morning prep walkthrough.m4a",
+    title: "Client onboarding walkthrough.m4a",
     meta: "Voice memo · 4:12 · transcribed",
     status: "ingesting",
     agent: "Owner-Dependency Agent",
     impact: "+3 Transferability (projected)",
   },
   {
-    id: "q_njt_letter",
+    id: "q_gsa_letter",
     modality: "photos",
-    title: "NJ Transit renewal letter (photo)",
+    title: "Garden State Auto Group renewal letter (photo)",
     meta: "Scan · 1 page · OCR complete",
     status: "approved",
     agent: "Concentration Agent",
@@ -102,8 +102,8 @@ const TILE_CONFIG: ReadonlyArray<{
 
 const CASE_OBSERVATIONS: ReadonlyArray<string> = [
   "Owner-dependency is your single largest score gap — voice memos walking through daily tasks unlock the most points.",
-  "Renewal letters from NJ Transit Corporate Catering would let the Concentration Agent close the open question.",
-  "Anything that documents how the kitchen runs without you on-site moves Transferability fast.",
+  "Renewal letters from Garden State Auto Group would let the Concentration Agent close the open question.",
+  "Anything that documents how client accounts run without you in the room moves Transferability fast.",
 ]
 
 const SCORE_DELTAS: ReadonlyArray<{ label: string; from: number; to: number; tone: "mint" | "lav" | "peach" }> = [
@@ -813,7 +813,7 @@ function NotesSurface({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Type anything CASE should know. Backstory on a contract, why a number looks high in a given month, the names of the staff who actually run the kitchen — he'll structure it."
+        placeholder="Type anything CASE should know. Backstory on a contract, why a number looks high in a given month, the names of the staff who actually run client accounts — he'll structure it."
         rows={6}
         style={{
           width: "100%",

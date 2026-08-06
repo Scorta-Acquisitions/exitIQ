@@ -45,7 +45,7 @@ const LOG_LINES: ReadonlyArray<LogLine> = [
   { ts: "00:29", text: "Normalizing SDE across 3 years..." },
   { ts: "00:31", text: "Running concentration analysis..." },
   { ts: "00:33", text: "Flagged: Top customer = 19% of revenue (moderate)", flag: "amber" },
-  { ts: "00:34", text: "Flagged: Key-man dependency — owner drives catering sales", flag: "red" },
+  { ts: "00:34", text: "Flagged: Key-man dependency — owner drives client account management", flag: "red" },
   { ts: "00:36", text: "Generating financial summary..." },
   { ts: "00:38", text: "Analysis complete." },
 ]
@@ -290,7 +290,7 @@ function CaseIntroBanner({
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {streaming ? (
             <>
-              The Ingestion Agent is classifying {persona.identity.businessName.split(" ")[0]}'s
+              The Ingestion Agent is classifying {persona.identity.shortName}'s
               ledger right now. I'll surface the add-back schedule and the two flags for your
               approval the moment it finishes.
             </>
@@ -367,7 +367,7 @@ function StreamingLog({
             flex: 1,
           }}
         >
-          ingestion-agent · palace-kitchen · live
+          ingestion-agent · fieldstone-digital · live
         </div>
         <div
           style={{
@@ -675,7 +675,7 @@ function SummaryCard({
           <FlagCard
             tone="red"
             title="Key-Man Dependency"
-            body={`Owner drives all catering sales relationships and vendor negotiations. ${persona.risk.staffTenuredCount} of ${persona.risk.staffTotal} employees has 3+ years tenure. ${persona.risk.sopsDocumented} documented SOPs on record.`}
+            body={`Owner drives all client account relationships and vendor negotiations. ${persona.risk.staffTenuredCount} of ${persona.risk.staffTotal} employees has 3+ years tenure. ${persona.risk.sopsDocumented} documented SOPs on record.`}
             downstream="Owner-Dependency Agent will address this in Risk Analysis"
           />
           <FlagCard

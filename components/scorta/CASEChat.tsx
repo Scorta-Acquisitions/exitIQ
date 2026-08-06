@@ -32,7 +32,7 @@ const READINESS_RESPONSE = `Based on my read of your deal file — no, not yet.
 
 Your Scorta Score is 71/100, but Transferability is 38/100 and Owner-Dependency is also at 38. That tells me the deal is well-priced but not buyer-ready. Zero documented SOPs, one tenured staff member out of eleven, a business that still runs through you. Any buyer or SBA lender would see the same gap I do.
 
-Before I push the CIM out, I want to properly calibrate your readiness — and right now I don't have enough on the business itself. Head to /upload next. Twenty minutes on your top vendor relationships, the catering booking flow, and your day-to-day role gives me what I need. After that, /risk lets the Owner-Dependency Agent finish the 5 SOP templates that close the $450K transferability gap.
+Before I push the CIM out, I want to properly calibrate your readiness — and right now I don't have enough on the business itself. Head to /upload next. Twenty minutes on your top vendor relationships, the client onboarding flow, and your day-to-day role gives me what I need. After that, /risk lets the Owner-Dependency Agent finish the 5 SOP templates that close the $450K transferability gap.
 
 You're closer than you think — but right now we'd leave money on the table.`
 
@@ -554,7 +554,7 @@ function Header({
             marginTop: 3,
           }}
         >
-          Case Manager · Palace Kitchen &amp; Catering
+          Case Manager · Fieldstone Digital Marketing
         </div>
       </div>
       <button

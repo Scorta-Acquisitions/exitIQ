@@ -13,6 +13,7 @@ import { AgentActivityPanel } from "./AgentActivityPanel"
 import { AgentFleetProvider } from "./AgentFleetContext"
 import { AuditTrailModal } from "./AuditTrailModal"
 import { CASEChat } from "./CASEChat"
+import { useViewMode, type ViewMode, ViewModeProvider } from "./ViewModeContext"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -30,8 +31,20 @@ export type Seller = {
 }
 
 export function AppShell({ children, seller }: { children: React.ReactNode; seller: Seller }) {
+  return (
+    <ViewModeProvider>
+      <AgentFleetProvider>
+        <AppShellContent seller={seller}>{children}</AppShellContent>
+      </AgentFleetProvider>
+    </ViewModeProvider>
+  )
+}
+
+function AppShellContent({ children, seller }: { children: React.ReactNode; seller: Seller }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { mode } = useViewMode()
+  const isOperator = mode === "operator"
   const [signingOut, setSigningOut] = React.useState(false)
   const [auditOpen, setAuditOpen] = React.useState(false)
 
@@ -45,7 +58,6 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
   }
 
   return (
-    <AgentFleetProvider>
     <div
       data-theme="cream"
       style={{
@@ -160,7 +172,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
           </div>
         </div>
 
-        {/* Stations list */}
+        {/* Stations list — seller mode only; operator mode gets a minimal Console rail */}
         <nav
           style={{
             flex: 1,
@@ -174,20 +186,26 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
             gap: 18,
           }}
         >
-          <RailGroup
-            heading="Exit Prep & Readiness"
-            stations={STATIONS.filter((s) => s.group === "underwriting")}
-            pathname={pathname}
-          />
-          <div style={{ height: 1, background: "var(--div)", margin: "0 4px" }} aria-hidden />
-          <RailGroup
-            heading="Brokerage Services"
-            stations={STATIONS.filter((s) => s.group === "brokerage")}
-            pathname={pathname}
-          />
+          {isOperator ? (
+            <OperatorRailSection />
+          ) : (
+            <>
+              <RailGroup
+                heading="Exit Prep & Readiness"
+                stations={STATIONS.filter((s) => s.group === "underwriting")}
+                pathname={pathname}
+              />
+              <div style={{ height: 1, background: "var(--div)", margin: "0 4px" }} aria-hidden />
+              <RailGroup
+                heading="Brokerage Services"
+                stations={STATIONS.filter((s) => s.group === "brokerage")}
+                pathname={pathname}
+              />
+            </>
+          )}
         </nav>
 
-        {/* Seller footer */}
+        {/* Footer — seller identity in seller mode, generic Operator Console block in operator mode */}
         <div
           style={{
             padding: "11px 13px",
@@ -199,27 +217,51 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
             gap: 11,
           }}
         >
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "50%",
-              background: seller.avatarBg,
-              color: seller.avatarColor,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 600,
-              fontSize: 12,
-              flexShrink: 0,
-              fontFamily: inter,
-            }}
-          >
-            {seller.avatarInitials}
-          </div>
+          {isOperator ? (
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: "rgba(107,93,176,.14)",
+                color: "var(--lav, #6b5db0)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+              aria-hidden
+            >
+              <svg width={14} height={14} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="1.5" width="5" height="4.5" rx="1" />
+                <rect x="8" y="1.5" width="5" height="4.5" rx="1" />
+                <rect x="1" y="8" width="5" height="4.5" rx="1" />
+                <rect x="8" y="8" width="5" height="4.5" rx="1" />
+              </svg>
+            </div>
+          ) : (
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: seller.avatarBg,
+                color: seller.avatarColor,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 600,
+                fontSize: 12,
+                flexShrink: 0,
+                fontFamily: inter,
+              }}
+            >
+              {seller.avatarInitials}
+            </div>
+          )}
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--t1)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {seller.displayName}
+              {isOperator ? "Operator Console" : seller.displayName}
             </div>
             <div
               style={{
@@ -232,7 +274,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
                 letterSpacing: ".3px",
               }}
             >
-              {seller.email}
+              {isOperator ? "Internal · all seller deals" : seller.email}
             </div>
           </div>
           <button
@@ -282,6 +324,7 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
       <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <TopBar
           seller={seller}
+          mode={mode}
           onOpenAudit={() => setAuditOpen(true)}
           auditCount={AUDIT_TRAIL.length}
         />
@@ -294,7 +337,59 @@ export function AppShell({ children, seller }: { children: React.ReactNode; sell
       <CASEChat currentRoute={pathname} />
       <AuditTrailModal open={auditOpen} onClose={() => setAuditOpen(false)} />
     </div>
-    </AgentFleetProvider>
+  )
+}
+
+// ── Operator-mode rail — one console item, no seller STATIONS rail ─────
+// There's only one operator route today (`/deals`); this intentionally does
+// not invent additional operator-only pages.
+function OperatorRailSection() {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "1.1px",
+          textTransform: "uppercase",
+          color: "var(--t3)",
+          marginBottom: 10,
+          paddingLeft: 4,
+          fontFamily: inter,
+        }}
+      >
+        Console
+      </div>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+        <li>
+          <Link
+            href="/deals"
+            className="scorta-rail-link-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 11,
+              padding: "10px 11px",
+              borderRadius: 10,
+              textDecoration: "none",
+              background: "rgba(44,140,112,.08)",
+              border: "1px solid var(--mint-edge, rgba(44,140,112,.28))",
+              boxShadow: "0 4px 14px rgba(44,140,112,.10)",
+            }}
+          >
+            <StationIndicator status="active" />
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)", lineHeight: 1.2 }}>
+                Deal Portfolio
+              </div>
+              <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: mono, letterSpacing: ".4px", marginTop: 2 }}>
+                Every seller deal · Case Manager Fleet
+              </div>
+            </div>
+          </Link>
+        </li>
+      </ul>
+    </div>
   )
 }
 
@@ -540,13 +635,16 @@ function StationIndicator({ status }: { status: StationStatus }) {
 // ── Top bar ────────────────────────────────────────────────────────────
 function TopBar({
   seller,
+  mode,
   onOpenAudit,
   auditCount,
 }: {
   seller: Seller
+  mode: ViewMode
   onOpenAudit: () => void
   auditCount: number
 }) {
+  const isOperator = mode === "operator"
   return (
     <header
       style={{
@@ -565,43 +663,70 @@ function TopBar({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: garamond,
-            fontSize: 19,
-            fontWeight: 500,
-            color: "var(--t1)",
-            letterSpacing: "-.3px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {seller.businessName}
-        </div>
-        <div
-          style={{
-            padding: "3px 9px",
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: ".6px",
-            textTransform: "uppercase",
-            color: "var(--peach, #b86a3e)",
-            background: "var(--peach-soft, rgba(184,106,62,.10))",
-            border: "1px solid var(--peach-edge, rgba(184,106,62,.28))",
-            borderRadius: 9999,
-            fontFamily: inter,
-          }}
-        >
-          Hot Seller · 6–12 mo
-        </div>
+        {isOperator ? (
+          <div
+            style={{
+              fontFamily: garamond,
+              fontSize: 19,
+              fontWeight: 500,
+              color: "var(--t1)",
+              letterSpacing: "-.3px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Operator Console
+          </div>
+        ) : (
+          <>
+            <div
+              style={{
+                fontFamily: garamond,
+                fontSize: 19,
+                fontWeight: 500,
+                color: "var(--t1)",
+                letterSpacing: "-.3px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {seller.businessName}
+            </div>
+            <div
+              style={{
+                padding: "3px 9px",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: ".6px",
+                textTransform: "uppercase",
+                color: "var(--peach, #b86a3e)",
+                background: "var(--peach-soft, rgba(184,106,62,.10))",
+                border: "1px solid var(--peach-edge, rgba(184,106,62,.28))",
+                borderRadius: 9999,
+                fontFamily: inter,
+              }}
+            >
+              Hot Seller · 6–12 mo
+            </div>
+          </>
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button
-          type="button"
-          onClick={onOpenAudit}
-          className="scorta-audit-pill"
-          aria-label={`View audit trail · ${auditCount} entries`}
+        <Link
+          href={isOperator ? "/dashboard" : "/deals"}
+          className="scorta-operator-pill"
+          aria-label={
+            isOperator
+              ? "Switch to Seller View — back to Fieldstone's own single-deal workspace"
+              : "Switch to Operator View — every deal this operator is running"
+          }
+          title={
+            isOperator
+              ? "Seller View — Fieldstone's own single-deal workspace"
+              : "Operator View — every deal this operator is running concurrently, not just Fieldstone"
+          }
           style={{
             padding: "5px 12px",
             borderRadius: 9999,
@@ -613,6 +738,7 @@ function TopBar({
             alignItems: "center",
             gap: 8,
             fontFamily: inter,
+            textDecoration: "none",
             transition:
               "background 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out",
           }}
@@ -628,60 +754,104 @@ function TopBar({
             strokeLinejoin="round"
             aria-hidden
           >
-            <path d="M3 1.5h6.5L11.5 3.5V12A.5.5 0 0 1 11 12.5H3a.5.5 0 0 1-.5-.5V2A.5.5 0 0 1 3 1.5z" />
-            <path d="M9.5 1.5V3.5h2" />
-            <path d="M4.5 6h5M4.5 8h5M4.5 10h3" />
+            <rect x="1" y="1.5" width="5" height="4.5" rx="1" />
+            <rect x="8" y="1.5" width="5" height="4.5" rx="1" />
+            <rect x="1" y="8" width="5" height="4.5" rx="1" />
+            <rect x="8" y="8" width="5" height="4.5" rx="1" />
           </svg>
-          <span style={{ fontSize: 11.5, fontWeight: 600, lineHeight: 1 }}>Audit Trail</span>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: 9.5,
-              color: "var(--t3)",
-              letterSpacing: ".4px",
-              lineHeight: 1,
-            }}
-          >
-            {auditCount}
+          <span style={{ fontSize: 11.5, fontWeight: 600, lineHeight: 1 }}>
+            {isOperator ? "Seller View" : "Operator View"}
           </span>
-        </button>
-        <DealClockPill />
-        <div
-          style={{
-            padding: "5px 12px",
-            borderRadius: 9999,
-            border: "1px solid var(--mint-edge, rgba(44,140,112,.32))",
-            background: "rgba(255,255,255,.85)",
-            boxShadow: "0 4px 12px rgba(44,140,112,.10)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: mono,
-              fontSize: 10,
-              color: "var(--t3)",
-              letterSpacing: ".6px",
-              textTransform: "uppercase",
-            }}
-          >
-            Exit IQ
-          </div>
-          <div
-            style={{
-              fontFamily: garamond,
-              fontSize: 16,
-              fontWeight: 500,
-              color: "var(--t1)",
-              lineHeight: 1,
-            }}
-          >
-            {seller.scorePill.value}
-          </div>
-          <div style={{ fontSize: 11, color: "var(--t2)" }}>· {seller.scorePill.label}</div>
-        </div>
+        </Link>
+        {!isOperator && (
+          <>
+            <button
+              type="button"
+              onClick={onOpenAudit}
+              className="scorta-audit-pill"
+              aria-label={`View audit trail · ${auditCount} entries`}
+              style={{
+                padding: "5px 12px",
+                borderRadius: 9999,
+                border: "1px solid var(--glass-edge, rgba(0,0,0,.10))",
+                background: "rgba(255,255,255,.7)",
+                color: "var(--t1)",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontFamily: inter,
+                transition:
+                  "background 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out",
+              }}
+            >
+              <svg
+                width={12}
+                height={12}
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M3 1.5h6.5L11.5 3.5V12A.5.5 0 0 1 11 12.5H3a.5.5 0 0 1-.5-.5V2A.5.5 0 0 1 3 1.5z" />
+                <path d="M9.5 1.5V3.5h2" />
+                <path d="M4.5 6h5M4.5 8h5M4.5 10h3" />
+              </svg>
+              <span style={{ fontSize: 11.5, fontWeight: 600, lineHeight: 1 }}>Audit Trail</span>
+              <span
+                style={{
+                  fontFamily: mono,
+                  fontSize: 9.5,
+                  color: "var(--t3)",
+                  letterSpacing: ".4px",
+                  lineHeight: 1,
+                }}
+              >
+                {auditCount}
+              </span>
+            </button>
+            <DealClockPill />
+            <div
+              style={{
+                padding: "5px 12px",
+                borderRadius: 9999,
+                border: "1px solid var(--mint-edge, rgba(44,140,112,.32))",
+                background: "rgba(255,255,255,.85)",
+                boxShadow: "0 4px 12px rgba(44,140,112,.10)",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: mono,
+                  fontSize: 10,
+                  color: "var(--t3)",
+                  letterSpacing: ".6px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Exit IQ
+              </div>
+              <div
+                style={{
+                  fontFamily: garamond,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: "var(--t1)",
+                  lineHeight: 1,
+                }}
+              >
+                {seller.scorePill.value}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--t2)" }}>· {seller.scorePill.label}</div>
+            </div>
+          </>
+        )}
       </div>
     </header>
   )
@@ -754,6 +924,16 @@ function ScopedStyles() {
       }
       .scorta-audit-pill:focus-visible {
         outline: 2px solid var(--mint, #2c8c70);
+        outline-offset: 2px;
+      }
+      .scorta-operator-pill:hover {
+        background: #fff;
+        border-color: var(--lav-edge, rgba(107,93,176,.32));
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(12,10,9,.06);
+      }
+      .scorta-operator-pill:focus-visible {
+        outline: 2px solid var(--lav, #6b5db0);
         outline-offset: 2px;
       }
     `}</style>

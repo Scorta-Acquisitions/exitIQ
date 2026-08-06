@@ -50,8 +50,8 @@ const LENDERS: ReadonlyArray<Lender> = [
     id: "northeast",
     name: "Northeast Community Bank",
     matchPct: 94,
-    type: "NJ food service specialist · SBA preferred lender",
-    note: "Highest match — local relationship lender, NJ food service specialization, SBA preferred status means faster commitment.",
+    type: "NJ digital marketing agency specialist · SBA preferred lender",
+    note: "Highest match — local relationship lender, NJ digital marketing agency specialization, SBA preferred status means faster commitment.",
     loanTermsLine1: "Up to $1.4M · 10-year term",
     loanTermsLine2: "prime + 2.75%",
     vdrGranted: true,
@@ -61,7 +61,7 @@ const LENDERS: ReadonlyArray<Lender> = [
     name: "First National Business Capital",
     matchPct: 87,
     type: "National SBA lender · 15-day commitment SLA",
-    note: "Fast commitment timeline — 15-day SLA suitable for Chandan's 6–12 month exit window.",
+    note: "Fast commitment timeline — 15-day SLA suitable for Amara's 6–12 month exit window.",
     loanTermsLine1: "Up to $1.2M · 10-year term",
     loanTermsLine2: "prime + 3.0%",
     vdrGranted: false,
@@ -79,9 +79,12 @@ const LENDERS: ReadonlyArray<Lender> = [
 ]
 
 // ── Buyer data (Boardroom personas + spec) ──────────────────────────────────
-type BuyerType = "sba" | "micro_pe" | "search"
+// Exported so NetworkStation.tsx (`/network`) can reuse these 3 named,
+// already-shortlisted buyers as the top tier of the capital-verified pool —
+// single source of truth, no re-typed duplicate data.
+export type BuyerType = "sba" | "micro_pe" | "search"
 
-const BUYER_META: Record<BuyerType, { label: string; accent: string; soft: string; edge: string }> = {
+export const BUYER_META: Record<BuyerType, { label: string; accent: string; soft: string; edge: string }> = {
   sba: {
     label: "SBA-Backed Operator",
     accent: "var(--mint, #2c8c70)",
@@ -104,7 +107,7 @@ const BUYER_META: Record<BuyerType, { label: string; accent: string; soft: strin
 
 type SequenceTouch = { label: string; body: string }
 
-type Buyer = {
+export type Buyer = {
   id: string
   name: string
   initial: string
@@ -119,20 +122,20 @@ type Buyer = {
   initialColumn: BuyerColumn
 }
 
-const BUYERS: ReadonlyArray<Buyer> = [
+export const BUYERS: ReadonlyArray<Buyer> = [
   {
     id: "marcus",
     name: "Marcus Rivera",
     initial: "M",
     buyerType: "sba",
     profile:
-      "First-time buyer · SBA 7(a) pre-qualified · restaurant operations background · NJ-based",
+      "First-time buyer · SBA 7(a) pre-qualified · digital marketing agency operations background · NJ-based",
     matchRationale:
       "DSCR 4.4× strong for SBA. Boardroom: proceed to LOI conditional on SOPs.",
     sequence: [
       {
         label: "Touch 1",
-        body: "Personalized intro — Palace's 15-year history, $962K SDE, SBA pre-qual status",
+        body: "Personalized intro — Fieldstone's 15-year history, $962K SDE, SBA pre-qual status",
       },
       { label: "Touch 2", body: "CIM access invitation with NDA link" },
       { label: "Touch 3", body: "DSCR worksheet + lender intro" },
@@ -148,13 +151,13 @@ const BUYERS: ReadonlyArray<Buyer> = [
     initial: "D",
     buyerType: "micro_pe",
     profile:
-      "Independent sponsor · platform acquisition focus · property + brand thesis · 2 prior deals",
+      "Independent sponsor · platform acquisition focus · recurring-retainer annuity thesis · 2 prior deals",
     matchRationale:
-      "Property ownership = balance sheet asset. Boardroom: proceed, seller note preferred.",
+      "Recurring retainer base = annuity-like cash flow. Boardroom: proceed, seller note preferred.",
     sequence: [
       {
         label: "Touch 1",
-        body: "Platform acquisition angle — Palace's property + 15-year brand as anchor asset",
+        body: "Platform acquisition angle — Fieldstone's 38% recurring retainer base + 15-year brand as anchor asset",
       },
       {
         label: "Touch 2",
@@ -168,23 +171,23 @@ const BUYERS: ReadonlyArray<Buyer> = [
   },
   {
     id: "search_fund",
-    name: "Search Fund (Profile TBD)",
-    initial: "S",
+    name: "Graham Voss",
+    initial: "G",
     buyerType: "search",
-    profile: "Search Fund operator · single-target acquisition · contract-quality focus",
+    profile: "Search Fund operator · principal at Kestrel Search Fund · single-target acquisition · contract-quality focus",
     matchRationale:
-      "Held pending Concentration Agent's NJ Transit contract confirmation (Boardroom WO 2).",
+      "Held pending Concentration Agent's Garden State Auto Group contract confirmation (Boardroom WO 2).",
     sequence: [
       {
         label: "Touch 1",
-        body: "Intro contingent on NJ Transit 3-year contract confirmation",
+        body: "Intro contingent on Garden State Auto Group 3-year contract confirmation",
       },
     ],
     held: true,
     holdReason:
-      "NJ Transit contract confirmation required before Search Fund outreach. The Search Fund's deal-breaker objection (Boardroom WO 2) has not yet been resolved. Outreach Agent will auto-launch this sequence when the Concentration Agent confirms contract status.",
+      "Garden State Auto Group contract confirmation required before Search Fund outreach. The Search Fund's deal-breaker objection (Boardroom WO 2) has not yet been resolved. Outreach Agent will auto-launch this sequence when the Concentration Agent confirms contract status.",
     holdEstimate:
-      "When NJ Transit 3-year contract is confirmed → Search Fund sequence launches automatically",
+      "When Garden State Auto Group 3-year contract is confirmed → Search Fund sequence launches automatically",
     agentNote: "Sequence built · waiting on Concentration Agent.",
     initialColumn: "identified",
   },
@@ -540,8 +543,8 @@ function CaseIntro({ persona, mode }: { persona: Persona; mode: OutreachMode }) 
   void persona
   const body =
     mode === "lenders"
-      ? "The Lender Ops Agent has matched three SBA lenders against Palace's approved financials. Northeast Community Bank is the top match with a 94% deal-profile fit. Review the package, choose which lenders to include, and authorize submission."
-      : "The Outreach Agent has built sequences for two buyer profiles — SBA-Backed Operator and Micro-PE. Search Fund outreach is held pending the NJ Transit contract confirmation. Review the pipeline and authorize launch."
+      ? "The Lender Ops Agent has matched three SBA lenders against Fieldstone's approved financials. Northeast Community Bank is the top match with a 94% deal-profile fit. Review the package, choose which lenders to include, and authorize submission."
+      : "The Outreach Agent has built sequences for two buyer profiles — SBA-Backed Operator and Micro-PE. Search Fund outreach is held pending the Garden State Auto Group contract confirmation. Review the pipeline and authorize launch."
   return (
     <div
       style={{
@@ -1387,7 +1390,7 @@ function BuyerColumnPanel({
       <ColumnHeader
         eyebrow="OUTREACH AGENT · BUYER SEQUENCES"
         statusChip={{ tone: "amber", label: "2 SEQUENCES READY · 1 HELD" }}
-        boardroomRef="Priority order from Boardroom: SBA-Backed Operator first · Micro-PE second · Search Fund held pending NJ Transit contract"
+        boardroomRef="Priority order from Boardroom: SBA-Backed Operator first · Micro-PE second · Search Fund held pending Garden State Auto Group contract"
       />
       <Kanban
         buyerColumn={buyerColumn}
@@ -2320,7 +2323,7 @@ function DealProgressStrip() {
           color: "var(--t3)",
         }}
       >
-        Deal Progress · Palace Kitchen &amp; Catering
+        Deal Progress · Fieldstone Digital Marketing
       </div>
       <div
         style={{

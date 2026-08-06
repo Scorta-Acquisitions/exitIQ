@@ -9,6 +9,13 @@ import {
   RECAST_THINKING_ENTRY_ID,
   RECAST_THINKING_FLAG,
 } from "@/lib/auditTrail"
+import {
+  type AuditVelocitySummary,
+  type EntryVelocity,
+  getAuditVelocitySummary,
+  getVelocityById,
+} from "@/lib/auditVelocity"
+import { getDealClock } from "@/lib/dealClock"
 
 const garamond = "'EB Garamond', var(--font-eb-garamond, 'Times New Roman', serif)"
 const inter = "Inter, var(--font-inter, sans-serif)"
@@ -69,7 +76,12 @@ export function AuditTrailModal({ open, onClose }: { open: boolean; onClose: () 
           animation: "auditSlideUp 280ms ease-out",
         }}
       >
-        <Header onClose={onClose} entryCount={AUDIT_TRAIL.length} />
+        <Header
+          onClose={onClose}
+          entryCount={AUDIT_TRAIL.length}
+          velocity={getAuditVelocitySummary()}
+          elapsedDays={getDealClock().dayNumber - 1}
+        />
         <Body />
         <Footer />
       </section>
@@ -90,7 +102,17 @@ function useRecastFreshlyLogged(): boolean {
 }
 
 // ── Header ────────────────────────────────────────────────────────────────
-function Header({ onClose, entryCount }: { onClose: () => void; entryCount: number }) {
+function Header({
+  onClose,
+  entryCount,
+  velocity,
+  elapsedDays,
+}: {
+  onClose: () => void
+  entryCount: number
+  velocity: AuditVelocitySummary
+  elapsedDays: number
+}) {
   return (
     <header
       style={{
@@ -155,6 +177,7 @@ function Header({ onClose, entryCount }: { onClose: () => void; entryCount: numb
           {entryCount} actions logged · newest first · every entry attributed to a named agent
           with the inputs it consulted, what it produced, and the reasoning behind the call.
         </div>
+        <VelocityStrip velocity={velocity} elapsedDays={elapsedDays} />
       </div>
       <button
         type="button"
@@ -184,9 +207,48 @@ function Header({ onClose, entryCount }: { onClose: () => void; entryCount: numb
   )
 }
 
+// ── Velocity strip — the speed-to-close proof, made concrete for this trail ─
+function VelocityStrip({
+  velocity,
+  elapsedDays,
+}: {
+  velocity: AuditVelocitySummary
+  elapsedDays: number
+}) {
+  return (
+    <div style={{ display: "flex", gap: 18, marginTop: 12 }}>
+      <VelocityStat value={String(velocity.totalActions)} label="Agent actions" />
+      <VelocityStat value={`${velocity.totalHumanHours}h`} label="Human time (est.)" />
+      <VelocityStat value={String(elapsedDays)} label="Days elapsed" />
+    </div>
+  )
+}
+
+function VelocityStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+      <span style={{ fontFamily: garamond, fontSize: 15, fontWeight: 500, color: "rgba(245,245,245,.96)" }}>
+        {value}
+      </span>
+      <span
+        style={{
+          fontFamily: mono,
+          fontSize: 9,
+          color: "rgba(245,245,245,.55)",
+          letterSpacing: ".5px",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
 // ── Body ──────────────────────────────────────────────────────────────────
 function Body() {
   const recastFresh = useRecastFreshlyLogged()
+  const velocity = React.useMemo(() => getVelocityById(), [])
 
   // Group entries by date so the timeline reads as days, not a flat list.
   // Newest entry first — reverse the source array, then reverse each day's
@@ -225,6 +287,7 @@ function Body() {
           entries={group.entries}
           isLatestGroup={gi === 0}
           recastFresh={recastFresh}
+          velocity={velocity}
         />
       ))}
     </div>
@@ -236,11 +299,13 @@ function DayGroup({
   entries,
   isLatestGroup,
   recastFresh,
+  velocity,
 }: {
   date: string
   entries: ReadonlyArray<AuditEntry>
   isLatestGroup: boolean
   recastFresh: boolean
+  velocity: ReadonlyMap<string, EntryVelocity>
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -293,6 +358,7 @@ function DayGroup({
                 entry={entry}
                 defaultExpanded={defaultExpanded}
                 freshlyLogged={isFreshRecast}
+                velocity={velocity.get(entry.id)}
               />
             </li>
           )
@@ -306,10 +372,12 @@ function EntryCard({
   entry,
   defaultExpanded,
   freshlyLogged,
+  velocity,
 }: {
   entry: AuditEntry
   defaultExpanded: boolean
   freshlyLogged: boolean
+  velocity?: EntryVelocity
 }) {
   const [expanded, setExpanded] = React.useState(defaultExpanded)
   const accent = accentColor(entry.agentAccent)
@@ -417,16 +485,30 @@ function EntryCard({
               </span>
             )}
           </div>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: 10,
-              color: "var(--t3, rgba(12,10,9,.42))",
-              letterSpacing: ".4px",
-            }}
-          >
-            {entry.timeLabel}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span
+              style={{
+                fontFamily: mono,
+                fontSize: 10,
+                color: "var(--t3, rgba(12,10,9,.42))",
+                letterSpacing: ".4px",
+              }}
+            >
+              {entry.timeLabel}
+            </span>
+            {velocity && (
+              <span
+                style={{
+                  fontFamily: mono,
+                  fontSize: 9,
+                  color: "var(--t3, rgba(12,10,9,.34))",
+                  letterSpacing: ".3px",
+                }}
+              >
+                ~{velocity.minutes} min · {velocity.cumulativeMinutes} min total
+              </span>
+            )}
+          </div>
         </header>
 
         <div

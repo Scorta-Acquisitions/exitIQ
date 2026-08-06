@@ -361,7 +361,7 @@ function CaseIntroBanner({ persona }: { persona: Persona }) {
           CASE · Case Manager
         </div>
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
-          Two of {persona.identity.businessName.split(" ")[0]}'s four sources are already authorized.
+          Two of {persona.identity.shortName}'s four sources are already authorized.
           Run the QuickBooks sync to hand the books off to the Ingestion Agent — I'll surface the
           add-back schedule and concentration flags in the next station.
         </div>

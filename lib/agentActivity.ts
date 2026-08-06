@@ -31,7 +31,7 @@ export const AGENT_DEFS: ReadonlyArray<AgentDef> = [
     initialTask: "Drafting SOP templates for 5 tasks",
     runningLines: [
       "Drafting SOP templates for 5 tasks",
-      "Mapping catering sales process steps...",
+      "Mapping client account management steps...",
       "Generating vendor negotiation SOP...",
     ],
     waitingLines: [],
@@ -41,9 +41,9 @@ export const AGENT_DEFS: ReadonlyArray<AgentDef> = [
     name: "Concentration Agent",
     workOrderIndex: 2,
     initialStatus: "running",
-    initialTask: "Drafting NJ Transit contract extension",
+    initialTask: "Drafting Garden State Auto Group contract extension",
     runningLines: [
-      "Drafting NJ Transit contract extension",
+      "Drafting Garden State Auto Group contract extension",
       "Reviewing 6-year account history...",
       "Preparing 3-year renewal terms...",
     ],
@@ -67,14 +67,14 @@ export const AGENT_DEFS: ReadonlyArray<AgentDef> = [
     name: "Outreach Agent",
     workOrderIndex: 4,
     initialStatus: "waiting",
-    initialTask: "Queued · pending NJ Transit contract status",
+    initialTask: "Queued · pending Garden State Auto Group contract status",
     runningLines: [
       "Building SBA-Backed Operator sequences",
       "Drafting Micro-PE outreach cadence...",
       "Preparing buyer profile pitch decks...",
     ],
     waitingLines: [
-      "Queued · pending NJ Transit contract status",
+      "Queued · pending Garden State Auto Group contract status",
       "SBA-Backed Operator profile ready to sequence",
       "Micro-PE profile ready to sequence",
     ],
@@ -140,23 +140,23 @@ export function getAgentState(
     case "concentration":
       // Reviewing once the lender station opens, then completes by buyer outreach.
       if (phase >= PHASE.BUYERS) {
-        return { status: "complete", task: "NJ Transit contract extension drafted", amber: false }
+        return { status: "complete", task: "Garden State Auto Group contract extension drafted", amber: false }
       }
       if (phase >= PHASE.LENDERS) {
         return {
           status: "reviewing",
-          task: "NJ Transit draft ready · awaiting your review",
+          task: "Garden State Auto Group draft ready · awaiting your review",
           amber: true,
         }
       }
       return { status: "running", task: null, amber: false }
 
     case "owner_dep":
-      // Reviewing once lender outreach opens (SOPs ready for Chandan to fill in).
+      // Reviewing once lender outreach opens (SOPs ready for Amara to fill in).
       if (phase >= PHASE.LENDERS) {
         return {
           status: "reviewing",
-          task: "SOP templates ready · Chandan to fill in",
+          task: "SOP templates ready · Amara to fill in",
           amber: true,
         }
       }

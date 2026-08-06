@@ -1099,9 +1099,8 @@ function SNav({ onOpen }: { onOpen: () => void }) {
         {/* CTAs */}
         <div style={{ display: "flex", gap: 10, alignItems: "center", marginLeft: "auto" }}>
           {!isMobile && (
-            <a
-              href="#exitiq"
-              onClick={(e) => scrollToSection(e, "#exitiq")}
+            <Link
+              href="/login"
               style={{
                 fontFamily: inter,
                 fontSize: 14,
@@ -1112,7 +1111,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
               }}
             >
               Sign in
-            </a>
+            </Link>
           )}
           <button onClick={onOpen} style={{ ...btnPrimary, height: 38, fontSize: 14 }}>
             Try ExitIQ
@@ -1230,9 +1229,9 @@ function SNav({ onOpen }: { onOpen: () => void }) {
               )
             )}
             <div style={{ height: 1, background: C.hairline, margin: "8px 24px" }} />
-            <a
-              href="#exitiq"
-              onClick={(e) => scrollToSection(e, "#exitiq")}
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
               style={{
                 fontFamily: inter,
                 fontSize: 16,
@@ -1243,7 +1242,7 @@ function SNav({ onOpen }: { onOpen: () => void }) {
               }}
             >
               Sign in
-            </a>
+            </Link>
           </div>
         </div>
       )}

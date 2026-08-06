@@ -5,8 +5,8 @@
  * the starter chips resolve instantly against it. Anything that doesn't
  * match falls through to a live model call (see buildCaseSystemPrompt below
  * and app/api/case/chat/route.ts) grounded in the same persona/audit-trail
- * facts. All numbers here trace to `.exitiq-debug/sessions/DEMO_PERSONA.md`
- * and upstream station outputs (Recast, Risk, Boardroom, VDR).
+ * facts. All numbers here trace to `lib/persona.ts` (the locked demo
+ * persona) and upstream station outputs (Recast, Risk, Boardroom, VDR).
  *
  * Spec: CASE_CHAT.md (pasted into chat session 2026-05-18).
  */
@@ -27,8 +27,8 @@ export type QAEntry = {
 // fall through to the meaningful answers first.
 export const QA_MAP: ReadonlyArray<QAEntry> = [
   {
-    triggers: ["nj transit", "concentration", "search fund"],
-    response: `NJ Transit Corporate Catering accounts for 19% of your annual revenue — within the SBA's acceptable threshold, so it's not a lender problem. But it is a Search Fund deal-breaker.
+    triggers: ["garden state auto", "concentration", "search fund"],
+    response: `Garden State Auto Group accounts for 19% of your annual revenue — within the SBA's acceptable threshold, so it's not a lender problem. But it is a Search Fund deal-breaker.
 
 The Search Fund buyer requires a 3-year written contract to build their recurring revenue thesis. Right now you have a month-to-month arrangement on a 6-year relationship. The Concentration Agent has drafted a contract extension proposal. Until that's confirmed, the Search Fund outreach sequence is on hold.
 
@@ -86,18 +86,18 @@ Two access requests are pending your approval:
 Head to the VDR station to approve both. The lender access in particular is time-sensitive — bank reviewers typically move to the next file if they don't hear back within 24 hours.`,
   },
   {
-    triggers: ["property", "facility", "building", "real estate"],
-    response: `You own the building — 4,200 sq ft commercial kitchen in Northern New Jersey. That's a significant deal advantage. Most restaurant sellers are leasing, which creates lease assignment risk and term uncertainty for buyers and lenders.
+    triggers: ["property", "facility", "building", "real estate", "office", "lease"],
+    response: `Fieldstone leases a Class B office suite in Northern New Jersey — you don't own the building. That's normal for a digital marketing agency; the deal isn't anchored by real estate.
 
-For the SBA-Backed Operator: the property is collateral that strengthens the loan application.
-For the Micro-PE buyer: the property is a balance sheet asset that anchors the platform acquisition thesis.
-For valuation: the $500K asset floor means the deal has hard asset support regardless of EBITDA multiple.
+For the SBA-Backed Operator: the loan structure doesn't require a property pledge — it's built on cash flow, not collateral.
+For the Micro-PE buyer: the 38% recurring retainer base (including Garden State Auto Group) plays the role real estate would elsewhere — annuity-like cash flow that anchors the platform acquisition thesis.
+For valuation: the $500K asset floor holds regardless — it's built from working capital and equipment, not property.
 
-The property is listed as part of the $1.75M deal.`,
+The lease terms are documented for buyer due diligence as part of the $1.75M deal.`,
   },
   {
     triggers: ["lender", "sba", "bank", "financing", "loan"],
-    response: `Palace Kitchen is SBA 7(a) eligible. Here's the deal structure:
+    response: `Fieldstone is SBA 7(a) eligible. Here's the deal structure:
 
 Loan amount:          $1,090,000 (87.5% financed)
 Buyer down payment:   $106,000 minimum
@@ -106,7 +106,7 @@ DSCR:                 4.4× — well above the 1.25× floor
 Loan term:            10 years
 
 Three lenders have been matched:
-· Northeast Community Bank — 94% match (NJ food service specialist, SBA preferred lender, VDR access pending)
+· Northeast Community Bank — 94% match (NJ digital marketing agency specialist, SBA preferred lender, VDR access pending)
 · First National Business Capital — 87% match (15-day commitment SLA)
 · ReadyCap Commercial — 81% match (flexible down payment)
 
@@ -114,16 +114,16 @@ The lender package — P&L Recast + add-back schedule + DSCR worksheet — is li
   },
   {
     triggers: ["revenue", "$2.1", "2.1m"],
-    response: `Palace Kitchen generated $2,100,000 in gross revenue in 2024 — up from $1,780,000 in 2022 and $1,970,000 in 2023. That's an 18% compound growth rate over 3 years.
+    response: `Fieldstone generated $2,100,000 in gross revenue in 2024 — up from $1,780,000 in 2022 and $1,970,000 in 2023. That's an 18% compound growth rate over 3 years.
 
-Revenue mix: approximately 38% recurring (corporate catering contracts including NJ Transit). The recurring component is what drives the SBA-Backed Operator and Search Fund interest — both buyer profiles want predictable cash flow to service their acquisition debt.`,
+Revenue mix: approximately 38% recurring (retainer contracts including Garden State Auto Group). The recurring component is what drives the SBA-Backed Operator and Search Fund interest — both buyer profiles want predictable cash flow to service their acquisition debt.`,
   },
   {
     triggers: ["valuation", "worth", "price", "listing"],
-    response: `Palace Kitchen is listed at $1.75M — a 2.4× multiple on your Year 3 normalized SDE of $962K.
+    response: `Fieldstone is listed at $1.75M — a 2.4× multiple on your Year 3 normalized SDE of $962K.
 
 Valuation range: $1.6M – $1.9M.
-Asset floor: $500K (you own the property — that's a balance sheet anchor most food service sellers don't have).
+Asset floor: $500K (working capital and equipment — most agency sellers don't have hard asset backing at all).
 
 The gap between $1.75M and $1.9M is the owner-dependency discount. The Boardroom's analysis puts the fix value at +$450K if you complete the 5 SOP tasks. At 3.0× on $962K that's a $1.9M exit. At your current 2.4× with no SOPs it's $1.75M. The difference is $150K and about 6 weeks of documentation work.`,
   },
@@ -138,17 +138,17 @@ The gap between $1.75M and $1.9M is the owner-dependency discount. The Boardroom
     ],
     response: `The 5-task owner-dependency remediation plan is the single highest-leverage thing you can do right now. Here's what's outstanding:
 
-1. Catering sales playbook — how inquiries are received, quoted, and confirmed without you. (+8 pts)
-2. Vendor negotiation SOP — your top 5 supplier contacts, terms, and renewal process. (+5 pts)
-3. Bank deposit delegation — end-of-day reconciliation any staff member can run. (+4 pts)
-4. Staff scheduling SOP — who makes coverage calls when you're unavailable. (+4 pts)
-5. Health inspection protocol — who responds and how, without you. (+3 pts)
+1. Client account management & new-business pitching playbook — how key client relationships are managed and new-business pitches are run without you. (+8 pts)
+2. Vendor negotiation SOP — your top 5 vendor contacts (media platforms, freelance talent, software), terms, and renewal process. (+5 pts)
+3. Invoice & AR reconciliation delegation — monthly billing reconciliation any staff member can run. (+4 pts)
+4. Account staffing SOP — who reassigns client coverage when you're unavailable. (+4 pts)
+5. Client data & compliance protocol — who responds and how, without you. (+3 pts)
 
 Total: +24 transferability points. 38 → 62/100. The Owner-Dependency Agent has templates drafted for tasks 1 and 3. Tasks 2, 4, and 5 need your input. Fix value: +$450,000 in deal value.`,
   },
   {
     triggers: ["staff", "employees", "team"],
-    response: `Palace Kitchen has 11 employees. One of them has 3+ years of tenure. The rest are shorter-tenured — which is a contributing factor to the owner-dependency risk.
+    response: `Fieldstone has 11 employees. One of them has 3+ years of tenure. The rest are shorter-tenured — which is a contributing factor to the owner-dependency risk.
 
 No SOPs are documented. That means the institutional knowledge of how this business runs is entirely in your head. A buyer can't operate it confidently without you, and a lender models that risk into the loan terms.
 
@@ -175,18 +175,18 @@ The Transferability score is the only sub-score below 60. Completing the 5-task 
 
 [PROCEED] Micro-PE Buyer — David Chen
   Independent sponsor, platform acquisition thesis.
-  Interested in your property + 15-year brand.
+  Interested in your recurring retainer base + 15-year brand.
   Seller note: $175K–$229K modeled into deal structure.
 
 [ON HOLD] Search Fund
-  Held pending NJ Transit 3-year contract confirmation.
+  Held pending Garden State Auto Group 3-year contract confirmation.
   Outreach launches automatically when contract is signed.
 
 Bottom line: two sequences are ready to launch, one is held. Authorizing outreach from the Outreach station puts the deal in front of the right people immediately.`,
   },
   {
     triggers: ["timeline", "how long", "when", "close"],
-    response: `Chandan, you indicated a 6–12 month exit window. Here's the realistic timeline from today:
+    response: `Amara, you indicated a 6–12 month exit window. Here's the realistic timeline from today:
 
 Weeks 1–2:   Approve VDR access, authorize lender + buyer outreach
 Weeks 3–6:   SOP documentation (5 tasks — agent-assisted, your input needed on 3 of 5)
@@ -207,7 +207,7 @@ The SOP work is the only item on the critical path that requires your time. Ever
       "whats left",
       "checklist",
     ],
-    response: `Here's where Palace Kitchen's exit stands:
+    response: `Here's where Fieldstone's exit stands:
 
 ✓ Intake & assessment complete (Exit IQ 49/100)
 ✓ Platform connectors live (QuickBooks + Plaid)
@@ -221,7 +221,7 @@ The SOP work is the only item on the critical path that requires your time. Ever
 ⬜ Lender submission (package ready, pending auth)
 ⬜ Buyer outreach (2 sequences ready, 1 held)
 ⬜ SOP remediation (5 tasks, +$450K unlock)
-⬜ NJ Transit contract (Search Fund hold condition)
+⬜ Garden State Auto Group contract (Search Fund hold condition)
 
 Critical path: approve the two VDR access requests, then authorize lender + buyer outreach. Those two actions move the deal from "prepared" to "in market."`,
   },
@@ -231,7 +231,7 @@ Critical path: approve the two VDR access requests, then authorize lender + buye
   },
   {
     triggers: ["hi", "hello", "hey"],
-    response: `Hi Chandan. Still here — what do you need?`,
+    response: `Hi Amara. Still here — what do you need?`,
   },
 ]
 
@@ -298,7 +298,7 @@ const QUICK_CHIPS: Record<string, ReadonlyArray<string>> = {
   "/risk": [
     "What's owner dependency?",
     "How do I fix it?",
-    "What's the NJ Transit risk?",
+    "What's the Garden State Auto risk?",
   ],
   "/boardroom": [
     "Who are my buyers?",
@@ -339,15 +339,15 @@ export function getQuickChips(route: string): ReadonlyArray<string> {
 // ── Route-aware proactive messages ────────────────────────────────────
 const PROACTIVE_MESSAGES: Record<string, string> = {
   "/connect": `Two connectors are live — QuickBooks and Plaid. Stripe and Google Drive are pending. You don't need them to proceed, but Google Drive would unlock your tax returns for the lender package.`,
-  "/ingestion": `Ingestion Agent is running. 1,247 transactions across 36 months. Two flags coming — concentration risk on NJ Transit and key-man dependency on you. Both are expected given the business type. Neither is a deal-stopper.`,
+  "/ingestion": `Ingestion Agent is running. 1,247 transactions across 36 months. Two flags coming — concentration risk on Garden State Auto Group and key-man dependency on you. Both are expected given the business type. Neither is a deal-stopper.`,
   "/recast": `The Recast Agent normalized your SDE to $962K on $147K in defensible add-backs. That's the number your $1.75M listing is built on. Review the add-back schedule — the personal travel line ($9K) is the most likely lender scrutiny point.`,
   "/risk": `Your transferability score is 38/100. That's the number suppressing your multiple from 3.0× to 2.4×. The fix is 5 written SOPs — the agent has templates for 2 of them. The other 3 need your input.`,
   "/boardroom": `The Boardroom identified 3 buyer profiles and dispatched 4 work orders. The SBA-Backed Operator is your highest-probability close. The Search Fund is your highest-value outcome — but it's conditional. Approve the fleet dispatch when you're ready.`,
   "/documents": `The CIM is being assembled from your approved financials and risk profile. 12 sections. Review Section 1 (Executive Summary) and Section 6 (Deal Structure) before approving — those are the two sections buyers read first.`,
   "/vdr": `Your VDR is live. Two access requests are pending — Marcus Rivera (buyer) and Northeast Community Bank (lender). Approve the lender first — their SLA clock starts on access, and 15 days to commitment means you want them reviewing now.`,
   "/score": `Scorta Score: 71/100. You're a Strong SBA Candidate. The 13 points between you and Scorta Certified are almost entirely owned by Transferability. Complete the 5 SOP tasks and you're at 84.`,
-  "/lenders": `Lender package is ready. Northeast Community Bank is the highest match at 94% — NJ food service specialist, SBA preferred lender. Submit to them first. First National is the backup with a 15-day commitment SLA if you need a timeline anchor.`,
-  "/buyers": `Two buyer sequences are ready. Marcus Rivera (SBA-Backed Operator) and David Chen (Micro-PE). The Search Fund is held until the NJ Transit contract is confirmed. Authorize outreach and the deal is officially in market.`,
+  "/lenders": `Lender package is ready. Northeast Community Bank is the highest match at 94% — NJ digital marketing agency specialist, SBA preferred lender. Submit to them first. First National is the backup with a 15-day commitment SLA if you need a timeline anchor.`,
+  "/buyers": `Two buyer sequences are ready. Marcus Rivera (SBA-Backed Operator) and David Chen (Micro-PE). The Search Fund is held until the Garden State Auto Group contract is confirmed. Authorize outreach and the deal is officially in market.`,
 }
 
 export function getProactiveMessage(route: string): string | null {
@@ -394,6 +394,6 @@ If asked something outside this deal file, or something you have no basis for, s
 }
 
 // ── Opening message (always the first message in the thread) ──────────
-export const OPENING_MESSAGE = `Hi Chandan — I'm managing your Palace Kitchen exit from here. Your deal is at $1.75M listed, Scorta Score 71/100, and the agent fleet is active. Here's where things stand: two documents are live in the VDR, the owner-dependency remediation plan has 5 tasks outstanding, and the NJ Transit contract confirmation is the current blocker for the Search Fund pathway.
+export const OPENING_MESSAGE = `Hi Amara — I'm managing your Fieldstone exit from here. Your deal is at $1.75M listed, Scorta Score 71/100, and the agent fleet is active. Here's where things stand: two documents are live in the VDR, the owner-dependency remediation plan has 5 tasks outstanding, and the Garden State Auto Group contract confirmation is the current blocker for the Search Fund pathway.
 
 What do you want to work on?`

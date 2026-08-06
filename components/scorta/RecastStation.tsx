@@ -289,7 +289,7 @@ function CaseIntroBanner({
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {working ? (
             <>
-              Recast Agent is normalizing {persona.identity.businessName.split(" ")[0]}'s financials —
+              Recast Agent is normalizing {persona.identity.shortName}'s financials —
               applying SBA-style add-backs and cleaning the EBITDA story.
             </>
           ) : (
@@ -741,7 +741,7 @@ const NARRATIVES: Record<NarrativeKey, Narrative> = {
     amount: "$22,000",
     tone: "accepted",
     body:
-      "A non-recurring equipment repair of $22,000 was incurred in 2023 for commercial kitchen equipment. This item is added back as a one-time capital event with no expected recurrence, supported by vendor invoice documentation. Excluded from Year 1 and Year 3 normalized figures.",
+      "A non-recurring equipment repair of $22,000 was incurred in 2023 for office & production equipment. This item is added back as a one-time capital event with no expected recurrence, supported by vendor invoice documentation. Excluded from Year 1 and Year 3 normalized figures.",
   },
   travel: {
     label: "Personal Travel — $9,000 / yr",
@@ -993,8 +993,8 @@ function ValuationOutput({ persona }: { persona: Persona }) {
               fontFamily: inter,
             }}
           >
-            Palace Kitchen&apos;s multiple reflects {persona.business.yearsOperating} years of operating history,
-            SBA eligibility, and property ownership — offset by owner-dependency risk currently
+            Fieldstone&apos;s multiple reflects {persona.business.yearsOperating} years of operating history,
+            SBA eligibility, and a recurring retainer base — offset by owner-dependency risk currently
             scored at {persona.risk.ownerDependencyScore} / 100. Resolving the dependency score to
             {" "}
             {persona.risk.targetTransferability} / 100 supports the upper end of the range at 3.0×,

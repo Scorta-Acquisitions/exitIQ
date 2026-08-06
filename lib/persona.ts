@@ -1,26 +1,30 @@
 /**
- * Locked demo persona — Chandan Patel / Palace Kitchen & Catering.
- * Source of truth: .exitiq-debug/sessions/DEMO_PERSONA.md + demo-persona.json + demo-report.md.
- * Do not invent or alter values. If a value is missing, log an open question in DEMO_SPRINT.md.
+ * Locked demo persona — Amara Reyes / Fieldstone Digital Marketing.
+ * This is a hand-maintained locked demo object, not derived from any external source file.
+ * Do not invent or alter values. `lib/auditTrail.ts` and `lib/caseChat.ts` contain hand-written
+ * prose (not templated against this object) that must be kept in sync with it by hand whenever
+ * an identity field here changes.
  */
 
 export const PERSONA = {
   identity: {
-    displayName: "Chandan Patel",
-    firstName: "Chandan",
-    email: "chandan@palacekitchen.com",
-    businessName: "Palace Kitchen & Catering",
-    businessSlug: "palace-kitchen",
+    displayName: "Amara Reyes",
+    firstName: "Amara",
+    email: "amara@fieldstonedigital.com",
+    businessName: "Fieldstone Digital Marketing",
+    businessSlug: "fieldstone-digital",
+    /** Short/nickname form of businessName — use this instead of `.split(" ")[0]` derivations. */
+    shortName: "Fieldstone",
     role: "Owner-Operator",
     location: "Northern New Jersey",
-    avatarInitials: "CP",
+    avatarInitials: "AR",
     avatarColor: "#1D9E75",
     avatarBg: "#E1F5EE",
   },
   business: {
-    industry: "Restaurant / Food Service",
+    industry: "Digital Marketing Agency",
     yearsOperating: 15,
-    facilityType: "Owns the property",
+    facilityType: "Leases a Class B office suite",
     employeesRange: "6–15",
     employees: 11,
     longTenuredStaff: 1,
@@ -85,7 +89,7 @@ export const PERSONA = {
     topCustomerShare: 19,
     concentrationLevel: "MODERATE" as const,
     concentrationRiskLabel: "Within SBA threshold — monitor",
-    topAccountName: "NJ Transit Corporate Catering",
+    topAccountName: "Garden State Auto Group",
     topAccountTenureYears: 6,
   },
   sba: {
@@ -168,11 +172,12 @@ export const STATIONS: ReadonlyArray<Station> = [
   { href: "/recast", label: "Financials Recast", sublabel: "Station 05", agent: "Recast · Boardroom", group: "underwriting", state: "shipped", prereq: "the Ingestion Agent finishes classifying" },
   { href: "/risk", label: "Risk Analysis", sublabel: "Station 06", agent: "Owner-Dependency · Concentration", group: "underwriting", state: "shipped", prereq: "the Recast Agent posts add-backs" },
   { href: "/boardroom", label: "The Boardroom", sublabel: "Station 06b", agent: "Boardroom", group: "underwriting", state: "active", prereq: "the Owner-Dependency remediation plan is reviewed" },
-  { href: "/score", label: "Scorta Score", sublabel: "Station 07", agent: "Case Manager", group: "underwriting", state: "locked", prereq: "the Boardroom dispatches the agent fleet" },
+  { href: "/score", label: "Scorta Score", sublabel: "Station 07", agent: "Case Manager", group: "underwriting", state: "active", prereq: "the Boardroom dispatches the agent fleet" },
 
   // ── Brokerage Services ───────────────────────────────────────────────────
   { href: "/documents", label: "CIM & Docs", sublabel: "Station 08", agent: "CIM Agent", group: "brokerage", state: "active", prereq: "the Boardroom dispatches the agent fleet" },
   { href: "/vdr", label: "Virtual Data Room", sublabel: "Station 09", agent: "VDR · Case Manager", group: "brokerage", state: "active" },
   { href: "/lenders", label: "Lender Outreach", sublabel: "Station 10", agent: "Lender Ops", group: "brokerage", state: "active", prereq: "the CIM is published to the VDR" },
-  { href: "/buyers", label: "Buyer Outreach", sublabel: "Station 11", agent: "Outreach", group: "brokerage", state: "active", prereq: "lenders are matched" },
+  { href: "/network", label: "Buyer Network", sublabel: "Station 11", agent: "Outreach", group: "brokerage", state: "active", prereq: "lenders are matched" },
+  { href: "/buyers", label: "Buyer Outreach", sublabel: "Station 12", agent: "Outreach", group: "brokerage", state: "active", prereq: "the buyer network is filtered to a shortlist" },
 ]

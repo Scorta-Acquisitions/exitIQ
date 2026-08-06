@@ -1,10 +1,10 @@
 /**
  * Permanent audit trail — hard-coded chronological log of every agent action
- * taken on Chandan's deal. Traces from Exit IQ intake (2026-05-17) through
+ * taken on Amara's deal. Traces from Exit IQ intake (2026-05-17) through
  * the next-steps recommendations surfaced on the Seller Home today (2026-05-20).
  *
- * Demo only. The narrative is locked against the persona files in
- * .exitiq-debug/sessions/ — do not invent numbers.
+ * Demo only. This is hand-maintained prose kept in sync with `lib/persona.ts`
+ * by hand — it is not templated against `PERSONA`. Do not invent numbers.
  */
 
 export type AuditSeverity = "info" | "flag" | "review"
@@ -48,16 +48,16 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "Exit IQ intake received",
     detail:
-      "Session mp91it7xqthbf6b handed off from Exit IQ Assessment. Deal file opened for Palace Kitchen & Catering, Northern New Jersey.",
+      "Session mp91it7xqthbf6b handed off from Exit IQ Assessment. Deal file opened for Fieldstone Digital Marketing, Northern New Jersey.",
     inputs: [
       "Exit IQ score: 49/100 · Grade C · Needs Preparation",
       "Segment tag: hot_seller · routing path: Guided Readiness Track",
-      "Completed: 2026-05-17 by Chandan Patel",
+      "Completed: 2026-05-17 by Amara Reyes",
     ],
     output: "Operator workspace provisioned · all 11 stations initialized",
     thinking: {
       reasoning:
-        "Intake payload validated against the Exit IQ schema (v6). Composite Exit IQ score of 49 placed Chandan in the Needs Preparation band; segment_tag of hot_seller derived from the 6–12 month timeline answer + no-price-in-mind flag. Routed to the Guided Readiness Track rather than the Direct-to-Market track because Documentation Quality and Transferability sub-scores both trailed the SBA-fundable threshold (≥55).",
+        "Intake payload validated against the Exit IQ schema (v6). Composite Exit IQ score of 49 placed Amara in the Needs Preparation band; segment_tag of hot_seller derived from the 6–12 month timeline answer + no-price-in-mind flag. Routed to the Guided Readiness Track rather than the Direct-to-Market track because Documentation Quality and Transferability sub-scores both trailed the SBA-fundable threshold (≥55).",
       metadata: [
         { label: "Model", value: "claude-sonnet-4-6" },
         { label: "Schema version", value: "exit-iq/v6" },
@@ -74,13 +74,13 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "Persona classification locked",
     detail:
-      "Business profile derived from intake answers. 15-year operating history, owner-operator structure, owns the property, 6–15 employee range, 6–12 month selling timeline, no price in mind.",
+      "Business profile derived from intake answers. 15-year operating history, owner-operator structure, leases a Class B office suite, 6–15 employee range, 6–12 month selling timeline, no price in mind.",
     output: "Persona file written · downstream agents authorized to read",
     thinking: {
       reasoning:
-        "Cross-referenced industry (Restaurant / Food Service) against the Scorta industry taxonomy to attach standard SBA add-back categories, lender-preference clusters, and the buyer-segment templates the Boardroom would later use. Locked the persona record so downstream agents read from a single source instead of re-deriving from intake.",
+        "Cross-referenced industry (Digital Marketing Agency) against the Scorta industry taxonomy to attach standard SBA add-back categories, lender-preference clusters, and the buyer-segment templates the Boardroom would later use. Locked the persona record so downstream agents read from a single source instead of re-deriving from intake.",
       metadata: [
-        { label: "Industry taxonomy", value: "NAICS 722330 → Scorta IFOOD-04" },
+        { label: "Industry taxonomy", value: "NAICS 541810 → Scorta IMKTG-04" },
         { label: "Audit hash", value: "sha256:c81f…2d44" },
       ],
     },
@@ -116,7 +116,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "sky",
     action: "QuickBooks connector authorized",
     detail:
-      "OAuth grant received from Chandan. 36 months of access scoped to Palace Kitchen & Catering company file.",
+      "OAuth grant received from Amara. 36 months of access scoped to Fieldstone Digital Marketing company file.",
     output: "Ingestion endpoint provisioned · pull queued",
     href: "/connect",
   },
@@ -175,7 +175,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "sky",
     action: "Concentration flag raised",
     detail:
-      "Customer revenue distribution showed NJ Transit Corporate Catering at 19% of top-line revenue across a 6-year relationship. Flagged within SBA monitoring threshold.",
+      "Customer revenue distribution showed Garden State Auto Group at 19% of top-line revenue across a 6-year relationship. Flagged within SBA monitoring threshold.",
     output: "Flag posted to Concentration Agent queue",
     severity: "flag",
   },
@@ -251,7 +251,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     href: "/risk",
     thinking: {
       reasoning:
-        "Used Scorta's transferability composite (weighted: 35% SOP coverage, 30% staff-tenure depth, 20% owner-hours, 15% cross-training). Chandan's score breakdown — SOP coverage contributed 0/35 (zero documented), staff tenure 8/30 (1 of 11 ≥3yr), owner hours 17/20 (62 hr/wk is high but not red-line), cross-training 13/15 (informal coverage exists). Net 38/100. Modeled the post-remediation score assuming all 5 SOPs complete: would jump to 73/100 and re-rate the multiple from 2.4× to 2.85×, hence the +$450K unlock estimate.",
+        "Used Scorta's transferability composite (weighted: 35% SOP coverage, 30% staff-tenure depth, 20% owner-hours, 15% cross-training). Amara's score breakdown — SOP coverage contributed 0/35 (zero documented), staff tenure 8/30 (1 of 11 ≥3yr), owner hours 17/20 (62 hr/wk is high but not red-line), cross-training 13/15 (informal coverage exists). Net 38/100. Modeled the post-remediation score assuming all 5 SOPs complete: would jump to 73/100 and re-rate the multiple from 2.4× to 2.85×, hence the +$450K unlock estimate.",
       metadata: [
         { label: "Composite version", value: "transferability/v4" },
         { label: "Sensitivity floor", value: "55/100 = SBA-fundable" },
@@ -268,7 +268,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "peach",
     action: "Remediation playbook drafted",
     detail:
-      "Five SOP templates pre-filled against the top owner-dependent tasks: catering sales process, vendor negotiation, kitchen open/close, payroll close, monthly P&L review. Each requires Chandan to fill in business-specific details.",
+      "Five SOP templates pre-filled against the top owner-dependent tasks: client account management & new-business pitching, vendor negotiation, account staffing, invoice & AR reconciliation, monthly P&L review. Each requires Amara to fill in business-specific details.",
     output: "5 SOP templates ready · estimated value unlock +$450K at close",
     severity: "review",
     href: "/risk",
@@ -279,9 +279,9 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     timeLabel: "9:18 AM",
     agent: "Concentration Agent",
     agentAccent: "lav",
-    action: "NJ Transit account reviewed",
+    action: "Garden State Auto Group account reviewed",
     detail:
-      "Six-year relationship with NJ Transit Corporate Catering examined. Account anchored on a month-to-month arrangement — material risk if a buyer needs contract continuity for thesis.",
+      "Six-year relationship with Garden State Auto Group examined. Account anchored on a month-to-month arrangement — material risk if a buyer needs contract continuity for thesis.",
     inputs: [
       "Top-customer share: 19% of revenue",
       "Tenure: 6 years",
@@ -300,7 +300,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "SBA-Backed Operator red-team complete",
     detail:
-      "First buyer persona evaluated Chandan's deal from a single-buyer operator perspective. Verdict: highest-probability close at $1.75M list with the SOP remediation completed.",
+      "First buyer persona evaluated Amara's deal from a single-buyer operator perspective. Verdict: highest-probability close at $1.75M list with the SOP remediation completed.",
     output: "Persona advances to Outreach with no blocking conditions",
   },
   {
@@ -311,7 +311,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "sky",
     action: "Search Fund red-team complete",
     detail:
-      "Search Fund persona evaluated the deal for recurring-revenue thesis fit. Raised deal-breaker objection on NJ Transit contract-structure risk. Held pending Concentration Agent's extension confirmation.",
+      "Search Fund persona evaluated the deal for recurring-revenue thesis fit. Raised deal-breaker objection on Garden State Auto Group contract-structure risk. Held pending Concentration Agent's extension confirmation.",
     output: "Persona held · auto-launches once contract status confirmed",
     severity: "flag",
   },
@@ -334,12 +334,12 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "Work orders dispatched to fleet",
     detail:
-      "Four work orders generated from the red-team consensus: Owner-Dependency (SOP completion), Concentration (NJ Transit contract), Recast (personal-travel hardening), Outreach (sequence prep). Audit hash signed.",
+      "Four work orders generated from the red-team consensus: Owner-Dependency (SOP completion), Concentration (Garden State Auto Group contract), Recast (personal-travel hardening), Outreach (sequence prep). Audit hash signed.",
     output: "Fleet dispatched · Case Manager monitoring · routed seller to command center",
     href: "/boardroom",
     thinking: {
       reasoning:
-        "Each red-team objection was converted to a falsifiable work order with a named owner, an expected output, and a measurable exit criterion. Owner-Dependency was assigned 5 SOPs because the Search Fund + Micro-PE personas both raised the same gap, weighted highest. Concentration drew the NJ Transit contract draft because the Search Fund objection was the only deal-breaker on the table. Recast's personal-travel hardening came from Micro-PE's request for QofE-defensible add-back narratives. Outreach prep was sequenced last because launching it before the SOP work would land buyers on a deal that wasn't ready to defend itself.",
+        "Each red-team objection was converted to a falsifiable work order with a named owner, an expected output, and a measurable exit criterion. Owner-Dependency was assigned 5 SOPs because the Search Fund + Micro-PE personas both raised the same gap, weighted highest. Concentration drew the Garden State Auto Group contract draft because the Search Fund objection was the only deal-breaker on the table. Recast's personal-travel hardening came from Micro-PE's request for QofE-defensible add-back narratives. Outreach prep was sequenced last because launching it before the SOP work would land buyers on a deal that wasn't ready to defend itself.",
       metadata: [
         { label: "Work orders", value: "4 (sequenced, not parallel where critical)" },
         { label: "Routing target", value: "/dashboard (command center)" },
@@ -368,17 +368,17 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "Lender shortlist matched",
     detail:
-      "Three SBA-preferred lenders ranked against Chandan's deal profile. Northeast Community Bank — 94% fit (NJ food service specialist). First National Business Capital — 87% (15-day commitment SLA). ReadyCap Commercial — 81% (flexible down payment).",
+      "Three SBA-preferred lenders ranked against Amara's deal profile. Northeast Community Bank — 94% fit (NJ digital marketing agency specialist). First National Business Capital — 87% (15-day commitment SLA). ReadyCap Commercial — 81% (flexible down payment).",
     inputs: [
       "Normalized SDE $962K · DSCR 4.4× · Min down $106K",
-      "Industry: Restaurant / Food Service · Location: Northern New Jersey",
+      "Industry: Digital Marketing Agency · Location: Northern New Jersey",
       "Borrower profile: Owner-Operator · 15-year history",
     ],
     output: "3 lenders shortlisted · Northeast + First National marked Package Sent",
     href: "/lenders",
     thinking: {
       reasoning:
-        "Scored Scorta's 38-lender network against this deal on 6 dimensions: industry specialization, geography fit, deal-size band, SBA preferred-lender status, historical commitment SLA, and DSCR sensitivity. Northeast Community Bank ranked first because (1) NJ food service is their declared vertical, (2) average commitment <12 days for deals in this size band, (3) they have approved 4 of the last 5 deals Scorta has sent in this profile. First National Business Capital provided timeline insurance: their 15-day SLA is the backstop if Northeast slows. ReadyCap was included for buyer optionality — their flex-down structure opens the deal to operators who can't hit the $106K minimum.",
+        "Scored Scorta's 38-lender network against this deal on 6 dimensions: industry specialization, geography fit, deal-size band, SBA preferred-lender status, historical commitment SLA, and DSCR sensitivity. Northeast Community Bank ranked first because (1) NJ digital marketing agencies are their declared vertical, (2) average commitment <12 days for deals in this size band, (3) they have approved 4 of the last 5 deals Scorta has sent in this profile. First National Business Capital provided timeline insurance: their 15-day SLA is the backstop if Northeast slows. ReadyCap was included for buyer optionality — their flex-down structure opens the deal to operators who can't hit the $106K minimum.",
       metadata: [
         { label: "Network size scored", value: "38 lenders" },
         { label: "Cutoff", value: "Top 3 above 75% match" },
@@ -408,7 +408,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     agentAccent: "mint",
     action: "Seller next-steps surfaced",
     detail:
-      "Cross-checked every open agent task against actions that only Chandan can take. Three live items routed to the Seller Home next-steps queue.",
+      "Cross-checked every open agent task against actions that only Amara can take. Three live items routed to the Seller Home next-steps queue.",
     inputs: [
       "Owner-Dependency: 5 SOP templates ready · seller input required",
       "Outreach: 3 NDA signatures · seller signatory",
@@ -419,7 +419,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     href: "/dashboard",
     thinking: {
       reasoning:
-        "Filter applied: actions where the seller is the only legitimate signatory OR the agent's confidence is below the auto-execute threshold. Ranked by $/effort: SOP completion topped the queue at +$450K for ~3 hours of seller input; NDA signatures second because they unblock the entire Brokerage Services stage; CIM review third because it's blocking VDR publish. Trimmed from 7 candidates to 3 — the other 4 were re-queued to background agents (e.g., NJ Transit contract draft is still on the Concentration Agent's plate; not a seller-facing action yet).",
+        "Filter applied: actions where the seller is the only legitimate signatory OR the agent's confidence is below the auto-execute threshold. Ranked by $/effort: SOP completion topped the queue at +$450K for ~3 hours of seller input; NDA signatures second because they unblock the entire Brokerage Services stage; CIM review third because it's blocking VDR publish. Trimmed from 7 candidates to 3 — the other 4 were re-queued to background agents (e.g., Garden State Auto Group contract draft is still on the Concentration Agent's plate; not a seller-facing action yet).",
       metadata: [
         { label: "Candidates considered", value: "7" },
         { label: "Surfaced", value: "3 (top by $/effort)" },
@@ -454,7 +454,7 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
     thinking: {
       reasoning: `Each add-back category was decided in three steps: identify, justify, defend.
 
-(1) Vehicle expense — $24,200. Identified via classified GL entries against an owner-titled vehicle. Justified under SBA SOP 50 10 8 §5.B as a clean owner-perk add-back. Defensibility tier: high. Rejected alternative: pro-rating by mileage log — Chandan doesn't keep one, so the full amount holds up better than a split that invites underwriter questions.
+(1) Vehicle expense — $24,200. Identified via classified GL entries against an owner-titled vehicle. Justified under SBA SOP 50 10 8 §5.B as a clean owner-perk add-back. Defensibility tier: high. Rejected alternative: pro-rating by mileage log — Amara doesn't keep one, so the full amount holds up better than a split that invites underwriter questions.
 
 (2) Personal travel — $9,000. Identified via 38 calendar entries tagged personal that paired with corporate-card charges. Justified under SOP 50 10 8 §5.D. Defensibility tier: MEDIUM — this is the line lenders most often push back on. Drafted a defensive narrative with calendar cross-references baked in. Rejected alternative: hiding it in T&E — keeping it explicit is safer than burying it.
 
@@ -466,11 +466,11 @@ export const AUDIT_TRAIL: ReadonlyArray<AuditEntry> = [
 
 (6–11) Remaining six categories (owner meals, owner phone, owner internet, owner training, owner-paid family wages, one-time CPA fees) — totaling $36,900. Each below the $10K line and uncontroversial under standard SBA recast rules.
 
-Composite sanity check: $127,400 total add-backs equals 13.2% of the recast SDE base. Cross-checked against the Scorta historical band for NJ food service deals (median 11.4%, p75 14.8%). The deal lands in the defensible zone — not aggressive enough to draw heightened underwriter scrutiny, not conservative enough to leave value on the table.
+Composite sanity check: $127,400 total add-backs equals 13.2% of the recast SDE base. Cross-checked against the Scorta historical band for NJ digital marketing agency deals (median 11.4%, p75 14.8%). The deal lands in the defensible zone — not aggressive enough to draw heightened underwriter scrutiny, not conservative enough to leave value on the table.
 
 Final position: $962K Year-3 normalized SDE. This number was chosen over the conservative scenario ($891K, which would have dragged the asking price to $1.59M) and the aggressive scenario ($1.04M, which would have triggered Northeast's 15% defensive haircut and effectively closed at the conservative number anyway with a slower commitment).
 
-Seller approval required before publish to lender package — Chandan's signature is the chain-of-custody event that locks this for downstream agents.`,
+Seller approval required before publish to lender package — Amara's signature is the chain-of-custody event that locks this for downstream agents.`,
       metadata: [
         { label: "Model", value: "claude-sonnet-4-6" },
         { label: "Add-back categories", value: "11 (5 high-defensibility, 1 medium, 5 standard)" },

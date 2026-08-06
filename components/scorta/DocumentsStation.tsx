@@ -99,13 +99,13 @@ const SECTIONS: ReadonlyArray<CIMSection> = [
     title: "Customer Concentration Analysis",
     agent: "Concentration Agent",
     agentTooltip:
-      "Built from the Concentration Agent's NJ Transit account review and contract coverage plan.",
+      "Built from the Concentration Agent's Garden State Auto Group account review and contract coverage plan.",
   },
   {
     number: 10,
     title: "Facilities & Equipment",
     agent: "CIM Agent",
-    agentTooltip: "Built from the CIM Agent's property and equipment schedule.",
+    agentTooltip: "Built from the CIM Agent's office lease and equipment schedule.",
   },
   {
     number: 11,
@@ -169,7 +169,7 @@ const DOC_TYPES: ReadonlyArray<DocType> = [
     title: "Anonymized Listing Teaser",
     agent: "Outreach Agent",
     audience: "Buyer-facing",
-    body: "One-page blind profile for marketplace listings and cold buyer outreach. Surfaces the opportunity without exposing Palace's identity until NDA.",
+    body: "One-page blind profile for marketplace listings and cold buyer outreach. Surfaces the opportunity without exposing Fieldstone's identity until NDA.",
   },
   {
     key: "lender",
@@ -236,7 +236,7 @@ const BUYER_PROFILES: ReadonlyArray<BuyerProfile> = [
     accent: "var(--sky, #4a7ba8)",
     accentSoft: "rgba(74,123,168,.10)",
     accentEdge: "rgba(74,123,168,.26)",
-    body: "SBA or seller-financed. Conditional on 3-year NJ Transit contract confirmation. Outreach held pending contract status.",
+    body: "SBA or seller-financed. Conditional on 3-year Garden State Auto Group contract confirmation. Outreach held pending contract status.",
   },
   {
     key: "micro",
@@ -496,7 +496,7 @@ function StationHeader({ started, streaming }: { started: boolean; streaming: bo
       >
         {started ? (
           <>
-            The CIM Agent is assembling Palace Kitchen &amp; Catering's Confidential
+            The CIM Agent is assembling Fieldstone Digital Marketing's Confidential
             Information Memorandum from the approved recast, risk profile, and
             Boardroom buyer-targeting work — section by section. Review each
             section, then publish to the Virtual Data Room.
@@ -504,7 +504,7 @@ function StationHeader({ started, streaming }: { started: boolean; streaming: bo
         ) : (
           <>
             The Boardroom's dispatch authorized eight agent deliverables for
-            Palace Kitchen. Each one is built from the same approved upstream
+            Fieldstone. Each one is built from the same approved upstream
             data — your recast financials, risk profile, and buyer-targeting
             verdicts. Choose what to generate next.
           </>
@@ -568,7 +568,7 @@ function CaseIntroBanner({
         <div style={{ fontSize: 13.5, color: "var(--t1)", lineHeight: 1.55, fontFamily: inter }}>
           {!started ? (
             <>
-              Every deliverable Palace will need for lender outreach, buyer
+              Every deliverable Fieldstone will need for lender outreach, buyer
               outreach, and the close is one click away — each one assembled
               from the agents who already approved their underlying inputs.
               Start with the CIM (buyers see it first); the rest stand by until
@@ -1036,7 +1036,7 @@ function GenerationSurface({
             textTransform: "uppercase",
           }}
         >
-          CIM Agent · Palace Kitchen &amp; Catering
+          CIM Agent · Fieldstone Digital Marketing
         </div>
         <div style={{ flex: 1 }} />
         <div
@@ -1501,13 +1501,13 @@ function ExecutiveSummary({ persona }: { persona: Persona }) {
     >
       <p>
         {persona.identity.businessName} is a {persona.business.yearsOperating}-year-old,
-        owner-operated food service business located in Northern New Jersey. The
-        business operates a full-service commercial kitchen offering walk-in
-        dining, corporate catering, and event services. The owner holds title to
-        the 4,200&nbsp;sq&nbsp;ft facility, which is included in the listing.
+        owner-operated digital marketing agency located in Northern New Jersey. The
+        business provides full-service digital marketing offering paid media
+        management, SEO, creative production, and retainer account services. The owner
+        leases a Class B office suite, which is not included in the listing.
       </p>
       <p>
-        Over the trailing 36&nbsp;months, Palace Kitchen has grown revenue at an{" "}
+        Over the trailing 36&nbsp;months, Fieldstone has grown revenue at an{" "}
         {persona.financials.revenueTrend3yr}% compound rate, reaching{" "}
         {persona.financials.revenueDisplay} in Year&nbsp;3. Normalized Seller's
         Discretionary Earnings (SDE) for Year&nbsp;3 are{" "}
@@ -1523,7 +1523,7 @@ function ExecutiveSummary({ persona }: { persona: Persona }) {
         normalized SDE. The listing is SBA 7(a) eligible with a projected DSCR
         of {persona.sba.dscr}× — well above the {persona.sba.dscrFloor}× threshold.
         Minimum buyer down payment is {persona.sba.minDownPaymentDisplay.replace("K", ",000")}.
-        Property ownership provides a balance sheet asset that supports both SBA
+        A 38% recurring retainer base provides annuity-like cash flow that supports both SBA
         financing and micro-PE acquisition structures.
       </p>
       <p>

@@ -131,20 +131,20 @@ const PANELS: ReadonlyArray<PersonaPanel> = [
       "Forming LOI conditions...",
     ],
     verdict: "conditional",
-    conditionSummary: "Conditional on 3-year NJ Transit contract",
+    conditionSummary: "Conditional on 3-year Garden State Auto Group contract",
     conditionFull:
-      "Will not proceed without a 3-year NJ Transit Corporate Catering contract extension and a documented management transition plan.",
+      "Will not proceed without a 3-year Garden State Auto Group contract extension and a documented management transition plan.",
     offerRange: "$1.45M – $1.65M",
     structure: "SBA 7(a) or seller-financed",
     sellerNote: "$150K – $200K preferred",
-    condition: "NJ Transit 3-yr contract + mgmt transition plan",
+    condition: "Garden State Auto Group 3-yr contract + mgmt transition plan",
     readKey: "Recurring Rev Read",
     readValue: "38% — Thin",
-    readBody: "The NJ Transit account is the thesis. Lock it before LOI or the recurring story collapses.",
+    readBody: "The Garden State Auto Group account is the thesis. Lock it before LOI or the recurring story collapses.",
     objections: [
       {
         severity: "deal_breaker",
-        text: "NJ Transit contract unconfirmed beyond current term — recurring revenue thesis depends on it.",
+        text: "Garden State Auto Group contract unconfirmed beyond current term — recurring revenue thesis depends on it.",
         assignment: "Concentration Agent",
         workOrderRef: 1,
       },
@@ -162,7 +162,7 @@ const PANELS: ReadonlyArray<PersonaPanel> = [
       },
       {
         severity: "medium",
-        text: "No documented transition plan for catering sales relationships.",
+        text: "No documented transition plan for client account relationships.",
         assignment: "Owner-Dependency Agent",
         workOrderRef: 0,
       },
@@ -179,7 +179,7 @@ const PANELS: ReadonlyArray<PersonaPanel> = [
     accentEdge: "rgba(184,106,62,.28)",
     reasoning: [
       "Assessing platform acquisition fit...",
-      "Reviewing property and asset base...",
+      "Reviewing recurring retainer base...",
       "Modeling seller note structure...",
       "Forming LOI conditions...",
     ],
@@ -191,10 +191,10 @@ const PANELS: ReadonlyArray<PersonaPanel> = [
     structure: "Cash + seller note",
     sellerNote: "$175K – $229K (10–15% of deal)",
     condition: "None hard — prefers faster close",
-    readKey: "Asset Read",
-    readValue: "Property + brand + 15-yr ops",
+    readKey: "Retainer Read",
+    readValue: "38% retainer + brand + 15-yr ops",
     readBody:
-      "Property ownership is a balance sheet asset. 15-year brand + facility = platform fit for add-on acquisitions.",
+      "The 38% recurring retainer base is an annuity-like cash flow anchor. 15-year brand + retainer base = platform fit for add-on acquisitions.",
     objections: [
       {
         severity: "high",
@@ -256,11 +256,11 @@ const WORK_ORDERS: ReadonlyArray<WorkOrder> = [
     agentKey: "concentration",
     priority: "HIGH",
     priorityTone: "high",
-    task: "Draft a contract extension proposal for the NJ Transit Corporate Catering account. Target: 3-year renewal. Confirm contract status and document tenure for lender package.",
+    task: "Draft a contract extension proposal for the Garden State Auto Group account. Target: 3-year renewal. Confirm contract status and document tenure for lender package.",
     triggeredBy: "Search Fund (deal-breaker)",
     unlock: "Unlocks Search Fund LOI pathway",
     triggerSource: [
-      { panel: "search", severity: "deal_breaker", text: "NJ Transit contract unconfirmed beyond current term" },
+      { panel: "search", severity: "deal_breaker", text: "Garden State Auto Group contract unconfirmed beyond current term" },
     ],
   },
   {
@@ -280,7 +280,7 @@ const WORK_ORDERS: ReadonlyArray<WorkOrder> = [
     agentKey: "outreach",
     priority: "HIGH",
     priorityTone: "high",
-    task: "Prioritize SBA-Backed Operator and Micro-PE buyer profiles for initial outreach. Search Fund outreach held pending NJ Transit contract confirmation. Generate personalized sequences for each target profile.",
+    task: "Prioritize SBA-Backed Operator and Micro-PE buyer profiles for initial outreach. Search Fund outreach held pending Garden State Auto Group contract confirmation. Generate personalized sequences for each target profile.",
     triggeredBy: "Boardroom buyer segment recommendations",
     unlock: "Opens two of three LOI pathways",
     triggerSource: [
