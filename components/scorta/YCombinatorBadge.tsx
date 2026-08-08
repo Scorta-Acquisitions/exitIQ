@@ -38,8 +38,10 @@ const SIZES = {
 export function YCombinatorBadge({ className, style, size = "md" }: YCombinatorBadgeProps) {
   const s = SIZES[size]
   return (
-    <div
-      role="img"
+    <a
+      href="https://www.ycombinator.com/"
+      target="_blank"
+      rel="noopener noreferrer"
       aria-label="Backed by Y Combinator"
       className={className}
       style={{
@@ -51,6 +53,8 @@ export function YCombinatorBadge({ className, style, size = "md" }: YCombinatorB
         background: CARD,
         border: `1px solid ${BORDER}`,
         boxShadow: "0 1px 2px rgba(12,10,9,.05)",
+        textDecoration: "none",
+        cursor: "pointer",
         ...style,
       }}
     >
@@ -84,6 +88,6 @@ export function YCombinatorBadge({ className, style, size = "md" }: YCombinatorB
         </svg>
         Combinator
       </span>
-    </div>
+    </a>
   )
 }
