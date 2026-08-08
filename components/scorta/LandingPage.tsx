@@ -4,6 +4,7 @@
 import Link from "next/link"
 import React from "react"
 import { ExitIQApp } from "@/components/exitiq/ExitIQApp"
+import { YCombinatorBadge } from "@/components/scorta/YCombinatorBadge"
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -1348,6 +1349,7 @@ function SHero({ onOpen }: { onOpen: () => void }) {
           }}
         >
           <div style={eyebrow()}>An AI-native broker for Main Street</div>
+          <YCombinatorBadge size="sm" />
           <h1
             style={{
               fontFamily: garamond,

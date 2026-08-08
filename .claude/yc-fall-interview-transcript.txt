@@ -1,0 +1,290 @@
+00:00:15,360 --> 00:00:16,079 [Rightside]
+Hey, guys. 
+
+00:00:16,080 --> 00:00:16,840 [Suyash]
+Hello, hello. 
+
+00:00:16,840 --> 00:00:17,180 [Puneet]
+Hello. 
+
+00:00:18,920 --> 00:00:20,970 [Rightside]
+Uh, well, you know how this goes. 
+
+00:00:20,970 --> 00:00:20,980 [Puneet]
+[chuckles] 
+
+00:00:20,980 --> 00:00:24,080 [Rightside]
+I know we have, uh, about 10 minutes, so why don't we jump right in? 
+
+00:00:24,080 --> 00:00:25,060 [Puneet]
+Awesome. 
+
+00:00:25,060 --> 00:00:25,480 [Suyash]
+Yes. 
+
+00:00:25,480 --> 00:00:27,040 [Rightside]
+What are you guys-- what are you guys working on? 
+
+00:00:27,040 --> 00:00:27,460 [Puneet]
+Awesome. 
+
+00:00:27,460 --> 00:01:07,320 [Suyash]
+Uh, so yeah, we're building Scordo. We're replacing the small business broker. Uh, we work with businesses that are worth between 500K to 3 1000000 dollars, and we run the entire sale process end-to-end for them, uh, through 2 teams of agents rather than with people. The 1st team preps them, uh, preps the business and turns them from, you know, a messy Main Street business into a transferable, saleable asset. And then the 2nd team matches them with our capital verified buyers and publishes them on, you know, public marketplaces, and then runs the entire due diligence, LOI process all the way to close. Um, long term, we want to be the Stripe for Main Street M&A. Um, but yeah, that's what we're doing. 
+
+00:01:08,720 --> 00:01:16,980 [Rightside]
+Stripe for Main Street M&A. Okay, well, be-before we get to that, um, catch us up with what's happened since your last interview. 
+
+00:01:16,980 --> 00:02:12,940 [Suyash]
+Yes. Uh, so last interview, we had just gotten 9 prep agreements. So the way we split our revenue is we charge a prep fee between 3 to 5K for a business, and then we sign them on to a brokerage. So we'd only had 9 prep agreements with no closed sales. We now have 2 closed sales. We collected 110K in revenue from those 2, uh, closed sales, um, and we have a 3rd in contract right now, plus a couple more contract agreements. Additionally, the main thing is the feedback from our last interview was, why don't we incorporate the buy-side into this and use our underwriting, you know, mechanism to support the buy side? So we built a product called Deal IQ that we're selling to search funds, um, and we're in a pilot, paid pilot program with 3 search funds right now. Uh, they use our underwriting, the same things that we use to fix up businesses, they use to evaluate businesses. And all these businesses also join our verified buyer pool so then sellers are able to-- we're able to sell our businesses through them as well. 
+
+00:02:12,940 --> 00:02:18,300 [Rightside]
+Can you just clarify, like, are you the marketplace, or are you just selling tools to both sides? 
+
+00:02:18,300 --> 00:02:36,100 [Suyash]
+We're the service provider for the seller, and we sell a SaaS tool to the buy side. So we're not really a marketplace. We list on public marketplaces, but we provide the full service for the sellers. And buy side, we provide a SaaS tool primarily so we can get this pool of buyers that we can sell our sell side to if we need to, or sellers to. 
+
+00:02:37,560 --> 00:02:37,920 [Rightside]
+Hmm. Sure. 
+
+00:02:39,600 --> 00:02:44,280 [Rightside]
+Okay. And so this new buy-side tool that you have, um, 
+
+00:02:45,760 --> 00:02:50,080 [Rightside]
+is-- y-you have a couple, uh, f-funds using it now, did you say? 
+
+00:02:50,080 --> 00:02:55,300 [Suyash]
+Yeah, we have 3 search funds in, like, a paid pilot. We just started building this out last month. 
+
+00:02:55,300 --> 00:03:47,780 [Puneet]
+Yeah, it's our buy-side product where it gives the, uh, searchers and the acquisition entrepreneurs the same analysis engine that we would use on the sell side, uh, just pointed the exact other way. You know, they would paste a li- a listing or a CIM or-- and they would do any sort of reverse recasts, um, the claimed-- and look at the claimed earnings and tell them whether to press a little bit de-deeper or they-- it tells it, it looks good, um, you know, pass on it, anything like that. Or it would also look at the SBA returns and address any diligence re-- questions and also an LO-LOI if it needs to. Um, yeah, as he said, as CJ said, 3 search funds are already using it and paying 1250 each for pilots. The revenue is useful, but it's small. But the real job is that every single serious buyer who uses it joins our capital verified pool so that when we take it to a seller, uh, or to a market, we already know who's looking for what business, and they are, uh, eager to close on those. 
+
+00:03:47,780 --> 00:03:51,880 [Rightside]
+So is it one pilot or 3 pilots that are paying 1250 a month? 
+
+00:03:51,880 --> 00:03:55,260 [Suyash]
+Uh, it's 3, like 3 separate search funds. 
+
+00:03:55,260 --> 00:03:56,880 [Rightside]
+Okay. And that's how much they're paying, 1250? 
+
+00:03:56,880 --> 00:03:59,180 [Suyash]
+Yeah, each one, each one. It's for a six-week pilot. 
+
+00:04:00,600 --> 00:04:08,420 [Rightside]
+Oh, for a six-week pilot. Okay. Go ahead. Um, have they found any businesses through your tool yet? 
+
+00:04:08,420 --> 00:04:27,340 [Suyash]
+Uh, yeah. Actually, the business under contract right now was evaluated through our Deal IQ, and that search fund is the one-- the one we're selling right now is a home service business, and their vertical is primarily in home service roll-ups. Uh, so they used our Deal IQ tool to vet that business, and then, um, that, that deal is going through right now. It's under LOI. 
+
+00:04:27,340 --> 00:04:29,479 [Rightside]
+Are you actually on both sides of that transaction? 
+
+00:04:29,480 --> 00:04:44,600 [Suyash]
+No. So we're just an entirely a SaaS tool over there. So we don't advise the buyer. There's no conflict of interest there. We service the seller. That is just a SaaS tool they use to-- they can use it to verify our listings. They can use it to verify, like, any listing on any marketplace. 
+
+00:04:44,600 --> 00:04:55,100 [Rightside]
+Okay. All right. Um, interesting. Okay, so you have 2 pieces of, of SaaS software here, one for small business owners and the other for the funds that buy them out. 
+
+00:04:56,260 --> 00:04:57,240 [Rightside]
+Where does this go from here? 
+
+00:04:58,440 --> 00:05:54,099 [Suyash]
+Well, primarily, um... So 1st, on the, on the sell side, we're providing the full service. We don't really even really show them, you know, software. We just work as a broker almost, but we're just able to run far more deals far quicker through using agents to do all of the repeatable work. So we just ser- like, we provide the service to them, and then the other side is a SaaS tool. But long term, we think we could be the entire underwriting layer, almost like as if it's a FICO score for Main Street M&A. We also wanna go into, you know, escrow and facilitating the entire transaction. So now that we're building a pool of buyers, we have pools of sellers, we're building our reputation up by being able to sell these businesses and provide tools and kind of increase the throughput for both buyers and sellers. We wanna continue to do that by allowing lenders to underwrite using our software and our agents, and then also, like, almost create a FICO score over a long period of time. That-that's like, that's one main thing. 
+
+00:05:56,320 --> 00:05:57,840 [Rightside]
+Interesting. So you wanna get... 
+
+00:05:58,860 --> 00:06:04,340 [Rightside]
+I guess, what are the hard, like what are the magic tricks you have to pull off in order to be able to get into that position? 
+
+00:06:04,340 --> 00:06:06,960 [Suyash]
+Uh, into the, like, FICO score being like the, the- 
+
+00:06:06,960 --> 00:06:17,660 [Rightside]
+Yeah, so FICO score, it sounds like you wanna do escrow, uh, provide maybe under, like, financing for the deals as well. Uh, I'm, I'm trying to, I'm trying to map out what you actually need to do to be able to do that. 
+
+00:06:18,980 --> 00:07:33,720 [Suyash]
+Well, primarily, the, the 1st step is becoming, like, almost like not really a marketplace, like the go-to M&A, like, rails where a lot of the top buyers in our, in our field. We're targeting, like, sub 5 million. Um, above that is where, like, big PE players, uh, play, and a lot of the businesses are outside of that range. But 90 percent of small businesses fall here, and we wanna speed up that entire transaction time, almost like it's a real estate transaction, much simpler than it is right now. So the more transactions we get through and the more history we build, we can take what we build and our, like, underlying data layer from both the buy side and the sell side, and then kind of upsell that to lenders to allow them to underwrite all of these different deals. 'Cause there's a big... Uh, we, we work with lenders really often. I used to run a micro PE fund. Uh, there's a big issue in terms of underwriting small business deals right now where lenders are looking through all these sorts of documents. They're not really sure what, uh, would work for them, and there's no real, like, standardized way to look at that. So we can use all of this data from both ends and our credibility from being able to sell and buy, um, to go to lenders and form that, like, underwriting ability. And we could start with one lender, the lenders we work with primarily. So we work with, like, Live Oak Bank right now, but we can start with, like, little pilots for certain lenders and just kind of go from there. 
+
+00:07:33,720 --> 00:07:34,380 [Rightside]
+All right.
+
+00:00:00,100 --> 00:00:00,980 [Rightside]
+Interesting. Um, 
+
+00:00:02,320 --> 00:00:07,520 [Rightside]
+switch gears. How did you guys get into this in the 1st place? 
+
+00:00:07,520 --> 00:00:33,800 [Puneet]
+Uh, yeah. So, you know, we, me and Suyash met in high school. Uh, back then we founded our own digital marketing agency. Funnily enough, that's like one of the 1st businesses we closed on and, and helped sell. Um, yeah, we closed that for, uh, low 7 figures. And from there, uh, Suyash actually went into micro PE and had his own search fund. Um, [mouth click] and from there, we really noticed that, uh, businesses aren't just able to sell because they're not pre- 
+
+00:00:33,800 --> 00:00:42,700 [Rightside]
+So Suy- Suyash, you, you took-- you, you basically, after exiting the, the agency that you guys built, you started a micro PE fund? 
+
+00:00:42,700 --> 00:00:46,380 [Suyash]
+Yeah, that happened post-college. So this was-- the, the sale was all pre-college. 
+
+00:00:46,380 --> 00:00:46,440 [Puneet]
+Yeah. 
+
+00:00:46,440 --> 00:00:58,200 [Suyash]
+We were like kids. We were like 15, 16. By 18, we sold our marketing agency. We went to college. We both studied computer science. Then we came back. Uh, we were both worked as AI engineers at-- I worked at Atlassian. 
+
+00:00:58,200 --> 00:00:59,400 [Puneet]
+I worked at Travelers Insurance. 
+
+00:00:59,400 --> 00:01:23,220 [Suyash]
+And then I started a micro PE fund with 6 outside investors. Puneet was one of the investors. Um, and then we bought 4 businesses. They were all quick service restaurants. And that's where, like, we really got exposed to this problem on, like, what a hellish process it is, honestly, to find the right business to buy, due diligence, due diligence them, and, you know, go through that from the buy side. But we also sold a business, so we knew the sell side as well. 
+
+00:01:23,220 --> 00:01:23,420 [Puneet]
+Yeah. 
+
+00:01:24,720 --> 00:01:31,160 [Rightside]
+Okay, that's, that's quite interesting. So you, you bought 4 quick serve restaurants. Do you still own them? 
+
+00:01:31,160 --> 00:01:38,360 [Suyash]
+Uh, yeah, my brother actually runs the, the micro PE fund now entirely. Um, they were like hot chicken and ice cream. I'm a big, like- 
+
+00:01:38,360 --> 00:01:38,590 [Puneet]
+We love- 
+
+00:01:38,590 --> 00:01:39,590 [Suyash]
+-we're all big dessert guys. 
+
+00:01:39,590 --> 00:01:39,800 [Puneet]
+Big foodies, yeah. 
+
+00:01:39,800 --> 00:01:42,820 [Suyash]
+We're like big foodies, so it was like th-that's the kind of the realm we went in. 
+
+00:01:45,140 --> 00:01:47,690 [Rightside]
+[laughs] Makes perfect sense. [laughs] 
+
+00:01:47,690 --> 00:01:49,280 [Suyash]
+[laughs] 
+
+00:01:49,280 --> 00:01:51,160 [Rightside]
+Uh, okay. So, all right. So, so, 
+
+00:01:52,760 --> 00:01:58,680 [Rightside]
+um, so you've exited the fund now, uh, and, and now you guys are working on this. You've been working on it for how long? 
+
+00:01:59,940 --> 00:02:00,900 [Rightside]
+Let's see, since February. 
+
+00:02:00,960 --> 00:02:01,740 [Puneet]
+Yeah. 
+
+00:02:01,740 --> 00:02:01,760 [Rightside]
+April. 
+
+00:02:01,760 --> 00:02:02,400 [Puneet]
+Yeah. 
+
+00:02:02,400 --> 00:02:04,350 [Suyash]
+Yeah, we went full time in, like, April 1st. 
+
+00:02:04,350 --> 00:02:04,710 [Puneet]
+April, yeah. 
+
+00:02:04,710 --> 00:02:05,500 [Suyash]
+Like, yeah, March, April. 
+
+00:02:06,640 --> 00:02:07,520 [Rightside]
+I see. Okay. 
+
+00:02:11,280 --> 00:02:19,980 [Rightside]
+Are-- is this, is this like a regional thing? Are you-- are, are, are all of the businesses that you're working with concentrated in a specific geographical area? 
+
+00:02:19,980 --> 00:02:35,710 [Suyash]
+No, no, not at all. We're verticals, we're starting off concentrating in verticals, but region has no effect on the types of bus-- So we have, like, home services, digital marketing agencies, um, like, restaurants. That's like the verticals we touched on just 'cause that's where we had the most initial connections. 
+
+00:02:35,710 --> 00:02:35,720 [Rightside]
+Yeah. 
+
+00:02:35,720 --> 00:02:42,420 [Suyash]
+But it's not regional at all. Like, for example, our home service business is based out of Frisco, Texas, and we're here in, in Jersey. 
+
+00:02:42,420 --> 00:02:44,400 [Rightside]
+How, how are you finding these companies? 
+
+00:02:44,400 --> 00:03:15,420 [Suyash]
+Uh, entirely referrals. We're, we're going through, well, through the micro PE fund where we, like, we originally reached out to some of our investors. We reached out to some, like, uh, brokers and buyers, so we got some of them, uh, in our, like, pipeline. But now we're going through CPAs. So all of our home service businesses have gone through CPAs where we show them our product. They're like, "You know what? This is sick. We know all of our clients, these ones that are, like, looking to sell their business." And then we kinda bring them in that way. But we don't have any, like, full paid acquisition pipeline right now. We're entirely, like, referral and inbound. 
+
+00:03:15,420 --> 00:03:17,760 [Rightside]
+Do the CPAs get some kind of kickback here? 
+
+00:03:17,760 --> 00:03:31,460 [Suyash]
+No, no, they just-- Well, they have a longstanding relationship with these business owners, so they just wanna recommend the best possible thing. We wanna look into that down the line to create a repeatable channel where CPAs do get a kickback, and we can, like, expand. But for now, that's not the case. 
+
+00:03:32,780 --> 00:03:37,560 [Rightside]
+For a small business, what's the advantage of working with you versus, like, a fully human broker? 
+
+00:03:38,780 --> 00:04:20,050 [Puneet]
+Yeah, I'll take that one. Um, I, what-- I, I'll go back to our process of selling our, uh, digital marketing agency. We felt that the entire process, we were disconnected from the sale of our own business, which was a really important deal for us. And we're seeing the same, uh, we saw the same during the search fund process as well. Now, obviously, we're not allowed to communicate with the seller all that much because, uh, we have to go via the broker. And the broker is already handling, like, 5, 6 businesses at once he's trying to sell. So he's very disconnected from the seller itself. And the agents that we're using, uh, help, uh, a broker stay in touch with, like, multiple, uh, uh, a factor of 3, 4 businesses, uh, at the same time, giving them that, like, super personal experience. But also at the same time, a lot more of a standardized and, uh, 
+
+00:04:21,440 --> 00:04:48,900 [Puneet]
+data-oriented process where they're using, uh, off of our data flywheel and the businesses that we've already sold in their industry. So, uh, given all of this information, you know, with a regular broker where, um, all the data is disjointed, lives in the texts, emails, phone calls, et cetera, um, our, our, our main value, uh, proposition is that we're able to use both the data that we've gathered along with that personal touch because of how many, uh, businesses we can handle at once, uh, to give them that incredible experience. 
+
+00:04:48,900 --> 00:04:51,539 [Suyash]
+Yeah, and we're also half the price and, and way faster. 
+
+00:04:51,540 --> 00:04:52,360 [Puneet]
+Exactly. 
+
+00:04:52,360 --> 00:04:57,200 [Rightside]
+Okay, that's, that's clear. [laughs] Um, cool. 
+
+00:04:59,320 --> 00:05:00,300 [Rightside]
+Paint the picture of, like... 
+
+00:05:03,380 --> 00:05:05,360 [Rightside]
+Let's imagine this is, this works really well. 
+
+00:05:07,620 --> 00:05:17,510 [Rightside]
+We're like 5 years in the future, and, and you, and you're huge. What, what does, what does the business look like at a glance? Is this-- is-- should I think of this as kind of like a Zillow for small businesses? 
+
+00:05:18,600 --> 00:05:28,469 [Suyash]
+Uh, I think if Zillow was much better, maybe. Uh, we would run every, every aspect. Like, like we're saying, if we're saying Stripe for Main Street M&A- 
+
+00:05:28,469 --> 00:05:28,469 [Rightside]
+Yeah 
+
+00:05:28,469 --> 00:06:08,680 [Suyash]
+... we don't wanna just be a marketplace like Zillow is. We want the transaction rails to be running through us. So, like, the, the escrow, all these accounts are running through us. There's actual Scorda scores where businesses are given scores. There's buyers that are able to use our software to run through us. We're able to sell businesses. It's essentially the entire financial and underwriting infrastructure for Main Street M&A. 'Cause for transactions of this size, it is entirely possible, especially as agents have been growing and, like, the capabilities of them have been growing. For these really large businesses, 100,000,000 dollar plus transactions, yeah, they go through big PE, they go through IB. That's totally fine. But at our level, we can become, uh, like, you know, the one-stop shop. 
+
+00:06:10,200 --> 00:06:13,740 [Rightside]
+Okay. Makes sense to me. Chris, do you have any other questions? 
+
+00:06:15,840 --> 00:06:16,960 [Left Side]
+Um, 
+
+00:06:20,380 --> 00:06:33,200 [Left Side]
+no. Well, maybe, like, what do you see happening with, like, this, this part of the PE market? I mean, like, it feels like the big PE stuff is kinda going away a little bit because of, like, AI transformation, et cetera. Like, 
+
+00:06:34,500 --> 00:06:41,410 [Left Side]
+maybe this is to, to Pete's point, too, like, 5 years in the future, like, what does this feel like, this market in general? 
+
+00:06:41,410 --> 00:07:12,580 [Suyash]
+Well, I, I think the, the whole idea of the silver tsunami is very, like, real, where there's this massive transition of business owners. So the volume of businesses available on the market is only continuously going up. And then people like me, originally, micro PE funds, search funds, uh, half the MBA classes include search fund or ETA type things. So th-this will all kinda coalesce, and this market, this sub 10,000,000 dollar market, which has had traditionally very weak liquidity, will become a very liquid environment. And we wanna kind of become, like, the transaction rails for that. 
+
+00:07:15,400 --> 00:07:17,320 [Left Side]
+Okay, that makes sense. Cool. 
+
+00:07:18,340 --> 00:07:19,960 [Left Side]
+Awesome. Thanks, guys. 
+
+00:07:19,960 --> 00:07:20,260 [Suyash]
+Awesome. 
+
+00:07:20,260 --> 00:07:20,390 [Left Side]
+Thanks. 
+
+00:07:20,390 --> 00:07:20,960 [Puneet]
+Awesome. Thank you. 
+
+00:07:20,960 --> 00:07:22,160 [Suyash]
+Thank you. It was really nice meeting you guys. 
+
+00:07:22,160 --> 00:07:22,540 [Puneet]
+Thank you. 
