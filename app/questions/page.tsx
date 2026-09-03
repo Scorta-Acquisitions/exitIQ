@@ -29,7 +29,7 @@ export default function QuestionsPage() {
               ))}
               <a
                 href="#q-ask"
-                className="hover-green-dark border-brand bg-brand text-cta rounded-full border px-3.5 py-2 font-mono text-[11.5px] tracking-[.6px] uppercase"
+                className="border-brand bg-brand text-cta hover:text-cta rounded-full border px-3.5 py-2 font-mono text-[11.5px] tracking-[.6px] uppercase hover:shadow-[0_10px_26px_rgba(12,54,38,.3)]"
               >
                 Ask a question
               </a>

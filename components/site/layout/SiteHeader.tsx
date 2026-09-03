@@ -139,7 +139,7 @@ export function SiteHeader() {
               setNavOpen(false)
               openAdvisor()
             }}
-            className="hover-green-dark bg-brand text-cta mt-3 inline-flex h-[46px] items-center justify-center rounded-full text-[15px] font-medium"
+            className="bg-brand text-cta mt-3 inline-flex h-[46px] items-center justify-center rounded-full text-[15px] font-medium hover:shadow-[0_10px_26px_rgba(12,54,38,.3)]"
           >
             Talk to an M&amp;A advisor
           </button>

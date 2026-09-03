@@ -23,7 +23,7 @@ describe("hover colour", () => {
     }
   })
 
-  it("buttons opt in with hover-green on paper and hover-green-dark on green surfaces", () => {
+  it("outline and pill buttons opt in to the hover colour; filled buttons keep their text colour", () => {
     render(
       <>
         <Button href="/fees">Brand</Button>
@@ -47,10 +47,17 @@ describe("hover colour", () => {
         </Button>
       </>
     )
-    expect(screen.getByRole("link", { name: "Brand" })).toHaveClass("hover-green-dark")
+    const brand = screen.getByRole("link", { name: "Brand" })
+    expect(brand).toHaveClass("text-cta", "hover:text-cta")
+    expect(brand.className).toMatch(/hover:shadow-/)
+    expect(brand.className).not.toMatch(/hover-green/)
+    const cream = screen.getByRole("button", { name: "Cream" })
+    expect(cream).toHaveClass("text-ground", "hover:text-ground")
+    expect(cream.className).toMatch(/hover:shadow-/)
+    expect(cream.className).not.toMatch(/hover-green/)
     expect(screen.getByRole("button", { name: "Outline dark" })).toHaveClass("hover-green-dark")
     expect(screen.getByRole("button", { name: "Pill dark" })).toHaveClass("hover-green-dark")
-    for (const name of ["Cream", "Outline", "Plain", "Pill light"]) {
+    for (const name of ["Outline", "Plain", "Pill light"]) {
       const el = screen.getByRole("button", { name })
       expect(el).toHaveClass("hover-green")
       expect(el).not.toHaveClass("hover-green-dark")

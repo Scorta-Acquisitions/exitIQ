@@ -13,8 +13,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        brand: "hover-green-dark bg-brand font-medium text-cta hover:shadow-[0_10px_26px_rgba(12,54,38,.3)]",
-        cta: "hover-green bg-cta font-semibold text-ground",
+        // Filled buttons keep their text colour on hover (hover:text-* outranks the global a:hover) and lift instead.
+        brand: "bg-brand font-medium text-cta hover:text-cta hover:shadow-[0_10px_26px_rgba(12,54,38,.3)]",
+        cta: "bg-cta font-semibold text-ground hover:text-ground hover:shadow-[0_10px_26px_rgba(4,15,10,.35)]",
         outline: "hover-green border border-hair-2 bg-card/50 text-ink",
         "outline-plain": "hover-green border border-hair-2 text-ink",
         "outline-dark": "hover-green-dark border border-dhair text-d1 hover:border-filament/50",

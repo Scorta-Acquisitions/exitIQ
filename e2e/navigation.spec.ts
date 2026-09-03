@@ -26,6 +26,8 @@ test.describe("header navigation", () => {
 
         await groupButton.hover()
         await expect(menuLink).toBeVisible()
+        // The dropdown fades and slides in over 180ms; wait for it to settle before clicking.
+        await expect(groupButton.locator("xpath=..").locator(".nav-dd-menu")).toHaveCSS("opacity", "1")
         await expect(menuLink).toHaveAttribute("href", link.href)
         await expect(menuLink).toContainText(link.note)
         await menuLink.click()

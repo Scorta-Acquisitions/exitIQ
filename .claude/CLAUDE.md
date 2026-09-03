@@ -73,8 +73,8 @@ and shows sending, success, and error copy; grids that stack on phones use
 `minmax(min(100%,Npx),1fr)` so nothing is wider than a 320px viewport;
 `AmbientVideo` and the WebGL field degrade silently (missing media, no WebGL, reduced motion).
 Hover colour is one global rule in `styles/site.css` (`a:hover` → filament-ink, filament on deep-green surfaces,
-200ms ease-out, no underline, no text-shadow); non-link text opts in with `hover-green` / `hover-green-dark`.
-Never add per-element hover colours or glows. `lib/site/__tests__/site-css.test.ts` pins these rules.
+200ms ease-out, no underline, no text-shadow); non-link text opts in with `hover-green` / `hover-green-dark`. Filled buttons (`brand`, `cta`) keep their text colour
+(`hover:text-*` outranks `a:hover`) and lift with a shadow instead. Never add per-element hover colours or glows. `lib/site/__tests__/site-css.test.ts` pins these rules.
 `NEXT_PUBLIC_SITE_URL` (optional) sets `metadataBase`, sitemap, and robots origins.
 
 Verification: `pnpm typecheck` · `pnpm lint` · `pnpm prettier` · `pnpm test` (Vitest, includes
