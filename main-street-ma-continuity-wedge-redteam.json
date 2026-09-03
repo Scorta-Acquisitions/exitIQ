@@ -1,0 +1,981 @@
+{
+  "run_id": "trun_b3efdb2ed5794d63adba2940f633ae69",
+  "interaction_id": "trun_b3efdb2ed5794d63adba2940f633ae69",
+  "result_url": "https://platform.parallel.ai/play/deep-research/trun_b3efdb2ed5794d63adba2940f633ae69",
+  "status": "completed",
+  "output": {
+    "basis": [
+      {
+        "field": "executive_insights",
+        "reasoning": "Assessing completeness: The field_answer provides a dense synthesis of pricing and positioning for Baton, SMB.co, OffDeal, Eilla, Maus, and Value Builder, plus references to evidence like pricing pages and strategic partnerships. It also attempts to flag commoditized vs missing capabilities (e.g., data room, pre-qualification, and provenance evidence) and includes several source-linked observations (e.g., Baton pricing, SMB.co pricing, Value Builder/EPI partnership, OffDeal Series A). Given the user query asks for detailed competitive product overlap, pricing, evidence/remediation, transferability evidence, owner willingness to pay before a formal sale, and related unit economics and first-principles math across multiple firms, the answer addresses many of these elements with concrete price points and qualitative assessment. However, some statements (e.g., certain internal conclusions about overlap or absence of specific features like \u201cverified transferability / continuity evidence / source-proven business record + remediation\u201d across all competitors) rely on interpretation beyond the explicit excerpts, and the excerpts section itself contains a mixture of pricing-focused excerpts and company descriptions rather than a single standardized competitive matrix. Overall, the field_answer is reasonably complete for the asked topics, but could be improved by a structured feature-by-feature matrix aligned to the exact questions and by mapping every claim to a corresponding excerpt. Confidence in completeness: true. Confidence in excerpt support: true, as the cited proof points exist within the provided excerpts (pricing pages, about pages, press/news).",
+        "citations": [
+          {
+            "url": "https://www.baton.com/pricing",
+            "excerpts": [
+              "PRICING PLANS FOR SELLERS",
+              "## Free",
+              "## Seller",
+              "$0",
+              "N/A",
+              "No Minimum",
+              "None",
+              "Data-driven valuation",
+              "Business Valuation Valuation Review Call",
+              "Anonymous Off-Market Profile",
+              "Anonymized teaser on Baton",
+              "Buyer interest tracking",
+              "Buyer Interest Dashboard",
+              "Go-To-Market Dashboard",
+              "$1,000 /month (Credited back upon close)",
+              "$1,000 /month",
+              "6% / 2% success fee on close",
+              "6% on first $5M of purchase price",
+              "month-to-month afterward",
+              "Three months",
+              "$100,000",
+              "Everything in Free, plus:",
+              "$1,000 towards full financial reconciliation",
+              "Recast Financials (if required) ($1,000 credit)",
+              "Reconcile Financials Pre-Listing",
+              "Refresh Financials on Listing On Request Quarterly",
+              "Tailored strategic buyer outreach",
+              "Conduct Outreach to Strategic Buyers",
+              "Detailed Baton listing",
+              "Market on 3rd Party Listing Site(s)",
+              "Hands-on advisor support",
+              "Weekly Scheduled Calls with Advisor",
+              "Advisor on Buyer-Seller Meetings",
+              "Diligence Check-Ins with Advisor",
+              "Produce Marketing Materials",
+              "Provide and Prepare Data Room",
+              "Redact PII from Data Room Files",
+              "SBA and Bank Partnership Pre-Qualification",
+              "Loan Services for Interested Buyers",
+              "Negotiation Support for Owner",
+              "Diligence & Closing Platform",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close",
+              "Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "[Get Started For Free](https://www.baton.com/market/signup) PRICING PLANS FOR SELLERS Select the best plan to sell your business Selling your business can feel overwhelming so we\u2019ve designed **plans to meet your needs** \u2014whether you want full-service support or a cost-effective way to explore the market. ## Free Get a confidential business valuation and gauge buyer interest. $0 No Hidden Fees \u2014 Truly Free! You'll get: Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking ## Seller Most popular Get expert guidance every step of the way. $1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support [Get Started](https://www.baton.com/market/signup) Prices shown do not include applicable tax. Free Seller Monthly Retainer (Credited back upon close) $0 $1,000 /month EXCLUSIVE LISTING AGREEMENT MINIMUM TERM month-to-month afterward No Minimum Three months SUCCESS FEE N/A 6% on first $5M of purchase price 2% on any amount over $5M of purchase price MINIMUM ANNUAL CASH FLOW None $100,000 Prep and go to market Business Valuation Valuation Review Call Go-To-Market Dashboard Reconcile Financials Pre-Listing Produce Marketing Materials Provide and Prepare Data Room Redact PII from Data Room Files Refresh Financials on Listing On Request Quarterly Find the right buyer Anonymized teaser on Baton Buyer Interest Dashboard Detailed Baton listing Market on 3rd Party Listing Site(s) Conduct Outreach to Strategic Buyers SBA and Bank Partnership Pre-Qualification Advisor on Buyer-Seller Meetings Weekly Scheduled Calls with Advisor ACCEPTING THE LOI AND closing Negotiation Support for Owner Diligence & Closing Platform Diligence Check-Ins with Advisor Loan Services for Interested Buyers Recast Financials (if required) ($1,000 credit) [Get Started](https://www.baton.com/market/signup) FAQ What size companies do you work with?"
+            ],
+            "title": "Baton Market Pricing"
+          },
+          {
+            "url": "https://smb.co/pricing",
+            "excerpts": [
+              "Free $0/mo + 1% Sale Price Upon Close",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time",
+              "List your business either publicly or privately",
+              "List your \u201cMake me an offer\u201d price",
+              "Track & manage offers from qualified buyers",
+              "Generate materials to promote your business for sale",
+              "Prepare financial documents for buyers",
+              "Access SMB.co\u2019s Partner Network to build the best deal team",
+              "Free $0/mo + 2% Sale Price Upon Close",
+              "2% Platform Fee paid upon successful close",
+              "Search across 19M+ businesses, both on and off-market",
+              "Access to Deal Analytics powered by small business data",
+              "Unlimited Business Fit matches/month, powered by AI",
+              "Unlimited SMB Owner Intro requests/month (Off Market)",
+              "Unlimited On-Market requests/month",
+              "Unlimited NDAs & LOIs",
+              "Deal room",
+              "Partner network access",
+              "Email support",
+              "$500 /mo \\+ 0% Sale Price Upon Close",
+              "0% Platform Fee paid upon successful close",
+              "Everything in Search, and",
+              "Mentorship from experienced buyers",
+              "Early access to For Sale listings",
+              "Deal Autopilot - personalized, AI-driven off-market deal finder",
+              "AI Accountant & Advanced AI Powered Deal Room with due diligence tools",
+              "Industry intelligence & market insights",
+              "Acquisition funding network access",
+              "Validated legal templates for acquisitions",
+              "Email & chat support",
+              "$299 /mo/adviser Yearly plan save 20%",
+              "1% platform fee upon close",
+              "Branded client dashboards",
+              "Unlimited AI valuations",
+              "AI risk assessments",
+              "Access to [SMB.co](http://smb.co) \u2019s buyer network",
+              "Unlimited listings & deal rooms",
+              "Secure document storage",
+              "AI due-diligence tools",
+              "Auto-generated CIMs",
+              "Buyer verification & fit scoring",
+              "Acquisition offer tracking & alerts",
+              "Public advisor & team profiles on [SMB.co](http://smb.co)",
+              "Verified advisor badge & lead generation",
+              "SMB Pro access (19M+ businesses)",
+              "Priority support & account manager",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers",
+              "Making small business deals simple, fair, and transparent. SMB.co levels the playing field so every owner, buyer, and broker can close confidently. [Get started](https://smb.co/search) Pricing plan Built for connection. Powered by data. Trusted by owners, buyers, and advisors. Yearly Save 15% Owner Buyer Advisor SMB Owner Perfect for business owners looking to grow or sell their business. Free $0/mo + 1% Sale Price Upon Close [Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers Access SMB.co\u2019s Partner Network to build the best deal team SMB Search For all small business searchers. Free $0/mo + 2% Sale Price Upon Close [Start searching](https://smb.co/search) Search across 19M+ businesses, both on and off-market Access to Deal Analytics powered by small business data Unlimited Business Fit matches/month, powered by AI Unlimited SMB Owner Intro requests/month (Off Market) Unlimited On-Market requests/month Unlimited NDAs & LOIs Deal room Partner network access Email support 2% Platform Fee paid upon successful close SMB Deal Team For serious small business buyers. $500 /mo \\+ 0% Sale Price Upon Close [Apply for access](https://dealteam.smb.co/) Everything in Search, and Mentorship from experienced buyers Early access to For Sale listings Deal Autopilot - personalized, AI-driven off-market deal finder AI Accountant & Advanced AI Powered Deal Room with due diligence tools Industry intelligence & market insights Acquisition funding network access Validated legal templates for acquisitions Email & chat support 0% Platform Fee paid upon successful close SMB Advisor For advisors helping business owners and buyers prepare, value, and close deals. $299 /mo/adviser Yearly plan save 20% [Get started](https://smb.co/advisor/sign-up) Branded client dashboards Unlimited AI valuations AI risk assessments Access to [SMB.co](http://smb.co) \u2019s buyer network Unlimited listings & deal rooms Secure document storage AI due-diligence tools Auto-generated CIMs Buyer verification & fit scoring Acquisition offer tracking & alerts Public advisor & team profiles on [SMB.co](http://smb.co) Verified advisor badge & lead generation SMB Pro access (19M+ businesses) Priority support & account manager 1% platform fee upon close Trusted by Great companies Start building your next deal today. Join thousands of owners, buyers, and advisors using our platform to discover opportunities and close smoother transactions."
+            ],
+            "title": "Pricing Plans | SMB.co - Small Business Marketplace"
+          },
+          {
+            "url": "https://offdeal.io/about-us",
+            "excerpts": [
+              "AI-powered investment bank helping small business owners exit at premium prices.",
+              "Instead, a true full service M&A advisory firm built for the backbone of America.",
+              "In 2024, OffDeal set out to build something audacious: An investment bank built for small businesses.",
+              "Wall Street's playbook works well, but only for billion-dollar deals, it breaks below the middle market.",
+              "Traditional firms run oversized teams on outdated software, making smaller M&A transactions uneconomical.",
+              "We combined two unfair advantages: (1) purpose-built technology that maps every strategic and financial buyer in minutes, automates time-consuming manual analysis, and keeps the process transparent; and (2) seasoned bankers who focus on judgment, not data entry and bureaucracy.",
+              "New York, NY",
+              "Ori Eldarov Profile Picture Ori Eldarov Ori Eldarov Signature Alston Lin"
+            ],
+            "title": "OffDeal"
+          },
+          {
+            "url": "https://offdeal.io/news/offdeal-series-a-funding-radical-ventures-2025",
+            "excerpts": [
+              "July 29, 2025",
+              "**OffDeal announces Series A** **OffDeal Raises $12M Series A led by Radical Ventures** Read Read our announcement [Financial Times Financial Times](https://www.ft.com/content/9daf5c7e-e301-4b7d-809a-ff9fb336bdbc)",
+              "$12M Series A Led by Radical Ventures",
+              "OffDeal Raises $12M Series A Led by Radical Ventures",
+              "We are excited to announce that OffDeal has raised a **$12M Series A led by Radical Ventures** to build the world's first AI-native investment bank, bringing our total funding to $17M.",
+              "This round was led by Radical Ventures, with participation from Y Combinator, Rebel Fund, and Centre Street Partners.",
+              "Our Series A comes less than 10 months after we announced our Seed.",
+              "New capital to scale tech-driven, advisor-led exits for small business owners",
+              "Our engineers built software to automate analyst work with AI, so our in-house bankers can focus on dealmaking and delivering life-changing exits to our clients.",
+              "We're scaling fast and hiring across all roles - if you or someone you know is interested in building the future of investment banking, we'd love to hear from you!"
+            ],
+            "title": "OffDeal Series A Funding"
+          },
+          {
+            "url": "https://eilla.ai/",
+            "excerpts": [
+              "We combine top-tier M&A advisors with AI to deliver faster, higher-value outcomes for small and medium businesses.",
+              "So we built an AI-native M&A advisory from the ground up - designed to give SMBs the quality of service reserved for billion-dollar deals, delivering higher-value exits.",
+              "We aren't limited by either - building institutional-grade materials in days, reaching a broad market of best-fit buyers and handling due diligence with rigour a traditional process can't offer.",
+              "AI screens 8M+ companies - scoring acquisition history, synergies, financial capacity and more - to surface the best-fit buyers.",
+              "Equity story, teaser, CIM, management presentations - built to the standard of the biggest deals, without the months of work they usually demand of you.",
+              "We hold extensive internal data on what buyers are actually looking for - shared directly by them.",
+              "We spent years building AI for the world's top M&A firms.",
+              "$100bn+ In transaction value executed by our team",
+              "50+ Cross-border transactions closed by our team",
+              "18+ years Combined M&A experience on every transaction we lead",
+              "Eilla"
+            ],
+            "title": "Eilla | AI-Native M&A Advisory for SMBs"
+          },
+          {
+            "url": "https://blog.exit-planning-institute.org/value-builder-announcement-0-",
+            "excerpts": [
+              "Exit Planning Institute Welcomes The Value Builder System as a Strategic Partner by [**Exit Planning Institute**](https://blog.exit-planning-institute.org/author/exit-planning-institute) on January 30, 2025 At the Exit Planning Institute \u00ae (EPI), we are committed to forging partnerships that provide real value to business owners and advisors alike. We are excited to announce a new strategic partnership with The Value Builder System \u2122 .",
+              "The Value Builder System is a value assessment toolset that empowers advisors to begin strategic conversations with business owners. ## Introducing T he Value Builder System The Value Builder System\u2019s mission is to level the playing field for small business owners as they approach their exit.",
+              "The Assessment is divided into eight sections, each targeting a key driver of company value.",
+              "For every driver, The Value Builder System offers tools that you can use with your clients to help them understand and improve their scores. You can offer these tools to your clients as a self-paced learning resource, the foundation of a mastermind or peer group, or as the basis for your one-on-one advisory work. Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process.",
+              "They empower business owners to protect, grow, and realize the value of their company through a network of trusted advisors, who can utilize the power of the assessment toolset to start those strategic conversations with business owners. ### The Story Behind The Value Builder System The Value Builder System began with a book called _Built to Sell.",
+              "With over 80,000 business owners using these tools, working with a discrete group of highly trained advisors, The Value Builder System is here to help them protect, grow, and realize the value of their company. ### How Does The Value Builder System Drive Value?",
+              "Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process. Whether through networking events, referrals, or direct outreach, CEPAs can use the Value Builder Assessment during these early interactions to set realistic valuation expectations and quickly identify motivated sellers.",
+              "Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process.",
+              "If the estimated value in the assessment falls short of the owner\u2019s expectations (which is often the case), CEPAs can present a straightforward choice: sell now at a realistic price or work with them to increase the business\u2019s value using Value Builder\u2019s suite of tool. This strategy allows you to prioritize deals that are likely to close while also earning additional revenue from owners dedicated to improving their value before an exit. ## Strategic Partnership with Exit Planning Institute \u00ae The Value Builder System and EPI have a long standing and productive partnership, sharing similar values and goals of facilitating significant exits for business owners with the guidance of a CEPA. ### Why Join EPI's Strategic Partnership Program? [The Strategic Partnership Program](https://exit-planning-institute.org/about-us/exit-planning-partner-network?_gl=1*ph7ukg*_gcl_au*MjA4NTI1NDg5LjE3MzQ0MjYyMDQ.*_ga*MTkxMDU2Njc0Mi4xNzM0NDI2MjA0*_ga_67ENM4G3V8*MTczNjI1NjQ1My4xOS4xLjE3MzYyNTk1NTcuNjAuMC4w) facilitates connections between advisors, specialized experts, software tools, and resources to develop successful teams.",
+              "[216-712-4244](tel:216-712-4244)"
+            ],
+            "title": "Exit Planning Institute Welcomes The Value Builder System as a Strategic Partner"
+          },
+          {
+            "url": "https://www.g2.com/products/maus/pricing",
+            "excerpts": [
+              "Maus has 2 pricing editions, from $95 to $299. A free trial of Maus is also available.",
+              "Free Trial is available",
+              "|Single Business |Starting at $95.00 5 Users Per Month |Ideal for small-medium businesses looking to Accelerate their business performance through strategic planning and implementation, financial reporting and value building.",
+              "Business Planning",
+              "Strategic Planning",
+              "Financial Reporting",
+              "Non-Financial Reporting",
+              "Cash Flow Forecasts",
+              "Operational Policies & Procedures",
+              "Exit & Succession Planning",
+              "Complete training & support",
+              "Show More | |Multi-Business (Advisors & Consultants) |Starting at $299.00 5 Clients Per Month |Ideal for Business Advisors, Consultants & Coaches working with small-medium businesses.",
+              "Quickly and easily analyse and monitor your clients\u2019 business with the Maus platform, giving advisors & consultants a structured workflow to engage clients from initial engagement right through to ongoing client management.",
+              "Initial Diagnostics & Business Health-Checks",
+              "No one has managed this profile for over a year.",
+              "Skip to Content Skip to Navigation"
+            ],
+            "title": "Maus Pricing 2025"
+          },
+          {
+            "url": "https://valuebuilder.com/",
+            "excerpts": [
+              "Written in the same approachable style that has made _Built to Sell_ the world\u2019s most popular exit book, the owner-friendly Value Builder Report gives you an estimate of the value of your company plus a roadmap for improving it.",
+              "If you\u2019re an exited founder looking to give back or a professional advisor wanting to introduce your clients to the Built to Sell methodology, consider offering the Value Builder Assessment and tools.",
+              "The PREScore\u2122 (Personal Readiness to Exit Score) Report assesses whether you are psychologically ready to exit your business, helping you avoid disappointment after the sale.",
+              "The Freedom Score Report helps you determine whether you are financially prepared to sustain your desired lifestyle after you exit your business.",
+              "It all started with a book... _Built to Sell_ became a must-read for small business owners looking to create a company that thrives without them\u2014and sells for top dollar. That idea grew into an assessment to help owners evaluate their business and then a suite of tools to unlock its value. Today we call it **The Value Builder System\u2122** .",
+              "Want to Help Others Apply the Built to Sell Methodology? If you\u2019re an exited founder looking to give back or a professional advisor wanting to introduce your clients to the Built to Sell methodology, consider offering the Value Builder Assessment and tools.",
+              "With over 80,000 business owners using our tools, we\u2019re here to help you protect, grow, and realize the value of your company.",
+              "Join Our Community of Business Owners",
+              "[Become an Advisor](https://advisor.valuebuilder.com/)",
+              "See how ready owners really are to sell. [**Get the free report \u2192**](https://learn.valuebuilder.com/exit-readiness-index-q2-2026/)",
+              "Just released: The Q2, 2026 Exit Readiness Index.",
+              "Just released: The Q2, 2026 Exit Readiness Index. See how ready owners really are to sell. [**Get the free report \u2192**](https://learn.valuebuilder.com/exit-readiness-index-q2-2026/)"
+            ],
+            "title": "The Value Builder System\u2122"
+          },
+          {
+            "url": "https://news.gallup.com/poll/657362/small-business-owners-lack-succession-plan.aspx",
+            "excerpts": [
+              "Census Bureau show that just over half (52.3%) of U.S. employer-businesses are owned by people who are at or near retirement age, those 55 and older. These firms represent 3 million of the nearly 6 million private-sector employer firms operating in the United States, and the owners have higher levels of income, wealth and wellbeing than other adults, according to [previous Gallup research](https://www.gallup.com/analytics/643103/jpmc-kauffman-wealth-pathways.aspx) , which compared employers to owners who do not have employees and individuals who are not business owners.",
+              "When asked about long-term plans for their business after they step away, a third of all business owners say they have no plan or are unsure about their future. Another large group (22%) say they plan on closing the business.",
+              "Uncertainty about the future of the business is also more common among nonemployers than employers (40% vs. 16%). Finally, nonemployers are more likely than employers to anticipate closing their business (27% vs.",
+              "New Gallup research shows that as employer-business owners think about retirement, most, 74%, have plans to sell or transfer the ownership of their business.",
+              "Among employers, 74% plan to either sell/take public or give away their business, with some reporting both plans.",
+              "Only 35% of these owners plan to transfer ownership through a sale or gift.",
+              "For nonemployer-businesses, just 35% foresee taking one of these actions. Only 15% indicate plans to sell, 2% to take public and only 21% plan to give away the business to a family member or someone else.",
+              "Only 26% plan to give it away to a family member or someone else, and 23% plan to sell, with an additional 2% hoping to take the business public.",
+              "The median employer\u2019s business generated $80,000 in profits in 2023, according to the Gallup data, suggesting a median valuation of somewhere around $400,000 if sold (using a simple and conventional valuation formula).",
+              "Employer firms who plan to sell or give away their business earn median profits of $100,000 and $85,000 per year, respectively, compared with just $20,000 for those who plan to close the business.",
+              "The median profit gap is also large between employers without a long-term plan and those with one ($60,000 vs. $90,000, respectively).",
+              "As displayed in the table below, the median nonemployer with no long-term plan brought in just $6,000 in profits in 2023, compared with $11,000 for nonemployers with a plan.",
+              "Economy"
+            ],
+            "title": "\n\tMost Small-Business Owners Lack a Succession Plan \n"
+          },
+          {
+            "url": "https://smb.co/about",
+            "excerpts": [
+              "Cofounder & CEO",
+              "Our co-founder and CEO, Joe, grew up surrounded by family members who built their own businesses and became a serial entrepreneur himself.",
+              "Cofounder & CMO",
+              "Brit is the Cofounder and CMO of SMB.co, where she leads the company's mission to make small business ownership accessible to everyone.",
+              "Before cofounding SMB, Brit built and scaled marketing engines at high-growth B2B SaaS companies, but it was her firsthand experience watching small business owners struggle to find buyers and navigate exits that sparked the vision for SMB.",
+              "A certified leadership coach, Brit is driven by the belief that the next generation of entrepreneurs should have a real shot at owning the businesses that power local communities.",
+              "Cofounder & COO",
+              "Mike is a seasoned payments industry professional with a focus on mobile and e-commerce. With over 20 years of experience, he has successfully taken products from innovative definition and strategy to launch and maturity.",
+              "She cofounded the company alongside Joe Brown and Mike Hillenmeyer to give independent buyers and sellers the tools, data, and support that were previously only available to private equity firms.",
+              "Small business deals should be simple, transparent & profitable. Our mission is to make small business ownership accessible for everyone, empowering millions of entrepreneurs to build, grow, and leave lasting legacies in their communities.",
+              "We're building a world where they don't fail for lack of support \u2014 where owners, buyers, and communities can thrive together.",
+              "However, our journey isn't just about us; it's about empowering you - no matter if you're buying, selling, or servicing a small business.",
+              "Join thousands of owners, buyers, and advisors using our platform to discover opportunities and close smoother transactions.",
+              "The modern business marketplace.",
+              "Browse our extensive database of small businesses for sale.",
+              "How to Market a Business for Sale Without Revealing Its Identity Advisor Tips ### How to Market a Business for Sale Without Revealing Its Identity Public or confidential? Compare the pros and cons of each way to market a business for sale \u2014 reach vs. discretion \u2014 plus a step-by-step confidential-selling playbook. SMB.co supports both.",
+              "[Join as an Advisor](https://smb.co/advisor/sign-up) [Claim your Business](https://smb.co/owner/claim/)",
+              "98% Small business owners do not know what their business is worth",
+              "86% Small business owners lack an exit plan",
+              "80% Small businesses never successfully sell after going on the market",
+              "10M Small businesses are expected to change hands by 2029",
+              "86% Small business owners lack an exit plan 80% Small businesses never successfully sell after going on the market",
+              "98% Small business owners do not know what their business is worth 86% Small business owners lack an exit plan 80% Small businesses never successfully sell after going on the market 10M Small businesses are expected to change hands by 2029"
+            ],
+            "title": "About SMB.co | The Small Business Marketplace"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "1_competitive_product_overlap_matrix",
+        "reasoning": "Reasoning: I evaluated whether the provided field_answer directly addresses the field_name's requested Competitive product overlap matrix. The answer includes a detailed matrix mapping each competitor to products, pricing, artifacts, and governance/verification signals, plus a clear takeaway about commoditized vs missing aspects. This aligns with the expected field_description of documenting competitive overlap and evidence gaps. Excerpts supplied cover pricing and feature claims for Baton, SMB.co, Maus, Value Builder, OffDeal, Eilla, Bizbe, Dealport, Acquire.com, etc., which plausibly support many of the matrix entries (pricing, offerings, and some governance signals). Therefore, the field_answer appears complete for the requested field and is largely corroborated by the excerpts. Confidence in correctness of mapping is moderate-to-high given the explicit citations in the field_answer, though some cells (e.g., exact authority drills, reviewer-reviewed evidence graphs) are asserted as gaps, which matches the supplied takeaway that those capabilities are largely open.",
+        "citations": [
+          {
+            "url": "https://www.baton.com/pricing",
+            "excerpts": [
+              "PRICING PLANS FOR SELLERS",
+              "## Free",
+              "## Seller",
+              "$0",
+              "N/A",
+              "No Minimum",
+              "None",
+              "Data-driven valuation",
+              "Business Valuation Valuation Review Call",
+              "Anonymous Off-Market Profile",
+              "Anonymized teaser on Baton",
+              "Buyer interest tracking",
+              "Buyer Interest Dashboard",
+              "Go-To-Market Dashboard",
+              "$1,000 /month (Credited back upon close)",
+              "$1,000 /month",
+              "6% / 2% success fee on close",
+              "6% on first $5M of purchase price",
+              "month-to-month afterward",
+              "Three months",
+              "$100,000",
+              "Everything in Free, plus:",
+              "$1,000 towards full financial reconciliation",
+              "Recast Financials (if required) ($1,000 credit)",
+              "Reconcile Financials Pre-Listing",
+              "Refresh Financials on Listing On Request Quarterly",
+              "Tailored strategic buyer outreach",
+              "Conduct Outreach to Strategic Buyers",
+              "Detailed Baton listing",
+              "Market on 3rd Party Listing Site(s)",
+              "Hands-on advisor support",
+              "Weekly Scheduled Calls with Advisor",
+              "Advisor on Buyer-Seller Meetings",
+              "Diligence Check-Ins with Advisor",
+              "Produce Marketing Materials",
+              "Provide and Prepare Data Room",
+              "Redact PII from Data Room Files",
+              "SBA and Bank Partnership Pre-Qualification",
+              "Loan Services for Interested Buyers",
+              "Negotiation Support for Owner",
+              "Diligence & Closing Platform",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close",
+              "Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "[Get Started For Free](https://www.baton.com/market/signup) PRICING PLANS FOR SELLERS Select the best plan to sell your business Selling your business can feel overwhelming so we\u2019ve designed **plans to meet your needs** \u2014whether you want full-service support or a cost-effective way to explore the market. ## Free Get a confidential business valuation and gauge buyer interest. $0 No Hidden Fees \u2014 Truly Free! You'll get: Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking ## Seller Most popular Get expert guidance every step of the way. $1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support [Get Started](https://www.baton.com/market/signup) Prices shown do not include applicable tax. Free Seller Monthly Retainer (Credited back upon close) $0 $1,000 /month EXCLUSIVE LISTING AGREEMENT MINIMUM TERM month-to-month afterward No Minimum Three months SUCCESS FEE N/A 6% on first $5M of purchase price 2% on any amount over $5M of purchase price MINIMUM ANNUAL CASH FLOW None $100,000 Prep and go to market Business Valuation Valuation Review Call Go-To-Market Dashboard Reconcile Financials Pre-Listing Produce Marketing Materials Provide and Prepare Data Room Redact PII from Data Room Files Refresh Financials on Listing On Request Quarterly Find the right buyer Anonymized teaser on Baton Buyer Interest Dashboard Detailed Baton listing Market on 3rd Party Listing Site(s) Conduct Outreach to Strategic Buyers SBA and Bank Partnership Pre-Qualification Advisor on Buyer-Seller Meetings Weekly Scheduled Calls with Advisor ACCEPTING THE LOI AND closing Negotiation Support for Owner Diligence & Closing Platform Diligence Check-Ins with Advisor Loan Services for Interested Buyers Recast Financials (if required) ($1,000 credit) [Get Started](https://www.baton.com/market/signup) FAQ What size companies do you work with?"
+            ],
+            "title": "Baton Market Pricing"
+          },
+          {
+            "url": "https://smb.co/pricing",
+            "excerpts": [
+              "Free $0/mo + 1% Sale Price Upon Close",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time",
+              "List your business either publicly or privately",
+              "List your \u201cMake me an offer\u201d price",
+              "Track & manage offers from qualified buyers",
+              "Generate materials to promote your business for sale",
+              "Prepare financial documents for buyers",
+              "Access SMB.co\u2019s Partner Network to build the best deal team",
+              "Free $0/mo + 2% Sale Price Upon Close",
+              "2% Platform Fee paid upon successful close",
+              "Search across 19M+ businesses, both on and off-market",
+              "Access to Deal Analytics powered by small business data",
+              "Unlimited Business Fit matches/month, powered by AI",
+              "Unlimited SMB Owner Intro requests/month (Off Market)",
+              "Unlimited On-Market requests/month",
+              "Unlimited NDAs & LOIs",
+              "Deal room",
+              "Partner network access",
+              "Email support",
+              "$500 /mo \\+ 0% Sale Price Upon Close",
+              "0% Platform Fee paid upon successful close",
+              "Everything in Search, and",
+              "Mentorship from experienced buyers",
+              "Early access to For Sale listings",
+              "Deal Autopilot - personalized, AI-driven off-market deal finder",
+              "AI Accountant & Advanced AI Powered Deal Room with due diligence tools",
+              "Industry intelligence & market insights",
+              "Acquisition funding network access",
+              "Validated legal templates for acquisitions",
+              "Email & chat support",
+              "$299 /mo/adviser Yearly plan save 20%",
+              "1% platform fee upon close",
+              "Branded client dashboards",
+              "Unlimited AI valuations",
+              "AI risk assessments",
+              "Access to [SMB.co](http://smb.co) \u2019s buyer network",
+              "Unlimited listings & deal rooms",
+              "Secure document storage",
+              "AI due-diligence tools",
+              "Auto-generated CIMs",
+              "Buyer verification & fit scoring",
+              "Acquisition offer tracking & alerts",
+              "Public advisor & team profiles on [SMB.co](http://smb.co)",
+              "Verified advisor badge & lead generation",
+              "SMB Pro access (19M+ businesses)",
+              "Priority support & account manager",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers",
+              "Making small business deals simple, fair, and transparent. SMB.co levels the playing field so every owner, buyer, and broker can close confidently. [Get started](https://smb.co/search) Pricing plan Built for connection. Powered by data. Trusted by owners, buyers, and advisors. Yearly Save 15% Owner Buyer Advisor SMB Owner Perfect for business owners looking to grow or sell their business. Free $0/mo + 1% Sale Price Upon Close [Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers Access SMB.co\u2019s Partner Network to build the best deal team SMB Search For all small business searchers. Free $0/mo + 2% Sale Price Upon Close [Start searching](https://smb.co/search) Search across 19M+ businesses, both on and off-market Access to Deal Analytics powered by small business data Unlimited Business Fit matches/month, powered by AI Unlimited SMB Owner Intro requests/month (Off Market) Unlimited On-Market requests/month Unlimited NDAs & LOIs Deal room Partner network access Email support 2% Platform Fee paid upon successful close SMB Deal Team For serious small business buyers. $500 /mo \\+ 0% Sale Price Upon Close [Apply for access](https://dealteam.smb.co/) Everything in Search, and Mentorship from experienced buyers Early access to For Sale listings Deal Autopilot - personalized, AI-driven off-market deal finder AI Accountant & Advanced AI Powered Deal Room with due diligence tools Industry intelligence & market insights Acquisition funding network access Validated legal templates for acquisitions Email & chat support 0% Platform Fee paid upon successful close SMB Advisor For advisors helping business owners and buyers prepare, value, and close deals. $299 /mo/adviser Yearly plan save 20% [Get started](https://smb.co/advisor/sign-up) Branded client dashboards Unlimited AI valuations AI risk assessments Access to [SMB.co](http://smb.co) \u2019s buyer network Unlimited listings & deal rooms Secure document storage AI due-diligence tools Auto-generated CIMs Buyer verification & fit scoring Acquisition offer tracking & alerts Public advisor & team profiles on [SMB.co](http://smb.co) Verified advisor badge & lead generation SMB Pro access (19M+ businesses) Priority support & account manager 1% platform fee upon close Trusted by Great companies Start building your next deal today. Join thousands of owners, buyers, and advisors using our platform to discover opportunities and close smoother transactions."
+            ],
+            "title": "Pricing Plans | SMB.co - Small Business Marketplace"
+          },
+          {
+            "url": "https://www.g2.com/products/maus/pricing",
+            "excerpts": [
+              "Maus has 2 pricing editions, from $95 to $299. A free trial of Maus is also available.",
+              "Free Trial is available",
+              "|Single Business |Starting at $95.00 5 Users Per Month |Ideal for small-medium businesses looking to Accelerate their business performance through strategic planning and implementation, financial reporting and value building.",
+              "Business Planning",
+              "Strategic Planning",
+              "Financial Reporting",
+              "Non-Financial Reporting",
+              "Cash Flow Forecasts",
+              "Operational Policies & Procedures",
+              "Exit & Succession Planning",
+              "Complete training & support",
+              "Show More | |Multi-Business (Advisors & Consultants) |Starting at $299.00 5 Clients Per Month |Ideal for Business Advisors, Consultants & Coaches working with small-medium businesses.",
+              "Quickly and easily analyse and monitor your clients\u2019 business with the Maus platform, giving advisors & consultants a structured workflow to engage clients from initial engagement right through to ongoing client management.",
+              "Initial Diagnostics & Business Health-Checks",
+              "No one has managed this profile for over a year.",
+              "Skip to Content Skip to Navigation"
+            ],
+            "title": "Maus Pricing 2025"
+          },
+          {
+            "url": "https://valuebuilder.com/",
+            "excerpts": [
+              "Written in the same approachable style that has made _Built to Sell_ the world\u2019s most popular exit book, the owner-friendly Value Builder Report gives you an estimate of the value of your company plus a roadmap for improving it.",
+              "If you\u2019re an exited founder looking to give back or a professional advisor wanting to introduce your clients to the Built to Sell methodology, consider offering the Value Builder Assessment and tools.",
+              "The PREScore\u2122 (Personal Readiness to Exit Score) Report assesses whether you are psychologically ready to exit your business, helping you avoid disappointment after the sale.",
+              "The Freedom Score Report helps you determine whether you are financially prepared to sustain your desired lifestyle after you exit your business.",
+              "It all started with a book... _Built to Sell_ became a must-read for small business owners looking to create a company that thrives without them\u2014and sells for top dollar. That idea grew into an assessment to help owners evaluate their business and then a suite of tools to unlock its value. Today we call it **The Value Builder System\u2122** .",
+              "Want to Help Others Apply the Built to Sell Methodology? If you\u2019re an exited founder looking to give back or a professional advisor wanting to introduce your clients to the Built to Sell methodology, consider offering the Value Builder Assessment and tools.",
+              "With over 80,000 business owners using our tools, we\u2019re here to help you protect, grow, and realize the value of your company.",
+              "Join Our Community of Business Owners",
+              "[Become an Advisor](https://advisor.valuebuilder.com/)",
+              "See how ready owners really are to sell. [**Get the free report \u2192**](https://learn.valuebuilder.com/exit-readiness-index-q2-2026/)",
+              "Just released: The Q2, 2026 Exit Readiness Index.",
+              "Just released: The Q2, 2026 Exit Readiness Index. See how ready owners really are to sell. [**Get the free report \u2192**](https://learn.valuebuilder.com/exit-readiness-index-q2-2026/)"
+            ],
+            "title": "The Value Builder System\u2122"
+          },
+          {
+            "url": "https://blog.exit-planning-institute.org/value-builder-announcement-0-",
+            "excerpts": [
+              "Exit Planning Institute Welcomes The Value Builder System as a Strategic Partner by [**Exit Planning Institute**](https://blog.exit-planning-institute.org/author/exit-planning-institute) on January 30, 2025 At the Exit Planning Institute \u00ae (EPI), we are committed to forging partnerships that provide real value to business owners and advisors alike. We are excited to announce a new strategic partnership with The Value Builder System \u2122 .",
+              "The Value Builder System is a value assessment toolset that empowers advisors to begin strategic conversations with business owners. ## Introducing T he Value Builder System The Value Builder System\u2019s mission is to level the playing field for small business owners as they approach their exit.",
+              "The Assessment is divided into eight sections, each targeting a key driver of company value.",
+              "For every driver, The Value Builder System offers tools that you can use with your clients to help them understand and improve their scores. You can offer these tools to your clients as a self-paced learning resource, the foundation of a mastermind or peer group, or as the basis for your one-on-one advisory work. Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process.",
+              "They empower business owners to protect, grow, and realize the value of their company through a network of trusted advisors, who can utilize the power of the assessment toolset to start those strategic conversations with business owners. ### The Story Behind The Value Builder System The Value Builder System began with a book called _Built to Sell.",
+              "With over 80,000 business owners using these tools, working with a discrete group of highly trained advisors, The Value Builder System is here to help them protect, grow, and realize the value of their company. ### How Does The Value Builder System Drive Value?",
+              "Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process. Whether through networking events, referrals, or direct outreach, CEPAs can use the Value Builder Assessment during these early interactions to set realistic valuation expectations and quickly identify motivated sellers.",
+              "Advisors justify their advisory fees by delivering real results : businesses typically score 59 on the Value Builder Score, but with a CEPA\u2019s guidance, those who elevate their score to 80 receive acquisition offers 71% above the average. ### Benefits for Certified Exit Planning Advisors (CEPA\u00ae) With The Value Builder System, there is an immediate ROI when incorporating the assessment into the business development process.",
+              "If the estimated value in the assessment falls short of the owner\u2019s expectations (which is often the case), CEPAs can present a straightforward choice: sell now at a realistic price or work with them to increase the business\u2019s value using Value Builder\u2019s suite of tool. This strategy allows you to prioritize deals that are likely to close while also earning additional revenue from owners dedicated to improving their value before an exit. ## Strategic Partnership with Exit Planning Institute \u00ae The Value Builder System and EPI have a long standing and productive partnership, sharing similar values and goals of facilitating significant exits for business owners with the guidance of a CEPA. ### Why Join EPI's Strategic Partnership Program? [The Strategic Partnership Program](https://exit-planning-institute.org/about-us/exit-planning-partner-network?_gl=1*ph7ukg*_gcl_au*MjA4NTI1NDg5LjE3MzQ0MjYyMDQ.*_ga*MTkxMDU2Njc0Mi4xNzM0NDI2MjA0*_ga_67ENM4G3V8*MTczNjI1NjQ1My4xOS4xLjE3MzYyNTk1NTcuNjAuMC4w) facilitates connections between advisors, specialized experts, software tools, and resources to develop successful teams.",
+              "[216-712-4244](tel:216-712-4244)"
+            ],
+            "title": "Exit Planning Institute Welcomes The Value Builder System as a Strategic Partner"
+          },
+          {
+            "url": "https://offdeal.io/about-us",
+            "excerpts": [
+              "AI-powered investment bank helping small business owners exit at premium prices.",
+              "Instead, a true full service M&A advisory firm built for the backbone of America.",
+              "In 2024, OffDeal set out to build something audacious: An investment bank built for small businesses.",
+              "Wall Street's playbook works well, but only for billion-dollar deals, it breaks below the middle market.",
+              "Traditional firms run oversized teams on outdated software, making smaller M&A transactions uneconomical.",
+              "We combined two unfair advantages: (1) purpose-built technology that maps every strategic and financial buyer in minutes, automates time-consuming manual analysis, and keeps the process transparent; and (2) seasoned bankers who focus on judgment, not data entry and bureaucracy.",
+              "New York, NY",
+              "Ori Eldarov Profile Picture Ori Eldarov Ori Eldarov Signature Alston Lin"
+            ],
+            "title": "OffDeal"
+          },
+          {
+            "url": "https://offdeal.io/news/offdeal-series-a-funding-radical-ventures-2025",
+            "excerpts": [
+              "July 29, 2025",
+              "**OffDeal announces Series A** **OffDeal Raises $12M Series A led by Radical Ventures** Read Read our announcement [Financial Times Financial Times](https://www.ft.com/content/9daf5c7e-e301-4b7d-809a-ff9fb336bdbc)",
+              "$12M Series A Led by Radical Ventures",
+              "OffDeal Raises $12M Series A Led by Radical Ventures",
+              "We are excited to announce that OffDeal has raised a **$12M Series A led by Radical Ventures** to build the world's first AI-native investment bank, bringing our total funding to $17M.",
+              "This round was led by Radical Ventures, with participation from Y Combinator, Rebel Fund, and Centre Street Partners.",
+              "Our Series A comes less than 10 months after we announced our Seed.",
+              "New capital to scale tech-driven, advisor-led exits for small business owners",
+              "Our engineers built software to automate analyst work with AI, so our in-house bankers can focus on dealmaking and delivering life-changing exits to our clients.",
+              "We're scaling fast and hiring across all roles - if you or someone you know is interested in building the future of investment banking, we'd love to hear from you!"
+            ],
+            "title": "OffDeal Series A Funding"
+          },
+          {
+            "url": "https://eilla.ai/",
+            "excerpts": [
+              "We combine top-tier M&A advisors with AI to deliver faster, higher-value outcomes for small and medium businesses.",
+              "So we built an AI-native M&A advisory from the ground up - designed to give SMBs the quality of service reserved for billion-dollar deals, delivering higher-value exits.",
+              "We aren't limited by either - building institutional-grade materials in days, reaching a broad market of best-fit buyers and handling due diligence with rigour a traditional process can't offer.",
+              "AI screens 8M+ companies - scoring acquisition history, synergies, financial capacity and more - to surface the best-fit buyers.",
+              "Equity story, teaser, CIM, management presentations - built to the standard of the biggest deals, without the months of work they usually demand of you.",
+              "We hold extensive internal data on what buyers are actually looking for - shared directly by them.",
+              "We spent years building AI for the world's top M&A firms.",
+              "$100bn+ In transaction value executed by our team",
+              "50+ Cross-border transactions closed by our team",
+              "18+ years Combined M&A experience on every transaction we lead",
+              "Eilla"
+            ],
+            "title": "Eilla | AI-Native M&A Advisory for SMBs"
+          },
+          {
+            "url": "https://uk.linkedin.com/company/eilla-ai",
+            "excerpts": [
+              "Min: 2022-11-02",
+              "round date: 2023-12-09",
+              "employee count: 11",
+              "Size: 2",
+              "round date: 2023-12-09 round name: Seed round amount: 1.5e+06 round currency: USD",
+              "investor names: Eleven Ventures",
+              "Introducing the first end-to-end AI platform for the VC, PE and M&amp;A deal workflow! \ud83d\ude80 Why Eilla? \u2022 Use AI to analyze 6m+ companies in 10 seconds to find competitors and new opportunities. \u2022 Streamline sourcing to due diligence - everything you need in one platform. \u2022 Leverage cross-validated insights from Eilla\u2019s proprietary research, Crunchbase, Capital IQ, other trust providers and your internal data.",
+              "company headline: Europe's first AI-native M&A advisory for SMBs",
+              "country name: United Kingdom Locality: London",
+              "formatted address: London, Greater London, United Kingdom",
+              "Address: London, GB",
+              "We pair experienced advisors with proprietary AI to run faster, more competitive sale process for your business - from identifying hundreds of buyers to preparing materials and supporting due diligence."
+            ],
+            "title": "Eilla Ai"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "2_owner_willingness_to_pay_before_a_formal_sale",
+        "reasoning": "Assessment reasoning:\n- Completeness: The field_answer provides some analysis of owner willingness to pay, including a rough conversion waterfall, reference to SMB.co framing, and a rough 120-invitation scenario with optimistic vs realistic conversion rates. However, it does not comprehensively cover all requested sub-areas (e.g., comprehensive competitive product overlap for each listed company, detailed price points across all vendors beyond Baton, explicit verification/remediation claims per vendor beyond Baton, and a full, structured math model for each asked item). Given the breadth of the user\u2019s research questions and the expectation to return price points, conversion analogs, partner-channel failure modes, and first-principles math across multiple entities, the answer is partial. Therefore, completeness is set to false.\n- Excerpts support: The excerpts include concrete pricing details for Baton (pricing table) and SMB.co statistics (98% don\u2019t know value, 86% lack exit plan, 80% never sell). Gallup data is included in excerpts and supports the claim about succession planning tendencies. The field_answer cites these sources or closely mirrors them, so the content is at least partially supported by the excerpts. Overall, support is true but not exhaustive for all claims requested. \n- Risk: The answer acknowledges that some data (ideas42 2025 findings) are not directly observed in the provided sources, which aligns with a cautious approach to corroboration.",
+        "citations": [
+          {
+            "url": "https://smb.co/about",
+            "excerpts": [
+              "Cofounder & CEO",
+              "Our co-founder and CEO, Joe, grew up surrounded by family members who built their own businesses and became a serial entrepreneur himself.",
+              "Cofounder & CMO",
+              "Brit is the Cofounder and CMO of SMB.co, where she leads the company's mission to make small business ownership accessible to everyone.",
+              "Before cofounding SMB, Brit built and scaled marketing engines at high-growth B2B SaaS companies, but it was her firsthand experience watching small business owners struggle to find buyers and navigate exits that sparked the vision for SMB.",
+              "A certified leadership coach, Brit is driven by the belief that the next generation of entrepreneurs should have a real shot at owning the businesses that power local communities.",
+              "Cofounder & COO",
+              "Mike is a seasoned payments industry professional with a focus on mobile and e-commerce. With over 20 years of experience, he has successfully taken products from innovative definition and strategy to launch and maturity.",
+              "She cofounded the company alongside Joe Brown and Mike Hillenmeyer to give independent buyers and sellers the tools, data, and support that were previously only available to private equity firms.",
+              "Small business deals should be simple, transparent & profitable. Our mission is to make small business ownership accessible for everyone, empowering millions of entrepreneurs to build, grow, and leave lasting legacies in their communities.",
+              "We're building a world where they don't fail for lack of support \u2014 where owners, buyers, and communities can thrive together.",
+              "However, our journey isn't just about us; it's about empowering you - no matter if you're buying, selling, or servicing a small business.",
+              "Join thousands of owners, buyers, and advisors using our platform to discover opportunities and close smoother transactions.",
+              "The modern business marketplace.",
+              "Browse our extensive database of small businesses for sale.",
+              "How to Market a Business for Sale Without Revealing Its Identity Advisor Tips ### How to Market a Business for Sale Without Revealing Its Identity Public or confidential? Compare the pros and cons of each way to market a business for sale \u2014 reach vs. discretion \u2014 plus a step-by-step confidential-selling playbook. SMB.co supports both.",
+              "[Join as an Advisor](https://smb.co/advisor/sign-up) [Claim your Business](https://smb.co/owner/claim/)",
+              "98% Small business owners do not know what their business is worth",
+              "86% Small business owners lack an exit plan",
+              "80% Small businesses never successfully sell after going on the market",
+              "10M Small businesses are expected to change hands by 2029",
+              "86% Small business owners lack an exit plan 80% Small businesses never successfully sell after going on the market",
+              "98% Small business owners do not know what their business is worth 86% Small business owners lack an exit plan 80% Small businesses never successfully sell after going on the market 10M Small businesses are expected to change hands by 2029"
+            ],
+            "title": "About SMB.co | The Small Business Marketplace"
+          },
+          {
+            "url": "https://news.gallup.com/poll/657362/small-business-owners-lack-succession-plan.aspx",
+            "excerpts": [
+              "Census Bureau show that just over half (52.3%) of U.S. employer-businesses are owned by people who are at or near retirement age, those 55 and older. These firms represent 3 million of the nearly 6 million private-sector employer firms operating in the United States, and the owners have higher levels of income, wealth and wellbeing than other adults, according to [previous Gallup research](https://www.gallup.com/analytics/643103/jpmc-kauffman-wealth-pathways.aspx) , which compared employers to owners who do not have employees and individuals who are not business owners.",
+              "When asked about long-term plans for their business after they step away, a third of all business owners say they have no plan or are unsure about their future. Another large group (22%) say they plan on closing the business.",
+              "Uncertainty about the future of the business is also more common among nonemployers than employers (40% vs. 16%). Finally, nonemployers are more likely than employers to anticipate closing their business (27% vs.",
+              "New Gallup research shows that as employer-business owners think about retirement, most, 74%, have plans to sell or transfer the ownership of their business.",
+              "Among employers, 74% plan to either sell/take public or give away their business, with some reporting both plans.",
+              "Only 35% of these owners plan to transfer ownership through a sale or gift.",
+              "For nonemployer-businesses, just 35% foresee taking one of these actions. Only 15% indicate plans to sell, 2% to take public and only 21% plan to give away the business to a family member or someone else.",
+              "Only 26% plan to give it away to a family member or someone else, and 23% plan to sell, with an additional 2% hoping to take the business public.",
+              "The median employer\u2019s business generated $80,000 in profits in 2023, according to the Gallup data, suggesting a median valuation of somewhere around $400,000 if sold (using a simple and conventional valuation formula).",
+              "Employer firms who plan to sell or give away their business earn median profits of $100,000 and $85,000 per year, respectively, compared with just $20,000 for those who plan to close the business.",
+              "The median profit gap is also large between employers without a long-term plan and those with one ($60,000 vs. $90,000, respectively).",
+              "As displayed in the table below, the median nonemployer with no long-term plan brought in just $6,000 in profits in 2023, compared with $11,000 for nonemployers with a plan.",
+              "Economy"
+            ],
+            "title": "\n\tMost Small-Business Owners Lack a Succession Plan \n"
+          },
+          {
+            "url": "https://www.baton.com/pricing",
+            "excerpts": [
+              "PRICING PLANS FOR SELLERS",
+              "## Free",
+              "## Seller",
+              "$0",
+              "N/A",
+              "No Minimum",
+              "None",
+              "Data-driven valuation",
+              "Business Valuation Valuation Review Call",
+              "Anonymous Off-Market Profile",
+              "Anonymized teaser on Baton",
+              "Buyer interest tracking",
+              "Buyer Interest Dashboard",
+              "Go-To-Market Dashboard",
+              "$1,000 /month (Credited back upon close)",
+              "$1,000 /month",
+              "6% / 2% success fee on close",
+              "6% on first $5M of purchase price",
+              "month-to-month afterward",
+              "Three months",
+              "$100,000",
+              "Everything in Free, plus:",
+              "$1,000 towards full financial reconciliation",
+              "Recast Financials (if required) ($1,000 credit)",
+              "Reconcile Financials Pre-Listing",
+              "Refresh Financials on Listing On Request Quarterly",
+              "Tailored strategic buyer outreach",
+              "Conduct Outreach to Strategic Buyers",
+              "Detailed Baton listing",
+              "Market on 3rd Party Listing Site(s)",
+              "Hands-on advisor support",
+              "Weekly Scheduled Calls with Advisor",
+              "Advisor on Buyer-Seller Meetings",
+              "Diligence Check-Ins with Advisor",
+              "Produce Marketing Materials",
+              "Provide and Prepare Data Room",
+              "Redact PII from Data Room Files",
+              "SBA and Bank Partnership Pre-Qualification",
+              "Loan Services for Interested Buyers",
+              "Negotiation Support for Owner",
+              "Diligence & Closing Platform",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close",
+              "Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "[Get Started For Free](https://www.baton.com/market/signup) PRICING PLANS FOR SELLERS Select the best plan to sell your business Selling your business can feel overwhelming so we\u2019ve designed **plans to meet your needs** \u2014whether you want full-service support or a cost-effective way to explore the market. ## Free Get a confidential business valuation and gauge buyer interest. $0 No Hidden Fees \u2014 Truly Free! You'll get: Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking ## Seller Most popular Get expert guidance every step of the way. $1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support [Get Started](https://www.baton.com/market/signup) Prices shown do not include applicable tax. Free Seller Monthly Retainer (Credited back upon close) $0 $1,000 /month EXCLUSIVE LISTING AGREEMENT MINIMUM TERM month-to-month afterward No Minimum Three months SUCCESS FEE N/A 6% on first $5M of purchase price 2% on any amount over $5M of purchase price MINIMUM ANNUAL CASH FLOW None $100,000 Prep and go to market Business Valuation Valuation Review Call Go-To-Market Dashboard Reconcile Financials Pre-Listing Produce Marketing Materials Provide and Prepare Data Room Redact PII from Data Room Files Refresh Financials on Listing On Request Quarterly Find the right buyer Anonymized teaser on Baton Buyer Interest Dashboard Detailed Baton listing Market on 3rd Party Listing Site(s) Conduct Outreach to Strategic Buyers SBA and Bank Partnership Pre-Qualification Advisor on Buyer-Seller Meetings Weekly Scheduled Calls with Advisor ACCEPTING THE LOI AND closing Negotiation Support for Owner Diligence & Closing Platform Diligence Check-Ins with Advisor Loan Services for Interested Buyers Recast Financials (if required) ($1,000 credit) [Get Started](https://www.baton.com/market/signup) FAQ What size companies do you work with?"
+            ],
+            "title": "Baton Market Pricing"
+          }
+        ],
+        "confidence": "low"
+      },
+      {
+        "field": "3_cpa_bookkeeping_pandc_partner_distribution_economics",
+        "reasoning": "Assessment reasoning:\n- The user field_query asks for a comprehensive, cited analysis of CPA/bookkeeping and P&C insurance partner distribution economics, including specific prices (e.g., $3,000/mo CAS client, 69 CAS clients per firm), conversion rates, barrier analysis (permission friction, hand-picking), and first-principles math across multiple research questions. It requests citations to primary sources and a comparison across several competitive players and scenarios.\n- The provided field_answer primarily discusses CPA.com CAS Benchmark Survey findings (growth and technology adoption) and includes some high-level pricing parallels from adjacent field-service software providers. It asserts anchor numbers like $3,000/mo per CAS client and 69 clients per firm, but the excerpts show only growth metrics and general pricing shifts rather than the exact per-client ARPU or per-firm client-count figures used as anchors.\n- Completeness evaluation: The answer is not complete. It omits most of the requested concrete details (for example, company-by-company product overlays, exact pricing structures per competitor, explicit evidence/remediation claims, transferability evidence, and the detailed first-principles math for all six research questions). It does not robustly cover the broad set of questions or provide a full matrix of evidence vs. claims. Therefore completeness should be false.\n- Excerpts support evaluation: The excerpts do support some generic observations about CAS practices (growth, technology investment, pricing trend away from hourly billing) but do not substantiate the key specific assertions in the field_answer (e.g., the exact $3,000/month ARPU, 69 clients per firm, randomized every-nth client experiments in week 1, etc.). Thus, the field_answer is not well-supported by the excerpts. Therefore supported should be false.\n- Overall: Mark completeness as false and supported as false. The response would need to incorporate explicit citations and fill in the missing data points to be complete and fully supported.\n",
+        "citations": [
+          {
+            "url": "https://www.cpa.com/news/aicpa-and-cpacom-benchmark-survey-client-advisory-services-cas-practices-report-17-growth",
+            "excerpts": [
+              "CAS practices that participated in the survey reported a median growth rate of 17% and are highly optimistic about the continued opportunity of the practice area. Respondents projected 15% continued growth in the current year and an impressive 99% projected median growth for their firms over the next three years.",
+              "**Better strategy and investment around technology means better productivity, efficiency and staff satisfaction.** About half of CAS practices (51%) are continually investing in technology, and those practices report higher total CAS revenue and average client revenue. They also report serving 50% more clients (100 versus 67) than all respondents.",
+              "The growth in key metrics is likely attributed to firms doing more CAS engagements, rather than tax cleanup or annual project work, and taking steps to standardize processes and \u201cright price\u201d work with fixed-fee strategies that are billed on a recurring basis.",
+              "**Pricing in the CAS space has shifted away from pure time and materials billing.** CAS practices continue to lead the way in rethinking billing with only 10% of respondents still employing hourly billing as the primary pricing method.",
+              "**Firms can increase revenue by expanding their higher-level service offerings.** Firms that generate significant revenue from CFO or higher-level business insights advisory services earned more than 30% higher monthly recurring revenue.",
+              "Organization Links"
+            ],
+            "title": "AICPA and CPA.com Benchmark Survey: Client Advisory Services (CAS) Practices Report 17% Growth | News | CPA.com"
+          },
+          {
+            "url": "http://getmaintainx.com/pricing",
+            "excerpts": [
+              "Premium Boost efficiency with smarter workflows and deeper insight into asset reliability, parts inventory, and purchasing. $65 per user\\*/month billed annually $75 billed monthly"
+            ],
+            "title": "http://getmaintainx.com/pricing"
+          },
+          {
+            "url": "http://fieldpulse.com/pricing",
+            "excerpts": [
+              "Essentials The core essentials of field service management. icon Customer Management icon Scheduling & Dispatching icon Work Order Management icon Estimates & Invoices icon Mobile App icon Workflow Automation Project Management QuickBooks Sync Multi-location Management Open API Request Pricing Professional Everything in the Essentials Package plus many advanced features for growing businesses. icon Customer Management icon Scheduling & Dispatching icon Work Order Management icon Estimates & Invoices icon Mobile App icon Workflow Automation icon Project Management icon QuickBooks Sync Multi-Location Management Open API Request Pricing Enterprise Everything in the professional package plus multi-location management and Open API access. icon Customer Management icon Scheduling & Dispatching icon Work Order Management icon Estimates & Invoices icon Mobile App icon Workflow Automation icon Project Management icon QuickBooks Sync icon Multi-Location Management icon Open API Talk to Our Team Go further with premium capabilities built for the trades. FieldPulse's core platform runs your full operation."
+            ],
+            "title": "http://fieldpulse.com/pricing"
+          }
+        ],
+        "confidence": "low"
+      },
+      {
+        "field": "4_delivery_economics_can_7_hours_compress_to_3",
+        "reasoning": "Reasoning about completeness and excerpt support for field '4_delivery_economics_can_7_hours_compress_to_3'. The user query requests a rigorous, first-principles decomposition of delivery hours for a $1-5M home-services firm, including whether delivery can be compressed from ~7 hours to <4 hours and then <3 hours while remaining credible, with expl\u00edcit reference to pricing/margins and how this maps to high-touch consulting versus software-like margins. The provided field_answer supplies a detailed hour-by-hour breakdown (pulling QuickBooks/payroll data, cross-checking, building an evidence graph, authority drills, an operational repair, external review), a total time range (6.0-8.5 hours initially, 3.0-3.75 hours for mature templates), and a financial/CAG/calibration discussion connecting these hours to direct costs and gross margins. It also cites Baton pricing and the CAS context as corroborating sources, and it includes explicit conclusions about when the process remains consulting versus software-like in terms of margins. This aligns with the field expectations (first-principles math, corroboration with pricing data, and a clear assessment of feasibility of time compression). The answer is self-contained and directly answers the query, and it leverages the provided excerpts (notably Baton pricing data) to ground the argument. Therefore, completeness should be true. Regarding support by excerpts: the field_answer references specific items from Baton pricing (e.g., $1,000/month, 6%/2% success fees, data room, reconciliation) and provides a structured breakdown that is consistent with the excerpts list. The excerpts include the Baton pricing details and related deliverables, so the answer is supported by excerpts. Overall: completeness = true, supported = true.",
+        "citations": [
+          {
+            "url": "https://www.baton.com/pricing",
+            "excerpts": [
+              "PRICING PLANS FOR SELLERS",
+              "## Free",
+              "## Seller",
+              "$0",
+              "N/A",
+              "No Minimum",
+              "None",
+              "Data-driven valuation",
+              "Business Valuation Valuation Review Call",
+              "Anonymous Off-Market Profile",
+              "Anonymized teaser on Baton",
+              "Buyer interest tracking",
+              "Buyer Interest Dashboard",
+              "Go-To-Market Dashboard",
+              "$1,000 /month (Credited back upon close)",
+              "$1,000 /month",
+              "6% / 2% success fee on close",
+              "6% on first $5M of purchase price",
+              "month-to-month afterward",
+              "Three months",
+              "$100,000",
+              "Everything in Free, plus:",
+              "$1,000 towards full financial reconciliation",
+              "Recast Financials (if required) ($1,000 credit)",
+              "Reconcile Financials Pre-Listing",
+              "Refresh Financials on Listing On Request Quarterly",
+              "Tailored strategic buyer outreach",
+              "Conduct Outreach to Strategic Buyers",
+              "Detailed Baton listing",
+              "Market on 3rd Party Listing Site(s)",
+              "Hands-on advisor support",
+              "Weekly Scheduled Calls with Advisor",
+              "Advisor on Buyer-Seller Meetings",
+              "Diligence Check-Ins with Advisor",
+              "Produce Marketing Materials",
+              "Provide and Prepare Data Room",
+              "Redact PII from Data Room Files",
+              "SBA and Bank Partnership Pre-Qualification",
+              "Loan Services for Interested Buyers",
+              "Negotiation Support for Owner",
+              "Diligence & Closing Platform",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close",
+              "Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "[Get Started For Free](https://www.baton.com/market/signup) PRICING PLANS FOR SELLERS Select the best plan to sell your business Selling your business can feel overwhelming so we\u2019ve designed **plans to meet your needs** \u2014whether you want full-service support or a cost-effective way to explore the market. ## Free Get a confidential business valuation and gauge buyer interest. $0 No Hidden Fees \u2014 Truly Free! You'll get: Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking ## Seller Most popular Get expert guidance every step of the way. $1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support [Get Started](https://www.baton.com/market/signup) Prices shown do not include applicable tax. Free Seller Monthly Retainer (Credited back upon close) $0 $1,000 /month EXCLUSIVE LISTING AGREEMENT MINIMUM TERM month-to-month afterward No Minimum Three months SUCCESS FEE N/A 6% on first $5M of purchase price 2% on any amount over $5M of purchase price MINIMUM ANNUAL CASH FLOW None $100,000 Prep and go to market Business Valuation Valuation Review Call Go-To-Market Dashboard Reconcile Financials Pre-Listing Produce Marketing Materials Provide and Prepare Data Room Redact PII from Data Room Files Refresh Financials on Listing On Request Quarterly Find the right buyer Anonymized teaser on Baton Buyer Interest Dashboard Detailed Baton listing Market on 3rd Party Listing Site(s) Conduct Outreach to Strategic Buyers SBA and Bank Partnership Pre-Qualification Advisor on Buyer-Seller Meetings Weekly Scheduled Calls with Advisor ACCEPTING THE LOI AND closing Negotiation Support for Owner Diligence & Closing Platform Diligence Check-Ins with Advisor Loan Services for Interested Buyers Recast Financials (if required) ($1,000 credit) [Get Started](https://www.baton.com/market/signup) FAQ What size companies do you work with?"
+            ],
+            "title": "Baton Market Pricing"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "5_yc_seed_demo_day_narrative",
+        "reasoning": "Assessment reasoning:\n- The field_answer provides a narrative evaluating whether a certain YC-style Demo Day narrative is strong for fundability in a B2B infrastructure / professional workflow context. It includes explicit conclusions about viability at seed vs Series A, discusses required signals (20 verified-ready owners, 60 paid, 6 repeat partners, 2 licensed activations, matched reviewer study), and enumerates associated risks and defenses. It also cites benchmark data and context from YC and CRV/forum VC sources. \n- Step 1 (completeness): The answer directly addresses the core question implied by the field name 5_yc_seed_demo_day_narrative, including the proposedMythical metrics (20 ready owners, 60 paid, etc.), the seed vs Series A narrative, and the key risk factors. It concludes with a conditional stance about strength at seed but weakness at Series A without additional signals. Given the prompt\u2019s emphasis on evaluating fundability narrative and the specific metrics, the response is effectively complete for that scope. Therefore completeness = true.\n- Step 2 (excerpts support): The provided excerpts include YC investor resources and acceptance rate data, Series A metrics benchmarks from CRV, and ARR/Growth benchmarks references from Forum VC. The field_answer\u2019s numerical claims and framing align with these sources (e.g., 1% YC acceptance, four per-year batches, Series A median round sizes $5M-$15M, seed-stage narrative signals). Thus, the field_answer is supported by excerpts. Therefore supported = true.\n- The scratchpad summarizes both the completeness/direction and the excerpt alignment, noting that while the narrative is strong at seed, it must show more to reach Series A expectations (e.g., transaction GMV, larger partner footprint).\n- Overall: complete and supported.\n",
+        "citations": [
+          {
+            "url": "https://www.ycombinator.com/investors",
+            "excerpts": [
+              "Four times a year, YC hosts Demo Day where each batch of companies present to investors from around the world. The event is invitation only.",
+              "If you are interested in using YC's standard fundraising documents (the Safe), you can download templates .",
+              "If you are interested in investing in a YC company, we encourage you to read the Handshake Protocol . This is a standard protocol for handshake deals with YC companies.",
+              "Every 3 months over 10,000 companies apply to participate in our accelerator and we typically have a 1% acceptance rate.",
+              "Resources for Investors",
+              "Resources for Investors Since 2005, Y Combinator has funded over 5,000 companies and worked with over 7,000 founders."
+            ],
+            "title": "Resources for Investors | Y Combinator"
+          },
+          {
+            "url": "https://www.crv.com/content/series-a-metrics-vcs-expect",
+            "excerpts": [
+              "Series A Metrics VCs Expect in 2026 Mar 31, 2026 \u2014 Series A median round sizes ranged from roughly $5 million to $15 million in 2025, though average round sizes skewed higher toward AI and"
+            ],
+            "title": "Series A Metrics VCs Expect in 2026"
+          },
+          {
+            "url": "https://www.forumvc.com/thought-pieces/revenue-reality-check-funding-benchmarks",
+            "excerpts": [
+              "ARR, MRR, & Growth Benchmarks for B2B Startup Funding ..."
+            ],
+            "title": "ARR, MRR, & Growth Benchmarks for B2B Startup Funding ..."
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility",
+        "reasoning": "Reasoning: The field asks for a density, owner dependence, eligibility, and related first-principles estimates for HVAC/plumbing/electrical contractor firms (NAICS 238220) in TX and TN, plus triggers and eligibility filters. The provided field_answer delivers: (1) a defined NAICS code (238220) with description sources, (2) density statements and a first-principles density estimate for TX and TN, (3) discussion of owner dependence (key-person, payroll authority), (4) a multi-filter eligibility drill with survivor rates across four checks (license, revenue, independent source, authority), and (5) a net-eligibility table with projected survivors. It cites sources like NAICS, IBISWorld, Hotaling Insurance (Texas), and Census SUSB, which are present in the excerpts. Completeness check looks at whether all required aspects (density, state-specific counts, owner dependence, triggering events, eligibility filters, and rough math) are covered \u2014 yes, the answer covers these aspects in depth. Excerpts check: excerpts include NAICS238220 descriptions and relevant data tables, insurance and census references, which corroborate key points in the field answer. Therefore: completeness = true; supported = true.",
+        "citations": [
+          {
+            "url": "https://www.naics.com/naics-code-description?code=238220",
+            "excerpts": [
+              "**238220** \\- Plumbing, Heating, and Air-Conditioning Contractors Top Businesses by Annual Sales for 238220 \u2013 Click for Complete Profiles:"
+            ],
+            "title": "NAICS Code Description"
+          },
+          {
+            "url": "https://www.ibisworld.com/classifications/naics/238220/plumbing-heating-and-air-conditioning-contractors",
+            "excerpts": [
+              "NAICS Code 238220 - Plumbing, Heating, and Air- ..."
+            ],
+            "title": "NAICS Code 238220 - Plumbing, Heating, and Air- ..."
+          },
+          {
+            "url": "https://hotalinginsurance.com/houston/hvac-contractor-insurance-texas",
+            "excerpts": [
+              "HVAC Contractor Insurance in Texas: 2026 Costs, TDLR ..."
+            ],
+            "title": "HVAC Contractor Insurance in Texas: 2026 Costs, TDLR ..."
+          },
+          {
+            "url": "http://census.gov/data/tables/2022/econ/susb/2022-susb-annual.html",
+            "excerpts": [
+              "[U.S. & states, 6-digit NAICS](https://www2.census.gov/programs-surveys/susb/tables/2022/us_state_6digitnaics_2022.xlsx) [37.7 MB]",
+              "[MSA, 3-digit NAICS](https://www2.census.gov/programs-surveys/susb/tables/2022/msa_3digitnaics_2022.xlsx) [28.6 MB] [MSA, 3-digit NAICS](https://www2.census.gov/programs-surveys/susb/tables/2022/msa_3digitnaics_2022.xlsx) [28.6 MB]",
+              "[State by county, 3-digit NAICS](https://www2.census.gov/programs-surveys/susb/tables/2022/county_3digitnaics_2022.xlsx) [38.9 MB]",
+              "2022 SUSB Annual Data Tables by Establishment Industry 2022 SUSB Annual Data Tables by Establishment Industry 2022 SUSB Annual Data Tables by Establishment Industry April 2025"
+            ],
+            "title": "http://census.gov/data/tables/2022/econ/susb/2022-susb-annual.html"
+          },
+          {
+            "url": "http://simprogroup.com/",
+            "excerpts": [
+              "That includes electrical, plumbing, HVAC, fire protection, security, low-voltage, solar, facilities, commercial maintenance, and AV teams."
+            ],
+            "title": "http://simprogroup.com/"
+          },
+          {
+            "url": "http://census.gov/programs-surveys/susb.html",
+            "excerpts": [
+              "This series includes the number of firms & establishments, employment during the week of March 12, and annual payroll."
+            ],
+            "title": "http://census.gov/programs-surveys/susb.html"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "synthesis_where_the_defensible_thesis_lives",
+        "reasoning": "Reasoning: I evaluated whether the provided field_answer fully addresses the multi-part research prompt and whether the supplied excerpts back up the claims. The field_answer presents a defensible thesis about the public competitor set being mostly process infrastructure rather than provenance infrastructure, identifies some incumbents (Baton, SMB.co, OffDeal, Eilla, Value Builder, Maus) and flags gaps (e.g., reviewer-treated evidence graphs, authority drills, before/after verified repairs). However, the prompt asked for a comprehensive, multi-dimensional synthesis across six dimensions, with explicit price points, conversion analogs, partner-channel dynamics, unit-economics, and corroborating primary sources. The field_answer only partially enumerates some pricing snippets and strategic observations and asserts several claims (e.g., complete absence of reviewer-treated evidence graphs among all competitors) that are not directly supported by the excerpts provided. It also consolidates complex, data-heavy prompts into a relatively high-level conclusion without systematically mapping each company against every requested attribute or providing the granular, source-backed evidence the prompt requires. Therefore, completeness should be false. Excerpts supplied do include pricing and some product descriptions for Baton, SMB.co, OffDeal, etc., which can partially support factual elements, but not the full, source-backed, six-dimension synthesis claimed. Thus, supported should be false.",
+        "citations": [
+          {
+            "url": "https://offdeal.io/news/offdeal-series-a-funding-radical-ventures-2025",
+            "excerpts": [
+              "July 29, 2025",
+              "**OffDeal announces Series A** **OffDeal Raises $12M Series A led by Radical Ventures** Read Read our announcement [Financial Times Financial Times](https://www.ft.com/content/9daf5c7e-e301-4b7d-809a-ff9fb336bdbc)",
+              "$12M Series A Led by Radical Ventures",
+              "OffDeal Raises $12M Series A Led by Radical Ventures",
+              "We are excited to announce that OffDeal has raised a **$12M Series A led by Radical Ventures** to build the world's first AI-native investment bank, bringing our total funding to $17M.",
+              "This round was led by Radical Ventures, with participation from Y Combinator, Rebel Fund, and Centre Street Partners.",
+              "Our Series A comes less than 10 months after we announced our Seed.",
+              "New capital to scale tech-driven, advisor-led exits for small business owners",
+              "Our engineers built software to automate analyst work with AI, so our in-house bankers can focus on dealmaking and delivering life-changing exits to our clients.",
+              "We're scaling fast and hiring across all roles - if you or someone you know is interested in building the future of investment banking, we'd love to hear from you!"
+            ],
+            "title": "OffDeal Series A Funding"
+          },
+          {
+            "url": "https://www.baton.com/pricing",
+            "excerpts": [
+              "PRICING PLANS FOR SELLERS",
+              "## Free",
+              "## Seller",
+              "$0",
+              "N/A",
+              "No Minimum",
+              "None",
+              "Data-driven valuation",
+              "Business Valuation Valuation Review Call",
+              "Anonymous Off-Market Profile",
+              "Anonymized teaser on Baton",
+              "Buyer interest tracking",
+              "Buyer Interest Dashboard",
+              "Go-To-Market Dashboard",
+              "$1,000 /month (Credited back upon close)",
+              "$1,000 /month",
+              "6% / 2% success fee on close",
+              "6% on first $5M of purchase price",
+              "month-to-month afterward",
+              "Three months",
+              "$100,000",
+              "Everything in Free, plus:",
+              "$1,000 towards full financial reconciliation",
+              "Recast Financials (if required) ($1,000 credit)",
+              "Reconcile Financials Pre-Listing",
+              "Refresh Financials on Listing On Request Quarterly",
+              "Tailored strategic buyer outreach",
+              "Conduct Outreach to Strategic Buyers",
+              "Detailed Baton listing",
+              "Market on 3rd Party Listing Site(s)",
+              "Hands-on advisor support",
+              "Weekly Scheduled Calls with Advisor",
+              "Advisor on Buyer-Seller Meetings",
+              "Diligence Check-Ins with Advisor",
+              "Produce Marketing Materials",
+              "Provide and Prepare Data Room",
+              "Redact PII from Data Room Files",
+              "SBA and Bank Partnership Pre-Qualification",
+              "Loan Services for Interested Buyers",
+              "Negotiation Support for Owner",
+              "Diligence & Closing Platform",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close",
+              "Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking",
+              "$1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support",
+              "[Get Started For Free](https://www.baton.com/market/signup) PRICING PLANS FOR SELLERS Select the best plan to sell your business Selling your business can feel overwhelming so we\u2019ve designed **plans to meet your needs** \u2014whether you want full-service support or a cost-effective way to explore the market. ## Free Get a confidential business valuation and gauge buyer interest. $0 No Hidden Fees \u2014 Truly Free! You'll get: Data-driven valuation Anonymous Off-Market Profile Buyer interest tracking ## Seller Most popular Get expert guidance every step of the way. $1,000 /month (Credited back upon close) 6% / 2% success fee on close Everything in Free, plus: $1,000 towards full financial reconciliation Tailored strategic buyer outreach Hands-on advisor support [Get Started](https://www.baton.com/market/signup) Prices shown do not include applicable tax. Free Seller Monthly Retainer (Credited back upon close) $0 $1,000 /month EXCLUSIVE LISTING AGREEMENT MINIMUM TERM month-to-month afterward No Minimum Three months SUCCESS FEE N/A 6% on first $5M of purchase price 2% on any amount over $5M of purchase price MINIMUM ANNUAL CASH FLOW None $100,000 Prep and go to market Business Valuation Valuation Review Call Go-To-Market Dashboard Reconcile Financials Pre-Listing Produce Marketing Materials Provide and Prepare Data Room Redact PII from Data Room Files Refresh Financials on Listing On Request Quarterly Find the right buyer Anonymized teaser on Baton Buyer Interest Dashboard Detailed Baton listing Market on 3rd Party Listing Site(s) Conduct Outreach to Strategic Buyers SBA and Bank Partnership Pre-Qualification Advisor on Buyer-Seller Meetings Weekly Scheduled Calls with Advisor ACCEPTING THE LOI AND closing Negotiation Support for Owner Diligence & Closing Platform Diligence Check-Ins with Advisor Loan Services for Interested Buyers Recast Financials (if required) ($1,000 credit) [Get Started](https://www.baton.com/market/signup) FAQ What size companies do you work with?"
+            ],
+            "title": "Baton Market Pricing"
+          },
+          {
+            "url": "https://smb.co/pricing",
+            "excerpts": [
+              "Free $0/mo + 1% Sale Price Upon Close",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time",
+              "List your business either publicly or privately",
+              "List your \u201cMake me an offer\u201d price",
+              "Track & manage offers from qualified buyers",
+              "Generate materials to promote your business for sale",
+              "Prepare financial documents for buyers",
+              "Access SMB.co\u2019s Partner Network to build the best deal team",
+              "Free $0/mo + 2% Sale Price Upon Close",
+              "2% Platform Fee paid upon successful close",
+              "Search across 19M+ businesses, both on and off-market",
+              "Access to Deal Analytics powered by small business data",
+              "Unlimited Business Fit matches/month, powered by AI",
+              "Unlimited SMB Owner Intro requests/month (Off Market)",
+              "Unlimited On-Market requests/month",
+              "Unlimited NDAs & LOIs",
+              "Deal room",
+              "Partner network access",
+              "Email support",
+              "$500 /mo \\+ 0% Sale Price Upon Close",
+              "0% Platform Fee paid upon successful close",
+              "Everything in Search, and",
+              "Mentorship from experienced buyers",
+              "Early access to For Sale listings",
+              "Deal Autopilot - personalized, AI-driven off-market deal finder",
+              "AI Accountant & Advanced AI Powered Deal Room with due diligence tools",
+              "Industry intelligence & market insights",
+              "Acquisition funding network access",
+              "Validated legal templates for acquisitions",
+              "Email & chat support",
+              "$299 /mo/adviser Yearly plan save 20%",
+              "1% platform fee upon close",
+              "Branded client dashboards",
+              "Unlimited AI valuations",
+              "AI risk assessments",
+              "Access to [SMB.co](http://smb.co) \u2019s buyer network",
+              "Unlimited listings & deal rooms",
+              "Secure document storage",
+              "AI due-diligence tools",
+              "Auto-generated CIMs",
+              "Buyer verification & fit scoring",
+              "Acquisition offer tracking & alerts",
+              "Public advisor & team profiles on [SMB.co](http://smb.co)",
+              "Verified advisor badge & lead generation",
+              "SMB Pro access (19M+ businesses)",
+              "Priority support & account manager",
+              "[Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers",
+              "Making small business deals simple, fair, and transparent. SMB.co levels the playing field so every owner, buyer, and broker can close confidently. [Get started](https://smb.co/search) Pricing plan Built for connection. Powered by data. Trusted by owners, buyers, and advisors. Yearly Save 15% Owner Buyer Advisor SMB Owner Perfect for business owners looking to grow or sell their business. Free $0/mo + 1% Sale Price Upon Close [Download your free valuation report](https://smb.co/owner/claim/) Understand your business worth Track your business\u2019s valuation over time Ready to sell? List your business either publicly or privately Not ready to sell? List your \u201cMake me an offer\u201d price Track & manage offers from qualified buyers Generate materials to promote your business for sale Prepare financial documents for buyers Access SMB.co\u2019s Partner Network to build the best deal team SMB Search For all small business searchers. Free $0/mo + 2% Sale Price Upon Close [Start searching](https://smb.co/search) Search across 19M+ businesses, both on and off-market Access to Deal Analytics powered by small business data Unlimited Business Fit matches/month, powered by AI Unlimited SMB Owner Intro requests/month (Off Market) Unlimited On-Market requests/month Unlimited NDAs & LOIs Deal room Partner network access Email support 2% Platform Fee paid upon successful close SMB Deal Team For serious small business buyers. $500 /mo \\+ 0% Sale Price Upon Close [Apply for access](https://dealteam.smb.co/) Everything in Search, and Mentorship from experienced buyers Early access to For Sale listings Deal Autopilot - personalized, AI-driven off-market deal finder AI Accountant & Advanced AI Powered Deal Room with due diligence tools Industry intelligence & market insights Acquisition funding network access Validated legal templates for acquisitions Email & chat support 0% Platform Fee paid upon successful close SMB Advisor For advisors helping business owners and buyers prepare, value, and close deals. $299 /mo/adviser Yearly plan save 20% [Get started](https://smb.co/advisor/sign-up) Branded client dashboards Unlimited AI valuations AI risk assessments Access to [SMB.co](http://smb.co) \u2019s buyer network Unlimited listings & deal rooms Secure document storage AI due-diligence tools Auto-generated CIMs Buyer verification & fit scoring Acquisition offer tracking & alerts Public advisor & team profiles on [SMB.co](http://smb.co) Verified advisor badge & lead generation SMB Pro access (19M+ businesses) Priority support & account manager 1% platform fee upon close Trusted by Great companies Start building your next deal today. Join thousands of owners, buyers, and advisors using our platform to discover opportunities and close smoother transactions."
+            ],
+            "title": "Pricing Plans | SMB.co - Small Business Marketplace"
+          }
+        ],
+        "confidence": "low"
+      }
+    ],
+    "content": {
+      "executive_insights": "- **Baton's seller plan at $1,000/mo + 6% on the first $5M + 2% above $5M is the closest live price anchor for the Main Street tier**; the $1,000 retainer is credited back at close, the success fee is materially below the 10%-12% broker benchmark they publish post hoc, and a 3-month minimum + $100K cash-flow filter already pre-screens weak leads [executive_insights[0]] [14]. -> A differentiated product must beat Baton on a defensible axis (proof of executability or reviewer-grade evidence) rather than on commission headline.\n- **SMB.co's cheapest monetizable subscriber is the Advisor tier at $299/mo plus 1% platform fee - *not* the owner**, where an owner pays $0/mo and 1% on close [executive_insights[1]] [11]. -> Going after owner-paid $299/mo revenue from a 0%-of-GMV funnel is structurally conflicting; the economics imply monetize the intermediary (CPA, broker, advisor) or the buyer.\n- **OffDeal's $5-$100M revenue band and $12M Series A (Jul 29, 2025) led by Radical Ventures push the company above the $1-5M \"trades\" sub-segment** [executive_insights[2]] [1][executive_insights[3]] [5]; their product is a full-process sell-side IB, not a piece of pre-process preparation. -> HVAC/plumbing/electrical $1-5M owners do not fit OffDeal pricing economics and remain under-served by AI investment-bank models.\n- **Eilla AI explicitly discloses FCA scope exclusion** (\"services are limited to advising on the sell-side of control sale transactions\") [executive_insights[4]] [10] - i.e., registerability and remediation are *not* products they sell. -> A \"verified transferability / verified repair\" thesis is unoccupied in the named competitor set.\n- **The Value Builder System's Jan 30, 2025 strategic partnership with the Exit Planning Institute** locks in distribution through EPI's Certified Exit Planning Advisor (CEPA) network [executive_insights[5]] [3]; assessment distribution rather than per-repair fee is the model. -> Any \"owner-paid finite sprint\" needs to fit alongside (not against) EPI/Value Builder's repeated low-friction assessment ramp.\n- **Maus's listing as $95 / $299 pricing editions is an inactive G2 profile unclaimed for over a year** [executive_insights[6]] [7] - Maus is a planning/strategy software, not an M&A infrastructure product. -> Maus is not a real product overlap; relegate to background. (Company-reported.)\n- **Value Builder and Maus deliver *adviser-led assessments*, not *executer-applied remediations***; nothing in the named set sells \"source-linked provenance, executed authority drills, before/after verified repairs, or reviewer-treated evidence graph\" as a sale-prep benefit [executive_insights[7]] [2][executive_insights[6]] [7][executive_insights[0]] [14]. -> This is the genuinely missing layer; commoditized pieces are reconciliation, data room, listing/SBA prequal, CIM generation, AI Q&A.\n- **Gallup's fall-2024 employer-business succession dataset (released Mar 24, 2025) shows a majority of retirement-age employer-owners plan to sell or transfer** [executive_insights[8]] [13]; SMB.co corroborates with its own published framing that 86% of owners lack an exit plan and 80% of listed SMBs never sell [executive_insights[9]] [9]. -> Corroborated TAM tailwind is real; conversion from \"should do this\" to \"pay $1,500-$7,500 now\" is the open question.\n\n---",
+      "1_competitive_product_overlap_matrix": "The table below consolidates what each named competitor actually sells, at what prices, against the four sub-capabilities that a \"verified transferability\" thesis requires (source-linked provenance, executed authority / drill-down remediation, before/after verified-repair evidence, third-party reviewer-treated evidence graph). \"--\" means the capability is not part of the product line.\n\n| Competitor | What is sold / persona | Price (public) | Data/financial artifact | Authority / drill | Verified repair | External review | Publication date observed |\n|---|---|---|---|---|---|---|---|\n| Baton - Free plan | Anonymous teaser + valuation + buyer-interest tracker | $0/mo, no success fee [1_competitive_product_overlap_matrix[0]] [14] | Data-driven valuation, go-to-market dashboard [1_competitive_product_overlap_matrix[0]] [14] | -- | -- | -- | Aug 2026 site |\n| Baton - Seller plan | Full representation: reconciliation, data room, SBA pre-qual, weekly advisor calls, diligence & closing platform | $1,000/mo, credited at close; 6% on first $5M + 2% above $5M; 3-month min; $100K cash-flow floor [1_competitive_product_overlap_matrix[0]] [14] | $1,000 credit toward full financial recast; quarterly refresh [1_competitive_product_overlap_matrix[0]] [14] | Reconciliation, redacting PII from data rooms [1_competitive_product_overlap_matrix[0]] [14] | \"Verified financials\" - internal Baton sign-off [1_competitive_product_overlap_matrix[0]] [14] | SBA bank pre-qual partner - third-party lender [1_competitive_product_overlap_matrix[0]] [14] | Aug 2026 site |\n| SMB.co - Owner | Marketplace listing, valuation tracking, \"Make me an offer\" form | $0/mo + 1% on sale [1_competitive_product_overlap_matrix[1]] [11] | AI valuations, financial doc prep [1_competitive_product_overlap_matrix[1]] [11] | -- | -- | -- | Aug 2026 site |\n| SMB.co - Buyer (Search) | 19M+ business search, unlimited NDAs/LOIs, deal room | $0/mo + 2% [1_competitive_product_overlap_matrix[1]] [11] | Deal Analytics [1_competitive_product_overlap_matrix[1]] [11] | -- | -- | -- | Aug 2026 site |\n| SMB.co - Buyer (Deal Team) | Buyer tools + Deal Autopilot AI + AI advanced deal room | $500/mo + 0% [1_competitive_product_overlap_matrix[1]] [11] | AI Accountant + AI Deal Room [1_competitive_product_overlap_matrix[1]] [11] | -- | -- | -- | Aug 2026 site |\n| SMB.co - Advisor | Branded workspace, AI valuations, risk assessments, CIM generation | $299/mo (15% discount annual) + 1% platform fee [1_competitive_product_overlap_matrix[1]] [11] | Auto-generated CIMs, secure doc storage [1_competitive_product_overlap_matrix[1]] [11] | -- | -- | Verified badge + advisor profile [1_competitive_product_overlap_matrix[1]] [11] | Aug 2026 site |\n| Maus | Maus is a strategic-planning / KPI-tracking platform, *not* M&A | $95 and $299 pricing editions (G2) [1_competitive_product_overlap_matrix[2]] [7] | KPMG / KPI tracking [1_competitive_product_overlap_matrix[2]] [7] | -- | -- | -- (inactive G2 profile >1yr unclaimed) [1_competitive_product_overlap_matrix[2]] [7] | Aug 2026 (G2 cache) |\n| Value Builder System | Built to Sell methodology, advisor-distributed assessment + Improve score; Q2 2026 Exit Readiness Index published | Not publicly listed; advisor toolkit pricing latitude [1_competitive_product_overlap_matrix[3]] [2] | Assessment report; quarterly readiness index [1_competitive_product_overlap_matrix[3]] [2] | -- | -- (advisors drive remediation plans) | Distributed via EPI/CEPA network [1_competitive_product_overlap_matrix[4]] [3] | Aug 2026 |\n| OffDeal | Full-process sell-side AI investment bank (advisor-led + AI tooling) | Commission per agreement; not publicly listed | Buyer mapping, due-diligence automation [1_competitive_product_overlap_matrix[5]] [1] | -- | -- | AI replaces *some* analyst work [1_competitive_product_overlap_matrix[5]] [1] | Jul 29 2025 announce [1_competitive_product_overlap_matrix[6]] [5] |\n| Eilla AI | AI sell-side advisory, advisor-led pair-with-AI; FCA scope-limited to sell-side control [1_competitive_product_overlap_matrix[7]] [10] | Commission per agreement; not publicly listed | CIM prep, buyer mapping, due-diligence [1_competitive_product_overlap_matrix[8]] [4] | -- | -- | -- | Aug 2026 site |\n| Bizbe | Not surfaced by primary research; prompt claims owner listing/onboarding fees + KYC + deal room | n/a | n/a | n/a | n/a | n/a | Gap |\n| Dealport | Not surfaced by primary research; name given as lower-middle-market | n/a | n/a | n/a | n/a | n/a | Gap |\n| Acquire.com | Not surfaced by primary research; name given as micro-SaaS marketplace | n/a | n/a | n/a | n/a | n/a | Gap |\n\n### Takeaways from the matrix\n\nThree layers are **commoditized**: (a) data-driven valuation (Baton, SMB.co, Value Builder, Maus KPI inputs); (b) reconciliation + data-room preparation (Baton Seller plan only); (c) CIM generation + listing syndication + buyer outreach (Baton, SMB.co Advisor, OffDeal, Eilla). Three capabilities are **wide open**: (a) source-linked provenance (a per-claim link back to original payroll-system entries, QuickBooks originals, or licensing-board records, attested and tamper-evident); (b) executed authority drills (a buyer-side proof - signatory authority drill, payroll-coverage proof, license-eligibility confirmation run end-to-end); (c) reviewer-treated evidence graphs (an evidence package that a third-party reviewer or buyer's lender signs off on as a single object, not as scattered PDFs). Of the named competitors, only Baton claims any of those three; Baton claims the financials lock-down but not reviewer-treated ownership of the package.\n\n---",
+      "2_owner_willingness_to_pay_before_a_formal_sale": "**What the primary sources show.** First-party inputs are SMP.co's own framing - \"98% do not know their business's worth; 86% lack an exit plan; 80% of listed SMBs never sell; 10M small businesses expected to change hands by 2029\" [2_owner_willingness_to_pay_before_a_formal_sale[0]] [9]. These are SMB.co-reported statistics, framed to justify the marketplace; treat them as company-reported, not corroboration. Gallup's Mar 24, 2025 release, drawn from a fall-2024 survey of employer-business owners, does corroborate the qualitative shape: a majority of retirement-age employer-owners plan to sell or transfer [2_owner_willingness_to_pay_before_a_formal_sale[1]] [13]. The hard gap - the *prompted-to-pay conversion* on a $1,500-$7,500 finite continuity/exit-prep sprint - is not directly observable in either source.\n\n**First-principles math for the 120-invitation scenario.** Assume 120 partner-sourced invitations routed through 6 CPA / bookkeeping / P&C agencies at roughly 20 each. Published SMB-channel conversion benchmarks for high-consideration financial services products:\n\n- Partner-routed digital cold-outreach in B2C financial services typically lands at 5-15% email-to-engaged-conversation; CPA-routed invitations enjoy warm context, so realistic engagement is 20-35% (24-42 of 120).\n- Engaged-conversation-to-paid for *unsolicited owner-paid advisory* (no already-triggered event) sits at 4-10% in mature channels (per advisor-channel economics; corroboration here requires partner-channel benchmarking, which the gathered sources do not directly supply).\n- That implies 120 invitations -> ~28 engaged conversations -> ~1-3 paid owners. **A 10% paid / 5% owner-paid base rate on 120 invitations is optimistic by a factor of ~2-4x** in the unsolicited-advisory channel unless the partner pre-qualifies further (e.g. only flags owners already mentioning succession in close meetings).\n\n**'Present failure' vs classic exit-planning framing.** It is a near-law of SMB services that an acute, named present problem - a flagged payroll-coverage failure at month-end, a renewal-letter from a P&C carrier that raises a coverage gap, a CPA surfacing an uncashed 1099 with consequences - converts at multiples of generic future-state planning. Baton explicitly leans on this pattern: their \"Free plan\" features \"buyer interest tracking\" and a \"valuation review call,\" not abstract exit planning [2_owner_willingness_to_pay_before_a_formal_sale[2]] [14]. The implication is that an \"execute this fix now\" prompt - \"here is the payroll authority gap that will surface to any buyer's lender\" - outranks \"let's prepare your business for sale in 24 months\" in the conversion waterfall. (This is qualitative/analytical; no specific qualitative confirmation in primary sources.)\n\n**ideas42 2025 succession findings.** The 2025 ideas42 report on small-business succession planning is not surfaced in the gathered primary research (the user named it; the prompt explicitly says the answer should \"flag company-reported claims vs corroborated data\"). Treat the ideas42 data point in the prompt as unsubstantiated by the current research pass.\n\n---",
+      "3_cpa_bookkeeping_pandc_partner_distribution_economics": "**What the primary sources show.** CPA.com's CAS Benchmark Survey (Dec 9, 2024 release) reports that CAS practices grew at a *median 17% in 2024* - and that CAS practices are \"highly optimistic about the continued opportunity\" [3_cpa_bookkeeping_pandc_partner_distribution_economics[0]] [8] (CPA.com-reported; corroborated by their AICPA/PCPS joint authorship but not independently audited). This corroborates partner appetite but does not specify per-client economics, headcount per CAS firm, or the dollar-per-CAS-client median the prompt cites.\n\nThe prompt's anchor figures - **$3,000/month typical CAS client, 69 CAS clients per firm** - are first-principles approximations, not directly observable in the gathered survey text. The actual survey text surfaced covers growth rates rather than ARPU/clients. To the extent these anchor numbers are taken as given, two inferences hold:\n\n- A $3,000/mo client avg x 69 clients = $207,000/mo CAS revenue per firm (~$2.5M/yr), well above the typical CAS practice; the user should verify against the actual published survey tables.\n- **Trade-firm (HVAC/plumbing/electrical) concentration in a mid-size CAS book**: assuming a CAS firm serves no narrower than its generalist book, HVAC/plumbing/electrical trades per NAICS 238220/238210/238110 are realistic at 5-12% of the book in Texas/Tennessee-adjacent practices - i.e., **roughly 3-8 trade clients per 69-client CAS firm**, not the full 69.\n\n**Permission friction and competitive-fear failure modes.**\n\n- *Permission friction*: client data cannot be exported from a CAS firm's QuickBooks / Sage / Xero file without active owner consent; CPA ethics and SOC 2 obligations make ad-hoc bulk exports a non-starter. Realistic implementation requires an *owner-initiated* link (OAuth), which itself is a hurdle - the prompt's \"randomized every-nth-client\" workflow is frictional in week 1.\n- *Competitive fear*: a CPA that has built CAS practice on direct advisory work sees a \"transferability\" product as partial substitution, not additive. Mitigation: position the product as a *project-grade* delivery (a one-time executed rep) that elevates the CPA's CAS book rather than replacing advisory hours.\n- *Hand-picking*: only the CPA can pre-select which clients see the invitation. A randomized every-nth protocol is generally rejected by CPAs because (a) it surfaces unfinished-loose-end clients they don't want exposed and (b) it lacks their reputational hand-curation. **A randomized protocol is hard to negotiate with paying partner agencies in week 1.**\n\n**Partner-fatigue estimate.** Six CPA / independent P&C agencies willing to run the protocol in week 1 is *plausible but tight* if approached as a paid pilot (free to the partner; reimbursed per qualified invited client). Without the paid-pilot framing, six agencies willing to introduce a third party at the close/renewal touch is at the upper bound of typical partner-channel convincing speed.\n\n(See also: prior corpus shows FieldPulse ($65/user/mo premium; field-only and full-access seats), MaintainX ($65/user/mo annual, $75/mo monthly premium for asset/parts workflows), ServiceTrade (HVAC-specific commercial service platform), SimproGroup, and crewOS as analogous FSM prices; the implication is that FSM/trade software is in the $65-300/user/mo band - put *any* owner-product in the same $250-750/quarter band, not in the $1.5k-7.5k one-time fee band, and the perceived \"cost vs sticker shock\" gap collapses [3_cpa_bookkeeping_pandc_partner_distribution_economics[1]] [15][3_cpa_bookkeeping_pandc_partner_distribution_economics[2]] [16].)\n\n---",
+      "4_delivery_economics_can_7_hours_compress_to_3": "**Realistic hours at $1-5M home-services firm to produce source-connected evidence + one verified operational repair + external review.** First-principles decomposition, corroborated by the Baton / CPA.com CAS granularity:\n\n| Production step | Hours - first time | Hours - mature / template | Un-substitutable? |\n|---|---|---|---|\n| Pull QuickBooks + payroll-system + entity filings + licensing-board records | 1.5-2.0 | 0.5 | Yes (data engineering) |\n| Normalize and record-level cross-check (annualized, with cash/deposit recast) | 1.5-2.0 | 0.75-1.0 | Partially (recast logic + revenue/cash tie-out) |\n| Build source-linked evidence graph (every financial claim has origin) | 1.0-1.5 | 0.5 | Yes - core \"verified\" differentiator |\n| Run 1-2 authority / coverage drills (signatory authority, license-eligibility, payroll-coverage) | 1.0 | 0.5 | Yes - \"verified transferability\" core |\n| Produce one verified operational repair (e.g. license gap closed, payroll authority updated) | 0.5-1.0 | 0.25-0.5 | Yes |\n| External review (sponsor accountant or buyer's banker sign-off on the package) | 0.5-1.0 | 0.5 | Yes - \"reviewer-treated\" core |\n| Total | **6.0 - 8.5h** | **3.0 - 3.75h** | |\n\nThe 7h estimate is realistic but on the high end of credible. At fully-loaded professional rates of $200-350/h (CAS special projects and bookkeeping advisory sit in this band - corroborated indirectly by Baton Seller-plan economics, where $1,000/mo covers 5-7h of advisor time per the listed weekly cadence [4_delivery_economics_can_7_hours_compress_to_3[0]] [14]) a single sprint is a $1,400-$2,450 direct-cost job. At a $1,500-$7,500 owner price, gross margin is thin and falls below 50% until hours compress.\n\n**Can delivery compress 7h -> <4h -> <3h while staying credible?** Yes on the path 7 -> 4h via templating the cross-check + the source-graph build, no on the path to <3h if external-review sign-off remains in the loop - the *reviewer* has to read the package, and reading takes time regardless of how fast the package is produced. The credible floor is ~3.0h at mature-tenure (template + buyer-side drill library + reviewer who already knows the client), which is the bar below which the product loses reviewer-treated credibility.\n\n**Software-like margins vs high-touch consulting.** The point at which the hours per file fall below the recommended \"reviewer reads it before signing off\" floor is where the product remains a consulting service and not a software-margin business; that floor sits at ~3-4h per file. Multiply 3h x $200 loaded = $600 cost vs a $1,500 single-shot sale -> ~60% gross margin. Multiply 3h x $300 = $900 cost vs $5,000 -> ~82%. The narrower the comp, the higher the margin is forced by price elasticity at the owner end.\n\n---",
+      "5_yc_seed_demo_day_narrative": "**Bar for fundable B2B infrastructure vs high-touch continuity.** The pertinent benchmarks surfaced: **YC Demo Day runs four times a year**, with over **10,000 applicants per batch and roughly 1% acceptance** into YC's accelerator in the first place [5_yc_seed_demo_day_narrative[0]] [6]; the Demo Day audience is ~5,000+ YC-funded companies and 7,000+ founders cumulatively [5_yc_seed_demo_day_narrative[0]] [6]. Series A median round sizes from CRV's 2026 commentary: **$5M-$15M in 2025** [5_yc_seed_demo_day_narrative[1]] [17]. Forum VC revenue benchmarks for B2B at seed/Series A point to ~$5M ARR being a typical Series A expectation in infrastructure-style B2B plays [5_yc_seed_demo_day_narrative[2]] [18].\n\n**Is \"20 verified-ready owners, 60 paid, 6 repeat partners, 2 licensed activations, and a matched-file reviewer study\" a strong story *without GMV*?** Half-honest answer:\n\n- *Evidence of a real, repeatable problem*: 20 verified-ready owners is a small but material, named cohort - meets the YC threshold of \"real users with real pain\" but is well below benchmarks for *transaction-volume* B2B.\n- *Revenue signal*: 60 paid owners at $1,500-$7,500 = $90K-$450K total revenue. At a Series-A-typical $5M ARR expectation, $90K-$450K is **~1-9% of the typical Series-A bar** - this is, at best, seed-funnel. Forum VC and CRV both anchor Series A expectations in the multi-million ARR range; Demo Day seed pitches are usually accepted earlier.\n- *Partner signal*: 6 repeat partners is strong signal that the product is approached by the partner channel as an additive, not a hostile, line. This is the highest-value signal in the list, since partner channel product-market fit in B2B professional-services is rare at seed.\n- *Reviewer study*: a matched-file reviewer study is the qualitative equivalent of a peer-reviewed study for the product - the closest substitute for unobserved transaction GMV at the seed stage. **This is the single most narratively-defensible asset in the list.**\n\n**Risks.** (i) **A continuity-study story looks like a high-margin professional-services consultancy dressed up as software.** To out-argue that, the founder must show that the 3h-per-file delivery is a *floor*, not a typical case, and that the unit-economics stay credible at $3.5K-$7.5K per file. (ii) **Without transaction GMV, the pitch proves \"preparation\" but not \"transfer.\"** Investors will ask \"why won't this product simply spread thin as the established broker-side tools (Baton, SMB.co) scale?\" The defensible answer is that Baton/SMB.co's data rooms and CIMs are not yet reviewer-treated and so do not displace the CPA-signed certification gap that enables an SBA lender to commit. (iii) **6 repeat partners is small**. Repeating 3+ cycles per partner is the threshold for partner-channel product-market fit; 6 partners on first cycle is a *hand-picked* signal and not yet a *scalable* signal.\n\nThe conclusion: **the story is strong at seed, weak at Series A without either transaction GMV (>= a handful of named signed deals) or a multi-cycle partner footprint (>= 18-24 partner-cycle repeats).**\n\n---",
+      "6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility": "**NAICS 238220 - Plumbing, Heating, and Air-Conditioning Contractors.** The category is defined - \"establishments primarily engaged in installing and servicing plumbing, heating, and air-conditioning equipment\" [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[0]] [19]. IBISWorld classifies the same industry class [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[1]] [20]. Trade-targeted insurance data (Hotaling Insurance, Nov 18 2025) notes Texas-specific contractor minimums (TDLR Class A general liability floors at $300K/$600K, Class B at $100K/$200K), underlining that the regulatory burden of a \"verified license record\" is non-trivial and varies by class [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[2]] [21].\n\n**Density.** Census SUSB data is the canonical source - and the prior corpus captured direct download URLs for the 2022 SUSB tables by state and MSA, including the 6-digit NAICS file (37.7MB US states file; 28.6MB MSA file; 38.9MB state-by-county file) [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[3]] [22]. NAICS 238220 is reported by IBISWorld as a fragmented, high-establishment-count industry dominated by small operators [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[1]] [20]. Earlier investigations of mechanical / industrial trades via prior corpus ([6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[4]] [23] field-service-software trade coverage list) corroborate that the buyer persona is dominated by 5-50-employee shops.\n\n**Texas and Tennessee $1-5M density.** Specific firm-level counts by state and revenue bucket are not in the immediate excerpts; the prompt asks for a first-principles estimate. NAICS 238220 plausibly runs into *tens of thousands* of US establishments and is concentrated in Sun Belt and construction-active states. For Texas and Tennessee, the prior corpus ([6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[5]] [24][6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[3]] [22]) points to SUSB's 6-digit NAICS state file (us_state_6digitnaics_2022.xlsx, 37.7MB) as the canonical source. A reasonable first-principles density estimate: **~$3,000-$5,000 NAICS-238220 establishments in Texas, ~$1,500-$2,500 in Tennessee**; of these, the *5-50-employee, $1-5M revenue* subset - i.e., the addressable owner-operator targets for a verified-transferability product - is plausibly **~25-35% of total**, i.e., ~750-1,750 in TX and ~400-850 in TN. These figures are first-principles, not directly extracted in the current research pass; treat them as planning estimates.\n\n**Owner-dependence and triggers.** Trades of this kind are textbook key-person businesses; pricing-authority gaps, payroll-authority (signatory) gaps, and licensing-board coverage lapses are well-known continuity-failures in the trade (e.g. Hotaling's TDLR-class framework [6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility[2]] [21]). How often a CPA monthly close or P&C renewal surfaces a \"present continuity failure\" that an owner will pay to fix immediately is not directly measurable in the primary sources; **first-principles: roughly 5-10% of monthly close encounters produce a one-paycheck or one-licensing-correction event per year**, *of which* (a) a third are owner-resolvable with a $1,500-$7,500 spend and (b) a half are owner-perceptible as \"critical.\" That implies an activation in roughly **1-3% of monthly-close encounters** - i.e., a CPA with 50 trade clients pushing the protocol might surface roughly 0.5-1.5 paid conversions per close cycle.\n\n**Eligibility-rate survival under license + revenue + QB + independent-source filters.** Apply the four filters in sequence to a \"50 trade-client\" CPA book (the prompt's hypothetical):\n\n| Filter | Survival rate (first-principles) | Surviving of 50 |\n|---|---|---|\n| Trade-target (HVAC/plumbing/electrical) | 100% by construction | 50 |\n| Active license on date of close | 90-94% (state-specific; Texas TDLR renewals have predictable lapse patterns) | 45-47 |\n| $1-5M revenue verifiable on QuickBooks / Sage | 70-80% (some clients use spreadsheets; some are below the band) | 33-37 |\n| Independent source-pullable (bank statement + payroll-system + QB accessible via owner consent) | 60-75% of the remaining pool (most stops at QB-only) | 22-28 |\n| Authority drill + license-eligibility drill both pass | 50-65% of remaining pool (signatory gaps common in sole-prop / family LLCs) | 14-20 |\n\n**Net eligibility ~28-40% of \"50 trade clients\" survives the four filters and ~14-20 (= ~28-40% of filtered pool) is drill-passing.** This is the ceiling on the partner-channel offer's reachable set per CA firm per quarter, before any *willingness-to-pay* filter is applied.\n\n---",
+      "synthesis_where_the_defensible_thesis_lives": "Across the six dimensions, the picture is consistent: **the public competitor set in lower-middle-market M&A infrastructure is a near-monoculture of *process infrastructure*, not *provenance infrastructure*.** Baton and SMB.co commoditize valuation, listing, reconciliation, SBA pre-qualification, AI diligence, and CIM generation. OffDeal and Eilla commoditize the AI-augmented sell-side IB process. Value Builder + EPI commoditize the assessment-and-readiness distribution muscle. Maus is a planning tool, not an M&A product; Bizbe / Dealport / Acquire.com are not surfaced by primary research in this pass and are *flagged as gaps*. **None of the surfaced competitors sells reviewer-treated evidence graphs, executed authority drills, or before/after verified repairs.** That is the defensible axis.\n\nThree structural risks bound the radius of defensibility. (i) Baton is already *energetically* proximate: their free valuation + buyer-interest tracker + plan-paid reconciliation stack is the most natural incumbent to release a \"reviewer-treated\" SKU below the Seller plan, given their existing data-room capability. If they do, the differentiation evaporates on first-party data alone. (ii) OffDeal's $12M Series A [synthesis_where_the_defensible_thesis_lives[0]] [5] and big-fund backing means an AI investment-bank could pull the in-house pre-flight work into its own process layer at marginal cost. (iii) EPI / Value Builder is a *trusted-by-the-distributor* incumbent; the partner-channel goes through EPI first, not through unbundled products.\n\nTwo opportunities bound the upside. (i) The *partner-channel economics of CPA book* are untouched by the named competitors - Baton and SMB.co are owner/buyer-side and not actively funneling through CPA CAS practices [synthesis_where_the_defensible_thesis_lives[1]] [14][synthesis_where_the_defensible_thesis_lives[2]] [11]. The CPA-routed transferability pitch is open territory. (ii) The *applied-repair* layer is genuinely missing; \"we will sign off that the license record is clean and the payroll authority chain is documented\" is a unit-economics business that doesn't exist in the public competitor set. 3h-per-file mature economics holds the product at professional-services-level margins, not software-level, until a patentable reviewer's attestation loops back as software.\n\nThe conclusion for the founder/GTM team: **the survivable thesis is \"reviewer-trusted continuity layer\" sold CPA-first at a finite $1,500-$7,500 sprint, with an explicit hand-pick protocol (no randomized every-nth attempt), building to multi-cycle repeat partner cohorts at 18+ repeats before approaching Series A.** The Demo Day story is *seed-fluent at 20 owners / 60 paid / 6 repeat partners / reviewer study*, but under that bar of repeat-partner multi-cycles it's a *high-touch continuity consultancy*, and the firm will price like one.\n\n---"
+    },
+    "type": "json",
+    "beta_fields": null,
+    "mcp_tool_calls": null,
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "executive_insights": {
+          "type": "string",
+          "title": "Executive Insights"
+        },
+        "1_competitive_product_overlap_matrix": {
+          "type": "string",
+          "title": "1. Competitive Product Overlap Matrix"
+        },
+        "2_owner_willingness_to_pay_before_a_formal_sale": {
+          "type": "string",
+          "title": "2. Owner Willingness to Pay Before a Formal Sale"
+        },
+        "3_cpa_bookkeeping_pandc_partner_distribution_economics": {
+          "type": "string",
+          "title": "3. CPA / Bookkeeping / P&C Partner Distribution Economics"
+        },
+        "4_delivery_economics_can_7_hours_compress_to_3": {
+          "type": "string",
+          "title": "4. Delivery Economics: Can 7 Hours Compress to 3?"
+        },
+        "5_yc_seed_demo_day_narrative": {
+          "type": "string",
+          "title": "5. YC / Seed Demo Day Narrative"
+        },
+        "6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility": {
+          "type": "string",
+          "title": "6. HVAC / Plumbing / Electrical Density, Owner Dependence, and Eligibility"
+        },
+        "synthesis_where_the_defensible_thesis_lives": {
+          "type": "string",
+          "title": "Synthesis - Where the Defensible Thesis Lives"
+        }
+      },
+      "required": [
+        "executive_insights",
+        "1_competitive_product_overlap_matrix",
+        "2_owner_willingness_to_pay_before_a_formal_sale",
+        "3_cpa_bookkeeping_pandc_partner_distribution_economics",
+        "4_delivery_economics_can_7_hours_compress_to_3",
+        "5_yc_seed_demo_day_narrative",
+        "6_hvac_plumbing_electrical_density_owner_dependence_and_eligibility",
+        "synthesis_where_the_defensible_thesis_lives"
+      ]
+    }
+  }
+}

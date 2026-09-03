@@ -1,0 +1,69 @@
+Produce a rigorous, primary-source-backed research report mapping how independent and small-firm business brokers currently originate, prepare, market, diligence, finance, and close sales of businesses in the $500K–$10M enterprise value range (primarily $1M+ revenue, SDE/EBITDA-based). Audience: Scorta, an AI-native sell-side M&A firm + verification layer for the sub-$10M market, designing an agent stack (CASE kernel, File/Findings Report, VDR, Boardroom, Scorta Score, SBA lender flow, buyer network) to collapse the highest-friction, highest-value steps while remaining fully compliant with current SBA SOP, licensing, and data rules.
+
+GROUND TRUTH — do not contradict or re-derive:
+Scorta is an operating sell-side M&A firm already closing deals in the NJ/NY/CT corridor. It runs end-to-end engagements on an agent stack. It does not charge three parties on the same deal. On its own listings the buyer receives the diligence packet at no charge. Verification revenue is earned overwhelmingly on third-party deals. The firm sells procedures/findings (reconciled to filed returns), not conclusions or reliance letters. It refuses unreported cash. Two-tier data storage (identified vs statistical aggregates) is mandatory from day one. Pre-underwritten listings and lender packaging are strategic. The October 1, 2026 SOP 50 10 8.1 QoE mandate for ≥$3M deals is a hard catalyst. Full legal/licensing constraints (M&A broker exemption, state licensing, FCA exposure, transcript purpose-locking under IRC §6103) are already known and must be respected.
+
+METHODOLOGY:
+Prioritize primary or near-primary sources: IBBA / state association materials, SBA SOP language and lender training decks, broker software vendor documentation and case studies, recent (2024–2026) practitioner interviews or forum threads from active brokers, accounting firm M&A practice notes, and actual CIM/teaser/VDR examples that are public or reconstructed from public deal descriptions. Distinguish clearly between software brochure claims and what brokers actually do day-to-day. Quantify wherever possible (hours, dollars, close rates, tool adoption percentages). Flag areas where public information is thin and state confidence level. Explicitly call out practices that would create conflict, FCA, or licensing exposure for an AI-native firm following Scorta’s ground-truth rules. Do not invent tools, processes, or adoption numbers. When evidence is incomplete, say so and recommend the next primary research step. Tone: precise, non-promotional, operationally grounded.
+
+COVER EVERY LAYER WITH EVIDENCE:
+
+1) END-TO-END SELL-SIDE PROCESS MAP (step-by-step, sequential and parallel).
+Document every stage a competent broker actually executes for a typical Main Street or lower-middle-market engagement. For each stage list: exact activities; inputs required from the seller; outputs/artifacts produced; time typically consumed (hours or calendar days); common failure points and how brokers currently recover or abandon; what stays human vs what is already semi-automated.
+
+Stages that must be covered in full detail (expand or subdivide as data warrants):
+- Lead generation / listing acquisition / engagement letter
+- Information gathering & financial recast (SDE/EBITDA normalization, add-backs, owner compensation, non-recurring items)
+- Valuation / pricing recommendation
+- CIM / teaser / marketing materials creation
+- Buyer list construction, qualification, and outreach
+- NDA administration and staged disclosure
+- Data room setup and ongoing management
+- Buyer Q&A and management of diligence requests
+- LOI support and negotiation of key terms
+- Financing coordination (especially SBA 7(a) packaging, DSCR modeling, equity injection, seller notes)
+- Third-party QoE / appraisal / environmental / legal diligence orchestration
+- Closing checklist, wire instructions, escrow/attorney coordination, post-close transition
+- Failed listing handling and re-engagement
+
+2) CURRENT TOOLING STACK USED BY BROKERS (2025–2026), ranked by prevalence where possible.
+Categorize: CRM / deal pipeline / client management; financial recasting & valuation; listing syndication / marketing (BizBuySell, BizQuest, Axial, proprietary sites, email sequences, LinkedIn); virtual data rooms / document sharing / access control; buyer qualification / proof-of-funds / CRM for buyers; SBA packaging / lender submission portals or templates; document generation (CIM, LOI, NDAs, engagement letters); e-signature, e-notary, closing coordination; accounting / bookkeeping review tools; any emerging AI or automation tools brokers are already adopting.
+
+For each major tool note: pricing model (if public), key strengths/weaknesses for sub-$10M deals, integration points (APIs, Zapier, CSV, email), and whether it is used more by solo brokers, small firms, or national franchises (Sunbelt, Transworld, Murphy, VR, etc.).
+
+3) SMB-SIDE TOOLS THAT GENERATE THE SOURCE DATA.
+Catalog the most common systems small businesses ($1M–$10M revenue) actually run: accounting (QuickBooks Online/Desktop, Xero, Sage, NetSuite); POS / payment processors (Square, Toast, Clover, Stripe); payroll (Gusto, ADP, Paychex); banking and bank feeds; inventory, CRM, scheduling, franchise systems; tax prep / CPA workflows.
+
+For each category identify: dominant vendors by industry vertical (HVAC, plumbing, restaurants, professional services, etc.); how brokers currently extract data (manual export, screen share, Plaid-style, accountant intermediary, physical binder); existing API / Open Banking / accounting API surfaces that an AI platform could connect to cleanly; friction points and workarounds brokers use today.
+
+4) CONNECTION & INTEGRATION SURFACES.
+Map concrete technical and process ways an AI-native sell-side platform can plug into or replace parts of the above stack without requiring the seller or broker to change behavior overnight:
+- Read-only financial ingestion paths that respect transcript purpose-locking and engagement-letter consent
+- How to turn a completed File / Findings Report (procedures/findings reconciled to filed returns, not conclusions or reliance letters) into something a traditional broker or lender already accepts
+- Syndication of listings while retaining control of the VDR and access logs
+- Buyer network sharing / reciprocal referral mechanics that do not violate confidentiality or create dual-agency issues
+- Lender packet formats that credit officers already recognize
+
+5) OPERATIONAL, LEGAL, AND PRACTICAL REALITIES.
+- Licensing requirements by state (focus first on NJ/NY/CT, then common expansion states)
+- Engagement letter must-haves (fee structure, exclusivity, tail, data clauses, dual-representation disclosure)
+- How brokers currently handle unreported cash, owner-dependence, concentration risk, lease assignment, key-person risk, and seller financing
+- Common deal-killers at the bank and how experienced brokers pre-empt them
+- Fee practices (upfront vs pure contingent, Double Lehman vs flat, cooperating broker splits)
+- Insurance, E&O, and liability posture typical for small firms
+- Time and cost benchmarks per engagement
+
+6) COMPETITIVE & MARKET CONTEXT THAT AFFECTS TOOLING CHOICES.
+Brief but precise view of how national franchises, online marketplaces (Baton, etc.), QoE shops, and SBA packagers currently interface with or compete against independent brokers. Note any tools or processes that are already consolidating or being automated.
+
+REQUIRED REPORT STRUCTURE:
+1. Executive Summary (1 page) – key process map, dominant tools, highest-leverage automation opportunities.
+2. Detailed End-to-End Process Playbook (with timing and artifact inventory).
+3. Broker Tooling Stack (current state + gaps).
+4. SMB Source Systems & Data Extraction Reality.
+5. Integration & Connection Opportunities (technical + commercial).
+6. Practical “How to Be a Broker” Knowledge Base (licensing, contracts, risk flags, negotiation norms, failed-deal handling).
+7. Implications & Recommended Build Priorities mapped directly to CASE kernel, File, Findings Report, VDR, Boardroom, Scorta Score, SBA lender flow, buyer network.
+8. Appendix: Source list, open questions, dated items that will change with the Oct 2026 SOP 50 10 8.1 update.
+
+Cite primary sources inline. Distinguish brochure claims vs practitioner reality. Flag thin evidence with confidence levels.

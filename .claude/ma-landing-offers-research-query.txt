@@ -1,0 +1,68 @@
+You are researching and ideating differentiated landing-page offers for an AI-native M&A advisory / business-brokerage firm (premium, data-forward, discreet). This is a strategy + productization brief, not a generic marketing list.
+
+## Stated assumptions (proceed with these; flag if evidence contradicts)
+- Geography: United States primary; Canada secondary. English-language. Lower-middle-market / Main Street-to-LMM M&A.
+- Company size: $2M–$50M revenue; founder-led or PE-backed; typically 10–250 employees.
+- Enterprise value band implied: roughly $1M–$40M depending on sector and margin (not mega-cap IB).
+- Buyer universe: independent sponsors, search funds / ETA, PE add-ons, strategics, SBA 7(a) / 7(a) acquisition, family offices.
+- Visitor intent: owner or PE deal lead seriously considering an exit, recapitalization, majority/minority sale, or sale-to-management in the next 6–24 months. Not “just curious what I’m worth.”
+- Brand posture: premium, confidential, AI-native process (data, comps, documents, buyer graphs, workflow automation). NOT “we’ll sell your business in 30 days,” NOT discount brokerage, NOT BizBuySell listing mill.
+- Channel: paid + organic landing pages; artifact delivered in-browser in under 5 minutes; productized tool, not a custom consulting hour.
+- Category constraint: high-trust, confidential B2B. Capture must feel like unlocking an artifact, not a sales form.
+
+## Competitive problem to solve
+Most competitors (business brokers, IBBA shops, franchise brokerages, some PE-backed platforms, listing marketplaces) use the same lead magnet: “Get a free valuation of your business.” Evidence needed:
+1. Map the actual landing-page offers used by leading US lower-middle-market brokers, boutique IBs, sell-side advisory platforms, CIM/data-room tools, QofE/accounting firms, and AI M&A startups as of 2025–2026. Name specific firms and quote or paraphrase their headline offers.
+2. Explain why “free valuation” is commoditized: tire-kickers, credibility gap (instant multiple from a form), mismatch with how real valuations are done (QofE, comps, quality of earnings, customer concentration), and failure to show AI-native capability.
+3. Identify high-performing analog lead magnets in adjacent high-trust categories (wealth/estate, PE fundraising, commercial real estate, insurance brokerage, legal intake) that qualify intent without feeling like a quiz.
+4. Identify what AI can uniquely do at landing-page speed that a human broker cannot: parse uploaded P&L/tax return, NAICS/comps matching, buyer-graph overlap, CIM/document gap detection, process-risk scoring, earnout/tax structure scenarios, confidentiality/leak risk, SBA/financing feasibility, add-back quality, customer concentration flags — with sources on current AI document extraction / comps databases / buyer intelligence products.
+
+## Hard constraints on ideas
+- DO NOT propose “free company valuation / what is my business worth / instant multiple / business value calculator” as an offer. That is the anti-pattern.
+- DO NOT propose personality quizzes, generic SaaS gimmicks, or 40-page PDF reports.
+- Every idea must be implementable as a landing page + short form or interactive output delivering real value in 2–5 minutes.
+- Attract owners considering exit/recap/sale in 6–24 months.
+- Feel uniquely possible because the firm is AI-native.
+- Capture enough signal to qualify without feeling like a sales form.
+- Productizable as a repeatable tool.
+
+## Required output structure
+
+First, a short evidence section (cite sources with URLs):
+- Competitive offer landscape (named firms + headlines)
+- Why free valuation underperforms for serious sellers
+- What “ready to transact in 6–24 months” actually looks like (behavioral signals, not just stated timeline)
+- AI capabilities that are real in 2026 vs. vapor (be honest about data/privacy/accuracy limits)
+
+Then ideate **12–15** differentiated landing-page offers. For EACH idea, use EXACTLY this structure:
+
+1. Offer name (headline-ready)
+2. One-line hook (what the visitor sees first)
+3. What they get in 2–5 minutes (output / artifact)
+4. Why this is better than a free valuation (intent, differentiation, perceived value)
+5. How AI makes it uniquely good (what a human broker couldn’t do at this speed/scale)
+6. Minimum capture fields (keep lean; note any optional fields that improve scoring)
+7. Lead quality signal (what you learn about readiness, size, timeline, or deal type)
+8. Natural next step (how this hands off into a sales / advisor conversation)
+
+Cover a mix of offer types, not 15 variants of the same assessment:
+- Interactive diagnostic / score (readiness, CIM completeness, QoE risk, confidentiality)
+- Scenario / structure tool (earnout, recap vs. sale, tax/after-tax proceeds at a high level — not tax advice; SBA vs. cash; rollover equity)
+- Buyer-side intelligence (who would buy this, concentration of likely buyers, process design)
+- Document/data upload tools (P&L / tax return / customer list anonymized)
+- Process / timeline / leak-risk tools
+- PE-backed vs founder-led variants if the mechanic differs
+- At least 2 offers aimed at PE-backed portfolio companies considering a sale/recap, not only founder-owners
+- At least 1 offer that works if the visitor will NOT upload financials (privacy-first)
+- At least 1 offer that uses a light financial upload (PDF/CSV) because that’s where AI-native is most unfair
+
+Then add:
+• Top 3 I’d ship first and why (speed to build vs. conversion vs. brand) — be explicit about build complexity (no-upload vs. document parse vs. buyer graph)
+• Offers to avoid in this category and why (including valuation calculators, “sold in 30 days,” public listing teases, anything that implies the business is for sale without consent)
+• Positioning note: how the page should talk (tone, proof, risk reversal) so it doesn’t sound like every other broker site. Premium, data-forward, discreet.
+
+Also include a scoring table for all 12–15 ideas on: build effort (S/M/L), expected conversion, expected lead quality, brand-fit, data/privacy risk.
+
+Be concrete: name the artifact (e.g. “CIM Gap Score 0–100 with 6 missing sections”), not vague “insights.” Call out legal/compliance caveats (not a formal valuation, not tax/legal advice, confidentiality of uploads, no public listing).
+
+Ground ideas in how real LMM deals work: teaser vs CIM, IOI vs LOI, QofE, working capital peg, reps & warranties, earnouts, rollover, SBA, searcher financing, customer concentration, add-backs, quality of revenue, key-person risk, confidential vs listed process.

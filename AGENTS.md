@@ -1,180 +1,372 @@
-# Scorta Frontend Review Agent Rules
+# exitIQ / Scorta — Engineering Contract
 
-You are a read-only frontend code reviewer for the Scorta/exitIQ codebase.
-Trigger: when a PR comment contains `@claude`.
-Do NOT edit files. Do NOT create branches. Do NOT push code.
-Do NOT read any files in `.github/review-skills/` — all rules are inline below.
-
----
-
-## Review Protocol
-
-### Step 1 — Get the diff
-
-Fetch the PR diff. Note which patterns appear across changed files:
-
-| Pattern to scan for | Category triggered |
-|---|---|
-| `page.tsx`, `layout.tsx`, `async function` | Server rules (§A) |
-| `"use client"` | Client boundary rules (§B) |
-| `useState`, `useEffect`, `useMemo`, `useCallback` | Hooks rules (§C) |
-| `import {` from `lucide-react`, `@radix-ui`, `@mui` | Bundle rules (§D) |
-| `style={{`, hex colors `#`, hardcoded px values | Design token rules (§E) |
-| `aria-`, `<button`, `<a`, icon-only elements | Accessibility rules (§F) |
-| `../../`, `process.env`, `db` import | Scorta overrides (§G) — always checked |
-| `.tsx` component files | Rendering rules (§H) |
-
-### Step 2 — Apply rules from relevant sections below
-
-Only check sections triggered by Step 1. §G is always checked on every PR.
+Read this at the start of every session. It is the single source of truth for the stack,
+architecture boundaries, conventions, and the engineering standards this codebase holds itself to.
+When the code and this document disagree, trust the code and fix this document.
 
 ---
 
-## §A — Server-Side Rules
+## What this project is
 
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| A1 | Sequential `await` on independent fetches | Waterfall — wrap in `Promise.all()` | 🔴 |
-| A2 | `await` before a conditional that could short-circuit | Defer await into the branch that needs it | 🟡 |
-| A3 | RSC passes full object to Client Component | Serialize only fields the client uses | 🟡 |
-| A4 | `async` RSC parent blocks sibling data fetches | Extract siblings to parallel async components | 🔴 |
-| A5 | Server Action with no auth check inside it | Must call `verifySession()` inside every Server Action | 🔴 |
-| A6 | `fetch()` or `fs.readFile()` inside a route handler body | Hoist static I/O to module level (runs once, not per request) | 🟡 |
-| A7 | Mutable module-level variable stores request data | Causes cross-request data leaks — pass as props or use `React.cache()` | 🔴 |
-| A8 | Multiple calls to same DB query across component tree | Wrap with `React.cache()` for per-request deduplication | 🟡 |
-| A9 | Logging/analytics inside route handler before `return` | Move to `after()` so it doesn't block response | 🟡 |
-| A10 | Nested `.map()` with sequential `await` per item | Chain dependent fetches: `ids.map(id => getA(id).then(a => getB(a.ref)))` | 🔴 |
+**Scorta** is an AI-native broker for sub-$2M Main Street businesses — underwriter, prep shop, and
+broker-of-record run by a coordinated fleet of specialized agents (Ingestion, Recast,
+Owner-Dependency, Concentration, Case Manager / CASE, Boardroom, CIM, VDR, Lender Ops, Outreach)
+with humans on the approval and relationship layer.
 
----
+The codebase began as **exitIQ** — the public Exit IQ Assessment (stage 1 + email gate are live;
+stages 2–4 are schema-ready but not yet wired into the live flow). That assessment plus the GAP
+report it generates is the kept foundation. Current build direction (see `plans/`) is
+**brokerage-first**: build the full broker workflow — CIM generation, marketplace listings, buyer
+qualification, LOI drafting, data room — as agent surfaces, while the seller relationship stays
+human-in-the-loop.
 
-## §B — Client Boundary Rules
+Engineering reality to keep in mind: much of the authenticated `(app)` workspace currently renders
+against a **single locked mock persona** (`lib/persona.ts`) rather than live per-user data. That is
+acceptable scaffolding, but it is *debt*, not a standard. New work should move data flows toward
+real, per-session/per-user data wherever feasible, and must not deepen the mock coupling without a
+reason.
 
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| B1 | `"use client"` with no justification comment | Must have `// use client: [reason it can't be RSC]` on the line above | 🔴 |
-| B2 | `"use client"` on a component that has no interactivity | Unnecessary — remove and make it RSC | 🟡 |
-| B3 | `db` imported in a `"use client"` file | DB access not allowed in Client Components | 🔴 |
-| B4 | `process.env` read in a `"use client"` file | Use `@/env.mjs` only; only `NEXT_PUBLIC_` vars are safe client-side | 🔴 |
+Build plans live in [`plans/`](../plans):
+- `plans/Scorta Brokerage Build.md` — strategic pivot + broker responsibility map
+- `plans/Phase 1 — Intake & Valuation.md`, `Phase 2 — Listing Preparation.md`, `Phase 3 — Buyer Outreach & Qualification.md`
 
----
+**DealIQ (buy-side, in progress).** A standalone buyer application under `lib/dealiq/` +
+`components/dealiq/` + `app/(dealiq)/` — separate IA, separate sign-in, *no* product switcher and no
+link from the seller workspace into it. Three documents, read in this order:
+- `plans/DealIQ — Product Boundary & Data Flow.md` — what DealIQ is and where its edges are
+- `plans/DealIQ — Execution Plan.md` — the 14 build items, the data seam (§1), and the settled
+  architecture decisions (§2). **Do not relitigate §2 mid-build.**
+- `plans/DealIQ — Build Log.md` — **running decision record.** Standing decisions that bind later
+  items, engine semantics, repo gotchas, and per-item status. Read it before starting any DealIQ
+  item, and append to it when you finish one.
 
-## §C — Hooks Rules
-
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| C1 | Component function defined inside another component | Remounts on every parent render — extract to module scope, pass props | 🔴 |
-| C2 | `useEffect` sets state that could be computed during render | Derived state in effect — calculate inline instead | 🟡 |
-| C3 | `useEffect` side effect clearly triggered by a user action | Move logic to the event handler directly | 🟡 |
-| C4 | `useEffect` dependency is an object/array reference | Narrow to primitive fields: `[obj.id]` not `[obj]` | 🟡 |
-| C5 | `useMemo` wrapping a simple boolean/string/number expression | Overhead exceeds savings — remove `useMemo` | 🟡 |
-| C6 | `setState(stateVar + x)` where stateVar is in dep array | Use functional update: `setState(curr => curr + x)` | 🟡 |
-| C7 | `useState(expensiveComputation())` | Lazy init: `useState(() => expensiveComputation())` | 🟡 |
-| C8 | `useSearchParams()` or similar subscribed but only read in a callback | Read inside callback only: `new URLSearchParams(window.location.search)` | 🟡 |
-| C9 | `useMemo` filter step and sort step combined in one call | Split into two `useMemo` calls with separate deps | 🟡 |
-| C10 | Separate `useEffect` calls for unrelated side effects merged | Split into two effects with their own dep arrays | 🟡 |
-| C11 | Default value for optional prop is inline `{}`, `[]`, or `() => {}` in `memo()` component | Extract to a module-level constant — breaks memoization otherwise | 🟡 |
-| C12 | Frequent value (mouse pos, scroll, timer) stored in `useState` | Use `useRef` + direct DOM mutation if no render needed | 🟡 |
-| C13 | Non-urgent update (scroll position, search filter) in `setState` | Wrap in `startTransition()` or use `useDeferredValue` | 🟡 |
+Two DealIQ rules worth stating here because they are easy to break by habit: nothing under
+`lib/dealiq/` may import anything outside `lib/dealiq/` (enforced by a test), and no business fact
+may appear in a component — all content lives in `lib/dealiq/data/` behind a placeholder banner.
 
 ---
 
-## §D — Bundle & Import Rules
+## Engineering standards (non-negotiable)
 
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| D1 | `import { X, Y } from 'lucide-react'` (not via `optimizePackageImports`) | Barrel import loads all 1500+ icons — verify `optimizePackageImports` in `next.config` | 🔴 |
-| D2 | `import { X } from '@radix-ui/react-*'` directly in `app/` pages | Must go through `components/` wrapper — raw Radix not allowed in pages | 🔴 |
-| D3 | Heavy component (`Monaco`, chart lib, PDF viewer) with static import | Use `next/dynamic` with `ssr: false` | 🟡 |
-| D4 | Analytics/error tracking imported at layout level without `dynamic` | Defer with `next/dynamic` + `ssr: false` so it loads post-hydration | 🟡 |
-| D5 | `import(someVariable)` dynamic import with a runtime string path | Use explicit map of literal import paths for static analysis | 🟡 |
-| D6 | `import { ButtonX } from '@/components/ui'` barrel import from own codebase | Import directly from component file path | 🟡 |
+These apply to all new and modified code. They replace the prior "demo sprint / happy-path-only" rules.
 
----
+1. **The build stays green.** `pnpm typecheck` and `pnpm lint` must pass. No type errors, no
+   `@ts-ignore` without a one-line justification, no dead routes, no console errors in normal flows.
+2. **Type safety is real.** TypeScript is strict with `noUncheckedIndexedAccess`. No `any` to silence
+   the compiler — model the type. Validate all external input (request bodies, params, env) with Zod.
+3. **Handle the unhappy path.** Route handlers and server actions must handle invalid input, missing
+   rows, and upstream failures with explicit status codes and structured logs — not crashes. Client
+   surfaces need loading **and** error states. (Existing demo code may not; new code must.)
+4. **Respect the architecture boundaries** below (env surface, server-only DB, no upward imports,
+   `@/*` alias). Breaking these creates cascading bugs.
+5. **Tests for logic.** Pure logic in `lib/` (scoring, segmentation, SBA, transforms) is unit-tested
+   with Vitest. DB schema/RLS behavior has integration tests. Add/extend tests when you touch this logic.
+6. **Migrations are append-only and ship with their RLS.** Never edit an applied migration; generate a
+   new one. Any new user-data table ships its RLS policies in the *same* migration.
+7. **No secrets in code or logs.** Read config only through `@/env.mjs`. Redact PII before tracing.
+8. **Small, reviewable changes.** Match existing file conventions. Don't reformat unrelated code or
+   introduce new libraries/palettes/AI providers without cause.
 
-## §E — Design Token Rules
-
-| ID | Trigger | Flag | Severity |
-|---|---|---|--- |
-| E1 | Hex color in `style={{}}` or className e.g. `text-[#3b82f6]` | Use Tailwind token only — no hardcoded hex | 🔴 |
-| E2 | Arbitrary Tailwind value `p-[13px]`, `mt-[7px]`, etc. | Use nearest 4px-grid token (`p-3`=12px, `p-4`=16px) | 🔴 |
-| E3 | Color class without `dark:` variant | All color utilities need `dark:` pairing | 🔴 |
-| E4 | `style={{ color: '...' }}` or `style={{ background: '...' }}` inline | Replace with Tailwind token class | 🟡 |
-| E5 | Variant-bearing component with `className` conditionals but no CVA | Require CVA (`class-variance-authority`) for all variant logic | 🟡 |
-
----
-
-## §F — Accessibility Rules
-
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| F1 | `<button>` or `<a>` containing only an icon with no text | Requires `aria-label` describing the action | 🔴 |
-| F2 | Interactive element smaller than `h-10 w-10` (44×44px) | Minimum touch target — increase to at least `h-10 w-10` | 🔴 |
-| F3 | `<img>` without `alt` attribute | Every image needs `alt`; decorative images use `alt=""` | 🔴 |
-| F4 | `onClick` on a non-interactive element (`div`, `span`, `li`) | Use `<button>` or add `role="button"` + `tabIndex={0}` + keyboard handler | 🔴 |
-| F5 | Heading levels skipped (`h1` → `h3`) | Follow heading hierarchy — never skip levels | 🟡 |
-| F6 | `addEventListener('touchstart'/'wheel')` without `{ passive: true }` | Add passive flag — removes scroll jank | 🟡 |
-| F7 | Color contrast not verifiable from static review | Flag for manual WCAG AA check (4.5:1 body, 3:1 large text) | 🟡 |
+A related but separate document, [`AGENTS.md`](../AGENTS.md) at the repo root, is the **read-only PR
+review contract** (server/client/hooks/bundle/design-token/a11y rules). Treat its rules as the target
+state for frontend code; note that the current inline-style station UI predates several of them.
 
 ---
 
-## §G — Scorta Project Overrides (always checked)
+## Stack (verified from `package.json`)
 
-These are hard project standards enforced on every PR regardless of diff content.
+| Layer | Choice | Pin |
+|-------|--------|-----|
+| Framework | Next.js 15 App Router (RSC-first) | `next@15.5.10` |
+| Dev bundler | Turbopack (`next dev --turbo`) | — |
+| Language | TypeScript strict, `noUncheckedIndexedAccess` | `typescript@^5.9` |
+| Runtime | React 19 | `react@^19.2.4` |
+| Styling | Tailwind CSS v4 (`@tailwindcss/postcss`) + CSS-variable design tokens in `styles/tailwind.css` | `tailwindcss@^4.2` |
+| Primitives | Radix UI (accordion, dialog, dropdown, popover, select, slider, switch, tabs, tooltip, checkbox, radio, scroll-area, toggle-group, label, form) | `@radix-ui/*` |
+| Variants | CVA + `tailwind-merge` | `class-variance-authority@^0.7` |
+| Package manager | **pnpm** (node ≥ 20) — never `npm`/`yarn` | `pnpm@10.0.0` |
+| ORM | Drizzle ORM + postgres.js | `drizzle-orm@^0.45`, `postgres@^3.4` |
+| DB | Supabase Postgres — transaction pooler at runtime | — |
+| Auth | Supabase Auth via `@supabase/ssr` (publishable key, cookie sessions) | `@supabase/ssr@^0.10` |
+| Env | `@t3-oss/env-nextjs` via `env.mjs` (single surface) | `@t3-oss/env-nextjs@^0.13` |
+| AI | AI SDK v6 + `@ai-sdk/anthropic` (direct provider — **not** AI Gateway) | `ai@^6.0`, `@ai-sdk/anthropic@^3.0` |
+| AI models | `claude-sonnet-4-6` (reports), `claude-haiku-4-5-20251001` (fast paths) — constants in `lib/ai/index.ts` | — |
+| Email | Resend (no-op until `RESEND_API_KEY` set) | `resend@^6.12` |
+| Validation | Zod | `zod@^3.24` |
+| Observability | `@vercel/otel` + structured logger (`lib/logger.ts`) | `@vercel/otel@^1.12` |
+| Testing | Vitest + RTL + Playwright | `vitest@^3.2`, `@playwright/test@^1.58` |
+| Stories | Storybook 8 | `storybook@^8.6` |
 
-| ID | Rule | Severity |
+**Do not introduce a new color palette, component library, or AI provider.** Inherit what's in place.
+
+---
+
+## Environment Variables — `env.mjs` is the ONLY surface
+
+**Never read `process.env` directly in application code.** The single exception is
+`lib/debug/workflow-trace.ts`, which reads `EXITIQ_WORKFLOW_LOG` and `VERCEL` directly by design, to
+stay outside the t3-env server guard so it can run from edge-bundled helpers and tests.
+
+```ts
+import { env } from "@/env.mjs"
+// ✅ env.DATABASE_URL, env.NEXT_PUBLIC_SUPABASE_URL, …
+// ❌ process.env.DATABASE_URL
+```
+
+| Variable | Scope | Purpose |
 |---|---|---|
-| G1 | No `"use client"` without justification comment above it | 🔴 |
-| G2 | No `process.env` reads outside `@/env.mjs` | 🔴 |
-| G3 | No `db` import in any Client Component | 🔴 |
-| G4 | No relative `../../` imports — use `@/*` alias only | 🔴 |
-| G5 | Radix UI only via `components/` wrappers, never raw in `app/` | 🔴 |
-| G6 | CVA required for all variant-bearing components | 🟡 |
-| G7 | No barrel imports from `@radix-ui/react-*` — use direct sub-packages | 🔴 |
-| G8 | No hardcoded hex values — Tailwind design tokens only | 🔴 |
-| G9 | No arbitrary Tailwind values like `p-[13px]` | 🔴 |
-| G10 | All color classes must have `dark:` variants | 🔴 |
-| G11 | Icon-only interactive elements must have `aria-label` | 🔴 |
-| G12 | Interactive elements minimum `h-10 w-10` (44px touch target) | 🔴 |
+| `DATABASE_URL` | server | Postgres — **transaction pooler (6543)** at runtime; session pooler (5432) only for local `drizzle-kit` |
+| `SUPABASE_URL` | server | Project URL — declared, not currently consumed by runtime code |
+| `SUPABASE_SERVICE_SECRET_KEY` | server | Service-role key — **only** used in the RLS integration test. No runtime code uses it; don't add service-role calls casually |
+| `NEXT_PUBLIC_SUPABASE_URL` | client | Used by browser + server Supabase clients |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client | Used by browser + server Supabase clients (server uses publishable + cookies, **not** the service key) |
+| `ANTHROPIC_API_KEY` | server | Consumed in `lib/ai/index.ts` |
+| `RESEND_API_KEY` | server, optional | When missing, `lib/email/index.ts` is a no-op |
+| `EXITIQ_WORKFLOW_LOG` / `NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG` | both | NDJSON workflow tracing to `.exitiq-debug/` (local dev only; auto-off on Vercel) |
+| `ANALYZE` | server | Toggles `@next/bundle-analyzer` in `next.config.ts` |
+| `SKIP_ENV_VALIDATION` | special | Bypasses `createEnv` validation in CI / lint envs without creds |
 
---- hello
+`.env.local.example` is the canonical template. When you add/remove a variable, update **both**
+`env.mjs` and `.env.local.example`.
 
-## §H — Rendering Rules
-
-| ID | Trigger | Flag | Severity |
-|---|---|---|---|
-| H1 | `<svg className="animate-spin">` or transform on SVG element directly | Wrap in `<div className="animate-spin">` — SVG lacks GPU acceleration | 🟡 |
-| H2 | Long rendered list with no virtualization or `content-visibility` | Add `content-visibility: auto` + `contain-intrinsic-size` via className | 🟡 |
-| H3 | Static JSX element (no props, no state) defined inside component body | Hoist to module level to avoid re-creation on every render | 🟡 |
-| H4 | Page/layout awaits data before returning JSX wrapper | Use `<Suspense>` boundary — render shell immediately, stream data in | 🟡 |
-| H5 | `{condition && <Component />}` where condition can be `0` | Use `{condition ? <Component /> : null}` — falsy 0 renders as text | 🔴 |
+**`prepare: false` in `lib/db/index.ts` is mandatory** — `DATABASE_URL` is the transaction-mode pooler
+(PgBouncer in transaction mode doesn't support prepared statements). Never remove it.
 
 ---
 
-## Step 3 — Post findings
+## Architecture Boundaries (hard rules)
 
-Post ONE comment. No preamble. No task lists. No filler. Exact format:
-
+### 1. Import alias `@/*` → repo root
+```ts
+import { env } from "@/env.mjs"
+import { db } from "@/lib/db"
 ```
-**Summary:** [2–3 sentences on what this PR does]
+No relative `../../` imports for repo-internal modules.
 
-**🔴 Blockers** (must fix before merge):
-- `file/path.tsx:LINE` — [Rule ID] — [issue] — [exact fix]
+### 2. Database access is server-only
+`lib/db/index.ts` exports a module-level `db` singleton (one `postgres()` client reused across
+requests). Import it **only** in Route Handlers (`app/api/**/route.ts`), Server Actions
+(`"use server"`), or server-only utility modules. **Never** import `db` from a Client Component.
 
-**🟡 Warnings** (should fix):
-- `file/path.tsx:LINE` — [Rule ID] — [issue] — [suggestion]
+### 3. Supabase client split (`lib/supabase/`)
+| Client | File | Use |
+|---|---|---|
+| Browser | `client.ts` (`createBrowserClient`) | Client Components, browser-side auth |
+| Server | `server.ts` (`createServerClient` + `next/headers` cookies) | Server Components, Route Handlers |
+| Middleware | `middleware.ts` (`createServerClient` + `NextRequest` cookies) | session refresh in root `middleware.ts` |
 
-**✅ Verdict:** APPROVED | ⚠️ CHANGES REQUESTED | ❌ BLOCKED
+All three use the **publishable** key. RLS gatekeeps the `anon` role; Drizzle bypasses RLS via the
+direct `DATABASE_URL` connection. The root [`middleware.ts`](../middleware.ts) calls
+`supabase.auth.getUser()` on every non-static request to keep server-component auth state fresh.
+
+### 4. Module layering (no upward imports)
 ```
-
-Cite exact file paths and line numbers. Group findings by file. If no issues found, post APPROVED with a one-line summary.
+app/          (pages, layouts, route handlers, server actions)
+  └── components/   (UI; must not import db)
+  └── lib/          (assessment, ai, supabase, db, email, debug, exitiq, persona, logger)
+        └── env.mjs (sole env surface)
+```
+A module in `lib/` must not import from `app/`. UI components must not import `db`.
 
 ---
 
-## Scope
+## Routes & API contract (verified)
 
-Review: `app/**`, `components/**`, `styles/**`, `*.tsx`, `*.ts`
-Skip: `lib/db/**`, `drizzle/migrations/**`, `pnpm-lock.yaml`, `*.config.*`, `*.test.*`
+```
+app/
+  page.tsx                         → components/scorta/LandingPage   (marketing)
+  about/page.tsx                   → components/scorta/AboutPage
+  login/page.tsx                   → components/scorta/LoginPanel     (redirects to /dashboard if signed in)
+  report/[sessionId]/page.tsx      → assessment report page
+  (app)/                           authenticated seller workspace
+    layout.tsx                     → guards via supabase.auth.getUser() → redirect("/login"); wraps AppShell
+    dashboard/page.tsx             → SellerHome           (Station 02 — Case Manager)
+    connect/page.tsx               → ConnectStation       (Platform Connectors — Ingestion)
+    ingestion/page.tsx             → IngestionStation      (Data Processing — Ingestion)
+    recast/page.tsx                → RecastStation         (Financials Recast — Recast · Boardroom)
+    risk/page.tsx                  → RiskStation           (Owner-Dependency · Concentration)
+    boardroom/page.tsx             → BoardroomStation      (dispatches the agent fleet)
+    score/page.tsx                 → Scorta Score          (Case Manager)
+    documents/page.tsx             → DocumentsStation      (CIM & Docs — CIM Agent)
+    vdr/page.tsx                   → VDRStation            (Virtual Data Room)
+    lenders/page.tsx               → LendersStation        (Lender Outreach — Lender Ops)
+    buyers/page.tsx                → BuyersStation         (Buyer Outreach — Outreach)
+    upload/page.tsx                → UploadStation
+    case/page.tsx                  → CaseChatPage          (CASE conversation)
+  api/
+    health/route.ts                          GET    liveness probe
+    waitlist/route.ts                        POST   waitlist signup
+    assessment/session/route.ts              POST   upsert session (one route, all stages)
+    assessment/session/[session_id]/route.ts GET    read session row
+    assessment/generate/route.ts             POST   stream Sonnet report (text/plain)
+    assessment/report/[session_id]/route.ts  GET    read cached report markdown
+    debug/workflow-trace/route.ts            POST   client → server trace event sink
+```
 
+`next.config.ts` rewrites `/healthz`, `/api/healthz`, `/health`, `/ping` → `/api/health`.
+The station rail / order / lock state is defined by `STATIONS` in `lib/persona.ts`.
 
-# Scorta Backend Coding Agent Rules
-<!-- NEXT-AGENTS-MD-START -->[Next.js Docs Index]|root: ./.next-docs|STOP. What you remember about Next.js is WRONG for this project. Always search docs and read before any task.|If docs missing, run this command first: npx @next/codemod agents-md --output AGENTS.md|01-app/01-getting-started:{01-installation.mdx,02-project-structure.mdx,03-layouts-and-pages.mdx,04-linking-and-navigating.mdx,05-server-and-client-components.mdx,06-partial-prerendering.mdx,07-fetching-data.mdx,08-updating-data.mdx,09-caching-and-revalidating.mdx,10-error-handling.mdx,11-css.mdx,12-images.mdx,13-fonts.mdx,14-metadata-and-og-images.mdx,15-route-handlers-and-middleware.mdx,16-deploying.mdx,17-upgrading.mdx}|01-app/02-guides:{analytics.mdx,authentication.mdx,backend-for-frontend.mdx,caching.mdx,ci-build-caching.mdx,content-security-policy.mdx,css-in-js.mdx,custom-server.mdx,data-security.mdx,debugging.mdx,draft-mode.mdx,environment-variables.mdx,forms.mdx,incremental-static-regeneration.mdx,instrumentation.mdx,internationalization.mdx,json-ld.mdx,lazy-loading.mdx,local-development.mdx,mdx.mdx,memory-usage.mdx,multi-tenant.mdx,multi-zones.mdx,open-telemetry.mdx,package-bundling.mdx,prefetching.mdx,production-checklist.mdx,progressive-web-apps.mdx,redirecting.mdx,sass.mdx,scripts.mdx,self-hosting.mdx,single-page-applications.mdx,static-exports.mdx,tailwind-v3-css.mdx,third-party-libraries.mdx,videos.mdx}|01-app/02-guides/migrating:{app-router-migration.mdx,from-create-react-app.mdx,from-vite.mdx}|01-app/02-guides/testing:{cypress.mdx,jest.mdx,playwright.mdx,vitest.mdx}|01-app/02-guides/upgrading:{codemods.mdx,version-14.mdx,version-15.mdx}|01-app/03-api-reference:{07-edge.mdx,08-turbopack.mdx}|01-app/03-api-reference/01-directives:{use-cache.mdx,use-client.mdx,use-server.mdx}|01-app/03-api-reference/02-components:{font.mdx,form.mdx,image.mdx,link.mdx,script.mdx}|01-app/03-api-reference/03-file-conventions/01-metadata:{app-icons.mdx,manifest.mdx,opengraph-image.mdx,robots.mdx,sitemap.mdx}|01-app/03-api-reference/03-file-conventions:{default.mdx,dynamic-routes.mdx,error.mdx,forbidden.mdx,instrumentation-client.mdx,instrumentation.mdx,intercepting-routes.mdx,layout.mdx,loading.mdx,mdx-components.mdx,middleware.mdx,not-found.mdx,page.mdx,parallel-routes.mdx,public-folder.mdx,route-groups.mdx,route-segment-config.mdx,route.mdx,src-folder.mdx,template.mdx,unauthorized.mdx}|01-app/03-api-reference/04-functions:{after.mdx,cacheLife.mdx,cacheTag.mdx,connection.mdx,cookies.mdx,draft-mode.mdx,fetch.mdx,forbidden.mdx,generate-image-metadata.mdx,generate-metadata.mdx,generate-sitemaps.mdx,generate-static-params.mdx,generate-viewport.mdx,headers.mdx,image-response.mdx,next-request.mdx,next-response.mdx,not-found.mdx,permanentRedirect.mdx,redirect.mdx,revalidatePath.mdx,revalidateTag.mdx,unauthorized.mdx,unstable_cache.mdx,unstable_noStore.mdx,unstable_rethrow.mdx,use-link-status.mdx,use-params.mdx,use-pathname.mdx,use-report-web-vitals.mdx,use-router.mdx,use-search-params.mdx,use-selected-layout-segment.mdx,use-selected-layout-segments.mdx,userAgent.mdx}|01-app/03-api-reference/05-config/01-next-config-js:{allowedDevOrigins.mdx,appDir.mdx,assetPrefix.mdx,authInterrupts.mdx,basePath.mdx,browserDebugInfoInTerminal.mdx,cacheComponents.mdx,cacheLife.mdx,compress.mdx,crossOrigin.mdx,cssChunking.mdx,devIndicators.mdx,distDir.mdx,env.mdx,eslint.mdx,expireTime.mdx,exportPathMap.mdx,generateBuildId.mdx,generateEtags.mdx,headers.mdx,htmlLimitedBots.mdx,httpAgentOptions.mdx,images.mdx,incrementalCacheHandlerPath.mdx,inlineCss.mdx,logging.mdx,mdxRs.mdx,middlewareClientMaxBodySize.mdx,onDemandEntries.mdx,optimizePackageImports.mdx,output.mdx,pageExtensions.mdx,poweredByHeader.mdx,ppr.mdx,productionBrowserSourceMaps.mdx,reactCompiler.mdx,reactMaxHeadersLength.mdx,reactStrictMode.mdx,redirects.mdx,rewrites.mdx,sassOptions.mdx,serverActions.mdx,serverComponentsHmrCache.mdx,serverExternalPackages.mdx,staleTimes.mdx,staticGeneration.mdx,taint.mdx,trailingSlash.mdx,transpilePackages.mdx,turbopack.mdx,turbopackPersistentCaching.mdx,typedRoutes.mdx,typescript.mdx,urlImports.mdx,useCache.mdx,useLightningcss.mdx,viewTransition.mdx,webVitalsAttribution.mdx,webpack.mdx}|01-app/03-api-reference/05-config:{02-typescript.mdx,03-eslint.mdx}|01-app/03-api-reference/06-cli:{create-next-app.mdx,next.mdx}|02-pages/01-getting-started:{01-installation.mdx,02-project-structure.mdx,04-images.mdx,05-fonts.mdx,06-css.mdx,11-deploying.mdx}|02-pages/02-guides:{amp.mdx,analytics.mdx,authentication.mdx,babel.mdx,ci-build-caching.mdx,content-security-policy.mdx,css-in-js.mdx,custom-server.mdx,debugging.mdx,draft-mode.mdx,environment-variables.mdx,forms.mdx,incremental-static-regeneration.mdx,instrumentation.mdx,internationalization.mdx,lazy-loading.mdx,mdx.mdx,multi-zones.mdx,open-telemetry.mdx,package-bundling.mdx,post-css.mdx,preview-mode.mdx,production-checklist.mdx,redirecting.mdx,sass.mdx,scripts.mdx,self-hosting.mdx,static-exports.mdx,tailwind-v3-css.mdx,third-party-libraries.mdx}|02-pages/02-guides/migrating:{app-router-migration.mdx,from-create-react-app.mdx,from-vite.mdx}|02-pages/02-guides/testing:{cypress.mdx,jest.mdx,playwright.mdx,vitest.mdx}|02-pages/02-guides/upgrading:{codemods.mdx,version-10.mdx,version-11.mdx,version-12.mdx,version-13.mdx,version-14.mdx,version-9.mdx}|02-pages/03-building-your-application/01-routing:{01-pages-and-layouts.mdx,02-dynamic-routes.mdx,03-linking-and-navigating.mdx,05-custom-app.mdx,06-custom-document.mdx,07-api-routes.mdx,08-custom-error.mdx}|02-pages/03-building-your-application/02-rendering:{01-server-side-rendering.mdx,02-static-site-generation.mdx,04-automatic-static-optimization.mdx,05-client-side-rendering.mdx}|02-pages/03-building-your-application/03-data-fetching:{01-get-static-props.mdx,02-get-static-paths.mdx,03-forms-and-mutations.mdx,03-get-server-side-props.mdx,05-client-side.mdx}|02-pages/03-building-your-application/06-configuring:{12-error-handling.mdx}|02-pages/04-api-reference:{06-edge.mdx,08-turbopack.mdx}|02-pages/04-api-reference/01-components:{font.mdx,form.mdx,head.mdx,image-legacy.mdx,image.mdx,link.mdx,script.mdx}|02-pages/04-api-reference/02-file-conventions:{instrumentation.mdx,middleware.mdx,public-folder.mdx,src-folder.mdx}|02-pages/04-api-reference/03-functions:{get-initial-props.mdx,get-server-side-props.mdx,get-static-paths.mdx,get-static-props.mdx,next-request.mdx,next-response.mdx,use-amp.mdx,use-report-web-vitals.mdx,use-router.mdx,userAgent.mdx}|02-pages/04-api-reference/04-config/01-next-config-js:{allowedDevOrigins.mdx,assetPrefix.mdx,basePath.mdx,bundlePagesRouterDependencies.mdx,compress.mdx,crossOrigin.mdx,devIndicators.mdx,distDir.mdx,env.mdx,eslint.mdx,exportPathMap.mdx,generateBuildId.mdx,generateEtags.mdx,headers.mdx,httpAgentOptions.mdx,images.mdx,middlewareClientMaxBodySize.mdx,onDemandEntries.mdx,optimizePackageImports.mdx,output.mdx,pageExtensions.mdx,poweredByHeader.mdx,productionBrowserSourceMaps.mdx,reactStrictMode.mdx,redirects.mdx,rewrites.mdx,runtime-configuration.mdx,serverExternalPackages.mdx,trailingSlash.mdx,transpilePackages.mdx,turbo.mdx,typescript.mdx,urlImports.mdx,useLightningcss.mdx,webVitalsAttribution.mdx,webpack.mdx}|02-pages/04-api-reference/04-config:{01-typescript.mdx,02-eslint.mdx}|02-pages/04-api-reference/05-cli:{create-next-app.mdx,next.mdx}|03-architecture:{accessibility.mdx,fast-refresh.mdx,nextjs-compiler.mdx,supported-browsers.mdx}|04-community:{01-contribution-guide.mdx,02-rspack.mdx}<!-- NEXT-AGENTS-MD-END -->
+### Assessment data flow
+1. Client persists stage answers to `localStorage` (in-session source of truth) via `lib/assessment/session.ts`.
+2. Client `POST`s a `SessionPatch` to `/api/assessment/session` (`lib/assessment/api.ts`).
+3. Server validates with Zod, computes `score` + `sbaEligible` only when `completedAt` is present, and
+   returns `200` **before** the DB write completes — the write runs in `after()`.
+4. Client `POST`s `/api/assessment/generate`, which streams Sonnet output and persists the final
+   markdown in another `after()` callback.
+
+**Known race (deliberate):** `/generate` can be called before the session upsert from step 3 finishes
+(the upsert runs in `after()` after the 200). In that case the route returns `404 not_found` — see the
+`traceEvent("api.generate.session_not_found", …)` block in
+[`app/api/assessment/generate/route.ts`](../app/api/assessment/generate/route.ts) and the
+`api.session.http_200_sent_before_after` trace in `session/route.ts`. Do **not** "fix" this by removing
+`after()` without coordinating — it's an intentional latency/UX tradeoff.
+
+### Stage data — JSONB everywhere
+`assessment_sessions` stores `stage1`, `gate`, `stage2`, `stage3`, `stage4` as JSONB. Per-stage Zod
+schemas live in `app/api/assessment/session/route.ts`; TS types in `lib/assessment/session.ts`
+(`Stage1Answers`…`Stage4Answers`, `GateAnswers`). Adding a stage field means updating **both** the Zod
+schema and the TS interface.
+
+### Naming quirk
+`SegmentTag` was renamed to `leadQuality` in TypeScript, but the DB column stays `segment_tag`
+(`.$type<SegmentTag>()` on the Drizzle column — see [`lib/db/schema/assessments.ts`](../lib/db/schema/assessments.ts):23).
+No migration is needed for this rename; preserve the column name.
+
+---
+
+## Database
+
+### Schema (`lib/db/schema/`) — three tables, all RLS-enabled
+| Table | Purpose | Notable columns |
+|---|---|---|
+| `assessment_sessions` | One row per assessment | `session_id` (text, unique), stage1-4 + gate JSONB, `segment_tag`, `score`, `sba_eligible`, `completed_at` |
+| `assessment_reports` | One report per session | `session_id` (FK, unique), `report_md`, `model_used`, `generation_ms` |
+| `waitlist` | Email capture | `email` (unique), `role`, `source` |
+
+### RLS posture (public, anon role only)
+- `anon_insert_sessions`, `anon_insert_reports`, `anon_insert_waitlist` — anon can INSERT.
+- Anon SELECT/UPDATE on assessment tables were **dropped** in `0001_drop_anon_rw_policies.sql`. All
+  reads route through API routes using the Drizzle `DATABASE_URL` connection (which bypasses RLS).
+- **Any new user-data table must ship its RLS policies in the same migration.**
+
+### Migrations (`lib/db/migrations/`)
+```
+0000_colossal_gravity.sql               initial schema + RLS
+0001_drop_anon_rw_policies.sql          remove anon SELECT/UPDATE
+0003_jazzy_dormammu.sql                 waitlist table + RLS
+0004_fine_fixer.sql                     drop teaser_json column
+0005_rainy_devos.sql                    session_id idx → UNIQUE constraint
+0006_restore_assessment_anon_policies_idx.sql   idempotent repair
+```
+`0002` is intentionally skipped (squashed during early dev). Don't renumber. Migrations are
+append-only — never edit an applied one.
+
+### Commands
+```bash
+pnpm db:generate   # generate migration SQL from schema changes
+pnpm db:migrate    # apply migrations — use SESSION pooler URL (5432) locally
+pnpm db:push       # DEV/LOCAL ONLY — never staging/prod
+pnpm db:studio     # Drizzle Studio
+```
+`drizzle.config.ts` loads `DATABASE_URL` via `env.mjs`; swap to a session-pooler URL in `.env.local`
+for migration commands only.
+
+---
+
+## AI
+
+- Provider + model constants live in `lib/ai/index.ts` (one module-level `anthropic` instance — never
+  per-request). `SONNET_MODEL` for report generation, `HAIKU_MODEL` for fast paths.
+- Prompts live in `lib/ai/prompts.ts`.
+- Report generation streams (`text/plain`) and persists in `after()`. Keep streaming responses
+  cancellation-safe and never block the response on the persistence write.
+
+---
+
+## Observability & Debug
+
+- **`instrumentation.ts`** — registers `@vercel/otel` (`serviceName: "scorta-api"`) and an
+  `unhandledRejection` handler that emits structured JSON.
+- **`lib/logger.ts`** — `logger.info/warn/error(event, ctx)` emits one JSON line per call; `timed(name, fn)`
+  wraps an async fn with success/error duration logging. Use it for anything worth observing in prod.
+- **`lib/debug/workflow-trace.ts`** — `traceEvent(phase, payload)` appends NDJSON to
+  `.exitiq-debug/sessions/<sessionId>.ndjson`. **Local dev only** (gated by `EXITIQ_WORKFLOW_LOG=true`
+  AND `VERCEL !== "1"`). Tracing must never crash the app — errors are swallowed by design.
+- **Client tracing** — `lib/debug/workflow-trace-client.ts` POSTs events to `/api/debug/workflow-trace`
+  when `NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG=true`.
+- **PII redaction** — gate data must go through `redactGateForTrace()` before reaching `traceEvent`.
+
+---
+
+## Components & lib map
+
+```
+components/
+  scorta/        platform shell + brokerage stations + marketing
+    AppShell.tsx           left rail + top bar + CASE chat + agent panel (wraps every (app) route)
+    AgentActivityPanel.tsx · AgentFleetContext.tsx · AuditTrailModal.tsx
+    CASEChat.tsx · CaseChatPage.tsx · CaseHero.tsx
+    SellerHome.tsx · LoginPanel.tsx · LandingPage.tsx · AboutPage.tsx
+    ConnectStation · IngestionStation · RecastStation · RiskStation · BoardroomStation
+    DocumentsStation · VDRStation · LendersStation · BuyersStation · OutreachStation
+    UploadStation · LockedStation
+  exitiq/        public assessment flow (client-heavy, WebGL canvas)
+    ExitIQApp.tsx          master state machine + WebGL lifecycle
+    questions · dashboard · preview · report · report-visual · radar · bento · ui
+
+lib/
+  persona.ts               locked mock persona (PERSONA) + STATIONS rail definition
+  assessment/              questions, scoring, sba, segmentation, session, transform, api,
+                           states, industries, readiness-axes, report-transform
+  ai/                      index (provider + models), prompts
+  db/                      index (singleton), schema/, migrations/, __tests__/
+  supabase/                client, server, middleware
+  exitiq/                  calculations, webgl, data
+  email/ · debug/ · logger.ts
+  auditTrail.ts · agentActivity.ts · caseChat.ts   (agent-fleet UI data)
+```
+
+### Styling reality
+Design tokens are CSS variables in `styles/tailwind.css` (`--t1`…`--t4`, `--glass-bg`, `--mint`,
+`--peach`, `--scan-color`, …). Dark is the default theme; `[data-theme="cream"]` is the light variant
+(the `(app)` workspace pins `cream`). Much of the `scorta/` station UI is written with **inline-style
+React using these CSS variables** rather than Tailwind utility classes. That is the current
+convention for those files — when extending them, reuse the existing tokens and inline-style patterns
+for consistency rather than mixing paradigms mid-component. New standalone components should prefer
+Tailwind utilities + tokens per `AGENTS.md`. Never hardcode raw hex outside the token definitions.
+Fonts (`EB Garamond` serif, `Inter` sans, `JetBrains Mono`) are loaded via `next/font/google` in
+`app/layout.tsx`.
+
+---
+
+## Commands
+
+```bash
+pnpm dev                # Next dev (Turbopack)
+pnpm build              # Production build
+pnpm start              # Production server
+pnpm lint  / lint:fix   # ESLint (flat config: typescript-eslint + next + storybook + import-order)
+pnpm prettier / :fix    # Prettier
+pnpm typecheck          # tsc --noEmit
+pnpm test               # Vitest (RUN_DB_INTEGRATION_TESTS=1)
+pnpm test:integration   # DB schema + RLS integration tests
+pnpm e2e:headless       # Playwright
+pnpm storybook
+pnpm db:studio
+```
+
+---
+
+## Definition of Done
+
+A change is done when:
+
+- [ ] `pnpm typecheck` and `pnpm lint` pass clean
+- [ ] `pnpm prettier` is satisfied (run `:fix` if not)
+- [ ] New/changed `lib/` logic has unit tests; DB/RLS changes have integration tests; all green
+- [ ] Invalid input, missing rows, and upstream failures are handled with explicit status + structured logs
+- [ ] Client surfaces have loading and error states
+- [ ] No `process.env` outside `env.mjs`; no `db` import in client components; no `../../` imports
+- [ ] Schema changes ship a new migration (with RLS where applicable); `env.mjs` + `.env.local.example` updated together
+- [ ] No new palette / component library / AI provider introduced without cause
+- [ ] The relevant flow was actually exercised (no console errors, no dead links, no 404s)

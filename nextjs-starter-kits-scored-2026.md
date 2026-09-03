@@ -1,0 +1,233 @@
+# Evidence-capped Next.js starter kit selection for Scorta
+
+Principle #1 applied: the selection is based on which kit can preserve Scorta's default stack for the next 6-12 months, not on feature count or visual polish. A kit earns credit only where Pass 1 verified the relevant architecture, tenancy boundary, RLS, storage path, or maintenance signal; a material UNVERIFIED field receives a conservative cap rather than an inferred benefit. MakerKit Lite is the only candidate with a verified Supabase account boundary and shipped SQL policies, while the paid MakerKit aligns with the target stack but leaves paid tenancy, RLS, storage, agent documentation, and exact commit recency UNVERIFIED. The current Clerk<->Supabase route is documented by Supabase as a first-class third-party-auth path at https://supabase.com/docs/guides/auth/third-party/clerk; Pass 1 records the older JWT-template integration as deprecated as of 2025-04-01. Neither ranked kit needs Clerk because both ship Supabase Auth.
+
+## Executive Summary
+
+- **Stack Hold**: MakerKit Lite matches App Router, TypeScript, Supabase Auth, Supabase Postgres, and a monorepo, while its SQL evidence is limited to accounts and storage [1][2] -> keep the stack and add Engagement-specific policies before real seller data.
+- **Isolation Proof**: Lite has actual `CREATE POLICY` evidence for `public.accounts` and `storage.objects`, but not for an Engagement table [1] -> treat the shipped policy as a pattern, not as completed Scorta isolation.
+- **Paid Completeness**: The full MakerKit adds team accounts, subscription billing, an admin dashboard, and a monorepo [2] -> use only if the extra surface survives a schema and deletion review; completeness is not proof of RLS.
+- **File Boundary**: Lite is the only option with Pass 1 evidence that its storage layer exposes an S3-compatible API, but AWS KMS, CloudTrail, and a production audit hook are not verified -> use kit storage for synthetic/public assets and build the real-seller AWS path explicitly.
+- **Evidence Caps**: Exact last-commit dates are UNVERIFIED for both ranked kits, and paid-kit RLS and storage are UNVERIFIED -> verify those fields before treating either maintenance or isolation as institutional-grade.
+- **Day-14 Trade-off**: Lite has less billing to strip, while the full kit has more prebuilt product surface but also more subscription/admin coupling [2] -> compare strip time against isolation work rather than choosing on UI breadth.
+
+## Disqualified
+
+- **vercel/next-forge** - disqualified because Pass 1 did not verify an org, workspace, or account table in `packages/database/prisma/schema.prisma`; its shipped stack is Clerk plus Neon/Prisma, and Vercel Blob has no verified S3 adapter or clean swap path. The repository is MIT and a Turborepo, but those positives do not cure the missing tenant and storage boundary [3].
+- **ixartz/SaaS-Boilerplate** - disqualified because the inspected migration contains only a `todo` table with `owner_id`, with no verified org/workspace/account primitive or SQL RLS policy; Pass 1 also found no verified storage surface. Evidence source: https://raw.githubusercontent.com/ixartz/SaaS-Boilerplate/main/migrations/0000_init-db.sql
+- **ixartz/Next-js-Boilerplate** - disqualified by the Pages Router support, and its inspected migration contains only a `counter` table with no verified tenancy or RLS boundary. Evidence source: https://raw.githubusercontent.com/ixartz/Next-js-Boilerplate/main/migrations/0000_init-db.sql
+- **Supabase Clerk third-party-auth documentation** - not a kit and therefore not ranked; it is used only to verify that Clerk JWT plus Supabase RLS is a documented fallback path. Evidence source: https://supabase.com/docs/guides/auth/third-party/clerk
+
+## Ranked options
+
+Scores use the 100-point base rubric, then apply only evidenced bonuses and penalties. An UNVERIFIED field is not treated as a negative fact, but the affected criterion is capped at the amount shown in the profile.
+
+| Rank | Name + repo/URL | License/price | Auth | DB | Tenancy mechanism | RLS (shipped SQL / must add / none) | Monorepo? | Agent docs (strong/partial/weak) | Last-commit date | Score/100 | 12-month risk (one phrase) | Day-14 risk (one phrase) |
+|---|---|---|---|---|---|---|---|---|---|---:|---|---|
+| 1 | MakerKit Lite (OSS) - https://github.com/makerkit/nextjs-saas-starter-kit-lite | MIT; free | Supabase Auth via `@supabase/ssr` | Supabase Postgres; Supabase migrations and generated database types | `public.accounts` is the verified account primitive; it can represent team or personal accounts [1] | Shipped SQL for `accounts` and `storage.objects`; must add policies for Engagement-scoped tables [1] | Yes; apps, packages, tooling, and generators | Partial; `apps/web/AGENTS.md` is mostly an auto-injected Next.js rules block [4] | UNVERIFIED; Pass 1 recorded 40 commits but not the last-commit date | **82** | AWS production file path and maintenance recency are not fully evidenced | Engagement schema, policies, S3 path, and audit event still need implementation |
+| 2 | MakerKit, next-supabase-turbo (paid full) - https://makerkit.dev/docs/next-supabase-turbo | $299 one-time lifetime price, previously $349; https://makerkit.dev/pricing | Supabase Auth | Supabase Postgres with Drizzle | UNVERIFIED in the paid repository; docs describe team accounts, but no paid tenancy migration was inspected [2] | UNVERIFIED; no paid migration with `CREATE POLICY` was inspected, so policies must be verified or added | Yes; Turborepo monorepo [2] | Weak; paid-kit agent docs and add-a-table/RLS workflow are UNVERIFIED | UNVERIFIED; changelog is active, but exact commit date was not verified; https://makerkit.dev/changelog | **45** | Billing and subscription coupling plus unverified isolation | Strip billing and verify the paid schema before building the demo |
+
+### 1. MakerKit Lite (OSS)
+
+**Score:** **82/100**. Base score: 21/25 for twelve-month stack hold, 15/18 for Day-14 velocity, 12/18 for isolation, 11/12 for domain neutrality, 7/10 for files, 5/10 for agent map, and 6/7 for commodity-delete cost, totaling 77. Add 5 for shipped SQL RLS and 5 for first-class Supabase Auth, then subtract 5 because the partial documentation does not safely prove an agent can add a new RLS-backed table. The isolation, files, and maintenance components are capped because Engagement policies, the AWS production path, audit hooks, and the exact last-commit date are UNVERIFIED. The RLS bonus is limited to the verified `accounts` and storage policies; it does not mean Engagement RLS is shipped [1].
+
+**Best used when:** Scorta wants the closest free starting point to its Supabase/RLS default while keeping billing out of the first product slice.
+
+**Qualities that make it worth picking**
+
+- The kit is MIT and free, uses the App Router and TypeScript, and is structured as a monorepo with apps and shared packages, which matches the desired thin foundation without introducing a second database or authentication system. Evidence source: https://github.com/makerkit/nextjs-saas-starter-kit-lite
+- Supabase Auth is the shipped authentication path, and the schema is Supabase-native, with `auth.users`, public tables, and storage types visible in the inspected migration and generated types [1].
+- `public.accounts` is an actual top-level primitive with a UUID primary key and an `auth.users` relationship; the migration explicitly treats accounts as team or personal containers [1]. That is a usable shell for adding an Engagement layer without making a later parent/platform container impossible.
+- The migration contains real SQL RLS, including `alter table ... enable row level security`, account read/update policies, and a storage-object policy [1]. This is materially better evidence than a README claim that merely mentions RLS.
+- The monorepo shape gives two founders a place to keep the public app, web app, shared UI, Supabase client, and domain packages separate. Evidence source: https://github.com/makerkit/nextjs-saas-starter-kit-lite/tree/main
+- Supabase Storage is S3-compatible through access keys or a session token plus RLS, so Pass 1 classifies the storage swap as a days-not-a-rewrite path, although that does not prove an AWS KMS or CloudTrail integration [1]. Evidence source: https://supabase.com/docs/guides/storage/s3/authentication
+- Lite omits the paid kit's billing tables, which reduces the amount of subscription machinery to delete before the synthetic transaction. The billing layout is still marked UNVERIFIED in Pass 1, so the score gives only partial commodity-delete credit.
+
+**Drawbacks**
+
+- The verified tenancy boundary is `accounts`, not `engagements`. The migration proves account and storage policies, but Pass 1 found no Engagement-scoped table or policy. Scorta must build `engagement`, membership, permission, evidence, and access-event policies before accepting a real seller document [1].
+- The AWS path is not a verified adapter in the repository. S3 compatibility makes a clean direction plausible, but the evidence does not show S3 presigned-url code, KMS key handling, CloudTrail correlation, or an audit hook. Those must be treated as build work, not inherited capability. Evidence source: https://supabase.com/docs/guides/storage/s3/authentication
+- The agent documentation is partial. `apps/web/AGENTS.md` contains an auto-injected Next.js rules block, but Pass 1 did not verify a complete package map or a documented sequence for adding a tenant column, `CREATE POLICY`, tests, and service-role restrictions [4].
+- Background jobs and webhook verification examples are UNVERIFIED. The kit therefore cannot receive the job or webhook bonuses, and the parse-to-claim pipeline must begin with route handlers or a separately chosen worker only after the application boundary is defined.
+- The exact last-commit date is UNVERIFIED. The repository has a recorded commit count, but that is not enough to label it active within the required 90-day window; maintenance should be rechecked before a long-lived fork is locked.
+- The exact public three-path seller showroom, pricing path, and synthetic transaction flow are not verified by the Pass 1 evidence. The kit can host them, but the Day-14 plan must build and test those routes rather than count them as shipped.
+
+**Week-1 keep / delete**
+
+Keep: App Router, TypeScript, Supabase Auth, the Supabase client and migration workflow, the monorepo boundaries, the account policy as a reference, and only the storage surface needed for synthetic/public assets. Delete or ignore: any nonessential demo chrome and any optional subscription or marketing surface that does not advance the public showroom, synthetic transaction, Owner Profile, Engagement, or evidence record. Do not infer that CMS, chat, or billing is present or absent beyond the inspected Lite evidence.
+
+**How workspace maps to an Engagement**
+
+Use `public.accounts` as the initial Scorta account shell, but make `engagements` the actual tenant boundary from the first domain migration. A single account may own or administer one or more engagements; each Engagement should then hold seller, Scorta advisor, and need-to-know collaborator memberships, with every engagement-scoped row carrying `engagement_id`. Copy the policy style from the verified account and storage policies, but write new policies for each Engagement-scoped table and test both an authorized collaborator and a denied cross-engagement request [1]. This preserves room for a later parent/platform container because the current account primitive is not forced to become the product-wide tenant.
+
+**Auth path (Supabase Auth vs Clerk) and rough days to wire**
+
+Use Supabase Auth, not an additional Clerk installation. It is already the shipped path, so the planning estimate is 1-2 days for environment configuration, callback smoke tests, protected-route checks, and the first RLS authorization tests; that estimate is planning judgment, not a Pass 1 fact. If a later requirement genuinely favors Clerk, use the current Supabase third-party-auth flow in which Supabase trusts Clerk session JWTs and RLS reads claims, rather than adding an unrelated second auth system: https://supabase.com/docs/guides/auth/third-party/clerk. The default path should remain one auth system and one Supabase database.
+
+**Files: synthetic demo vs first real seller document**
+
+For the synthetic transaction and public demo assets, the kit's storage layer is acceptable after checking bucket visibility. For the first real seller document, use an AWS S3 path with KMS and CloudTrail as the system of record, store only the evidence metadata and authorization state in Scorta Postgres, and generate authorized or expiring access through Scorta's policy boundary. Pass 1 supports the S3-compatible direction and a days-not-a-rewrite swap, but it does not verify the AWS adapter, KMS configuration, CloudTrail event correlation, or audit hook, so those remain explicit implementation tasks [1].
+
+**What this kit will never give us**
+
+It will not give Scorta the Business Brain, a canonical-fact and claim versioning model, a disclosure matrix, buyer-specific redaction rules, a Passport card, or the domain workflow for owner profile, ExitIQ, add-backs, offers, permissions, and access events. It supplies infrastructure patterns only; those product semantics must be designed and built by Scorta.
+
+### 2. MakerKit, next-supabase-turbo (paid full)
+
+**Score:** **45/100**. Base score: 20/25 for twelve-month stack hold, 15/18 for Day-14 velocity, 6/18 for isolation, 6/12 for domain neutrality, 3/10 for files, 1/10 for agent map, and 2/7 for commodity-delete cost, totaling 53. Subtract 8 for the evidenced billing-centric full-kit coupling. No RLS, webhook, or background-job bonuses are awarded because the relevant paid examples are UNVERIFIED; the `set up webhooks` reference is not treated as signature-verification code. The isolation, file, agent, and maintenance scores are capped because the paid schema, SQL policies, storage adapter path, agent docs, and exact commit date were not inspected. The score is therefore a conditional evidence score, not a claim that the paid kit is insecure.
+
+**Best used when:** Scorta values more prebuilt account, admin, billing, and marketing surface for the showroom and is willing to delete or isolate those features before the Engagement schema becomes canonical.
+
+**Qualities that make it worth picking**
+
+- The paid kit is documented as a production-ready multi-tenant SaaS foundation with authentication, team management, subscription billing, and an admin dashboard, and it is built on Next.js 16, React 19, Supabase, and Tailwind CSS 4 [2]. Those features can reduce generic application scaffolding for a public showroom.
+- It uses the desired broad architecture: App Router, TypeScript, Supabase Auth, Supabase Postgres, Drizzle, and a Turborepo monorepo [2]. That means it does not require the second database or second authentication system that makes next-forge a poor fit for the preserved default.
+- The full kit explicitly adds complete billing and subscription capability and team-account management relative to Lite. This can accelerate generic account and admin plumbing, but it is a quality only if the code is isolated from Scorta's Engagement and disclosure model [2].
+- The one-time lifetime price is recorded as $299, previously $349, rather than a required recurring subscription: https://makerkit.dev/pricing
+- The changelog provides a current maintenance signal, including updates around Next.js 16, Supabase v4, ORM v2, AI agents, and an MCP server: https://makerkit.dev/changelog. It is useful evidence of activity, but it is not a substitute for the missing exact last-commit date.
+- Documentation references production webhook setup, which may help locate an integration point, but Pass 1 did not verify a concrete signature-checking example. This is a lead for follow-up, not a webhook bonus.
+
+**Drawbacks**
+
+- The paid tenancy mechanism is UNVERIFIED. Docs mention team accounts, but no paid migration defining an organization, account, workspace, or Engagement was inspected. Do not make the team-account claim the authorization boundary until the schema and tests are read [2].
+- Paid-kit SQL RLS is UNVERIFIED. Lite's migration cannot be used as proof that the full kit has the same policies. Scorta must inspect or add `CREATE POLICY` statements on every Engagement-scoped table before accepting the isolation claim.
+- The file layer and AWS S3 swap are UNVERIFIED for the paid kit. Pass 1 records Supabase Storage in the docs but no verified S3 adapter or callsite contract, so the real-seller file path could consume more than the Lite path and must not be assumed to be a days-not-a-rewrite change.
+- Billing and subscriptions are woven into the full kit, which creates the rubric's -8 billing-centric penalty. Strip or isolate Stripe, seats, credits, invoices, and subscription lifecycle code before Scorta's canonical model is allowed to depend on it; the exact paid schema layout remains UNVERIFIED.
+- Paid-kit agent documentation, package-map quality, and the add-a-table plus RLS workflow are UNVERIFIED. It receives only 1/10 for the agent-map criterion, and no claim is made that the docs are actually weak or strong until the repository is inspected.
+- The active changelog is encouraging, but the exact last-commit date is UNVERIFIED. Do not label the kit actively maintained within 90 days solely from the changelog.
+- The admin, billing, and team surface may shorten generic setup but can create Day-14 drag. The mechanism is straightforward: every feature that owns routes, permissions, or tables must be deleted, isolated, or mapped before the Engagement boundary is safe. The paid kit's broader surface is therefore a trade-off, not a free velocity bonus [2].
+
+**Week-1 keep / delete**
+
+Keep: App Router, TypeScript, Supabase Auth, the Supabase client, the monorepo package boundaries, and only the account/team primitives that survive review of their migrations and RLS. Delete or ignore: subscription billing, Stripe lifecycle, seats or credits, admin polish, and any dashboard or marketing component that delays the synthetic transaction; retain a route only if it serves the public showroom, Owner Profile, Engagement, evidence record, or collaborator invite. The full kit's complete billing and team surface is documented, so deletion work is a known risk rather than an assumed absence [2].
+
+**How workspace maps to an Engagement**
+
+Do not assume the paid kit's team account is Scorta's tenant. First locate the actual paid schema and determine whether its account/team primitive can safely parent an `engagements` table. If it can, use the team/account record only as an outer container and make Engagement membership, permission, evidence, and access-event rows the real authorization boundary. If it cannot be demonstrated from SQL and tests, build the Engagement boundary independently and leave the generic team layer as optional UI. No Pass 1 evidence shows that adding a later parent/platform container is impossible, but no evidence shows it is safe either.
+
+**Auth path (Supabase Auth vs Clerk) and rough days to wire**
+
+Use the shipped Supabase Auth path and keep one auth system. The planning estimate is 1-2 days for environment setup, callback validation, protected routes, and the first RLS smoke tests, with extra time if the paid repository's auth wiring differs from the public documentation; this is an estimate, not a sourced duration. Do not add Clerk merely because the current Supabase docs support it. If Clerk becomes necessary later, use the documented Clerk JWT plus Supabase RLS integration at https://supabase.com/docs/guides/auth/third-party/clerk, and make it a deliberate auth substitution rather than a second parallel auth system.
+
+**Files: synthetic demo vs first real seller document**
+
+Treat the full kit's default storage as suitable for synthetic or public demo material only until the paid storage implementation is inspected. For the first real seller document, require an AWS S3, KMS, and CloudTrail design with Scorta-owned metadata, authorization, URL issuance, and access-event records. Pass 1 did not verify the adapter, KMS boundary, CloudTrail correlation, or audit hook for the paid kit, so the file score is capped at 3/10 and the production document path should not be accepted as inherited capability.
+
+**What this kit will never give us**
+
+It will not give Scorta the Business Brain, canonical fact and claim versioning, disclosure policy and buyer-specific redaction, a Passport card, or the domain workflow for Owner Profile, ExitIQ, offers, add-backs, evidence provenance, permissions, and access events. Its subscription, team, and admin features are generic SaaS plumbing, not Scorta's product model [2].
+
+## How to read the list
+
+- **Strongest on 12-month isolation:** MakerKit Lite, because it is the only ranked option with inspected SQL policies and an inspected account primitive. This is a narrow evidence advantage: its Engagement policies are still missing [1].
+- **Strongest on Day-14 showroom speed:** The full MakerKit has the broader documented prebuilt surface, including marketing, account/team, billing, and admin capabilities [2]. Lite may have lower strip cost because the paid billing layer is omitted, but Pass 1 does not verify the exact three seller paths for either kit. This lens is about likely scaffolding effort, not a verdict.
+- **Strongest for agent-driven two-founder teams:** Lite is stronger among the ranked options only because it has a verified, if partial, `AGENTS.md` path and a smaller surface to understand [4]. The evidence does not support calling it strong. The ixartz boilerplate has stronger agent-document evidence, but its Pages Router or missing tenancy evidence disqualifies it for this brief.
+- **Strongest if Scorta stays free:** Lite is MIT and free. The other free candidates remain outside the ranked set because free licensing cannot compensate for a missing verified tenant boundary, missing SQL RLS, absent storage surface, or Pages Router.
+
+These lenses intentionally point to different trade-offs. None is a hidden winner: Lite has stronger isolation evidence but more product work to build, while the full kit has more generic surface but more unverified coupling to remove.
+
+## Anti-pattern
+
+ShipFast-class packaging, Mongo-backed starters, and theme-only dashboards miss this list when they optimize for launch polish without proving Scorta's required boundary. Under the stated hard constraints, a Mongo, Firebase, or Convex system of record conflicts with the preserved Supabase Postgres choice; a theme-only dashboard does not establish an Engagement table, SQL RLS, S3 audit path, or service-role discipline; and a popular starter's feature count is not evidence of `CREATE POLICY` coverage. The relevant failure mode is not that these tools are universally poor, but that they force Scorta to add or replace the security and data boundary during the first 6-12 months.
+
+## Shared 7-day strip-and-shape outline
+
+| Day | Shared move | MakerKit Lite spends more/less | Paid MakerKit spends more/less |
+|---|---|---|---|
+| 1 | Clone, lock environment variables, delete or ignore billing, CMS, chat, and nonessential chrome | Less time stripping billing because Lite omits the paid billing layer in Pass 1; do not infer CMS or chat availability | More time isolating or deleting subscription, admin, and team surface because the full kit documents those features [2] |
+| 2 | Make `workspace = engagement`; add the tenant column and SQL RLS at that boundary | Less time finding a starting policy because `accounts` and storage policies are inspected; more time writing Engagement policies that are not shipped [1] | More time locating and validating the paid account/team schema and RLS because both are UNVERIFIED |
+| 3 | Build public routes and the synthetic transaction shell | App Router and monorepo are usable foundations, but the exact showroom is not counted as shipped; https://github.com/makerkit/nextjs-saas-starter-kit-lite | App Router, monorepo, marketing, and admin documentation may reduce generic route work, but exact seller paths remain unverified [2] |
+| 4 | Build Owner Profile and collaborator invite | Use the account primitive as a starting shell, then authorize the invite through Engagement membership [1] | Team-account UI may help, but do not connect it to real data until the paid tenancy migration and policies are verified [2] |
+| 5 | Put evidence upload on an AWS S3 path and record an audit event | S3-compatible storage gives a closer swap direction, but AWS KMS, CloudTrail, and audit correlation still need code; https://supabase.com/docs/guides/storage/s3/authentication | Storage adapter and AWS swap are UNVERIFIED, so budget discovery plus implementation rather than assuming compatibility |
+| 6 | Build the ExitIQ skeleton and leave a CRM-later stub for Attio | Product work is net-new for both kits | Product work is net-new for both kits |
+| 7 | Deploy, run cross-engagement denial tests, and replay the synthetic transaction | Recheck last-commit evidence and verify the new Engagement policies before inviting a real collaborator | Recheck last-commit evidence and paid RLS/storage before treating the full kit as production-ready |
+
+Lite spends less time stripping subscription machinery but more time completing the Engagement and AWS boundaries. The full kit may save generic UI work but can spend that time back on billing deletion and paid-schema verification; neither option inherits the required seller-domain model.
+
+## Synthesis
+
+The two ranked options differ along four material dimensions: isolation mechanism, scope of shipped surface, trade-off profile, and evidence quality over the 6-12 month horizon. Lite's mechanism is inspectable SQL: an account table, account policies, and a storage policy are visible in the migration [1]. Its scope is narrower, which reduces deletion cost, but the same thinness means Engagement, evidence, claims, permissions, and audit events must be built. Its evidence base is concrete for the first boundary and incomplete for AWS production files, jobs, webhooks, and maintenance recency.
+
+The full MakerKit's mechanism is broader SaaS packaging: the docs describe team accounts, billing, subscriptions, an admin dashboard, and a monorepo [2]. Its scope may reduce generic showroom scaffolding, but billing is woven into the product surface and the decisive isolation artifacts in the paid repository were not inspected. Its evidence base is therefore stronger for breadth and weaker for the exact security boundary that Scorta cannot compromise. The active changelog is a useful time signal, but it does not replace an exact commit date: https://makerkit.dev/changelog.
+
+The non-obvious tension is that more shipped SaaS functionality can reduce Day-14 coding while increasing the chance that a generic account, subscription, or admin model becomes Scorta's accidental core. Conversely, a thinner kit can look slower because Scorta must build more domain code, yet it can preserve the default stack with less deletion and fewer hidden couplings. For Scorta, the mechanism outranks the surface: actual policy evidence is more valuable than a team-account label, and a close S3-compatible path is more valuable than convenient demo storage only when the AWS audit boundary is implemented.
+
+Both kits can preserve one database and one auth system, and the Clerk<->Supabase path remains available as a documented alternative rather than a requirement: https://supabase.com/docs/guides/auth/third-party/clerk. Neither kit makes a later parent/platform container demonstrably impossible, but neither should be credited for that future model until the Engagement schema is explicit. The resulting decision is a controlled trade-off between Lite's verified-but-incomplete boundary and the full kit's broader-but-unverified boundary, not a universal winner.
+
+## Product work no kit covers
+
+| Scorta workstream | What must be built outside the kit | Why the starter does not substitute |
+|---|---|---|
+| Business Brain | Canonical facts, claims, provenance, source evidence, confidence, version history, and a review/acceptance workflow | The inspected kits provide generic accounts, todos, counters, billing, or storage primitives, not a seller knowledge model |
+| Disclosure matrix | Buyer-specific visibility, redaction, disclosure state, permission inheritance, and an auditable decision for each evidence item | Account or team membership is not a buyer disclosure policy; generic RLS is necessary but not sufficient |
+| Versioned facts | Immutable fact revisions, supersession, source links, conflict handling, and a distinction between raw evidence and canonical fact | No Pass 1 evidence shows a claim or canonical-fact schema in any candidate |
+| Passport card | A compact buyer-facing company representation with controlled fields, provenance, and disclosure-aware rendering | No kit supplies the Scorta Passport concept or its relationship to the Brain and disclosure policy |
+| Engagement operating model | `engagement`, seller, advisor, collaborator membership, evidence, claim, canonical_fact, add_back, offer, disclosure_policy, permission, access_event, buyer, and passport records | The only verified account primitive is not the Scorta domain model; these relationships and workflows are product work |
+
+These are the parts that create Scorta's defensibility. Keep DocuSign, Calendly, Zoom, Postmark/Twilio, Reducto, QBO read-only, Attio, and OpenAI as replaceable integrations rather than allowing a starter kit to turn them into the system of record.
+
+## References
+
+- vercel/next-forge: https://github.com/vercel/next-forge
+- ixartz/SaaS-Boilerplate: https://github.com/ixartz/SaaS-Boilerplate
+- ixartz/Next-js-Boilerplate: https://github.com/ixartz/Next-js-Boilerplate
+- MakerKit Lite repository: https://github.com/makerkit/nextjs-saas-starter-kit-lite
+- MakerKit full documentation and pricing: https://makerkit.dev/docs/next-supabase-turbo and https://makerkit.dev/pricing
+- Supabase Clerk third-party auth: https://supabase.com/docs/guides/auth/third-party/clerk
+- Supabase Storage S3 authentication: https://supabase.com/docs/guides/storage/s3/authentication
+
+---
+
+## Appendix (trailing output)
+
+## References
+
+1. *http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/supabase/migrations/20241219010757_schema.sql*. http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/supabase/migrations/20241219010757_schema.sql
+2. *http://makerkit.dev/docs/next-supabase-turbo/installation/introduction*. http://makerkit.dev/docs/next-supabase-turbo/installation/introduction
+3. *http://github.com/vercel/next-forge*. http://github.com/vercel/next-forge
+4. *http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/AGENTS.md*. http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/AGENTS.md
+
+---
+
+## Basis (citations returned by Parallel)
+
+```json
+[
+  {
+    "field": "answer",
+    "reasoning": "Reasoning: The field_answer provides a comprehensive narrative evaluation of listed Next.js starter kits against Pass 1 evidence, covering stack hold, RLS, tenancy, storage, maintenance, and other criteria. It references specific kits (Lite and paid MakerKit, next-forge, etc.) and integrates citations to observed files (migrations, AGENTS.md, docs) as shown in excerpts. While some details are labeled UNVERIFIED and some claims rely on evidence fragments, the answer addresses the expected aspects (1-14 fields) and aligns with the provided excerpts to a meaningful extent. Therefore, completeness is true. The excerpts do support the key assertions (e.g., existence of SQL RLS in Lite migrations, App Router usage, monorepo structure, AGENTS.md presence), though several items remain marked UNVERIFIED and would require further inspection for full corroboration. The answer is largely supported by excerpts, though not every claim is verifiably tied to a given excerpt listed; still, the core patterns and evidence points are grounded in the excerpts.",
+    "citations": [
+      {
+        "url": "http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/supabase/migrations/20241219010757_schema.sql",
+        "excerpts": [
+          "*/ -- Create a private Makerkit schema create schema if not exists kit; create extension if not exists \"unaccent\" schema kit; -- We remove all default privileges from public schema on functions to -- prevent public access to them alter default privileges revoke execute on functions from public; revoke all on schema public from public; revoke all PRIVILEGES on database \"postgres\" from \"anon\"; revoke all PRIVILEGES on schema \"public\" from \"anon\"; revoke all PRIVILEGES on schema \"storage\" from \"anon\"; revoke all PRIVILEGES on all SEQUENCES in schema \"public\" from \"anon\"; revoke all PRIVILEGES on all SEQUENCES in schema \"storage\" from \"anon\"; revoke all PRIVILEGES on all FUNCTIONS in schema \"public\" from \"anon\"; revoke all PRIVILEGES on all FUNCTIONS in schema \"storage\" from \"anon\"; revoke all PRIVILEGES on all TABLES in schema \"public\" from \"anon\"; revoke all PRIVILEGES on all TABLES in schema \"storage\" from \"anon\"; -- We remove all default privileges from public schema on functions to -- prevent public access to them by default alter default privileges in schema public revoke execute on functions from anon, authenticated; -- we allow the authenticated role to execute functions in the public schema grant usage on schema public to authenticated;"
+        ],
+        "title": "http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/supabase/migrations/20241219010757_schema.sql"
+      },
+      {
+        "url": "http://makerkit.dev/docs/next-supabase-turbo/installation/introduction",
+        "excerpts": [
+          "The Next.js Supabase SaaS Kit is a production-ready starter for building multi-tenant SaaS applications. It ships with authentication, team management, subscription billing, and an admin dashboard out of the box. Built on **Next.js 16**, **React 19**, **Supabase**, and **Tailwind CSS 4**, this Turborepo monorepo gives you a solid foundation to launch faster without sacrificing code quality or flexibility.",
+          "It ships with authentication, team management, subscription billing, and an admin dashboard out of the box."
+        ],
+        "title": "http://makerkit.dev/docs/next-supabase-turbo/installation/introduction"
+      },
+      {
+        "url": "http://github.com/vercel/next-forge",
+        "excerpts": [
+          "Top-level files .github/ .vscode/ apps/ docs/ packages/ scripts/ skills/next-forge/"
+        ],
+        "title": "http://github.com/vercel/next-forge"
+      },
+      {
+        "url": "http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/AGENTS.md",
+        "excerpts": [
+          "<!-- BEGIN:nextjs-agent-rules --> This is NOT the Next.js you know This version has breaking changes \u2014 APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices. This block is written and re-added by `next dev` \u2014 verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean. <!-- END:nextjs-agent-rules -->"
+        ],
+        "title": "http://raw.githubusercontent.com/makerkit/nextjs-saas-starter-kit-lite/main/apps/web/AGENTS.md"
+      }
+    ],
+    "confidence": "high"
+  }
+]
+```
