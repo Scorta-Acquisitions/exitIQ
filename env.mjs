@@ -22,6 +22,8 @@ export const env = createEnv({
     EXITIQ_WORKFLOW_LOG: z.enum(["true", "false"]).optional(),
   },
   client: {
+    /** Canonical public origin of the site (used for metadataBase, sitemap, robots). Optional locally. */
+    NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
     /** Mirror `EXITIQ_WORKFLOW_LOG` for browser: enables POSTing client-side trace events to `/api/debug/workflow-trace`. */
     NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG: z.enum(["true", "false"]).optional().transform((v) => v === "true"),
     // Supabase — safe for browser
@@ -36,6 +38,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_SECRET_KEY: process.env.SUPABASE_SERVICE_SECRET_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG: process.env.NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,

@@ -45,3 +45,6 @@ storybook-static/
 .pnpm-store/
 # next-agents-md
 .next-docs/
+
+# Codex CLI config (holds a personal access token)
+.codex/

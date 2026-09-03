@@ -853,7 +853,7 @@ function LinkedInIcon() {
 function AFounders() {
   const team = [
     {
-      photo: "/suyash.jpeg",
+      photo: "/suyash.png",
       name: "Suyash Agrawal",
       role: "Co-founder, CEO",
       bio: "Two years running a PE firm acquiring Main Street businesses. Watched deal after deal fall apart — sellers unprepared, books messy, financials that couldn't pass SBA underwriting. Nobody was telling owners what buyers actually needed to see. Scorta is the firm he wished existed when he was on the buy side.",

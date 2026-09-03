@@ -1,0 +1,386 @@
+@import "tailwindcss";
+
+/* ── Heirloom design tokens ──────────────────────────────────────────────────
+   Single committed look: cream paper surfaces with deep-green instrument panels.
+   Every color used by the site is declared here; components reference tokens only. */
+@theme {
+  /* paper surfaces */
+  --color-paper: #fafaf4;
+  --color-paper-2: #f3f4ea;
+  --color-paper-bright: #fdfdf8;
+  --color-paper-dim: #f0f2e6;
+  --color-paper-tint: #f6f8ee;
+  --color-paper-mint: #f4fbf4;
+  --color-paper-warm: #f8faf1;
+  --color-card: #ffffff;
+
+  /* deep green grounds */
+  --color-ground: #0b241b;
+  --color-ground-2: #0f2e23;
+  --color-ground-deep: #062314;
+  --color-brand: #0c3626;
+  --color-seal-hi: #1e6b47;
+
+  /* ink on paper */
+  --color-ink: #0e241b;
+  --color-l2: #3b4a41;
+  --color-l3: #5d6b61;
+  --color-l4: #79877d;
+  --color-slip-muted: #98a69c;
+  --color-slip-dim: #6c7a70;
+  --color-hair: #e3e4d6;
+  --color-hair-2: #cbcebb;
+  --color-error: #8a3b2e;
+
+  /* ink on green */
+  --color-d1: rgba(240, 248, 242, 0.96);
+  --color-d2: rgba(240, 248, 242, 0.72);
+  --color-d3: rgba(240, 248, 242, 0.62);
+  --color-d4: rgba(240, 248, 242, 0.46);
+  --color-dfull: #f0f8f2;
+  --color-dhair: rgba(240, 248, 242, 0.14);
+  --color-dhair-2: rgba(240, 248, 242, 0.07);
+  --color-node: #eaf4ec;
+  --color-seal-ring: #aeb4ac;
+
+  /* accents */
+  --color-filament: #4ce27e;
+  --color-filament-ink: #0f7a45;
+  --color-signal: #8fe0b2;
+  --color-cta: #f7faf3;
+  --color-parchment: #f7f4e1;
+  --color-gold: #eedd9e;
+
+  /* type */
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* motion */
+  --ease-e1: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-e2: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* layout breakpoints used by the header and hero */
+  --breakpoint-phone: 361px;
+  --breakpoint-cta: 641px;
+  --breakpoint-tab: 721px;
+  --breakpoint-nav: 1041px;
+  --breakpoint-backdrop: 1101px;
+  --breakpoint-wide: 1201px;
+
+  --animate-blink: hl-blink 2.2s infinite;
+  --animate-dash: hl-dash 34s linear infinite;
+  --animate-dash-fast: hl-dash 22s linear infinite;
+  --animate-feed: hl-feed 26s linear infinite;
+  --animate-row: p-row 0.5s var(--ease-e1) both;
+
+  @keyframes hl-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+  @keyframes hl-dash {
+    to {
+      stroke-dashoffset: -160;
+    }
+  }
+  @keyframes hl-feed {
+    to {
+      transform: translateY(-50%);
+    }
+  }
+  @keyframes p-row {
+    from {
+      opacity: 0;
+      transform: translateX(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Panel gradients — too long for utility syntax, so they live as custom properties. */
+:root {
+  color-scheme: light;
+  --panel-hero:
+    radial-gradient(120% 80% at 50% -20%, rgba(247, 244, 225, 0.1), transparent 55%),
+    radial-gradient(1100px 620px at 74% 38%, rgba(76, 226, 126, 0.14), transparent 62%),
+    radial-gradient(700px 420px at 10% 92%, rgba(226, 214, 160, 0.08), transparent 60%),
+    linear-gradient(168deg, #1b4533 0%, #123829 48%, #0d2b1e 100%);
+  --panel-market:
+    radial-gradient(120% 70% at 50% -15%, rgba(247, 244, 225, 0.09), transparent 55%),
+    radial-gradient(1000px 560px at 70% 52%, rgba(76, 226, 126, 0.12), transparent 60%),
+    linear-gradient(160deg, #17402f 0%, #0f3324 55%, #0c2a1c 100%);
+  --panel-privacy:
+    radial-gradient(120% 70% at 50% -15%, rgba(247, 244, 225, 0.07), transparent 55%),
+    radial-gradient(800px 500px at 22% 42%, rgba(76, 226, 126, 0.11), transparent 58%),
+    linear-gradient(200deg, #143726 0%, #0e2c1f 60%, #0a231a 100%);
+  --panel-offers:
+    radial-gradient(120% 70% at 50% -15%, rgba(247, 244, 225, 0.09), transparent 55%),
+    radial-gradient(900px 460px at 50% 108%, rgba(76, 226, 126, 0.13), transparent 62%),
+    linear-gradient(150deg, #16402e 0%, #113526 50%, #123a2a 100%);
+  --panel-foot:
+    radial-gradient(900px 400px at 80% 0%, rgba(76, 226, 126, 0.09), transparent 60%),
+    linear-gradient(180deg, #123829 0%, #0b2418 100%);
+  --hero-paper: linear-gradient(178deg, #fcfcf7 0%, #f6f8ee 70%, #f1f4e8 100%);
+  --scene-paper: linear-gradient(180deg, #fafaf4 0%, #f2f5ea 100%);
+  --scene-paper-privacy: linear-gradient(180deg, #fafaf4 0%, #eff3e7 100%);
+  --scene-paper-stages: linear-gradient(180deg, #fafaf4 0%, #f0f4e8 100%);
+  --scene-paper-offers: linear-gradient(180deg, #eff3e7 0%, #fafaf4 100%);
+  --slip-paper: linear-gradient(172deg, #fdfdf8, #f0f2e6);
+  --slip-paper-2: linear-gradient(172deg, #fdfdf8, #f3f4ea);
+  --card-warm: linear-gradient(172deg, #ffffff, #f8faf1);
+  --seal-dot: radial-gradient(circle at 38% 34%, #1e6b47, #0c3626);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    overflow-x: clip;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-filament);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+}
+
+/* ── Composite utilities ─────────────────────────────────────────────────── */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+@utility panel-hero {
+  background: var(--panel-hero);
+}
+@utility panel-market {
+  background: var(--panel-market);
+}
+@utility panel-privacy {
+  background: var(--panel-privacy);
+}
+@utility panel-offers {
+  background: var(--panel-offers);
+}
+@utility panel-foot {
+  background: var(--panel-foot);
+}
+@utility bg-hero-paper {
+  background: var(--hero-paper);
+}
+@utility bg-scene-paper {
+  background: var(--scene-paper);
+}
+@utility bg-scene-paper-privacy {
+  background: var(--scene-paper-privacy);
+}
+@utility bg-scene-paper-stages {
+  background: var(--scene-paper-stages);
+}
+@utility bg-scene-paper-offers {
+  background: var(--scene-paper-offers);
+}
+@utility bg-slip {
+  background: var(--slip-paper);
+}
+@utility bg-slip-2 {
+  background: var(--slip-paper-2);
+}
+@utility bg-card-warm {
+  background: var(--card-warm);
+}
+@utility bg-seal-dot {
+  background: var(--seal-dot);
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+@utility mask-feed {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 84%, transparent 100%);
+}
+@utility mask-seal {
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 35%, transparent 76%);
+  mask-image: radial-gradient(72% 72% at 50% 50%, #000 35%, transparent 76%);
+}
+@utility text-glow-filament {
+  text-shadow: 0 0 26px rgba(76, 226, 126, 0.35);
+}
+
+/* ── Hover colour ────────────────────────────────────────────────────────────
+   One global rule, not per-element styling: every link renders in the surrounding ink with no
+   underline and swaps to the deep hover green on hover (~200ms ease-out). On deep-green surfaces the
+   same swap resolves to the bright filament so the text stays legible. Keyboard focus is the 2px
+   filament outline defined in the base layer. Non-link text that reacts to hover (buttons, headings)
+   opts in with `hover-green` / `hover-green-dark`. */
+@layer utilities {
+  a {
+    transition: color 0.2s var(--ease-e1);
+  }
+  a:hover {
+    color: var(--color-filament-ink);
+  }
+  .aurora a:hover,
+  .panel-hero a:hover,
+  .panel-market a:hover,
+  .panel-privacy a:hover,
+  .panel-offers a:hover,
+  .panel-foot a:hover,
+  .bg-ground a:hover,
+  .bg-ground-2 a:hover,
+  .bg-brand a:hover {
+    color: var(--color-filament);
+  }
+}
+@utility hover-green {
+  transition: color 0.2s var(--ease-e1);
+  &:hover {
+    color: var(--color-filament-ink);
+  }
+}
+@utility hover-green-dark {
+  transition: color 0.2s var(--ease-e1);
+  &:hover {
+    color: var(--color-filament);
+  }
+}
+
+/* Component-level rules live in the components layer so Tailwind utilities can override them
+   (e.g. `sticky` on a scene panel beats `.aurora`'s default `position: relative`). */
+@layer components {
+  /* Aurora: two drifting radial fields behind every dark panel. */
+  .aurora {
+    position: relative;
+    isolation: isolate;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    inset: -28%;
+    z-index: -1;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .aurora::before {
+    background:
+      radial-gradient(42% 34% at 30% 32%, rgba(76, 226, 126, 0.15), transparent 70%),
+      radial-gradient(38% 30% at 76% 68%, rgba(247, 244, 220, 0.1), transparent 70%);
+    animation: aurora-a 24s ease-in-out infinite alternate;
+  }
+  .aurora::after {
+    background:
+      radial-gradient(34% 30% at 72% 22%, rgba(143, 224, 178, 0.13), transparent 70%),
+      radial-gradient(42% 36% at 20% 82%, rgba(238, 222, 158, 0.08), transparent 70%);
+    animation: aurora-b 34s ease-in-out infinite alternate;
+  }
+  @keyframes aurora-a {
+    0% {
+      transform: translate3d(-5%, -4%, 0) rotate(0deg) scale(1);
+    }
+    100% {
+      transform: translate3d(6%, 5%, 0) rotate(10deg) scale(1.08);
+    }
+  }
+  @keyframes aurora-b {
+    0% {
+      transform: translate3d(5%, 3%, 0) scale(1.1);
+    }
+    100% {
+      transform: translate3d(-6%, -5%, 0) scale(0.96);
+    }
+  }
+
+  /* Header dropdowns reveal on hover or keyboard focus within the group. */
+  .nav-dd {
+    position: relative;
+  }
+  .nav-dd > .nav-dd-menu {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    position: absolute;
+    top: 100%;
+    left: -16px;
+    padding-top: 12px;
+    z-index: 60;
+  }
+  .nav-dd:hover > .nav-dd-menu,
+  .nav-dd:focus-within > .nav-dd-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+  .nav-dd-menu a:hover {
+    background: var(--color-paper-2);
+  }
+
+  /* Hero SVG label density on narrower viewports. */
+  @media (max-width: 1200px) {
+    .hero-svg g > ellipse + text {
+      display: none;
+    }
+    .hero-svg text {
+      font-size: 13px !important;
+    }
+  }
+}
+
+/* Range inputs share the brand accent. */
+input[type="range"] {
+  accent-color: var(--color-filament-ink);
+}
+.range-dark {
+  accent-color: var(--color-filament);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

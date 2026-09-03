@@ -1,5 +1,95 @@
 # exitIQ / Scorta — Engineering Contract
 
+> **Deployable app as of September 2026: the Heirloom marketing site.** Root `app/` now serves the
+> Heirloom website (home, exitIQ readiness screen, offer review, how it works, fees, confidentiality,
+> buyer passport, who we are, questions, why) built from the Claude Design "Heirloom v7" file. The
+> previous Scorta/exitIQ application (marketing pages, authenticated `(app)` workspace, DealIQ,
+> `api/*`) was moved, not deleted, to [`legacy/`](../legacy/README.md) and is not routed or deployed.
+> Its shared libraries (`lib/assessment`, `lib/db`, `lib/supabase`, `lib/ai`, `lib/dealiq`,
+> `components/scorta`, `components/exitiq`, `components/dealiq`) remain in place and stay type-checked.
+> See **"Heirloom site (current)"** below; the sections after it describe the legacy codebase.
+
+## Heirloom site (current)
+
+```
+app/
+  layout.tsx                 fonts (Newsreader · IBM Plex Sans · IBM Plex Mono), metadata, SiteStateProvider,
+                             SiteHeader, SiteFooter, AdvisorDialog
+  page.tsx                   Home — HomeHero (HeroConsole funnel + WebGL field + SVG market graph), TermsStrip,
+                             MarketScene, FinancialPrep, PrivacyScene, OfferComparison, SellerWorkload,
+                             SpeedAndFees, ExperienceAdvisor, TransactionCarries, QuestionsTeaser, CloseSection
+  score/                     exitIQ — seven-question readiness run (ExitIqRun) + result panel
+  offer-review/              Free Offer Review intake (OfferIntake; `?mode=forward|paste|verbal`)
+  how-it-works/              StagesScene (8-stage scroll roadmap) + BusinessBrain reconciliation demo
+  fees/                      FeeCalculator + fee copy
+  confidentiality/           DisclosureLevels (6 levels · company record · access log)
+  buyers/                    Buyer Passport — PassportTiers + BuyerRegisterForm
+  who-we-are/ · questions/ · why/
+  not-found.tsx · sitemap.ts · robots.ts · icon.svg
+  api/health/route.ts        liveness (rewrites for /healthz etc. still in next.config.ts)
+  api/inquiry/route.ts       POST — Zod-validated site inquiry; logs; forwards via Resend when RESEND_API_KEY is set
+
+components/site/
+  ui/          Button (CVA, Link-aware) · Chip · TextLink · Disclosure · Dialog (Radix wrapper) · AmbientVideo · primitives
+  layout/      SiteHeader (desktop dropdowns via CSS, mobile menu) · SiteFooter
+  providers/   SiteStateProvider — cross-route client state (exitIQ run, hero funnel, advisor dialog), sessionStorage-persisted
+  advisor/     AdvisorDialog (5 questions → note → briefing + booking link) · AdvisorCtaButton / AdvisorTrigger
+  hero/        HomeHero · HeroConsole · HeroGraph (SVG) · useInstrumentField (WebGL)
+  exitiq/      ExitIqQuestion · ExitIqRun · ExitIqActions · ReviewWithAdvisor
+  scenes/      useSceneProgress · MarketScene · PrivacyScene · StagesScene
+  home/ · offer-review/ · how-it-works/ · fees/ · confidentiality/ · buyers/ · questions/
+  __tests__/   RTL component tests (vitest + jsdom; browser API stand-ins live in vitest.setup.ts)
+
+lib/site/
+  routes.ts        ROUTES · PAGE_META · NAV_GROUPS · MOBILE_NAV_LINKS · FOOTER_GROUPS · ANCHORS · CONTACT (emails,
+                   cal.com link). Flat lists (mobile, footer) list each destination once (unit-tested).
+  state/reducer.ts pure reducer for the shared client state (unit-tested)
+  exitiq/          questions.ts (bank + insights) · scoring.ts (scoreExitIq, findings, 90-day plan, text exports)
+  advisor/         data.ts · intake.ts (prefill, step logic, briefing text, agenda)
+  hero/            funnel.ts (stages, chips, copy) · geometry.ts (heroGeometry for the SVG)
+  offers/ · fees/ · confidentiality/ · buyers/ · questions/ · content/stages.ts   page data + pure helpers
+  scroll.ts        scene math (sceneProgress, marketFrame, stageFrame, privacyLevel)
+  mailto.ts        mailto/clipboard/download helpers + form body builders
+  inquiry.ts       shared Zod schema + client beacon for /api/inquiry
+  __tests__/       Vitest unit tests for every module above
+
+styles/site.css    Tailwind v4 `@theme` tokens (single cream + deep-green look, no dark mode), panel gradients,
+                   keyframes, aurora, nav dropdown CSS. Legacy `styles/tailwind.css` is no longer imported.
+public/brand/      heirloom-mark.svg · yc-logo.svg      public/media/   ambient MP4s (optional; see README)
+e2e/               Playwright, ~210 tests, no sleeps (helpers.ts polls measured state): routes.spec (every route at
+                   desktop + phone with console/failed-request hygiene, 404, link crawl, footer, legacy 404s),
+                   api.spec (inquiry validation matrix, health + rewrites, sitemap, robots), score.spec (full exitIQ
+                   run, edit/restart, download, cal.com popup via page.route), offer-review.spec (all three modes),
+                   advisor.spec (five-question briefing, note, email, prefill from /score and hero), navigation.spec
+                   (every header/footer/card link, anchors, back/forward), mobile.spec (390 + 320: menu, no horizontal
+                   scroll, stage panel fit, dialog fit), accessibility.spec (h1/landmarks, names, labels, tab order,
+                   focus trap + return), home.spec, pages.spec
+```
+
+Conventions for the site: Tailwind utilities against the tokens in `styles/site.css` (no raw hex in
+components); every `"use client"` carries a one-line justification; page data lives in `lib/site/**`
+and components render it; every form opens the visitor's mail client **and** beacons `/api/inquiry`,
+and shows sending, success, and error copy; grids that stack on phones use
+`minmax(min(100%,Npx),1fr)` so nothing is wider than a 320px viewport;
+`AmbientVideo` and the WebGL field degrade silently (missing media, no WebGL, reduced motion).
+Hover colour is one global rule in `styles/site.css` (`a:hover` → filament-ink, filament on deep-green surfaces,
+200ms ease-out, no underline, no text-shadow); non-link text opts in with `hover-green` / `hover-green-dark`.
+Never add per-element hover colours or glows. `lib/site/__tests__/site-css.test.ts` pins these rules.
+`NEXT_PUBLIC_SITE_URL` (optional) sets `metadataBase`, sitemap, and robots origins.
+
+Verification: `pnpm typecheck` · `pnpm lint` · `pnpm prettier` · `pnpm test` (Vitest, includes
+`components/site/__tests__` and `lib/site/__tests__`) · `pnpm test:site` (site-only run with coverage gates:
+97% lines/statements, 95% branches/functions over app/, components/site/, lib/site/ — raise, never lower) ·
+`pnpm build` · `npx playwright test --project=chromium --repeat-each=2` against `pnpm start` (retries are 0
+locally so flakes surface; set `PLAYWRIGHT_BASE_URL` to point the suite at another port).
+
+Test rigor rules (all site tests follow them): every `it` asserts a concrete value (exact text, href, number,
+or the class that *is* the behaviour); unhappy paths and boundaries are covered; time-based behaviour uses fake
+timers; no snapshots, no "renders without crashing", no sleeps in e2e. Scene components are driven in jsdom via
+`components/site/__tests__/scene-test-utils.ts`; seeded site state via `renderWithSeededSite` in `test-utils.tsx`.
+
+---
+
 Read this at the start of every session. It is the single source of truth for the stack,
 architecture boundaries, conventions, and the engineering standards this codebase holds itself to.
 When the code and this document disagree, trust the code and fix this document.
@@ -170,10 +260,10 @@ A module in `lib/` must not import from `app/`. UI components must not import `d
 
 ---
 
-## Routes & API contract (verified)
+## Routes & API contract (legacy — now under `legacy/app/`)
 
 ```
-app/
+legacy/app/
   page.tsx                         → components/scorta/LandingPage   (marketing)
   about/page.tsx                   → components/scorta/AboutPage
   login/page.tsx                   → components/scorta/LoginPanel     (redirects to /dashboard if signed in)
@@ -204,7 +294,7 @@ app/
 ```
 
 `next.config.ts` rewrites `/healthz`, `/api/healthz`, `/health`, `/ping` → `/api/health`.
-The station rail / order / lock state is defined by `STATIONS` in `lib/persona.ts`.
+The station rail / order / lock state is defined by `STATIONS` in `lib/persona.ts`. None of these legacy routes are served by the deployed app; the root `middleware.ts` that guarded them now lives at `legacy/middleware.ts`.
 
 ### Assessment data flow
 1. Client persists stage answers to `localStorage` (in-session source of truth) via `lib/assessment/session.ts`.
