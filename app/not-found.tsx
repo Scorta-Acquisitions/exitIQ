@@ -4,7 +4,7 @@ import { Container, Eyebrow } from "@/components/site/ui/primitives"
 import { ROUTES, SITE_NAME } from "@/lib/site/routes"
 
 export const metadata: Metadata = {
-  title: `Page not found | ${SITE_NAME}`,
+  title: `${SITE_NAME} | Page not found`,
   description: "The address may have changed. Start from the Heirloom home page or go straight to the sale process.",
   robots: { index: false },
 }

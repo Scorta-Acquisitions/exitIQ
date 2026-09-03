@@ -26,7 +26,7 @@ for (const { name, viewport, layout } of LAYOUTS) {
 test("unknown paths show the site 404 page", async ({ page }) => {
   const response = await page.goto("/nothing-here")
   expect(response?.status()).toBe(404)
-  await expect(page).toHaveTitle("Page not found | Heirloom")
+  await expect(page).toHaveTitle("Heirloom | Page not found")
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("That page is not part of the record.")
   await expect(
     page.getByText("The address may have changed. Start from the home page, or go straight to the sale process.")

@@ -38,6 +38,8 @@ describe("routes", () => {
     expect(new Set(titles).size).toBe(titles.length)
     expect(new Set(descriptions).size).toBe(descriptions.length)
     for (const d of descriptions) expect(d.length).toBeLessThanOrEqual(220)
+    // The brand leads every tab title so the site name is what survives truncation in a crowded tab strip.
+    for (const t of titles) expect(t).toMatch(/^Heirloom \| .{6,}/)
   })
 
   it("lists each destination once in the mobile menu and footer, and only known pages", () => {

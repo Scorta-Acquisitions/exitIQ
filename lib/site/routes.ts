@@ -36,52 +36,52 @@ export interface PageMeta {
 
 export const PAGE_META: Record<RouteKey, PageMeta> = {
   home: {
-    title: "Sell Your Business Privately | Heirloom",
+    title: "Heirloom | Sell Your Business Privately",
     description:
       "Heirloom represents owners of established private businesses and runs the sale from preparation through closing. Create buyer competition, protect confidentiality, and keep more of the outcome.",
   },
   score: {
-    title: "Is Your Business Ready to Sell? | exitIQ by Heirloom",
+    title: "Heirloom | exitIQ: Is Your Business Ready to Sell?",
     description:
       "See how buyers and lenders would view your business today. Answer seven questions and get practical findings plus a 90-day action plan.",
   },
   offerReview: {
-    title: "Free Business Offer Review | Heirloom",
+    title: "Heirloom | Free Business Offer Review",
     description:
       "Already have a buyer or offer? Heirloom reviews the cash, financing, earnouts, exclusivity, transition terms, missing terms, and closing risk for free.",
   },
   howItWorks: {
-    title: "How Heirloom Sells Your Business",
+    title: "Heirloom | How We Sell Your Business",
     description:
       "See how Heirloom prepares your company, creates a private buyer market, negotiates offers, manages diligence and financing, and carries the sale through closing.",
   },
   fees: {
-    title: "M&A Advisory Fees | Heirloom",
+    title: "Heirloom | M&A Advisory Fees",
     description:
       "A 5% success fee for a full private sale, 2.5% with an existing buyer, and a free initial Offer Review. See how Heirloom’s fee compares with traditional alternatives.",
   },
   confidentiality: {
-    title: "Sell Your Business Confidentially | Heirloom",
+    title: "Heirloom | Sell Your Business Confidentially",
     description:
       "Your company is never publicly listed. See how Heirloom controls buyer access, protects your identity, applies your exclusions, and records every disclosure.",
   },
   buyers: {
-    title: "Buyer Passport | Heirloom",
+    title: "Heirloom | Buyer Passport",
     description:
       "Prove your identity, acquisition criteria, and capacity range once. Keep the record current and share only the details you choose.",
   },
   whoWeAre: {
-    title: "Who We Are | Heirloom",
+    title: "Heirloom | Who We Are",
     description:
       "Meet the people and transaction experience behind Heirloom, including millions in enterprise value transacted through the firm and prior founder buy-side experience.",
   },
   questions: {
-    title: "Business Sale Questions | Heirloom",
+    title: "Heirloom | Business Sale Questions",
     description:
       "Answers on fees, confidentiality, fit, timing, buyers, transaction experience, and what happens from preparation through closing.",
   },
   why: {
-    title: "Why Heirloom Exists | Heirloom",
+    title: "Heirloom | Why We Exist",
     description:
       "Professional buyers have become more sophisticated. Heirloom gives established business owners a private, prepared, competitive sale process of their own.",
   },

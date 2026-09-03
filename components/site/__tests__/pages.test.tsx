@@ -573,7 +573,7 @@ describe("Not found page", () => {
   })
 
   it("exports a Page not found title and asks robots not to index it", () => {
-    expect(notFoundMeta.title).toBe("Page not found | Heirloom")
+    expect(notFoundMeta.title).toBe("Heirloom | Page not found")
     expect(notFoundMeta.robots).toEqual({ index: false })
     expect(notFoundMeta.description).toBe(
       "The address may have changed. Start from the Heirloom home page or go straight to the sale process."
