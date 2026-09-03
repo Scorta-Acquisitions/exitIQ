@@ -97,3 +97,23 @@ test("legacy routes are no longer served", async ({ page }) => {
     expect(response?.status(), legacy).toBe(404)
   }
 })
+
+test("every page advertises the brand share image for link previews", async ({ page, request }) => {
+  for (const path of ["/", "/fees"]) {
+    await page.goto(path)
+    const og = page.locator("meta[property='og:image']")
+    await expect(og).toHaveCount(1)
+    const url = (await og.getAttribute("content")) ?? ""
+    expect(url).toMatch(/^https?:\/\/[^/]+\/og\/heirloom-og\.png$/)
+    await expect(page.locator("meta[property='og:image:width']")).toHaveAttribute("content", "1200")
+    await expect(page.locator("meta[property='og:image:height']")).toHaveAttribute("content", "630")
+    await expect(page.locator("meta[property='og:title']")).toHaveAttribute("content", await page.title())
+    await expect(page.locator("meta[property='og:site_name']")).toHaveAttribute("content", "Heirloom")
+    await expect(page.locator("meta[name='twitter:card']")).toHaveAttribute("content", "summary_large_image")
+    await expect(page.locator("meta[name='twitter:image']")).toHaveAttribute("content", url)
+    const image = await request.get(new URL(url).pathname)
+    expect(image.status()).toBe(200)
+    expect(image.headers()["content-type"]).toBe("image/png")
+    expect((await image.body()).byteLength).toBeGreaterThan(20_000)
+  }
+})

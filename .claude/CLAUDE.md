@@ -13,8 +13,9 @@
 
 ```
 app/
-  layout.tsx                 fonts (Newsreader · IBM Plex Sans · IBM Plex Mono), metadata, SiteStateProvider,
-                             SiteHeader, SiteFooter, AdvisorDialog
+  layout.tsx                 fonts (Newsreader · IBM Plex Sans · IBM Plex Mono), metadata incl. the Open Graph /
+                             Twitter share card (public/og/heirloom-og.png, 1200×630; needs NEXT_PUBLIC_SITE_URL in
+                             prod), SiteStateProvider, SiteHeader, SiteFooter, AdvisorDialog
   page.tsx                   Home — HomeHero (HeroConsole funnel + WebGL field + SVG market graph), TermsStrip,
                              MarketScene, FinancialPrep, PrivacyScene, OfferComparison, SellerWorkload,
                              SpeedAndFees, ExperienceAdvisor, TransactionCarries, QuestionsTeaser, CloseSection
