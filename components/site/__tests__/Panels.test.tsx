@@ -251,7 +251,7 @@ describe("<OfferComparison />", () => {
     expect(screen.getByTestId("offer-card-C")).toHaveAttribute("data-best", "true")
     fireEvent.click(screen.getByRole("button", { name: "Most cash at closing" }))
     expect(screen.getByTestId("offer-card-D")).toHaveAttribute("data-best", "true")
-    expect(screen.getByText("Choose an offer to see the terms broken down.")).toBeInTheDocument()
+    expect(screen.getByText("Choose an offer.")).toBeInTheDocument()
     fireEvent.click(screen.getByTestId("offer-card-A"))
     expect(screen.getByText("Reading the offer terms...")).toBeInTheDocument()
   })
@@ -261,7 +261,7 @@ describe("<OfferComparison />", () => {
     fireEvent.click(screen.getByTestId("offer-card-A"))
     expect(screen.getByTestId("offer-card-A")).toHaveAttribute("aria-pressed", "true")
     expect(screen.queryByTestId("offer-detail")).toBeNull()
-    expect(screen.queryByText("Choose an offer to see the terms broken down.")).toBeNull()
+    expect(screen.queryByText("Choose an offer.")).toBeNull()
     await settle(340)
     expect(screen.queryByText("Reading the offer terms...")).toBeNull()
     const detail = screen.getByTestId("offer-detail")
@@ -313,7 +313,7 @@ describe("<OfferComparison />", () => {
     fireEvent.click(screen.getByTestId("offer-card-B"))
     expect(screen.queryByTestId("offer-detail")).toBeNull()
     expect(screen.getByTestId("offer-card-B")).toHaveAttribute("aria-pressed", "false")
-    expect(screen.getByText("Choose an offer to see the terms broken down.")).toBeInTheDocument()
+    expect(screen.getByText("Choose an offer.")).toBeInTheDocument()
   })
 
   it("selects an offer with Enter and toggles it off with Space, ignoring other keys", async () => {
@@ -411,12 +411,12 @@ describe("<QuestionsAccordion />", () => {
     expect(first).toHaveAttribute("aria-expanded", "false")
     fireEvent.click(first)
     expect(first).toHaveAttribute("aria-expanded", "true")
-    expect(screen.getByText(/For a full private sale, you pay a \$5,000/)).toBeVisible()
+    expect(screen.getByText(/A full private sale costs a \$5,000/)).toBeVisible()
     fireEvent.click(second)
     expect(first).toHaveAttribute("aria-expanded", "false")
     expect(second).toHaveAttribute("aria-expanded", "true")
     const region = within(second.parentElement as HTMLElement).getByRole("region")
-    expect(region).toHaveTextContent(/Heirloom will not tell them/)
+    expect(region).toHaveTextContent(/Not from Heirloom/)
   })
 
   it("gives every category a level-2 heading whose id is the category id", () => {
@@ -450,21 +450,21 @@ describe("<QuestionsAccordion />", () => {
     const region = document.getElementById(button.getAttribute("aria-controls") ?? "")!
     expect(region.hidden).toBe(false)
     expect(region).toHaveTextContent(
-      "Buyers do not pay Heirloom a transaction fee on a business we represent. Buyer Passport is currently free."
+      "Buyers pay no transaction fee on a business we represent. Buyer Passport is currently free."
     )
     fireEvent.click(button)
     expect(button).toHaveAttribute("aria-expanded", "false")
     expect(region.hidden).toBe(true)
   })
 
-  it("renders the second paragraph for answers that have one", () => {
+  it("renders the fee answer as a single paragraph that covers both the full sale and the existing buyer", () => {
     render(<QuestionsAccordion />)
     const button = screen.getByRole("button", { name: "How much does Heirloom charge?" })
     fireEvent.click(button)
     const region = document.getElementById(button.getAttribute("aria-controls") ?? "")!
-    expect(within(region).getAllByRole("paragraph")).toHaveLength(2)
+    expect(within(region).getAllByRole("paragraph")).toHaveLength(1)
     expect(region).toHaveTextContent(
-      "If you already have the buyer, the initial Offer Review is free. If you hire Heirloom to negotiate and manage that transaction through closing, the success fee is 2.5% with no upfront fee."
+      "A full private sale costs a $5,000 engagement commitment and a 5% success fee. The $5,000 is credited against the fee if the business sells. There is no retainer, listing fee, or minimum. If you already have a buyer, the offer review is free and the success fee is 2.5%, with no upfront fee."
     )
   })
 })

@@ -109,9 +109,9 @@ export function ExitIqRun() {
                 <p aria-live="polite" className="text-d4 mb-1.5 font-mono text-[11px] tracking-[.6px]">
                   Your result is ready.
                 </p>
-                <div className="eyebrow text-signal mb-3.5">Your most important findings</div>
+                <div className="eyebrow text-signal mb-3.5">Findings</div>
                 <h2 className="font-display text-d1 mb-5 text-[clamp(25px,3vw,34px)] leading-[1.16] font-normal tracking-[-.5px]">
-                  What a buyer is likely to question first.
+                  What a buyer would question first
                 </h2>
                 <div className="flex flex-col gap-3">
                   {result.findings.map((f, i) => (
@@ -126,11 +126,10 @@ export function ExitIqRun() {
                 </div>
                 <div className="border-dhair-2 mt-[22px] border-t pt-[18px]">
                   <Button variant="cta" size="xl" onClick={review.send}>
-                    Review my result with an advisor →
+                    Review my result with an advisor
                   </Button>
                   <p className="text-d2 mt-3 max-w-[520px] text-[13.5px] leading-[1.6]">
-                    Book a call with Suyash for a deeper look at the business and the best next step. Your exitIQ result
-                    rides along in the booking notes so you do not have to repeat it.
+                    Book a call with Suyash. Your result goes into the booking notes.
                   </p>
                   {review.sent ? (
                     <p aria-live="polite" className="text-filament mt-2.5 text-[13px]">
@@ -176,9 +175,7 @@ export function ExitIqRun() {
             data-testid="exitiq-result"
           >
             <div className="mb-5">
-              <span className="text-d4 font-mono text-[11.5px] tracking-[1.1px] uppercase">
-                How buyers may view the business today
-              </span>
+              <span className="text-d4 font-mono text-[11.5px] tracking-[1.1px] uppercase">Scores</span>
             </div>
             <div className="border-dhair-2 mb-[18px] border-t pt-4">
               <div className="text-d4 mb-1.5 font-mono text-[11.5px] tracking-[1.1px] uppercase">Recommendation</div>
@@ -215,9 +212,6 @@ export function ExitIqRun() {
             {iq.done ? (
               <div className="border-dhair-2 mt-5 border-t pt-4">
                 <div className="text-d4 mb-3 font-mono text-[11.5px] tracking-[1.1px] uppercase">Your next 90 days</div>
-                <p className="text-d3 mb-2.5 text-[12.5px] leading-[1.55]">
-                  Start with the actions tied to your highest-priority findings.
-                </p>
                 {result.plan.map((p, i) => (
                   <div key={p} className="border-dfull/5 grid grid-cols-[26px_1fr] gap-2.5 border-b py-2">
                     <span className="text-filament font-mono text-[11px]">{padIndex(i + 1)}</span>
@@ -234,19 +228,19 @@ export function ExitIqRun() {
                     className="text-d1 h-[38px] text-[11.5px]"
                     onClick={review.send}
                   >
-                    Review this result with an advisor
+                    Review my result with an advisor
                   </Button>
                 </div>
                 {plan.saved ? (
                   <p className="text-filament mt-2.5 text-[12.5px] leading-[1.55]">
-                    Your plan was downloaded as a text file and copied, ready to paste anywhere.
+                    Your plan was downloaded and copied.
                   </p>
                 ) : null}
               </div>
             ) : null}
             <div className="border-dhair-2 mt-[18px] border-t pt-3.5">
               <p className="text-d4 font-mono text-[11px] leading-[1.6]">
-                The result uses the answers you provided. Records can change it in either direction.
+                Records can change the result in either direction.
               </p>
             </div>
           </div>

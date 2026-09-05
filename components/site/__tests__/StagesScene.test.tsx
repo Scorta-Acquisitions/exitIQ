@@ -15,7 +15,7 @@ const nodeStates = () => SALE_STAGES.map((_, i) => screen.getByTestId(`stage-nod
 const panel = (i: number) => screen.getByTestId(`stage-panel-${i}`)
 const rail = (container: HTMLElement) => container.querySelector('[class~="transition-[width]"]') as HTMLElement
 const chip = (artifact: string) => screen.getByText(artifact)
-const hint = () => screen.getByText("Move through the stages to see what Heirloom handles and when you are needed.")
+const hint = () => screen.getByText("Scroll to move through the stages.")
 
 describe("<StagesScene />", () => {
   let drivers: SceneDrivers
@@ -68,7 +68,7 @@ describe("<StagesScene />", () => {
     expect(nodeStates()).toEqual(["done", "done", "done", "done", "active", "pending", "pending", "pending"])
   })
 
-  it("swaps the visible panel to stage 5 'Build the buyer market' at progress 0.5", () => {
+  it("swaps the visible panel to stage 5 'Buyer market' at progress 0.5", () => {
     renderWithSite(<StagesScene />)
     driveScene(drivers, screen.getByTestId("stages-scene"), 0.5)
     const s = SALE_STAGES[4]!
@@ -76,10 +76,10 @@ describe("<StagesScene />", () => {
     expect(p).toHaveAttribute("aria-hidden", "false")
     expect(p).toHaveClass("opacity-100")
     expect(within(p).getByText("STAGE 05 · MARKET")).toBeInTheDocument()
-    expect(within(p).getByRole("heading", { level: 3 })).toHaveTextContent("Build the buyer market")
+    expect(within(p).getByRole("heading", { level: 3 })).toHaveTextContent("Buyer market")
     expect(within(p).getByText(s.heirloom)).toBeInTheDocument()
-    expect(within(p).getByText("Nothing until serious buyers are ready.")).toBeInTheDocument()
-    expect(within(p).getByText("A qualified group of prospective buyers.")).toBeInTheDocument()
+    expect(within(p).getByText("Nothing until qualified buyers are ready.")).toBeInTheDocument()
+    expect(within(p).getByText("A qualified group of buyers.")).toBeInTheDocument()
     expect(panel(0)).toHaveAttribute("aria-hidden", "true")
     expect(panel(0)).toHaveClass("opacity-0")
     expect(panel(0).style.transform).toBe("translateY(-16px)")
@@ -98,9 +98,7 @@ describe("<StagesScene />", () => {
     renderWithSite(<StagesScene />)
     driveScene(drivers, screen.getByTestId("stages-scene"), 0.99)
     expect(nodeStates()).toEqual(["done", "done", "done", "done", "done", "done", "done", "active"])
-    expect(within(panel(7)).getByRole("heading", { level: 3 })).toHaveTextContent(
-      "Complete diligence, financing, and closing"
-    )
+    expect(within(panel(7)).getByRole("heading", { level: 3 })).toHaveTextContent("Diligence, financing, and closing")
   })
 
   it("writes the rail width as the progress percentage", () => {
@@ -172,7 +170,7 @@ describe("<StagesScene />", () => {
     expect(hint()).toHaveClass("opacity-100")
   })
 
-  it("opens the advisor dialog from 'Discuss my sale'", () => {
+  it("opens the advisor dialog from the 'Talk to an M&A advisor' trigger", () => {
     renderWithSite(
       <>
         <StagesScene />
@@ -180,7 +178,7 @@ describe("<StagesScene />", () => {
       </>
     )
     expect(screen.getByTestId("advisor-open")).toHaveTextContent("false")
-    fireEvent.click(screen.getByRole("button", { name: "Discuss my sale →" }))
+    fireEvent.click(screen.getByRole("button", { name: "Talk to an M&A advisor" }))
     expect(screen.getByTestId("advisor-open")).toHaveTextContent("true")
     expect(screen.getByTestId("open-advisor")).toHaveClass("hover-green-dark")
   })

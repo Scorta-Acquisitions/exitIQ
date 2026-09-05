@@ -90,7 +90,7 @@ describe("openAdvisor", () => {
     expect(s.answers).toEqual({ topic: "offer", type: "field", rev: "2-3" })
     expect(s.prefilled).toEqual({ topic: true, type: true, rev: true })
     expect(s.step).toBe(3)
-    expect(s.ack).toBe("What you already told us carried over. 2 questions left before booking.")
+    expect(s.ack).toBe("Your earlier answers carried over. 2 questions left before booking.")
   })
 
   it("uses singular copy when one question remains", () => {

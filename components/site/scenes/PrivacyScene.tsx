@@ -41,15 +41,12 @@ export function PrivacyScene() {
         />
         <div className="relative mx-auto grid h-full max-w-[1132px] grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,44%)),1fr))] content-center gap-6 px-6 py-[clamp(20px,4vh,44px)]">
           <div className="self-center">
-            <div className="text-signal mb-3.5 font-mono text-[11.5px] tracking-[1.2px] uppercase">
-              Confidential from the first conversation
-            </div>
             <h2 className="font-display text-d1 mb-2 text-[clamp(28px,3.6vw,44px)] leading-[1.06] font-normal tracking-[-.9px]">
-              Selling should not become public news.
+              Who sees what
             </h2>
             <p className="text-d3 mb-4 max-w-[380px] text-[14.5px] leading-[1.55]">
-              You decide which buyers are off limits and what information can be shared. We keep your identity private
-              until the right stage, limit sensitive records to qualified buyers, and record every access.
+              Buyers start with an anonymous overview. They learn your name after signing an NDA and see detailed
+              records only after we qualify them.
             </p>
             <div className="mt-1.5 mb-2.5 flex items-baseline gap-3.5">
               <span
@@ -79,7 +76,7 @@ export function PrivacyScene() {
               })}
             </div>
             <TextLink href={ROUTES.confidentiality} tone="dark" className="text-[13.5px]">
-              See who can access what →
+              See who can access what
             </TextLink>
             <p className="text-d4 mt-3 max-w-[380px] font-mono text-[10.5px] leading-[1.6]">
               Employees, customers, suppliers, and competitors are never contacted without your approval.

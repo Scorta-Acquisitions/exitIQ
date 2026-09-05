@@ -13,6 +13,11 @@ import {
 } from "@/lib/site/fees/calc"
 import { formatDollars } from "@/lib/site/format"
 
+/** Dollar figures read as tabular numerals; an instruction or a dash reads as small muted text so the row never looks like a broken value. */
+function valueClass(value: string, figure: string): string {
+  return value.startsWith("$") ? figure : "text-l3 max-w-[230px] text-right text-[12px] leading-[1.5]"
+}
+
 function Row({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="border-hair flex items-baseline justify-between border-b py-3">
@@ -64,13 +69,13 @@ export function FeeCalculator() {
               "market",
               "Full private sale selected",
               "Full private sale",
-              "Heirloom prepares the business, creates buyer competition, negotiates the offers, and runs the transaction through close."
+              "We prepare the business, find buyers, and close the sale."
             )}
             {pathCard(
               "execution",
               "Existing buyer selected",
               "I already have the buyer",
-              "Heirloom negotiates and manages the existing transaction through diligence, financing, and close."
+              "We negotiate and manage your existing deal to closing."
             )}
           </div>
           <label htmlFor="fees-price" className="text-l4 mb-2 block font-mono text-[11.5px] tracking-[1px] uppercase">
@@ -133,7 +138,7 @@ export function FeeCalculator() {
                 step={0.5}
                 value={inputs.altRate}
                 onChange={(e) => update({ altRate: e.target.value })}
-                placeholder="Enter quoted rate"
+                placeholder="Quoted rate"
                 aria-label="Traditional comparison rate"
                 className="border-hair-2 bg-paper-2 h-[42px] w-[150px] rounded-[9px] border px-3 text-[15px]"
               />
@@ -141,9 +146,8 @@ export function FeeCalculator() {
             </div>
           ) : null}
           <p className="text-l3 mt-2 text-[12px] leading-[1.6]">
-            Use the fee from the alternative proposal when you have one. For transaction values through $5M, the
-            calculator starts with a 10% illustration. Above $5M, enter a quoted rate because traditional schedules
-            often decline as deal size rises.
+            Enter the rate from a proposal if you have one. Through $5M the calculator starts at a 10% illustration.
+            Above $5M, enter a quoted rate, since traditional schedules often decline as deals get larger.
           </p>
           <button
             type="button"
@@ -169,19 +173,24 @@ export function FeeCalculator() {
           </div>
           <div className="border-hair flex items-baseline justify-between border-b pt-3.5 pb-3">
             <span className="text-l3 text-[14.5px]">Traditional fee at selected rate</span>
-            <span className="tabular text-l3 font-mono text-[16px]" data-testid="fee-traditional">
+            <span
+              className={valueClass(fees.traditional, "tabular text-l3 font-mono text-[16px]")}
+              data-testid="fee-traditional"
+            >
               {fees.traditional}
             </span>
           </div>
           <div className="flex items-baseline justify-between py-3">
             <span className="text-l2 flex-[1_1_190px] text-[14.5px]">Estimated difference</span>
-            <span className="tabular text-filament-ink font-mono text-[16px]" data-testid="fee-difference">
+            <span
+              className={valueClass(fees.difference, "tabular text-filament-ink font-mono text-[16px]")}
+              data-testid="fee-difference"
+            >
               {fees.difference}
             </span>
           </div>
           <p className="text-l3 mt-3.5 font-mono text-[11px] leading-[1.65]">
-            The 10% starting assumption is an illustration for the lower part of Heirloom’s core market. Traditional
-            fees vary by firm, deal size, minimum, and rate structure. Use the proposal in front of you when available.
+            The 10% rate is an illustration, not a quote.
           </p>
         </div>
       </div>

@@ -24,8 +24,8 @@ describe("<HomeHero />", () => {
   it("leads with the headline and its emphasised second half", () => {
     renderWithSite(<HomeHero />)
     const h1 = screen.getByRole("heading", { level: 1 })
-    expect(h1).toHaveTextContent("Sell your business to the right buyer, on the right terms.")
-    expect(within(h1).getByText("the right buyer, on the right terms.").tagName).toBe("EM")
+    expect(h1).toHaveTextContent("Sell your business privately, with qualified buyers competing.")
+    expect(within(h1).getByText("with qualified buyers competing.").tagName).toBe("EM")
   })
 
   it("states the positioning line and the one-paragraph promise", () => {
@@ -33,7 +33,7 @@ describe("<HomeHero />", () => {
     expect(screen.getByText("Technology-enabled sell-side M&A for established business owners")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Heirloom prepares your company, creates competition among qualified buyers, and manages the private sale through closing while you keep running the business."
+        "We prepare the company, bring qualified buyers into a private process, and manage the transaction through closing. You choose the offer."
       )
     ).toBeInTheDocument()
   })
@@ -72,10 +72,7 @@ describe("<HomeHero />", () => {
 
   it("links buyers to the Buyer Passport page", () => {
     renderWithSite(<HomeHero />)
-    expect(screen.getByRole("link", { name: "Buying a business? Get Heirloom Verified →" })).toHaveAttribute(
-      "href",
-      "/buyers"
-    )
+    expect(screen.getByRole("link", { name: "Buyers: Get Heirloom Verified" })).toHaveAttribute("href", "/buyers")
   })
 
   it("renders the console and the market graph", () => {
@@ -83,10 +80,7 @@ describe("<HomeHero />", () => {
     expect(screen.getByTestId("hero-console")).toBeInTheDocument()
     const graph = screen.getByTestId("hero-graph")
     expect(graph.tagName).toBe("svg")
-    expect(graph).toHaveAttribute(
-      "aria-label",
-      "A live map of a private transaction forming around one protected business"
-    )
+    expect(graph).toHaveAttribute("aria-label", "Diagram of a private buyer process around one business")
     expect(within(screen.getByTestId("hero-console")).getByText("Where are you today?")).toBeInTheDocument()
   })
 

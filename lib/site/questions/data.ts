@@ -19,24 +19,23 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "How much does Heirloom charge?",
-        a: "For a full private sale, you pay a $5,000 engagement commitment and a 5% success fee. The $5,000 is credited in full toward the success fee if the business sells. There is no monthly retainer, listing fee, or minimum success fee.",
-        a2: "If you already have the buyer, the initial Offer Review is free. If you hire Heirloom to negotiate and manage that transaction through closing, the success fee is 2.5% with no upfront fee.",
+        a: "A full private sale costs a $5,000 engagement commitment and a 5% success fee. The $5,000 is credited against the fee if the business sells. There is no retainer, listing fee, or minimum. If you already have a buyer, the offer review is free and the success fee is 2.5%, with no upfront fee.",
       },
       {
         q: "Is the $5,000 refundable if the business does not sell?",
-        a: "No. It is credited toward the 5% success fee if the business sells and is not refunded if no sale occurs. You keep the financial work, valuation, sale materials, buyer research, and outreach record produced for your business.",
+        a: "No. It is credited against the success fee if the business sells and is not refunded otherwise. You keep the financial work, valuation, and materials produced.",
       },
       {
         q: "What does the 5% apply to?",
-        a: "The fee applies to purchase value you receive, including cash at closing, seller financing, earnouts, and retained ownership under the engagement terms. Fees tied to a seller note or earnout are collected as those payments arrive. Genuine post-close salary is excluded.",
+        a: "The purchase value you receive, including cash at closing, seller financing, earnouts, and retained ownership. The fee on cash paid at closing is due at closing. The fee on anything paid later is due when you receive it. Salary you earn after closing is excluded.",
       },
       {
         q: "How does 5% compare with a traditional broker or M&A firm?",
-        a: "Traditional firms in this market can charge high single digits or low double digits, sometimes with minimums or a rate that declines as the deal gets larger. Heirloom charges 5% with no minimum. At many transactions in our core range, that can be roughly half the traditional fee. The right comparison is between the actual agreements because fee schedules vary.",
+        a: "Firms at this deal size often charge high single-digit or low double-digit rates, sometimes with a minimum. At many transactions in our range, 5% is roughly half. Compare the actual agreements, because schedules vary.",
       },
       {
         q: "Why would I pay 2.5% if I found the buyer?",
-        a: "Finding a buyer does not complete the sale. Price, cash at closing, financing, working capital, diligence, transition, legal terms, and closing risk can all change after the first offer. The 2.5% covers representation through negotiation, diligence, financing, late price-cut defense, and closing.",
+        a: "Price, cash, financing, working capital, diligence, and legal terms can all change after the first offer. The 2.5% covers negotiation, diligence, financing coordination, and closing.",
       },
     ],
   },
@@ -46,23 +45,23 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "Will my employees find out I am selling?",
-        a: "Heirloom will not tell them. We do not contact employees, customers, or suppliers without your approval. Prospective buyers begin with an anonymous overview and learn the company identity only after signing an NDA and passing initial review.",
+        a: "Not from Heirloom. We do not contact employees, customers, or suppliers without your approval, and buyers learn the company’s identity only after signing an NDA.",
       },
       {
         q: "Will my business be listed publicly?",
-        a: "No. Heirloom does not place your company or confidential information on a public business-for-sale marketplace. Buyer outreach is private and begins without naming the business.",
+        a: "No. Buyer outreach is private and begins without naming the business.",
       },
       {
         q: "Who decides which buyers can see my information?",
-        a: "You set the buyer categories, named exclusions, and information boundaries before outreach. Heirloom works inside those rules and returns to you for genuine exceptions. Routine outreach does not require buyer-by-buyer approval.",
+        a: "You set the buyer categories, named exclusions, and information limits before outreach. Heirloom works inside those rules and comes back to you for exceptions.",
       },
       {
         q: "What does a prospective buyer see before learning my name?",
-        a: "Industry, broad geography, and a revenue or earnings range. The anonymous overview does not include the company name, exact city, customers, website, or owner. Identity and full buyer materials follow a signed NDA; deeper financial and contract information follows buyer qualification.",
+        a: "Industry, broad geography, and a revenue or earnings range. Your identity and full materials follow a signed NDA. Detailed financials and contracts follow qualification.",
       },
       {
         q: "What happens to my data if I stop the process?",
-        a: "Buyer access is revoked immediately and buyers are told only that the owner withdrew. Your engagement states the retention and deletion rules for documents, recordings, transcripts, and transaction records. Different records have different legal and operational retention periods, all disclosed before you sign.",
+        a: "Buyer access is revoked and buyers are told only that the owner withdrew. Your engagement agreement states the retention and deletion rules for each type of record.",
       },
     ],
   },
@@ -72,19 +71,19 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "What size businesses does Heirloom work with?",
-        a: "We usually represent US businesses with at least $1M in annual revenue and a transaction value below $10M. We review larger opportunities and exceptional smaller businesses individually. Strong records and a realistic path to buyer competition matter as much as industry.",
+        a: "Usually US businesses with at least $1M in annual revenue and a transaction value below $10M. We look at larger businesses, and exceptional smaller ones, individually.",
       },
       {
         q: "Can you value my business from seven questions?",
-        a: "No. exitIQ shows how buyers and lenders may view the business today and identifies the highest-priority readiness issues. A defensible valuation requires verified financials, market evidence, and advisor judgment.",
+        a: "No. exitIQ shows how buyers and lenders may view the business and which readiness issues matter most. A valuation needs verified financials and market evidence.",
       },
       {
         q: "What happens if I am not ready to sell?",
-        a: "We explain the issues, give you specific milestones, and help coordinate the right accountants, lawyers, lenders, or other specialists. If the business should wait, we can revisit it after the work is complete. Material readiness work is scoped and priced before it begins.",
+        a: "We explain the issues, give you milestones, and coordinate the accountants, lawyers, or lenders needed. Significant readiness work is scoped and priced before it begins.",
       },
       {
         q: "What happens if Heirloom cannot sell my business?",
-        a: "We explain in writing why the process did not produce an acceptable sale, and you keep the work created for your business. The $5,000 engagement commitment is not refunded. We accept a full-sale engagement only when a realistic buyer market and seller outcome look possible.",
+        a: "We explain in writing why no acceptable sale resulted, and you keep the work produced. The $5,000 commitment is not refunded. We take a full-sale engagement only when a realistic buyer market looks possible.",
       },
     ],
   },
@@ -94,23 +93,23 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "How long does it take to sell a business this size?",
-        a: "Many transactions can close in roughly six to nine months. Timing depends on how ready the business is, buyer interest, financing, diligence, and legal work. Heirloom is designed to compress the parts we control through preparation, buyer qualification, and coordinated execution.",
+        a: "A traditional sale takes six to nine months. Heirloom closes in three to four months on average from launch to closing. Timing depends on how ready the business is, buyer interest, financing, diligence, and legal work.",
       },
       {
         q: "What does software do, and what does the advisor decide?",
-        a: "Software helps organize records, detect inconsistencies, research buyers, draft materials, and answer routine questions from approved evidence. Your advisor decides valuation, disclosure, negotiation positions, material diligence answers, and offer recommendations. Software cannot release sensitive information or communicate a negotiating position on its own.",
+        a: "Software organizes records, flags inconsistencies, researches buyers, drafts materials, and answers routine questions from approved evidence. Your advisor decides valuation, disclosure, negotiating positions, and offer recommendations. Software cannot release sensitive information on its own.",
       },
       {
-        q: "Who actually runs my deal?",
-        a: "One named M&A advisor owns the engagement from the first conversation through closing. Suyash Agrawal leads Heirloom’s early seller engagements personally, supported by engineers and transaction specialists. We aim to respond the same business day and handle urgent live-transaction issues promptly.",
+        q: "Who runs my deal?",
+        a: "One named advisor owns the engagement from the first conversation through closing. Suyash Agrawal leads early seller engagements himself, with engineers and transaction specialists supporting him.",
       },
       {
         q: "How much of the sale falls on me?",
-        a: "You explain your goals and the business, approve the privacy rules and sale materials, meet the serious buyers you choose, and decide on the offer and major terms. Heirloom manages the financial preparation, buyer process, negotiation, diligence, financing, specialists, and closing coordination.",
+        a: "You explain the business, approve the privacy rules and materials, meet the buyers you choose, and decide on the offer and major terms. Heirloom handles the rest.",
       },
       {
         q: "Can I talk to someone without giving a phone number?",
-        a: "Yes. Email Suyash directly at hello@heirloom.com. A phone number is not required to ask a question or begin a conversation, and your email is not added to an automated marketing sequence.",
+        a: "Yes. Send a question through the form on this page and a person replies once by email. Your address is not added to a marketing list.",
       },
     ],
   },
@@ -120,15 +119,15 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "Does Heirloom represent buyers?",
-        a: "No. Heirloom represents sellers in transactions and never buys a represented business for its own account. Buyer Passport verifies buyers; it does not advise them on a Heirloom-represented transaction.",
+        a: "No. Heirloom represents sellers and never buys a business it represents. Buyer Passport verifies buyers. It does not advise them.",
       },
       {
         q: "Do buyers pay Heirloom?",
-        a: "Buyers do not pay Heirloom a transaction fee on a business we represent. Buyer Passport is currently free.",
+        a: "Buyers pay no transaction fee on a business we represent. Buyer Passport is currently free.",
       },
       {
         q: "What is Buyer Passport?",
-        a: "A private buyer record that can confirm identity, acquisition criteria, capacity range, and lender preparation. Verification is dated, capacity appears as a range, and the buyer controls which approved details each recipient sees. A seller or advisor can verify an authentic Passport without creating an account.",
+        a: "A private record confirming a buyer’s identity, acquisition criteria, capacity range, and lender preparation. Verification is dated, capacity appears as a range, and the buyer controls what each recipient sees.",
       },
     ],
   },
@@ -138,15 +137,15 @@ export const QUESTION_CATEGORIES: QuestionCategory[] = [
     items: [
       {
         q: "What transaction experience does Heirloom have?",
-        a: "Heirloom has transacted millions of dollars in enterprise value through the firm. Separately, founder and CEO Suyash Agrawal previously transacted millions of dollars in enterprise value on the buy side through micro-PE investing and operations. Heirloom firm experience and Suyash’s earlier buy-side experience are separate records.",
+        a: "Heirloom has transacted millions of dollars in enterprise value. Before founding the firm, Suyash Agrawal acquired and operated small businesses as a micro-PE investor. Firm transactions and his earlier buy-side record are separate.",
       },
       {
         q: "Why should I trust Heirloom with the sale?",
-        a: "Heirloom combines firm transaction experience, prior founder buy-side experience, a named lead advisor, seller-only representation, a private buyer process, and published fees. Suyash leads early seller engagements personally, and the full process from preparation through closing is available for review before you engage us.",
+        a: "We work for sellers only, publish our fees, and name the advisor who runs your engagement. The full process is on this site before you sign anything.",
       },
       {
         q: "Is Project Ridgeline a real transaction?",
-        a: "No. Project Ridgeline is a fictional company created to show how Heirloom prepares financials, controls buyer access, answers diligence, and compares offers without exposing a seller’s information. Its company, people, buyers, activity, and figures are invented and labeled wherever they appear.",
+        a: "No. Project Ridgeline is a fictional company used to show how Heirloom prepares financials, controls access, answers diligence, and compares offers. Every name and figure is invented.",
       },
     ],
   },
@@ -164,23 +163,23 @@ export const QUESTION_CATEGORY_LINKS: Array<{ href: string; label: string }> = [
 export const HOME_TEASER: QuestionItem[] = [
   {
     q: "How much does Heirloom charge?",
-    a: "A full sale carries a 5% success fee. The $5,000 engagement commitment is credited toward that fee if the business sells.",
+    a: "A $5,000 engagement commitment and a 5% success fee. The $5,000 is credited against the fee if the business sells.",
   },
   {
     q: "Will my employees find out?",
-    a: "Heirloom never contacts your employees, customers, or suppliers without your approval. Buyers see an anonymous overview before your identity is released.",
+    a: "Not from Heirloom. We do not contact employees, customers, or suppliers without your approval.",
   },
   {
     q: "What if I already have a buyer?",
-    a: "We review the offer for free. If you hire us to negotiate and manage that transaction through closing, the success fee is 2.5%.",
+    a: "The offer review is free. If you hire us to run the transaction, the success fee is 2.5%.",
   },
   {
     q: "How long does a sale take?",
-    a: "Many transactions of this size can close in roughly six to nine months. Readiness, buyer financing, diligence, and legal work affect the timing.",
+    a: "Three to four months on average from launch to closing, 40% faster than a traditional sale.",
   },
   {
     q: "Who runs my sale?",
-    a: "One named M&A advisor owns the engagement from the first conversation through close. Suyash leads Heirloom’s early seller engagements personally.",
+    a: "One named advisor owns the engagement from the first conversation through closing.",
   },
 ]
 

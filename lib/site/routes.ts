@@ -22,7 +22,7 @@ export type RoutePath = (typeof ROUTES)[RouteKey]
 export const SITE_NAME = "Heirloom"
 
 export const CONTACT = {
-  hello: "hello@heirloom.com",
+  hello: "suyash@heirloomadvisory.ai",
   offers: "offers@heirloom.com",
   buyers: "buyers@heirloom.com",
   advisorCalendar: "https://heirloom.cal.com/suyash/m-a-advisory-meeting",
@@ -36,54 +36,53 @@ export interface PageMeta {
 
 export const PAGE_META: Record<RouteKey, PageMeta> = {
   home: {
-    title: "Heirloom | Sell Your Business Privately",
+    title: "Sell Your Business Privately | Heirloom M&A Advisory",
     description:
-      "Heirloom represents owners of established private businesses and runs the sale from preparation through closing. Create buyer competition, protect confidentiality, and keep more of the outcome.",
+      "Heirloom represents owners of established private businesses, brings qualified buyers into a private sale process, and manages the transaction through closing.",
   },
   score: {
-    title: "Heirloom | exitIQ: Is Your Business Ready to Sell?",
+    title: "Is Your Business Ready to Sell? exitIQ Readiness Check | Heirloom",
     description:
-      "See how buyers and lenders would view your business today. Answer seven questions and get practical findings plus a 90-day action plan.",
+      "Seven questions on how buyers and lenders would view your business, with findings and a 90-day plan. No name, email, or documents required.",
   },
   offerReview: {
-    title: "Heirloom | Free Business Offer Review",
+    title: "Free Business Offer Review Before You Sign | Heirloom",
     description:
-      "Already have a buyer or offer? Heirloom reviews the cash, financing, earnouts, exclusivity, transition terms, missing terms, and closing risk for free.",
+      "Heirloom reviews the cash at closing, deferred payments, financing, exclusivity, and missing terms in an offer for your business, for free.",
   },
   howItWorks: {
-    title: "Heirloom | How We Sell Your Business",
+    title: "How Heirloom Sells Your Business: The Eight Stages | Heirloom",
     description:
-      "See how Heirloom prepares your company, creates a private buyer market, negotiates offers, manages diligence and financing, and carries the sale through closing.",
+      "What Heirloom does at each stage of a private business sale, from preparing the financials to closing, and where the owner decides.",
   },
   fees: {
-    title: "Heirloom | M&A Advisory Fees",
+    title: "M&A Advisory Fees: 5% Success Fee, No Retainer | Heirloom",
     description:
-      "A 5% success fee for a full private sale, 2.5% with an existing buyer, and a free initial Offer Review. See how Heirloom’s fee compares with traditional alternatives.",
+      "5% success fee on a full private sale, 2.5% with an existing buyer, free initial offer review. No monthly retainer, listing fee, or minimum.",
   },
   confidentiality: {
-    title: "Heirloom | Sell Your Business Confidentially",
+    title: "Sell Your Business Confidentially: Who Sees What | Heirloom",
     description:
-      "Your company is never publicly listed. See how Heirloom controls buyer access, protects your identity, applies your exclusions, and records every disclosure.",
+      "Your business is never publicly listed. Buyers see staged information after an NDA and qualification, and every access is recorded.",
   },
   buyers: {
-    title: "Heirloom | Buyer Passport",
+    title: "Buyer Passport: Verified Business Buyer Record | Heirloom",
     description:
-      "Prove your identity, acquisition criteria, and capacity range once. Keep the record current and share only the details you choose.",
+      "Verify your identity, acquisition criteria, and capacity range once, and share only the details you choose with each seller.",
   },
   whoWeAre: {
-    title: "Heirloom | Who We Are",
+    title: "Who We Are: The Team Behind Heirloom M&A | Heirloom",
     description:
-      "Meet the people and transaction experience behind Heirloom, including millions in enterprise value transacted through the firm and prior founder buy-side experience.",
+      "The firm and founder behind Heirloom, with firm transactions and the founder's buy-side experience stated separately.",
   },
   questions: {
-    title: "Heirloom | Business Sale Questions",
-    description:
-      "Answers on fees, confidentiality, fit, timing, buyers, transaction experience, and what happens from preparation through closing.",
+    title: "Business Sale Questions: Fees, Confidentiality, Timing | Heirloom",
+    description: "Direct answers on fees, confidentiality, fit, timing, buyers, and the firm.",
   },
   why: {
-    title: "Heirloom | Why We Exist",
+    title: "Why Heirloom Exists: A Private Sale Process for Owners | Heirloom",
     description:
-      "Professional buyers have become more sophisticated. Heirloom gives established business owners a private, prepared, competitive sale process of their own.",
+      "Why established business owners need a private, competitive sale process, and what Heirloom is building.",
   },
 }
 
@@ -104,31 +103,31 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "For owners",
     minWidth: 310,
     links: [
-      { href: ROUTES.howItWorks, label: "Sell my business", note: "A private sale from preparation through closing" },
+      { href: ROUTES.howItWorks, label: "Sell my business", note: "Private sale, preparation to closing" },
       {
         href: ROUTES.offerReview,
         label: "Review my offer",
-        note: "A free read of the buyer and terms in front of you",
+        note: "Free read of the terms",
       },
-      { href: ROUTES.score, label: "Check my business", note: "See how buyers and lenders would view it today" },
+      { href: ROUTES.score, label: "Check sale readiness", note: "Seven questions, no name needed" },
     ],
   },
   {
     label: "The process",
     minWidth: 280,
     links: [
-      { href: ROUTES.howItWorks, label: "How it works", note: "What Heirloom handles and what you decide" },
-      { href: ROUTES.fees, label: "Fees", note: "Full-sale, existing-buyer, and readiness economics" },
-      { href: ROUTES.confidentiality, label: "Confidentiality", note: "Who can see what, and when" },
+      { href: ROUTES.howItWorks, label: "How it works", note: "The eight stages of a sale" },
+      { href: ROUTES.fees, label: "Fees", note: "5% success fee, no retainer" },
+      { href: ROUTES.confidentiality, label: "Confidentiality", note: "Who sees what, and when" },
     ],
   },
   {
     label: "The firm",
     minWidth: 270,
     links: [
-      { href: ROUTES.whoWeAre, label: "Who we are", note: "The experience and people behind your sale" },
-      { href: ROUTES.questions, label: "Questions", note: "Answers on fees, confidentiality, fit, and process" },
-      { href: ROUTES.why, label: "Why Heirloom", note: "The problem with how private businesses sell" },
+      { href: ROUTES.whoWeAre, label: "Who we are", note: "The firm and its founder" },
+      { href: ROUTES.questions, label: "Questions", note: "Answers on fees, confidentiality, fit" },
+      { href: ROUTES.why, label: "Why Heirloom", note: "How private businesses sell today" },
     ],
   },
 ]
@@ -145,7 +144,7 @@ export const ANCHORS = {
 export const MOBILE_NAV_LINKS: Array<{ href: string; label: string; muted?: boolean }> = [
   { href: ROUTES.howItWorks, label: "Sell my business" },
   { href: ROUTES.offerReview, label: "Review my offer" },
-  { href: ROUTES.score, label: "Check if my business is ready" },
+  { href: ROUTES.score, label: "Check sale readiness" },
   { href: ROUTES.fees, label: "Fees" },
   { href: ROUTES.confidentiality, label: "Confidentiality" },
   { href: ROUTES.whoWeAre, label: "Who we are" },
@@ -160,7 +159,7 @@ export const FOOTER_GROUPS: Array<{ label: string; links: Array<{ href: string; 
     links: [
       { href: ROUTES.howItWorks, label: "Sell my business" },
       { href: ROUTES.offerReview, label: "Review my offer" },
-      { href: ROUTES.score, label: "Check my business" },
+      { href: ROUTES.score, label: "Check sale readiness" },
       { href: ROUTES.fees, label: "Fees" },
       { href: ROUTES.confidentiality, label: "Confidentiality" },
     ],

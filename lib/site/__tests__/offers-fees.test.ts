@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { computeFees, DEFAULT_FEE_INPUTS, RATE_INVALID, RATE_LARGE, RATE_PENDING } from "@/lib/site/fees/calc"
+import {
+  computeFees,
+  DEFAULT_FEE_INPUTS,
+  NO_COMPARISON,
+  RATE_INVALID,
+  RATE_LARGE,
+  RATE_PENDING,
+} from "@/lib/site/fees/calc"
 import { formatDollars, formatMillions, padIndex } from "@/lib/site/format"
 import { OFFERS, PRIORITIES } from "@/lib/site/offers/data"
 import { certaintyLabel, findOffer, offerScore, paidLater, rankOffers, retained } from "@/lib/site/offers/score"
@@ -68,7 +75,7 @@ describe("computeFees", () => {
   it("asks for a quoted rate above the illustration ceiling", () => {
     const f = computeFees({ ...DEFAULT_FEE_INPUTS, price: 7_000_000 })
     expect(f.traditional).toBe(RATE_LARGE)
-    expect(f.difference).toBe(RATE_PENDING)
+    expect(f.difference).toBe(NO_COMPARISON)
   })
 
   it("uses a valid quoted rate", () => {
@@ -79,11 +86,12 @@ describe("computeFees", () => {
 
   it("waits for a quoted rate and rejects impossible ones", () => {
     expect(computeFees({ ...DEFAULT_FEE_INPUTS, rateMode: "quoted", altRate: "" }).traditional).toBe(RATE_PENDING)
-    expect(computeFees({ ...DEFAULT_FEE_INPUTS, rateMode: "quoted", altRate: "" }).difference).toBe(RATE_PENDING)
+    expect(computeFees({ ...DEFAULT_FEE_INPUTS, rateMode: "quoted", altRate: "" }).difference).toBe(NO_COMPARISON)
+    expect(NO_COMPARISON).toBe("–")
     for (const bad of ["0", "-3", "51", "abc"]) {
       const f = computeFees({ ...DEFAULT_FEE_INPUTS, rateMode: "quoted", altRate: bad })
       expect(f.traditional).toBe(RATE_INVALID)
-      expect(f.difference).toBe(RATE_INVALID)
+      expect(f.difference).toBe(NO_COMPARISON)
     }
   })
 })

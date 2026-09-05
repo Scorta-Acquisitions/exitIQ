@@ -124,7 +124,7 @@ describe("<OfferIntake />", () => {
     )
     expect(screen.getByRole("link", { name: "Open an email to attach the offer" })).toHaveAttribute(
       "href",
-      expect.stringMatching(/^mailto:offers@heirloom\.com\?subject=Free%20Offer%20Review&body=/)
+      expect.stringMatching(/^mailto:offers@heirloom\.com\?subject=Free%20offer%20review&body=/)
     )
     expect(screen.getByRole("link", { name: "offers@heirloom.com" })).toHaveAttribute(
       "href",
@@ -171,7 +171,7 @@ describe("<OfferIntake />", () => {
     const body =
       "I received the following terms for my business:\n\nLOI: $4.65M, 60 days exclusivity\n\n" + OFFER_ASK + FOOTER
     expect(copyText).toHaveBeenCalledWith(body)
-    expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free Offer Review", body))
+    expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free offer review", body))
     expect(submitInquiry).toHaveBeenCalledWith({ kind: "offer_review", body, email: "", source: "offer-review" })
     expect(
       screen.getByText("Your offer has been sent for review. We will reply to the email you provided.")
@@ -206,7 +206,7 @@ describe("<OfferIntake />", () => {
     expect(body).not.toContain("Paid later")
     expect(body).not.toContain("Other concerns")
     expect(body).not.toContain("Email for your review")
-    expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free Offer Review", body))
+    expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free offer review", body))
   })
 
   it("includes the paid-later and concern lines when those fields are filled", async () => {
@@ -228,7 +228,7 @@ describe("<OfferIntake />", () => {
     fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
     await send()
     expect(
-      screen.getByText("We could not prepare the message. Email offers@heirloom.com directly and we will help.")
+      screen.getByText("We could not prepare the message. Email offers@heirloom.com directly.")
     ).toBeInTheDocument()
     expect(openMail).not.toHaveBeenCalled()
     expect(submitInquiry).not.toHaveBeenCalled()

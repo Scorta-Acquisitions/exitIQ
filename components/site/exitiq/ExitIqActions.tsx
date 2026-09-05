@@ -30,9 +30,9 @@ export function useAdvisorReview() {
 }
 
 export const ADVISOR_SENT_COPY =
-  "The booking page opened in a new tab with your result attached. It is also copied; paste it into the booking notes if it is missing."
+  "The booking page opened in a new tab with your result attached. If it is missing, paste the copied text into the notes."
 
-export const ADVISOR_ERROR_COPY = `We could not open the booking page. Email ${CONTACT.hello} and we will set up the call.`
+export const ADVISOR_ERROR_COPY = `We could not open the booking page. Email ${CONTACT.hello} directly.`
 
 /** Hook behind "Save my plan": clipboard plus a text download. */
 export function useSavePlan() {

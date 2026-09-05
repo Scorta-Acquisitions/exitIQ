@@ -109,9 +109,7 @@ test.describe("landmarks and text alternatives", () => {
     await button.click()
     await expect(button).toHaveAttribute("aria-expanded", "true")
     await expect(region).toBeVisible()
-    await expect(region).toContainText(
-      "For a full private sale, you pay a $5,000 engagement commitment and a 5% success fee."
-    )
+    await expect(region).toContainText("A full private sale costs a $5,000 engagement commitment and a 5% success fee.")
     await button.press("Enter")
     await expect(button).toHaveAttribute("aria-expanded", "false")
     await expect(region).toBeHidden()
@@ -129,7 +127,7 @@ test.describe("focus order", () => {
       "For owners",
       "Sell my business",
       "Review my offer",
-      "Check my business",
+      "Check sale readiness",
       "The process",
       "How it works",
       "Fees",

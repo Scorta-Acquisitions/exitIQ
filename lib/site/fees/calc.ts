@@ -42,9 +42,11 @@ export interface FeeBreakdown {
   difference: string
 }
 
-export const RATE_INVALID = "We cannot calculate a reliable comparison for this value."
-export const RATE_PENDING = "Comparison available after rate is entered"
-export const RATE_LARGE = "Traditional fees vary at this transaction size. Enter the quoted rate to compare."
+export const RATE_INVALID = "Enter a rate between 0 and 50."
+export const RATE_PENDING = "Enter a rate to compare."
+export const RATE_LARGE = "Above $5M, enter the quoted rate to compare."
+/** Shown in the difference row whenever the traditional row carries an instruction instead of a figure. */
+export const NO_COMPARISON = "–"
 
 /** Parse the quoted rate; `null` when blank, `NaN` when out of range or not a number. */
 function quotedRate(altRate: string): number | null {
@@ -73,7 +75,7 @@ export function computeFees(i: FeeInputs): FeeBreakdown {
       traditional = formatDollars((i.price * r) / 100)
       effective = r
     }
-    difference = r !== null && Number.isNaN(r) ? RATE_INVALID : ""
+    difference = r !== null && Number.isNaN(r) ? NO_COMPARISON : ""
   } else if (i.price <= ILLUSTRATION_CEILING) {
     traditional = formatDollars(i.price * (ILLUSTRATION_RATE / 100))
     effective = ILLUSTRATION_RATE
@@ -84,7 +86,7 @@ export function computeFees(i: FeeInputs): FeeBreakdown {
   }
 
   if (!difference) {
-    difference = effective === null ? RATE_PENDING : formatDollars((i.price * effective) / 100 - heirloom)
+    difference = effective === null ? NO_COMPARISON : formatDollars((i.price * effective) / 100 - heirloom)
   }
 
   return {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { AskForm } from "@/components/site/questions/AskForm"
 import { QuestionsAccordion } from "@/components/site/questions/QuestionsAccordion"
-import { Container, Eyebrow } from "@/components/site/ui/primitives"
+import { Container } from "@/components/site/ui/primitives"
 import { QUESTION_CATEGORY_LINKS } from "@/lib/site/questions/data"
 import { PAGE_META } from "@/lib/site/routes"
 
@@ -13,9 +13,8 @@ export default function QuestionsPage() {
       <section className="bg-paper px-6 pt-[clamp(48px,6vw,80px)] pb-[clamp(32px,4vw,48px)]">
         <Container>
           <div className="max-w-[760px]">
-            <Eyebrow className="mb-[18px]">Questions</Eyebrow>
             <h1 className="font-display mb-5 text-[clamp(34px,5.4vw,62px)] leading-[1.05] font-normal tracking-[-1.3px]">
-              What owners ask before they sell.
+              Questions owners ask.
             </h1>
             <nav aria-label="Question categories" className="mt-6 flex flex-wrap gap-2">
               {QUESTION_CATEGORY_LINKS.map((l) => (

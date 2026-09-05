@@ -105,15 +105,15 @@ test.describe("footer navigation", () => {
 
 test.describe("home shortcuts", () => {
   const TERMS = [
-    { label: "Representation", text: "We work for the seller.", href: "/who-we-are" },
-    { label: "Confidentiality", text: "Your company is never publicly listed.", href: "/confidentiality" },
+    { label: "Representation", text: "Sellers only.", href: "/who-we-are" },
+    { label: "Listing", text: "Never public.", href: "/confidentiality" },
+    { label: "Company fit", text: "Usually $1M or more in annual revenue.", href: "/questions" },
     {
-      label: "Company fit",
-      text: "Established businesses, usually with $1M or more in annual revenue.",
-      href: "/questions",
+      label: "Experience",
+      text: "Millions in enterprise value transacted through Heirloom.",
+      href: "/who-we-are",
     },
-    { label: "Experience", text: "Millions in enterprise value transacted through Heirloom.", href: "/who-we-are" },
-    { label: "Economics", text: "Roughly half many traditional broker and M&A fees.", href: "/fees" },
+    { label: "Timing", text: "40% faster than a traditional sale.", href: "/how-it-works" },
   ]
 
   for (const term of TERMS) {
@@ -133,15 +133,17 @@ test.describe("home shortcuts", () => {
 
   const CARDS = [
     { title: "Review my offer", href: "/offer-review", eyebrow: "Offer in hand" },
-    { title: "Start exitIQ", href: "/score", eyebrow: "Still deciding" },
-    { title: "See how it works", href: "/how-it-works", eyebrow: "Want the details" },
+    { title: "Check sale readiness", href: "/score", eyebrow: "Still deciding" },
+    { title: "See how it works", href: "/how-it-works", eyebrow: "The process" },
   ]
 
   for (const card of CARDS) {
     test(`the closing "${card.title}" card links to ${card.href}`, async ({ page }) => {
       await page.goto("/")
-      const section = page.locator("section").filter({ hasText: "No public listing. No obligation to sell." })
-      await expect(section.getByRole("heading", { name: "Start where you are." })).toBeVisible()
+      const section = page
+        .locator("section")
+        .filter({ has: page.getByRole("heading", { name: "Choose a next step." }) })
+      await expect(section.getByRole("heading", { name: "Choose a next step." })).toBeVisible()
       const link = section.getByRole("link").filter({ has: page.getByText(card.title, { exact: true }) })
       await expect(link).toContainText(card.eyebrow)
       await expect(link).toHaveAttribute("href", card.href)
@@ -153,10 +155,10 @@ test.describe("home shortcuts", () => {
 
   test("the closing advisor card opens the dialog", async ({ page }) => {
     await page.goto("/")
-    const section = page.locator("section").filter({ hasText: "No public listing. No obligation to sell." })
+    const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "Choose a next step." }) })
     const card = section.getByTestId("open-advisor")
     await expect(card).toContainText("Ready to sell")
-    await expect(card).toContainText("Find out whether Heirloom is the right firm for your business.")
+    await expect(card).toContainText("Ask whether Heirloom fits your business and timing.")
     await card.click()
     await expect(advisorDialog(page)).toBeVisible()
   })
@@ -180,15 +182,17 @@ test.describe("in-page anchors", () => {
     }
   })
 
-  test("fees: Calculate my fee and Compare the fees jump to the calculator", async ({ page }) => {
+  test("fees: both Calculate my fee links jump to the calculator", async ({ page }) => {
     await page.goto("/fees")
     const main = page.getByRole("main")
-    await main.getByRole("link", { name: "Calculate my fee" }).click()
+    const calc = main.getByRole("link", { name: "Calculate my fee", exact: true })
+    await expect(calc).toHaveCount(2)
+    await calc.nth(0).click()
     await expectAnchorTarget(page, "/fees#fees-calc")
-    await expect(page.locator("#fees-calc")).toHaveText("What would Heirloom cost on your sale?")
+    await expect(page.locator("#fees-calc")).toHaveText("Fee calculator")
 
     await page.goto("/fees")
-    await main.getByRole("link", { name: "Compare the fees on my sale →" }).click()
+    await calc.nth(1).click()
     await expectAnchorTarget(page, "/fees#fees-calc")
   })
 
@@ -212,8 +216,8 @@ test.describe("in-page anchors", () => {
     await page.goto("/offer-review")
     const main = page.getByRole("main")
     const ctas = main.getByRole("link", { name: "Review my offer", exact: true })
-    await expect(ctas).toHaveCount(2)
-    for (const locator of [ctas.nth(0), ctas.nth(1), main.getByRole("link", { name: "Review my offer first →" })]) {
+    await expect(ctas).toHaveCount(3)
+    for (const locator of [ctas.nth(0), ctas.nth(1), ctas.nth(2)]) {
       await page.goto("/offer-review")
       await expect(locator).toHaveAttribute("href", "#offer-intake")
       await locator.click()

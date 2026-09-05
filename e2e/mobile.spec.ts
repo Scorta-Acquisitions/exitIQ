@@ -127,12 +127,12 @@ for (const vp of VIEWPORTS) {
 
       await expect(hero.getByTestId("hero-progress")).toHaveText("YOUR RESULT")
       const done = hero.getByTestId("hero-sell-done")
-      await expect(done.getByRole("heading", { name: "See what your sale would require." })).toBeVisible()
-      await expect(done).toContainText("You may be ready to begin a full sale process.")
+      await expect(done.getByRole("heading", { name: "Timing and fit" })).toBeVisible()
+      await expect(done).toContainText("You could start a full sale process now.")
       await expect(done).toContainText(
-        "Full representation usually begins around $1M in annual revenue. We can still help you identify the right next step."
+        "Full representation usually begins around $1M in annual revenue. An advisor can still suggest a next step."
       )
-      await expect(done.getByRole("link", { name: "See the sale process →" })).toHaveAttribute("href", "/how-it-works")
+      await expect(done.getByRole("link", { name: "See how it works" })).toHaveAttribute("href", "/how-it-works")
       await expect(done.getByTestId("open-advisor")).toBeVisible()
       await expectNoHorizontalScroll(page, `sell result at ${vp.width}px`)
 
@@ -176,14 +176,14 @@ for (const vp of VIEWPORTS) {
       const panel = page.locator('[data-testid="stages-scene"] > *')
       const stage = page.getByTestId("stage-panel-4")
       await expect(page.getByTestId("stage-node-4")).toHaveAttribute("data-state", "active")
-      await expect(stage.getByRole("heading", { name: "Build the buyer market" })).toBeVisible()
+      await expect(stage.getByRole("heading", { name: "Buyer market" })).toBeVisible()
       // The stage panel fades and slides in over 500ms; measure only once that transition has settled.
       await expect(stage).toHaveCSS("opacity", "1")
       await expect(stage).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)")
-      const receive = stage.getByText("A qualified group of prospective buyers.")
+      const receive = stage.getByText("A qualified group of buyers.")
       await expect(receive).toBeVisible()
       const slip = stage.getByText("YOU RECEIVE").locator("xpath=../..")
-      await expect(slip).toContainText("A qualified group of prospective buyers.")
+      await expect(slip).toContainText("A qualified group of buyers.")
 
       const panelBox = (await panel.boundingBox())!
       const slipBox = (await slip.boundingBox())!
@@ -268,7 +268,7 @@ for (const vp of VIEWPORTS) {
       await expect.poll(() => dialog.evaluate((el) => el.scrollTop), { message: "dialog scrolls" }).toBeGreaterThan(0)
       expect(await page.evaluate(() => window.scrollY), "page behind the dialog does not scroll").toBe(0)
 
-      const footnote = dialog.getByText("Read by your advisor before the call. Not shared outside Heirloom.")
+      const footnote = dialog.getByText("Not shared outside Heirloom.")
       await footnote.scrollIntoViewIfNeeded()
       await expect(footnote).toBeInViewport()
     })

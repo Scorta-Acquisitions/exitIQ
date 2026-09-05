@@ -41,9 +41,9 @@ describe("<SiteHeader />", () => {
     expect(burger).toHaveAttribute("aria-expanded", "false")
     fireEvent.click(burger)
     expect(burger).toHaveAttribute("aria-expanded", "true")
-    expect(screen.getByRole("link", { name: "Check if my business is ready" })).toHaveAttribute("href", "/score")
+    expect(screen.getByRole("link", { name: "Check sale readiness" })).toHaveAttribute("href", "/score")
     fireEvent.click(burger)
-    expect(screen.queryByRole("link", { name: "Check if my business is ready" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Check sale readiness" })).toBeNull()
   })
 
   it("links the wordmark to the home page", () => {
@@ -105,7 +105,7 @@ describe("<SiteHeader />", () => {
     expect(links.map((l) => l.textContent)).toEqual([
       "Sell my business",
       "Review my offer",
-      "Check if my business is ready",
+      "Check sale readiness",
       "Fees",
       "Confidentiality",
       "Who we are",

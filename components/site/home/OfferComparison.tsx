@@ -45,15 +45,12 @@ export function OfferComparison() {
     <section className="bg-scene-paper-offers px-3 py-[clamp(40px,5vw,64px)]" data-testid="offer-comparison">
       <Container className="aurora panel-offers border-dfull/8 text-d1 max-w-[1156px] overflow-hidden rounded-[26px] border px-[clamp(16px,3vw,38px)] py-[clamp(26px,4vw,46px)] shadow-[inset_0_1px_0_rgba(240,248,243,.06),0_30px_70px_rgba(11,36,27,.16)]">
         <div className="mb-5 max-w-[760px]">
-          <div className="text-signal mb-3.5 font-mono text-[11.5px] tracking-[1.2px] uppercase">
-            Compare the whole deal
-          </div>
           <h2 className="font-display text-d1 mb-2.5 text-[clamp(26px,3.4vw,40px)] leading-[1.06] font-normal tracking-[-.8px]">
-            Know what each offer puts in your pocket.
+            Compare offers
           </h2>
           <p className="text-d3 text-[14.5px] leading-[1.6]">
-            We compare cash at closing, seller financing, earnouts, retained equity, working capital, buyer financing,
-            transition demands, and closing risk. Your priorities determine which deal is strongest.
+            The highest price is not always the best offer. We rank offers on what you receive, when, and how likely the
+            deal is to close.
           </p>
         </div>
         <div
@@ -143,7 +140,7 @@ export function OfferComparison() {
         </div>
         {!sel && !busy ? (
           <p className="border-dhair text-d4 mb-3.5 rounded-[11px] border border-dashed px-4 py-[13px] font-mono text-[11.5px]">
-            Choose an offer to see the terms broken down.
+            Choose an offer.
           </p>
         ) : null}
         {busy ? (

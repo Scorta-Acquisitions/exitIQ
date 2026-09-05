@@ -73,6 +73,7 @@
   --animate-dash-fast: hl-dash 22s linear infinite;
   --animate-feed: hl-feed 26s linear infinite;
   --animate-row: p-row 0.5s var(--ease-e1) both;
+  --animate-fill: p-fill 1.1s var(--ease-e1) both;
 
   @keyframes hl-blink {
     0%,
@@ -100,6 +101,14 @@
     }
     to {
       opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes p-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
       transform: none;
     }
   }

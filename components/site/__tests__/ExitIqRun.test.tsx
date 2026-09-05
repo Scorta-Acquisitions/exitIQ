@@ -321,9 +321,7 @@ describe("<ExitIqRun />", () => {
       await answerAll(WEAK)
       fireEvent.click(screen.getByRole("button", { name: "Save my plan" }))
       const expected = planText(WEAK_RESULT)
-      expect(
-        await screen.findByText("Your plan was downloaded as a text file and copied, ready to paste anywhere.")
-      ).toBeInTheDocument()
+      expect(await screen.findByText("Your plan was downloaded and copied.")).toBeInTheDocument()
       expect(mocks.copyText).toHaveBeenCalledTimes(1)
       expect(mocks.copyText).toHaveBeenCalledWith(expected)
       expect(mocks.downloadTextFile).toHaveBeenCalledTimes(1)
@@ -336,7 +334,7 @@ describe("<ExitIqRun />", () => {
       renderWithSite(<ExitIqRun />)
       await answerAll(WEAK)
       fireEvent.click(screen.getByRole("button", { name: "Save my plan" }))
-      await screen.findByText("Your plan was downloaded as a text file and copied, ready to paste anywhere.")
+      await screen.findByText("Your plan was downloaded and copied.")
       expect(mocks.openInNewTab).not.toHaveBeenCalled()
       expect(mocks.submitInquiry).not.toHaveBeenCalled()
     })
@@ -346,7 +344,7 @@ describe("<ExitIqRun />", () => {
     it("copies the review body, beacons an exitiq_review inquiry, and opens the booking page with truncated notes", async () => {
       renderWithSite(<ExitIqRun />)
       await answerAll(WEAK)
-      fireEvent.click(screen.getByRole("button", { name: "Review my result with an advisor →" }))
+      fireEvent.click(within(questionPanel()).getByRole("button", { name: "Review my result with an advisor" }))
       expect(await screen.findByText(ADVISOR_SENT_COPY)).toHaveAttribute("aria-live", "polite")
       const body = advisorReviewBody(WEAK)
       expect(body.length).toBeGreaterThan(700)
@@ -363,7 +361,7 @@ describe("<ExitIqRun />", () => {
     it("the review body carries the recommendation, the three scores, and every answer label", async () => {
       renderWithSite(<ExitIqRun />)
       await answerAll(WEAK)
-      fireEvent.click(screen.getByRole("button", { name: "Review this result with an advisor" }))
+      fireEvent.click(within(resultPanel()).getByRole("button", { name: "Review my result with an advisor" }))
       await screen.findByText(ADVISOR_SENT_COPY)
       const body = mocks.copyText.mock.calls[0]![0]
       expect(body).toContain("Recommendation: More Evidence Needed")
@@ -376,11 +374,9 @@ describe("<ExitIqRun />", () => {
       mocks.copyText.mockRejectedValueOnce(new Error("clipboard denied"))
       renderWithSite(<ExitIqRun />)
       await answerAll(WEAK)
-      fireEvent.click(screen.getByRole("button", { name: "Review my result with an advisor →" }))
+      fireEvent.click(within(questionPanel()).getByRole("button", { name: "Review my result with an advisor" }))
       expect(await screen.findByText(ADVISOR_ERROR_COPY)).toHaveAttribute("aria-live", "polite")
-      expect(ADVISOR_ERROR_COPY).toBe(
-        "We could not open the booking page. Email hello@heirloom.com and we will set up the call."
-      )
+      expect(ADVISOR_ERROR_COPY).toBe("We could not open the booking page. Email suyash@heirloomadvisory.ai directly.")
       expect(screen.queryByText(ADVISOR_SENT_COPY)).toBeNull()
       expect(mocks.submitInquiry).not.toHaveBeenCalled()
       expect(mocks.openInNewTab).not.toHaveBeenCalled()
@@ -390,7 +386,7 @@ describe("<ExitIqRun />", () => {
       mocks.copyText.mockRejectedValueOnce(new Error("clipboard denied"))
       renderWithSite(<ExitIqRun />)
       await answerAll(WEAK)
-      const button = screen.getByRole("button", { name: "Review my result with an advisor →" })
+      const button = within(questionPanel()).getByRole("button", { name: "Review my result with an advisor" })
       fireEvent.click(button)
       await screen.findByText(ADVISOR_ERROR_COPY)
       fireEvent.click(button)

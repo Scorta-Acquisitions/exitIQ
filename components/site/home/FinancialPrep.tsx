@@ -7,19 +7,15 @@ export function FinancialPrep() {
     <section className="border-hair bg-paper border-b px-6 py-[clamp(40px,5vw,64px)]">
       <Container className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,42%)),1fr))] items-center gap-9">
         <div>
-          <div className="text-filament-ink mb-3.5 font-mono text-[11.5px] tracking-[1.2px] uppercase">
-            Get the numbers straight before buyers see them
-          </div>
           <h2 className="font-display mb-3.5 text-[clamp(28px,3.6vw,42px)] leading-[1.06] font-normal tracking-[-.9px]">
-            Explain the business once.
+            Financial preparation
           </h2>
           <p className="text-l2 mb-[22px] max-w-[520px] text-[15.5px] leading-[1.62]">
-            We compare the books, tax returns, payroll, contracts, and what you tell us. When the records disagree, your
-            advisor resolves the conflict and keeps the valuation, buyer materials, lender package, and diligence
-            answers consistent.
+            Before any buyer sees the business, we reconcile the books, tax returns, and payroll. Buyers, lenders, and
+            diligence all get the same figures.
           </p>
           <Button href={ROUTES.howItWorks} size="md" className="h-11">
-            See how Heirloom prepares a business
+            See how it works
           </Button>
         </div>
         <div className="border-hair-2 bg-card overflow-hidden rounded-2xl border shadow-[0_24px_60px_rgba(12,54,38,.08)]">

@@ -22,7 +22,7 @@ export const QUESTIONS: Question[] = [
   {
     id: "type",
     q: "What kind of business do you run?",
-    note: "Choose the closest answer. Estimates are fine. You can change any answer before finishing.",
+    note: "Estimates are fine. You can change any answer before finishing.",
     chips: [
       { v: "field", l: "Home or field services" },
       { v: "recurring", l: "Recurring commercial services" },
@@ -54,7 +54,7 @@ export const QUESTIONS: Question[] = [
   {
     id: "sde",
     q: "About how much did the business earn before your pay and income taxes?",
-    note: "Use your best estimate. No one is checking it here.",
+    note: "Use your best estimate.",
     chips: [
       { v: "a", l: "Under $150K" },
       { v: "b", l: "$150K to $350K" },

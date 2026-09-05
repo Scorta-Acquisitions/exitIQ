@@ -70,9 +70,7 @@ describe("<AskForm />", () => {
     expect(copyText).toHaveBeenCalledWith(body)
     expect(submitInquiry).toHaveBeenCalledWith({ kind: "question", body, email: EMAIL, source: "questions" })
     expect(openMail).toHaveBeenCalledWith(mailtoHref(CONTACT.hello, "Question for Heirloom", body, 1400))
-    expect(screen.getByTestId("ask-sent")).toHaveTextContent(
-      "Your email app opened with the question filled in. Send it to reach Heirloom."
-    )
+    expect(screen.getByTestId("ask-sent")).toHaveTextContent("Your email app opened with the question filled in.")
     expect(screen.getByTestId("ask-sent")).toHaveTextContent(
       `paste the copied question into a message to ${CONTACT.hello}`
     )
@@ -97,7 +95,7 @@ describe("<AskForm />", () => {
     fireEvent.click(screen.getByTestId("ask-send"))
     await settle()
     const error = screen.getByText(/We could not prepare the message/)
-    expect(error).toHaveTextContent(`Email ${CONTACT.hello} directly and we will help.`)
+    expect(error).toHaveTextContent(`Email ${CONTACT.hello} directly.`)
     expect(error).toHaveAttribute("aria-live", "polite")
     expect(openMail).not.toHaveBeenCalled()
     expect(submitInquiry).not.toHaveBeenCalled()

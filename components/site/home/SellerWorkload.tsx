@@ -18,7 +18,7 @@ const HEIRLOOM_HANDLES = [
   "Prepare you for buyer meetings",
   "Compare and negotiate offers",
   "Coordinate diligence, financing, lawyers, and closing",
-  "Send one clear weekly update",
+  "Send a weekly update",
 ]
 
 export function SellerWorkload() {
@@ -27,20 +27,16 @@ export function SellerWorkload() {
     <section className="border-hair bg-paper border-b px-6 py-[clamp(40px,5vw,64px)]">
       <Container>
         <div className="mb-7 max-w-[720px]">
-          <div className="text-filament-ink mb-3.5 font-mono text-[11.5px] tracking-[1.2px] uppercase">
-            Your time stays on the business
-          </div>
           <h2 className="font-display mb-3 text-[clamp(28px,3.6vw,42px)] leading-[1.06] font-normal tracking-[-.9px]">
-            You run the company. We run the sale.
+            The whole sale asks four decisions of you.
           </h2>
           <p className="text-l2 text-[15.5px] leading-[1.62]">
-            Heirloom handles the preparation, buyer work, negotiation, and transaction management. You provide the
-            judgment only an owner can provide.
+            Heirloom handles the preparation, buyer work, negotiation, and closing while you keep running the company.
           </p>
         </div>
         <div className="border-hair-2 bg-card grid grid-cols-1 overflow-hidden rounded-2xl border shadow-[0_24px_60px_rgba(12,54,38,.08)] md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
           <div className="border-hair flex min-h-0 flex-col border-b p-[clamp(14px,2.4vw,22px)] md:border-r md:border-b-0">
-            <div className="text-filament-ink mb-3 font-mono text-[11px] tracking-[1px] uppercase">You handle</div>
+            <div className="text-filament-ink mb-3 font-mono text-[11px] tracking-[1px] uppercase">Owner</div>
             <div className="flex flex-col gap-[9px]">
               {YOU_HANDLE.map((t) => (
                 <div
@@ -54,7 +50,7 @@ export function SellerWorkload() {
           </div>
           <div className="flex min-h-0 flex-col p-[clamp(14px,2.4vw,22px)]">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-l4 font-mono text-[11px] tracking-[1px] uppercase">Heirloom handles</span>
+              <span className="text-l4 font-mono text-[11px] tracking-[1px] uppercase">Heirloom</span>
               <span className="text-filament-ink inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[.8px]">
                 <LiveDot className="h-1.5 w-1.5 shadow-[0_0_8px_rgba(76,226,126,.8)]" />
                 LIVE
@@ -78,7 +74,7 @@ export function SellerWorkload() {
         </div>
         <div className="mt-[18px]">
           <TextLink href={ROUTES.howItWorks} className="text-[14px]">
-            See every stage →
+            See how it works →
           </TextLink>
         </div>
       </Container>

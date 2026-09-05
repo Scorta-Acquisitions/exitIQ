@@ -24,20 +24,20 @@ const LOIS = [
 
 const STEPS = [
   {
-    title: "One buyer appears",
-    body: "A letter, call, or email gives you one number and one negotiating counterparty.",
+    title: "Inbound offer",
+    body: "A single buyer names the price and the terms.",
   },
   {
-    title: "We build the buyer list",
-    body: "We research strategic acquirers, investment groups, search funds, and qualified individuals that fit the business.",
+    title: "Buyer research",
+    body: "We research acquirers, investment groups, and individuals that fit the business.",
   },
   {
-    title: "We qualify interest",
-    body: "Buyers sign an NDA and prove they are serious before receiving sensitive information.",
+    title: "NDA and qualification",
+    body: "Buyers sign an NDA and show financing before seeing sensitive records.",
   },
   {
-    title: "You choose from real options",
-    body: "We compare the full economics, buyer fit, and closing risk of every credible offer.",
+    title: "Offer comparison",
+    body: "We compare the economics, buyer fit, and closing risk of each offer.",
   },
 ]
 
@@ -180,11 +180,11 @@ export function MarketScene() {
           <div className="flex min-h-0 max-w-[470px] flex-1 flex-col justify-center gap-[clamp(3px,.9vh,16px)] py-1">
             <div className="pt-0.5 pb-[clamp(2px,.8vh,10px)]">
               <h2 className="font-display text-d1 mb-1.5 text-[clamp(20px,min(2.8vw,4vh),34px)] leading-[1.06] font-normal tracking-[-.6px]">
-                One buyer should not set the price.
+                Several buyers compete privately.
               </h2>
               <p className="text-d3 text-[clamp(11px,2vh,13px)] leading-[1.5]">
-                An inbound offer gives you one buyer’s view of value and one set of terms. We build a private market
-                around your business so credible buyers can compete on price, cash, certainty, transition, and fit.
+                We find and qualify several buyers for your business and run the process privately. You compare their
+                offers instead of negotiating with whoever approached you.
               </p>
             </div>
             {STEPS.map((s, i) => {
@@ -214,7 +214,7 @@ export function MarketScene() {
                       <>
                         {" "}
                         <TextLink href={ROUTES.howItWorks} tone="dark">
-                          See the full sale process →
+                          See how it works →
                         </TextLink>
                       </>
                     ) : null}

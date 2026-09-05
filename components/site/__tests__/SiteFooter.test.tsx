@@ -8,7 +8,8 @@ describe("<SiteFooter />", () => {
   it("links the wordmark home, makes the email clickable, and shows the current year", () => {
     renderWithSite(<SiteFooter />)
     expect(screen.getByRole("link", { name: "Heirloom home" })).toHaveAttribute("href", "/")
-    expect(screen.getByRole("link", { name: CONTACT.hello })).toHaveAttribute("href", `mailto:${CONTACT.hello}`)
+    expect(screen.queryByRole("link", { name: /@/ })).toBeNull()
+    expect(screen.queryByText(CONTACT.hello)).toBeNull()
     expect(screen.getByText(new RegExp(`© ${new Date().getFullYear()} Heirloom`))).toBeInTheDocument()
   })
 

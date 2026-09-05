@@ -251,8 +251,8 @@ describe("offerReviewBody", () => {
 })
 
 describe("OFFER_FORWARD_MAILTO", () => {
-  it("addresses offers@heirloom.com with the Free Offer Review subject", () => {
-    expect(OFFER_FORWARD_MAILTO.startsWith("mailto:offers@heirloom.com?subject=Free%20Offer%20Review&body=")).toBe(true)
+  it("addresses offers@heirloom.com with the Free offer review subject", () => {
+    expect(OFFER_FORWARD_MAILTO.startsWith("mailto:offers@heirloom.com?subject=Free%20offer%20review&body=")).toBe(true)
   })
 
   it("carries the attachment note, the standard ask, and the page footer in the body", () => {

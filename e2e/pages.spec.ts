@@ -34,8 +34,8 @@ test.describe("fees", () => {
     await expect(calc.getByTestId("fee-total")).toHaveText("$100,000")
 
     await calc.getByRole("button", { name: "Enter quoted rate" }).click()
-    await expect(calc.getByTestId("fee-traditional")).toHaveText("Comparison available after rate is entered")
-    await expect(calc.getByTestId("fee-difference")).toHaveText("Comparison available after rate is entered")
+    await expect(calc.getByTestId("fee-traditional")).toHaveText("Enter a rate to compare.")
+    await expect(calc.getByTestId("fee-difference")).toHaveText("–")
     await page.locator("#fees-rate").fill("12")
     await expect(calc.getByTestId("fee-traditional")).toHaveText("$480,000")
     await expect(calc.getByTestId("fee-difference")).toHaveText("$380,000")
@@ -46,21 +46,15 @@ test.describe("fees", () => {
     const calc = page.getByTestId("fee-calculator")
     await calc.getByRole("button", { name: "Enter quoted rate" }).click()
     await page.locator("#fees-rate").fill("0")
-    await expect(calc.getByTestId("fee-traditional")).toHaveText(
-      "We cannot calculate a reliable comparison for this value."
-    )
-    await expect(calc.getByTestId("fee-difference")).toHaveText(
-      "We cannot calculate a reliable comparison for this value."
-    )
+    await expect(calc.getByTestId("fee-traditional")).toHaveText("Enter a rate between 0 and 50.")
+    await expect(calc.getByTestId("fee-difference")).toHaveText("–")
 
     await calc.getByRole("button", { name: "Use 10% illustration" }).click()
     await page.locator("#fees-price").fill("6000000")
     await expect(calc.getByTestId("fee-price")).toHaveText("$6,000,000")
     await expect(calc.getByTestId("fee-total")).toHaveText("$300,000")
-    await expect(calc.getByTestId("fee-traditional")).toHaveText(
-      "Traditional fees vary at this transaction size. Enter the quoted rate to compare."
-    )
-    await expect(calc.getByTestId("fee-difference")).toHaveText("Comparison available after rate is entered")
+    await expect(calc.getByTestId("fee-traditional")).toHaveText("Above $5M, enter the quoted rate to compare.")
+    await expect(calc.getByTestId("fee-difference")).toHaveText("–")
 
     await calc.getByRole("button", { name: "Reset calculator" }).click()
     await expect(calc.getByTestId("fee-price")).toHaveText("$2,400,000")
@@ -194,16 +188,14 @@ test.describe("questions", () => {
     await expect(first).toHaveAttribute("aria-expanded", "true")
     await expect(
       page.getByText(
-        "No. Heirloom represents sellers in transactions and never buys a represented business for its own account. Buyer Passport verifies buyers; it does not advise them on a Heirloom-represented transaction."
+        "No. Heirloom represents sellers and never buys a business it represents. Buyer Passport verifies buyers. It does not advise them."
       )
     ).toBeVisible()
     await second.click()
     await expect(second).toHaveAttribute("aria-expanded", "true")
     await expect(first).toHaveAttribute("aria-expanded", "false")
     await expect(
-      page.getByText(
-        "Buyers do not pay Heirloom a transaction fee on a business we represent. Buyer Passport is currently free."
-      )
+      page.getByText("Buyers pay no transaction fee on a business we represent. Buyer Passport is currently free.")
     ).toBeVisible()
 
     const ask = page.getByTestId("ask-form")
@@ -218,9 +210,7 @@ test.describe("questions", () => {
       source: "questions",
       body: "Question: Do you work with franchises?\n\nReply to: owner@example.com",
     })
-    await expect(ask.getByTestId("ask-sent")).toContainText(
-      "Your email app opened with the question filled in. Send it to reach Heirloom."
-    )
+    await expect(ask.getByTestId("ask-sent")).toContainText("Your email app opened with the question filled in.")
     await expect(ask.getByTestId("ask-send")).toBeEnabled()
   })
 })
@@ -252,23 +242,21 @@ test.describe("how it works", () => {
     await page.goto("/how-it-works")
     await scrollScene(page, "stages-scene", 0.02)
     await expect(page.getByTestId("stage-node-0")).toHaveAttribute("data-state", "active")
-    await expect(page.getByTestId("stage-panel-0")).toContainText("Understand your goals")
-    await expect(page.getByTestId("stage-panel-0")).toContainText("A sale plan and focused information request.")
-    await expect(
-      page.getByText("Move through the stages to see what Heirloom handles and when you are needed.")
-    ).toBeVisible()
+    await expect(page.getByTestId("stage-panel-0")).toContainText("Your goals and timing")
+    await expect(page.getByTestId("stage-panel-0")).toContainText("A sale plan and information request.")
+    await expect(page.getByText("Scroll to move through the stages.")).toBeVisible()
 
     await scrollScene(page, "stages-scene", 0.5)
     await expectPinned(page, "stages-scene")
     await expect(page.getByTestId("stage-node-4")).toHaveAttribute("data-state", "active")
     await expect(page.getByTestId("stage-node-3")).toHaveAttribute("data-state", "done")
     await expect(page.getByTestId("stage-node-5")).toHaveAttribute("data-state", "pending")
-    await expect(page.getByTestId("stage-panel-4")).toContainText("Build the buyer market")
-    await expect(page.getByTestId("stage-panel-4")).toContainText("Nothing until serious buyers are ready.")
+    await expect(page.getByTestId("stage-panel-4")).toContainText("Buyer market")
+    await expect(page.getByTestId("stage-panel-4")).toContainText("Nothing until qualified buyers are ready.")
 
     await scrollScene(page, "stages-scene", 0.99)
     await expect(page.getByTestId("stage-node-7")).toHaveAttribute("data-state", "active")
-    await expect(page.getByTestId("stage-panel-7")).toContainText("Complete diligence, financing, and closing")
+    await expect(page.getByTestId("stage-panel-7")).toContainText("Diligence, financing, and closing")
 
     const brain = page.getByTestId("business-brain")
     await brain.scrollIntoViewIfNeeded()

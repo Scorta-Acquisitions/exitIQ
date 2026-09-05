@@ -24,12 +24,12 @@ export function HomeHero() {
             Technology-enabled sell-side M&amp;A for established business owners
           </div>
           <h1 className="font-display mb-2.5 text-[clamp(30px,3.8vw,52px)] leading-none font-normal tracking-[-.7px]">
-            Sell your business to <em className="text-brand">the right buyer, on the right terms.</em>
+            Sell your business privately, <em className="text-brand">with qualified buyers competing.</em>
           </h1>
           <div className="mx-auto mb-3.5 flex max-w-[760px] flex-wrap items-center justify-center gap-x-3.5 gap-y-2">
             <p className="text-l2 text-[clamp(14px,1.4vw,16px)] leading-[1.5]">
-              Heirloom prepares your company, creates competition among qualified buyers, and manages the private sale
-              through closing while you keep running the business.
+              We prepare the company, bring qualified buyers into a private process, and manage the transaction through
+              closing. You choose the offer.
             </p>
             <a
               href={CONTACT.ycombinator}
@@ -51,7 +51,7 @@ export function HomeHero() {
         <HeroConsole />
         <div className="border-hair mt-2 flex flex-wrap items-baseline justify-end gap-x-7 gap-y-2.5 border-t pt-2">
           <Button href={ROUTES.buyers} variant="pill-light" size="pill" className="px-3.5">
-            Buying a business? Get Heirloom Verified →
+            Buyers: Get Heirloom Verified
           </Button>
         </div>
       </div>

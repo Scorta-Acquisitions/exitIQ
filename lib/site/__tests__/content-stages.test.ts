@@ -35,12 +35,25 @@ describe("SALE_STAGES", () => {
     }
   })
 
-  it("keeps every label a single word and every title at most five words", () => {
+  it("keeps every label a single word and every title between two and five words", () => {
     for (const stage of SALE_STAGES) {
       expect(wordCount(stage.label), stage.label).toBe(1)
       expect(wordCount(stage.title), stage.title).toBeLessThanOrEqual(5)
-      expect(wordCount(stage.title), stage.title).toBeGreaterThanOrEqual(3)
+      expect(wordCount(stage.title), stage.title).toBeGreaterThanOrEqual(2)
     }
+  })
+
+  it("publishes the eight stage titles in order", () => {
+    expect(SALE_STAGES.map((s) => s.title)).toEqual([
+      "Your goals and timing",
+      "Prepare the numbers",
+      "Valuation and materials",
+      "Privacy rules",
+      "Buyer market",
+      "Buyer meetings",
+      "Compare the offers",
+      "Diligence, financing, and closing",
+    ])
   })
 
   it("keeps the artifact names short enough for the roadmap badge (at most two words)", () => {
@@ -72,9 +85,9 @@ describe("SALE_STAGES", () => {
     })
   })
 
-  it("asks nothing of the owner during buyer-market building until serious buyers are ready", () => {
+  it("asks nothing of the owner during buyer-market building until qualified buyers are ready", () => {
     const market = SALE_STAGES.find((s) => s.label === "Market")
-    expect(market?.you).toBe("Nothing until serious buyers are ready.")
+    expect(market?.you).toBe("Nothing until qualified buyers are ready.")
   })
 })
 
@@ -95,9 +108,11 @@ describe("HARD_PARTS", () => {
     }
   })
 
-  it("promises the owner keeps the decision when they withdraw", () => {
+  it("states exactly what happens when the owner withdraws", () => {
     const change = HARD_PARTS.find((h) => h.title === "You change your mind")
-    expect(change?.body.endsWith("The decision remains yours.")).toBe(true)
+    expect(change?.body).toBe(
+      "We stop outreach, revoke buyer access, tell buyers only that the owner withdrew, and follow the retention rules in your agreement."
+    )
   })
 })
 

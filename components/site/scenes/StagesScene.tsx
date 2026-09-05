@@ -30,7 +30,7 @@ export function StagesScene() {
         <div className="relative mx-auto flex h-full max-w-[1132px] flex-col px-6 py-[clamp(12px,3vh,32px)]">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-signal font-mono text-[clamp(9.5px,1.8vh,11.5px)] tracking-[1.2px] uppercase">
-              The sale, from first conversation to close
+              The eight stages
             </span>
             <span className="text-d4 hidden font-mono text-[10px] motion-reduce:inline">
               Use the controls below to review the same information without animation.
@@ -184,10 +184,10 @@ export function StagesScene() {
                   frame.hint ? "opacity-100" : "opacity-0"
                 }`}
               >
-                Move through the stages to see what Heirloom handles and when you are needed.
+                Scroll to move through the stages.
               </span>
               <AdvisorTrigger className="hover-green-dark text-signal font-mono text-[clamp(9px,1.7vh,11px)]">
-                Discuss my sale →
+                Talk to an M&amp;A advisor
               </AdvisorTrigger>
             </div>
           </div>

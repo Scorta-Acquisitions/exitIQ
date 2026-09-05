@@ -73,7 +73,7 @@ export function OfferIntake({ initialMode = "forward" }: { initialMode?: OfferIn
         void submitInquiry({ kind: "offer_review", body, email: fields.email, source: "offer-review" })
         setSending(false)
         setSent(true)
-        openMail(mailtoHref(CONTACT.offers, "Free Offer Review", body))
+        openMail(mailtoHref(CONTACT.offers, "Free offer review", body))
       } catch {
         setSending(false)
         setError(CONTACT.offers)
@@ -165,7 +165,7 @@ export function OfferIntake({ initialMode = "forward" }: { initialMode?: OfferIn
             </div>
             <p className="text-l3 mb-3 font-mono text-[11.5px]">PDF, Word document, image, or email export</p>
             <p className="text-l2 mb-3 text-[15px] leading-[1.65]">
-              Prefer email? Forward the original message or attach the document to{" "}
+              Or forward it to{" "}
               <a href={`mailto:${CONTACT.offers}`} className="border-filament-ink/30 text-filament-ink border-b">
                 {CONTACT.offers}
               </a>
@@ -175,16 +175,16 @@ export function OfferIntake({ initialMode = "forward" }: { initialMode?: OfferIn
               Open an email to attach the offer
             </Button>
             <p className="text-l3 mt-3 font-mono text-[11.5px]">
-              A person reviews the submission. You will usually hear back the same business day.
+              A person reviews it. You usually hear back the same business day.
             </p>
           </div>
         ) : (
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2.5">
             <Button onClick={send} disabled={sending} data-testid="oi-send">
-              Send for free review
+              Send for review
             </Button>
             <span className="text-l3 font-mono text-[11.5px]">
-              A person reviews the submission. You will usually hear back the same business day.
+              A person reviews it. You usually hear back the same business day.
             </span>
           </div>
         )}
@@ -196,7 +196,7 @@ export function OfferIntake({ initialMode = "forward" }: { initialMode?: OfferIn
         ) : null}
         {error ? (
           <p aria-live="polite" className="text-error mt-3 text-[13px]">
-            We could not prepare the message. Email {error} directly and we will help.
+            We could not prepare the message. Email {error} directly.
           </p>
         ) : null}
         {sent ? (
@@ -209,9 +209,6 @@ export function OfferIntake({ initialMode = "forward" }: { initialMode?: OfferIn
             </p>
           </div>
         ) : null}
-        <p className="text-l3 mt-3.5 font-mono text-[11.5px] leading-[1.6]">
-          Confidential. No commitment. We do not contact the buyer during the review.
-        </p>
       </div>
     </div>
   )

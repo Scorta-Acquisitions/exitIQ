@@ -18,7 +18,7 @@ app/
                              prod), SiteStateProvider, SiteHeader, SiteFooter, AdvisorDialog
   page.tsx                   Home — HomeHero (HeroConsole funnel + WebGL field + SVG market graph), TermsStrip,
                              MarketScene, FinancialPrep, PrivacyScene, OfferComparison, SellerWorkload,
-                             SpeedAndFees, ExperienceAdvisor, TransactionCarries, QuestionsTeaser, CloseSection
+                             SpeedSection, TransactionCarries, QuestionsTeaser, CloseSection
   score/                     exitIQ — seven-question readiness run (ExitIqRun) + result panel
   offer-review/              Free Offer Review intake (OfferIntake; `?mode=forward|paste|verbal`)
   how-it-works/              StagesScene (8-stage scroll roadmap) + BusinessBrain reconciliation demo
@@ -38,7 +38,7 @@ components/site/
   hero/        HomeHero · HeroConsole · HeroGraph (SVG) · useInstrumentField (WebGL)
   exitiq/      ExitIqQuestion · ExitIqRun · ExitIqActions · ReviewWithAdvisor
   scenes/      useSceneProgress · MarketScene · PrivacyScene · StagesScene
-  home/ · offer-review/ · how-it-works/ · fees/ · confidentiality/ · buyers/ · questions/
+  home/ · offer-review/ · how-it-works/ · fees/ · confidentiality/ · buyers/ · who-we-are/ · questions/
   __tests__/   RTL component tests (vitest + jsdom; browser API stand-ins live in vitest.setup.ts)
 
 lib/site/
@@ -48,7 +48,7 @@ lib/site/
   exitiq/          questions.ts (bank + insights) · scoring.ts (scoreExitIq, findings, 90-day plan, text exports)
   advisor/         data.ts · intake.ts (prefill, step logic, briefing text, agenda)
   hero/            funnel.ts (stages, chips, copy) · geometry.ts (heroGeometry for the SVG)
-  offers/ · fees/ · confidentiality/ · buyers/ · questions/ · content/stages.ts   page data + pure helpers
+  offers/ · fees/ · confidentiality/ · buyers/ · questions/ · content/stages.ts · content/speed.ts   page data + pure helpers
   scroll.ts        scene math (sceneProgress, marketFrame, stageFrame, privacyLevel)
   mailto.ts        mailto/clipboard/download helpers + form body builders
   inquiry.ts       shared Zod schema + client beacon for /api/inquiry
@@ -85,7 +85,7 @@ Verification: `pnpm typecheck` · `pnpm lint` · `pnpm prettier` · `pnpm test` 
 locally so flakes surface; set `PLAYWRIGHT_BASE_URL` to point the suite at another port).
 
 Test rigor rules (all site tests follow them): every `it` asserts a concrete value (exact text, href, number,
-or the class that *is* the behaviour); unhappy paths and boundaries are covered; time-based behaviour uses fake
+or the class that _is_ the behaviour); unhappy paths and boundaries are covered; time-based behaviour uses fake
 timers; no snapshots, no "renders without crashing", no sleeps in e2e. Scene components are driven in jsdom via
 `components/site/__tests__/scene-test-utils.ts`; seeded site state via `renderWithSeededSite` in `test-utils.tsx`.
 
@@ -113,17 +113,19 @@ human-in-the-loop.
 
 Engineering reality to keep in mind: much of the authenticated `(app)` workspace currently renders
 against a **single locked mock persona** (`lib/persona.ts`) rather than live per-user data. That is
-acceptable scaffolding, but it is *debt*, not a standard. New work should move data flows toward
+acceptable scaffolding, but it is _debt_, not a standard. New work should move data flows toward
 real, per-session/per-user data wherever feasible, and must not deepen the mock coupling without a
 reason.
 
 Build plans live in [`plans/`](../plans):
+
 - `plans/Scorta Brokerage Build.md` — strategic pivot + broker responsibility map
 - `plans/Phase 1 — Intake & Valuation.md`, `Phase 2 — Listing Preparation.md`, `Phase 3 — Buyer Outreach & Qualification.md`
 
 **DealIQ (buy-side, in progress).** A standalone buyer application under `lib/dealiq/` +
-`components/dealiq/` + `app/(dealiq)/` — separate IA, separate sign-in, *no* product switcher and no
+`components/dealiq/` + `app/(dealiq)/` — separate IA, separate sign-in, _no_ product switcher and no
 link from the seller workspace into it. Three documents, read in this order:
+
 - `plans/DealIQ — Product Boundary & Data Flow.md` — what DealIQ is and where its edges are
 - `plans/DealIQ — Execution Plan.md` — the 14 build items, the data seam (§1), and the settled
   architecture decisions (§2). **Do not relitigate §2 mid-build.**
@@ -153,7 +155,7 @@ These apply to all new and modified code. They replace the prior "demo sprint / 
 5. **Tests for logic.** Pure logic in `lib/` (scoring, segmentation, SBA, transforms) is unit-tested
    with Vitest. DB schema/RLS behavior has integration tests. Add/extend tests when you touch this logic.
 6. **Migrations are append-only and ship with their RLS.** Never edit an applied migration; generate a
-   new one. Any new user-data table ships its RLS policies in the *same* migration.
+   new one. Any new user-data table ships its RLS policies in the _same_ migration.
 7. **No secrets in code or logs.** Read config only through `@/env.mjs`. Redact PII before tracing.
 8. **Small, reviewable changes.** Match existing file conventions. Don't reformat unrelated code or
    introduce new libraries/palettes/AI providers without cause.
@@ -166,27 +168,27 @@ state for frontend code; note that the current inline-style station UI predates 
 
 ## Stack (verified from `package.json`)
 
-| Layer | Choice | Pin |
-|-------|--------|-----|
-| Framework | Next.js 15 App Router (RSC-first) | `next@15.5.10` |
-| Dev bundler | Turbopack (`next dev --turbo`) | — |
-| Language | TypeScript strict, `noUncheckedIndexedAccess` | `typescript@^5.9` |
-| Runtime | React 19 | `react@^19.2.4` |
-| Styling | Tailwind CSS v4 (`@tailwindcss/postcss`) + CSS-variable design tokens in `styles/tailwind.css` | `tailwindcss@^4.2` |
-| Primitives | Radix UI (accordion, dialog, dropdown, popover, select, slider, switch, tabs, tooltip, checkbox, radio, scroll-area, toggle-group, label, form) | `@radix-ui/*` |
-| Variants | CVA + `tailwind-merge` | `class-variance-authority@^0.7` |
-| Package manager | **pnpm** (node ≥ 20) — never `npm`/`yarn` | `pnpm@10.0.0` |
-| ORM | Drizzle ORM + postgres.js | `drizzle-orm@^0.45`, `postgres@^3.4` |
-| DB | Supabase Postgres — transaction pooler at runtime | — |
-| Auth | Supabase Auth via `@supabase/ssr` (publishable key, cookie sessions) | `@supabase/ssr@^0.10` |
-| Env | `@t3-oss/env-nextjs` via `env.mjs` (single surface) | `@t3-oss/env-nextjs@^0.13` |
-| AI | AI SDK v6 + `@ai-sdk/anthropic` (direct provider — **not** AI Gateway) | `ai@^6.0`, `@ai-sdk/anthropic@^3.0` |
-| AI models | `claude-sonnet-4-6` (reports), `claude-haiku-4-5-20251001` (fast paths) — constants in `lib/ai/index.ts` | — |
-| Email | Resend (no-op until `RESEND_API_KEY` set) | `resend@^6.12` |
-| Validation | Zod | `zod@^3.24` |
-| Observability | `@vercel/otel` + structured logger (`lib/logger.ts`) | `@vercel/otel@^1.12` |
-| Testing | Vitest + RTL + Playwright | `vitest@^3.2`, `@playwright/test@^1.58` |
-| Stories | Storybook 8 | `storybook@^8.6` |
+| Layer           | Choice                                                                                                                                          | Pin                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Framework       | Next.js 15 App Router (RSC-first)                                                                                                               | `next@15.5.10`                          |
+| Dev bundler     | Turbopack (`next dev --turbo`)                                                                                                                  | —                                       |
+| Language        | TypeScript strict, `noUncheckedIndexedAccess`                                                                                                   | `typescript@^5.9`                       |
+| Runtime         | React 19                                                                                                                                        | `react@^19.2.4`                         |
+| Styling         | Tailwind CSS v4 (`@tailwindcss/postcss`) + CSS-variable design tokens in `styles/tailwind.css`                                                  | `tailwindcss@^4.2`                      |
+| Primitives      | Radix UI (accordion, dialog, dropdown, popover, select, slider, switch, tabs, tooltip, checkbox, radio, scroll-area, toggle-group, label, form) | `@radix-ui/*`                           |
+| Variants        | CVA + `tailwind-merge`                                                                                                                          | `class-variance-authority@^0.7`         |
+| Package manager | **pnpm** (node ≥ 20) — never `npm`/`yarn`                                                                                                       | `pnpm@10.0.0`                           |
+| ORM             | Drizzle ORM + postgres.js                                                                                                                       | `drizzle-orm@^0.45`, `postgres@^3.4`    |
+| DB              | Supabase Postgres — transaction pooler at runtime                                                                                               | —                                       |
+| Auth            | Supabase Auth via `@supabase/ssr` (publishable key, cookie sessions)                                                                            | `@supabase/ssr@^0.10`                   |
+| Env             | `@t3-oss/env-nextjs` via `env.mjs` (single surface)                                                                                             | `@t3-oss/env-nextjs@^0.13`              |
+| AI              | AI SDK v6 + `@ai-sdk/anthropic` (direct provider — **not** AI Gateway)                                                                          | `ai@^6.0`, `@ai-sdk/anthropic@^3.0`     |
+| AI models       | `claude-sonnet-4-6` (reports), `claude-haiku-4-5-20251001` (fast paths) — constants in `lib/ai/index.ts`                                        | —                                       |
+| Email           | Resend (no-op until `RESEND_API_KEY` set)                                                                                                       | `resend@^6.12`                          |
+| Validation      | Zod                                                                                                                                             | `zod@^3.24`                             |
+| Observability   | `@vercel/otel` + structured logger (`lib/logger.ts`)                                                                                            | `@vercel/otel@^1.12`                    |
+| Testing         | Vitest + RTL + Playwright                                                                                                                       | `vitest@^3.2`, `@playwright/test@^1.58` |
+| Stories         | Storybook 8                                                                                                                                     | `storybook@^8.6`                        |
 
 **Do not introduce a new color palette, component library, or AI provider.** Inherit what's in place.
 
@@ -204,18 +206,18 @@ import { env } from "@/env.mjs"
 // ❌ process.env.DATABASE_URL
 ```
 
-| Variable | Scope | Purpose |
-|---|---|---|
-| `DATABASE_URL` | server | Postgres — **transaction pooler (6543)** at runtime; session pooler (5432) only for local `drizzle-kit` |
-| `SUPABASE_URL` | server | Project URL — declared, not currently consumed by runtime code |
-| `SUPABASE_SERVICE_SECRET_KEY` | server | Service-role key — **only** used in the RLS integration test. No runtime code uses it; don't add service-role calls casually |
-| `NEXT_PUBLIC_SUPABASE_URL` | client | Used by browser + server Supabase clients |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client | Used by browser + server Supabase clients (server uses publishable + cookies, **not** the service key) |
-| `ANTHROPIC_API_KEY` | server | Consumed in `lib/ai/index.ts` |
-| `RESEND_API_KEY` | server, optional | When missing, `lib/email/index.ts` is a no-op |
-| `EXITIQ_WORKFLOW_LOG` / `NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG` | both | NDJSON workflow tracing to `.exitiq-debug/` (local dev only; auto-off on Vercel) |
-| `ANALYZE` | server | Toggles `@next/bundle-analyzer` in `next.config.ts` |
-| `SKIP_ENV_VALIDATION` | special | Bypasses `createEnv` validation in CI / lint envs without creds |
+| Variable                                                  | Scope            | Purpose                                                                                                                      |
+| --------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                            | server           | Postgres — **transaction pooler (6543)** at runtime; session pooler (5432) only for local `drizzle-kit`                      |
+| `SUPABASE_URL`                                            | server           | Project URL — declared, not currently consumed by runtime code                                                               |
+| `SUPABASE_SERVICE_SECRET_KEY`                             | server           | Service-role key — **only** used in the RLS integration test. No runtime code uses it; don't add service-role calls casually |
+| `NEXT_PUBLIC_SUPABASE_URL`                                | client           | Used by browser + server Supabase clients                                                                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                    | client           | Used by browser + server Supabase clients (server uses publishable + cookies, **not** the service key)                       |
+| `ANTHROPIC_API_KEY`                                       | server           | Consumed in `lib/ai/index.ts`                                                                                                |
+| `RESEND_API_KEY`                                          | server, optional | When missing, `lib/email/index.ts` is a no-op                                                                                |
+| `EXITIQ_WORKFLOW_LOG` / `NEXT_PUBLIC_EXITIQ_WORKFLOW_LOG` | both             | NDJSON workflow tracing to `.exitiq-debug/` (local dev only; auto-off on Vercel)                                             |
+| `ANALYZE`                                                 | server           | Toggles `@next/bundle-analyzer` in `next.config.ts`                                                                          |
+| `SKIP_ENV_VALIDATION`                                     | special          | Bypasses `createEnv` validation in CI / lint envs without creds                                                              |
 
 `.env.local.example` is the canonical template. When you add/remove a variable, update **both**
 `env.mjs` and `.env.local.example`.
@@ -228,22 +230,26 @@ import { env } from "@/env.mjs"
 ## Architecture Boundaries (hard rules)
 
 ### 1. Import alias `@/*` → repo root
+
 ```ts
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 ```
+
 No relative `../../` imports for repo-internal modules.
 
 ### 2. Database access is server-only
+
 `lib/db/index.ts` exports a module-level `db` singleton (one `postgres()` client reused across
 requests). Import it **only** in Route Handlers (`app/api/**/route.ts`), Server Actions
 (`"use server"`), or server-only utility modules. **Never** import `db` from a Client Component.
 
 ### 3. Supabase client split (`lib/supabase/`)
-| Client | File | Use |
-|---|---|---|
-| Browser | `client.ts` (`createBrowserClient`) | Client Components, browser-side auth |
-| Server | `server.ts` (`createServerClient` + `next/headers` cookies) | Server Components, Route Handlers |
+
+| Client     | File                                                           | Use                                     |
+| ---------- | -------------------------------------------------------------- | --------------------------------------- |
+| Browser    | `client.ts` (`createBrowserClient`)                            | Client Components, browser-side auth    |
+| Server     | `server.ts` (`createServerClient` + `next/headers` cookies)    | Server Components, Route Handlers       |
 | Middleware | `middleware.ts` (`createServerClient` + `NextRequest` cookies) | session refresh in root `middleware.ts` |
 
 All three use the **publishable** key. RLS gatekeeps the `anon` role; Drizzle bypasses RLS via the
@@ -251,12 +257,14 @@ direct `DATABASE_URL` connection. The root [`middleware.ts`](../middleware.ts) c
 `supabase.auth.getUser()` on every non-static request to keep server-component auth state fresh.
 
 ### 4. Module layering (no upward imports)
+
 ```
 app/          (pages, layouts, route handlers, server actions)
   └── components/   (UI; must not import db)
   └── lib/          (assessment, ai, supabase, db, email, debug, exitiq, persona, logger)
         └── env.mjs (sole env surface)
 ```
+
 A module in `lib/` must not import from `app/`. UI components must not import `db`.
 
 ---
@@ -298,6 +306,7 @@ legacy/app/
 The station rail / order / lock state is defined by `STATIONS` in `lib/persona.ts`. None of these legacy routes are served by the deployed app; the root `middleware.ts` that guarded them now lives at `legacy/middleware.ts`.
 
 ### Assessment data flow
+
 1. Client persists stage answers to `localStorage` (in-session source of truth) via `lib/assessment/session.ts`.
 2. Client `POST`s a `SessionPatch` to `/api/assessment/session` (`lib/assessment/api.ts`).
 3. Server validates with Zod, computes `score` + `sbaEligible` only when `completedAt` is present, and
@@ -313,12 +322,14 @@ The station rail / order / lock state is defined by `STATIONS` in `lib/persona.t
 `after()` without coordinating — it's an intentional latency/UX tradeoff.
 
 ### Stage data — JSONB everywhere
+
 `assessment_sessions` stores `stage1`, `gate`, `stage2`, `stage3`, `stage4` as JSONB. Per-stage Zod
 schemas live in `app/api/assessment/session/route.ts`; TS types in `lib/assessment/session.ts`
 (`Stage1Answers`…`Stage4Answers`, `GateAnswers`). Adding a stage field means updating **both** the Zod
 schema and the TS interface.
 
 ### Naming quirk
+
 `SegmentTag` was renamed to `leadQuality` in TypeScript, but the DB column stays `segment_tag`
 (`.$type<SegmentTag>()` on the Drizzle column — see [`lib/db/schema/assessments.ts`](../lib/db/schema/assessments.ts):23).
 No migration is needed for this rename; preserve the column name.
@@ -328,19 +339,22 @@ No migration is needed for this rename; preserve the column name.
 ## Database
 
 ### Schema (`lib/db/schema/`) — three tables, all RLS-enabled
-| Table | Purpose | Notable columns |
-|---|---|---|
+
+| Table                 | Purpose                | Notable columns                                                                                            |
+| --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `assessment_sessions` | One row per assessment | `session_id` (text, unique), stage1-4 + gate JSONB, `segment_tag`, `score`, `sba_eligible`, `completed_at` |
-| `assessment_reports` | One report per session | `session_id` (FK, unique), `report_md`, `model_used`, `generation_ms` |
-| `waitlist` | Email capture | `email` (unique), `role`, `source` |
+| `assessment_reports`  | One report per session | `session_id` (FK, unique), `report_md`, `model_used`, `generation_ms`                                      |
+| `waitlist`            | Email capture          | `email` (unique), `role`, `source`                                                                         |
 
 ### RLS posture (public, anon role only)
+
 - `anon_insert_sessions`, `anon_insert_reports`, `anon_insert_waitlist` — anon can INSERT.
 - Anon SELECT/UPDATE on assessment tables were **dropped** in `0001_drop_anon_rw_policies.sql`. All
   reads route through API routes using the Drizzle `DATABASE_URL` connection (which bypasses RLS).
 - **Any new user-data table must ship its RLS policies in the same migration.**
 
 ### Migrations (`lib/db/migrations/`)
+
 ```
 0000_colossal_gravity.sql               initial schema + RLS
 0001_drop_anon_rw_policies.sql          remove anon SELECT/UPDATE
@@ -349,16 +363,19 @@ No migration is needed for this rename; preserve the column name.
 0005_rainy_devos.sql                    session_id idx → UNIQUE constraint
 0006_restore_assessment_anon_policies_idx.sql   idempotent repair
 ```
+
 `0002` is intentionally skipped (squashed during early dev). Don't renumber. Migrations are
 append-only — never edit an applied one.
 
 ### Commands
+
 ```bash
 pnpm db:generate   # generate migration SQL from schema changes
 pnpm db:migrate    # apply migrations — use SESSION pooler URL (5432) locally
 pnpm db:push       # DEV/LOCAL ONLY — never staging/prod
 pnpm db:studio     # Drizzle Studio
 ```
+
 `drizzle.config.ts` loads `DATABASE_URL` via `env.mjs`; swap to a session-pooler URL in `.env.local`
 for migration commands only.
 
@@ -418,6 +435,7 @@ lib/
 ```
 
 ### Styling reality
+
 Design tokens are CSS variables in `styles/tailwind.css` (`--t1`…`--t4`, `--glass-bg`, `--mint`,
 `--peach`, `--scan-color`, …). Dark is the default theme; `[data-theme="cream"]` is the light variant
 (the `(app)` workspace pins `cream`). Much of the `scorta/` station UI is written with **inline-style

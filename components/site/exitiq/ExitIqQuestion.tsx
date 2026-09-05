@@ -101,7 +101,7 @@ export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
       </div>
       {hero ? (
         <p className="text-d4 mt-3.5 font-mono text-[11.5px]">
-          About 2 minutes. No name, email, phone number, or documents required.
+          About 2 minutes. No name, email, or documents required.
         </p>
       ) : null}
     </div>

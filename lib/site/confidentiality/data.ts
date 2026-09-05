@@ -249,35 +249,35 @@ export function homeStageName(level: number): string {
 export const CONFIDENTIALITY_RULES: Array<{ title: string; body: string }> = [
   {
     title: "Your business is never publicly listed",
-    body: "Heirloom creates buyer interest privately. Your confidential information is not sold or posted to a public business-for-sale marketplace.",
+    body: "Buyer outreach is private and never uses a public business-for-sale marketplace.",
   },
   {
-    title: "We do not contact your people without approval",
-    body: "Employees, customers, suppliers, and other business relationships stay outside the process unless you authorize contact.",
+    title: "No contact with employees, customers, or suppliers without your approval",
+    body: "Business relationships stay outside the process unless you authorize contact.",
   },
   {
     title: "You set buyer exclusions before outreach",
-    body: "Name competitors, customers, suppliers, local buyers, or anyone else who must remain outside the process. Add exclusions at any time.",
+    body: "You can add exclusions at any time.",
   },
   {
-    title: "Your identity follows an NDA",
-    body: "Prospective buyers begin with an anonymous overview. Identifying information is released only after the buyer signs and passes initial review.",
+    title: "Your identity is released after an NDA",
+    body: "Buyers start with an anonymous overview and learn the name after signing.",
   },
   {
-    title: "Sensitive records follow buyer qualification",
-    body: "Detailed margins, customer information, contracts, payroll, and bank support are limited to serious buyers whose identity, fit, and ability to close have been reviewed.",
+    title: "Sensitive records are released after qualification",
+    body: "Margins, customer details, contracts, and payroll go only to qualified buyers.",
   },
   {
-    title: "Every access has a person and time",
-    body: "The access history shows who received information, what they opened, and when their access changes or expires.",
+    title: "Every access is recorded",
+    body: "The access history shows who opened what, and when access changed.",
   },
   {
     title: "Access expires and can be revoked",
-    body: "Buyers who leave the process or reach an access limit lose entry unless Heirloom extends it. You can ask us to revoke access sooner.",
+    body: "Buyers who leave the process lose access. You can ask us to revoke it sooner.",
   },
   {
     title: "Retention rules are written before you sign",
-    body: "Different records have different legal and operational retention periods. Your engagement explains how documents, recordings, transcripts, and transaction records are handled.",
+    body: "Your engagement agreement states how documents, recordings, transcripts, and transaction records are kept and deleted.",
   },
 ]
 

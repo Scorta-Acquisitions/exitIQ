@@ -99,6 +99,6 @@ export function offerReviewBody(f: OfferIntakeFields): string {
 
 export const OFFER_FORWARD_MAILTO = mailtoHref(
   "offers@heirloom.com",
-  "Free Offer Review",
+  "Free offer review",
   "I received an offer or indication of interest for my business. The original message or document is attached.\n\nPlease explain what I would receive, what is missing, and which terms deserve attention before I respond.\n\nSent from the Heirloom Offer Review page."
 )

@@ -39,7 +39,7 @@ test("unknown paths show the site 404 page", async ({ page }) => {
     expect(content).toBe("noindex")
   }
   await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible()
-  await expect(page.getByRole("contentinfo")).toContainText("We represent sellers.")
+  await expect(page.getByRole("contentinfo")).toContainText("Heirloom works for sellers only.")
 })
 
 test("every link on every page resolves: internal paths return 200 and anchors exist", async ({ page, request }) => {
@@ -76,13 +76,10 @@ test("the footer links home, shows a clickable email, and carries the current ye
   await page.goto("/why")
   const footer = page.getByRole("contentinfo")
   await expect(footer.getByRole("link", { name: "Heirloom home" })).toHaveAttribute("href", "/")
-  await expect(footer.getByRole("link", { name: "hello@heirloom.com" })).toHaveAttribute(
-    "href",
-    "mailto:hello@heirloom.com"
-  )
+  await expect(footer.getByRole("link", { name: /@/ })).toHaveCount(0)
   await expect(footer).toContainText(`© ${new Date().getFullYear()} Heirloom. All rights reserved.`)
   await expect(footer).toContainText(
-    "Worked examples on this site, including Project Ridgeline, use fictional companies, people, buyers, and figures and do not describe a Heirloom client or transaction."
+    "Worked examples, including Project Ridgeline, use fictional companies, people, buyers, and figures and do not describe a Heirloom client or transaction."
   )
   await expect(footer.getByRole("link", { name: "Get Heirloom Verified" })).toHaveAttribute(
     "href",

@@ -1,11 +1,10 @@
 import { HomeHero } from "@/components/site/hero/HomeHero"
 import { CloseSection } from "@/components/site/home/CloseSection"
-import { ExperienceAdvisor } from "@/components/site/home/ExperienceAdvisor"
 import { FinancialPrep } from "@/components/site/home/FinancialPrep"
 import { OfferComparison } from "@/components/site/home/OfferComparison"
 import { QuestionsTeaser } from "@/components/site/home/QuestionsTeaser"
 import { SellerWorkload } from "@/components/site/home/SellerWorkload"
-import { SpeedAndFees } from "@/components/site/home/SpeedAndFees"
+import { SpeedSection } from "@/components/site/home/SpeedSection"
 import { TermsStrip } from "@/components/site/home/TermsStrip"
 import { TransactionCarries } from "@/components/site/home/TransactionCarries"
 import { MarketScene } from "@/components/site/scenes/MarketScene"
@@ -21,8 +20,7 @@ export default function HomePage() {
       <PrivacyScene />
       <OfferComparison />
       <SellerWorkload />
-      <SpeedAndFees />
-      <ExperienceAdvisor />
+      <SpeedSection />
       <TransactionCarries />
       <QuestionsTeaser />
       <CloseSection />

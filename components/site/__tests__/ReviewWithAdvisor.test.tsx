@@ -51,20 +51,20 @@ describe("ReviewWithAdvisor", () => {
   describe("<ReviewWithAdvisorCard />", () => {
     it("is a real button that reacts to hover as a whole, with the title and the booking blurb", () => {
       renderWithSite(<ReviewWithAdvisorCard />)
-      const card = screen.getByRole("button", { name: /Ask an advisor to review the result/ })
+      const card = screen.getByRole("button", { name: /Review it with an advisor/ })
       expect(card.tagName).toBe("BUTTON")
       expect(card).toHaveAttribute("type", "button")
       expect(card).toHaveClass("hover-green")
-      const title = screen.getByText("Ask an advisor to review the result")
+      const title = screen.getByText("Review it with an advisor")
       expect(title.className).not.toMatch(/\btext-(ink|l\d|d\d)\b/)
       expect(card).toContainElement(title)
-      expect(card).toHaveTextContent("Book a call with Suyash. Your result rides along in the booking notes.")
+      expect(card).toHaveTextContent("Book a call with Suyash. Your result goes into the booking notes.")
     })
 
     it("copies the result, beacons the review, and opens the booking page with the result as notes", async () => {
       renderWithSeededSite(<ReviewWithAdvisorCard />, FINISHED)
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /Ask an advisor to review the result/ }))
+        fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
       })
       expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
       expect(mocks.copyText).toHaveBeenCalledTimes(1)
@@ -77,7 +77,7 @@ describe("ReviewWithAdvisor", () => {
     it("sends a body that marks every question 'Skipped' when nothing has been answered", async () => {
       renderWithSite(<ReviewWithAdvisorCard />)
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /Ask an advisor to review the result/ }))
+        fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
       })
       expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
       const body = mocks.copyText.mock.calls[0]![0]
@@ -90,7 +90,7 @@ describe("ReviewWithAdvisor", () => {
       mocks.copyText.mockRejectedValueOnce(new Error("denied"))
       renderWithSeededSite(<ReviewWithAdvisorCard />, FINISHED)
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /Ask an advisor to review the result/ }))
+        fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
       })
       expect(mocks.copyText).toHaveBeenCalledTimes(1)
       expect(mocks.submitInquiry).not.toHaveBeenCalled()
@@ -103,9 +103,7 @@ describe("ReviewWithAdvisor", () => {
       renderWithSite(<ReviewWithAdvisorButton />)
       const button = screen.getByRole("button", { name: "Review my result with an advisor" })
       expect(button.tagName).toBe("BUTTON")
-      expect(
-        screen.getByText("Your exitIQ result rides along in the booking notes so you do not have to repeat it.")
-      ).toBeInTheDocument()
+      expect(screen.getByText("Your result goes into the booking notes.")).toBeInTheDocument()
       expect(screen.queryByText(ADVISOR_SENT_COPY)).toBeNull()
       expect(screen.queryByText(ADVISOR_ERROR_COPY)).toBeNull()
     })
@@ -116,7 +114,7 @@ describe("ReviewWithAdvisor", () => {
       const sent = await screen.findByText(ADVISOR_SENT_COPY)
       expect(sent).toHaveAttribute("aria-live", "polite")
       expect(ADVISOR_SENT_COPY).toBe(
-        "The booking page opened in a new tab with your result attached. It is also copied; paste it into the booking notes if it is missing."
+        "The booking page opened in a new tab with your result attached. If it is missing, paste the copied text into the notes."
       )
       expect(mocks.copyText).toHaveBeenCalledWith(BODY)
       expect(mocks.submitInquiry).toHaveBeenCalledWith({ kind: "exitiq_review", body: BODY, source: "score" })
@@ -130,7 +128,7 @@ describe("ReviewWithAdvisor", () => {
       fireEvent.click(screen.getByRole("button", { name: "Review my result with an advisor" }))
       const error = await screen.findByText(ADVISOR_ERROR_COPY)
       expect(error).toHaveAttribute("aria-live", "polite")
-      expect(error).toHaveTextContent("Email hello@heirloom.com")
+      expect(error).toHaveTextContent("Email suyash@heirloomadvisory.ai")
       expect(screen.queryByText(ADVISOR_SENT_COPY)).toBeNull()
       expect(mocks.submitInquiry).not.toHaveBeenCalled()
       expect(mocks.openInNewTab).not.toHaveBeenCalled()

@@ -14,7 +14,7 @@ test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
 const CAL = "https://heirloom.cal.com/suyash/m-a-advisory-meeting"
 const SENT_COPY =
-  "The booking page opened in a new tab with your result attached. It is also copied; paste it into the booking notes if it is missing."
+  "The booking page opened in a new tab with your result attached. If it is missing, paste the copied text into the notes."
 
 const meter = (page: Page, label: string) =>
   page.getByTestId("exitiq-result").getByText(label, { exact: true }).locator("xpath=following-sibling::span")
@@ -35,9 +35,7 @@ test.describe("/score exitIQ run", () => {
 
     await expect(question).toContainText("Question 1 of 7")
     await expect(question.getByRole("heading", { name: "What kind of business do you run?" })).toBeVisible()
-    await expect(question).toContainText(
-      "Choose the closest answer. Estimates are fine. You can change any answer before finishing."
-    )
+    await expect(question).toContainText("Estimates are fine. You can change any answer before finishing.")
     await expect(progress).toHaveAttribute("aria-valuemax", "7")
     await expect(progress).toHaveAttribute("aria-valuenow", "0")
     await expect(page.getByTestId("exitiq-state")).toHaveText(EXITIQ_EMPTY_STATE)
@@ -54,7 +52,7 @@ test.describe("/score exitIQ run", () => {
     await expect(done).toBeVisible()
     await expect(question).toBeHidden()
     await expect(done).toContainText("Your result is ready.")
-    await expect(done.getByRole("heading", { name: "What a buyer is likely to question first." })).toBeVisible()
+    await expect(done.getByRole("heading", { name: "What a buyer would question first" })).toBeVisible()
     await expect(progress).toHaveAttribute("aria-valuenow", "7")
     await expect(page.getByTestId("exitiq-state")).toHaveText(EXITIQ_EXPECTED.state)
     await expect(result).toContainText(EXITIQ_EXPECTED.description)
@@ -70,7 +68,7 @@ test.describe("/score exitIQ run", () => {
     await expect(done.getByText("04", { exact: true })).toHaveCount(0)
 
     await expect(result.getByText("Your next 90 days")).toBeVisible()
-    await expect(result).toContainText("Start with the actions tied to your highest-priority findings.")
+    await expect(result).toContainText("Records can change the result in either direction.")
     for (let i = 0; i < EXITIQ_EXPECTED.plan.length; i++) {
       const step = EXITIQ_EXPECTED.plan[i]!
       await expect(indexed(result, `0${i + 1}`)).toHaveText(step)
@@ -229,9 +227,7 @@ test.describe("/score exitIQ run", () => {
     expect(content).toContain("Recommendation: Prepare First")
     expect(content).toBe(EXITIQ_EXPECTED.planText)
 
-    await expect(
-      result.getByText("Your plan was downloaded as a text file and copied, ready to paste anywhere.")
-    ).toBeVisible()
+    await expect(result.getByText("Your plan was downloaded and copied.")).toBeVisible()
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(EXITIQ_EXPECTED.planText)
   })
 
@@ -248,7 +244,7 @@ test.describe("/score exitIQ run", () => {
 
     const popupPromise = context.waitForEvent("page")
     const inquiry = waitForInquiry(page)
-    await done.getByRole("button", { name: "Review my result with an advisor →" }).click()
+    await done.getByRole("button", { name: "Review my result with an advisor" }).click()
 
     const popup = await popupPromise
     await popup.waitForURL(/heirloom\.cal\.com/)
@@ -296,21 +292,18 @@ test.describe("/score exitIQ run", () => {
   }) => {
     await page.goto("/score")
     const main = page.getByRole("main")
-    await expect(main).toContainText("About 2 minutes. No name, email, phone number, or documents required.")
+    await expect(main).toContainText("About 2 minutes. No name, email, or documents required.")
     await expect(main).toContainText(
-      "exitIQ is an educational readiness screen based on answers you provide. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
+      "exitIQ is a readiness screen based on your answers. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
     )
-    await expect(main.getByRole("link", { name: "See fees →" })).toHaveAttribute("href", "/fees")
-    await expect(main.getByRole("link", { name: "Ready to sell? See how Heirloom runs the process." })).toHaveAttribute(
+    await expect(main.getByRole("link", { name: "See fees →", exact: true })).toHaveAttribute("href", "/fees")
+    await expect(main.getByRole("link", { name: "Review my offer", exact: true })).toHaveAttribute(
       "href",
-      "/how-it-works"
+      "/offer-review"
     )
-    await expect(
-      main.getByRole("link", { name: "Already have a buyer? Have the offer reviewed first." })
-    ).toHaveAttribute("href", "/offer-review")
-    await expect(main.getByRole("link", { name: /See how Heirloom runs a sale/ })).toHaveAttribute(
-      "href",
-      "/how-it-works"
-    )
+    const process = main.getByRole("link", { name: /^See how it works/ })
+    await expect(process).toHaveCount(2)
+    await expect(process.nth(0)).toContainText("The eight stages from preparation to closing.")
+    for (const i of [0, 1]) await expect(process.nth(i)).toHaveAttribute("href", "/how-it-works")
   })
 })

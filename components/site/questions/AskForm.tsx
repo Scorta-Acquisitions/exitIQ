@@ -46,13 +46,12 @@ export function AskForm() {
       className="border-hair-2 bg-card mt-[38px] [scroll-margin-top:100px] rounded-[14px] border px-[26px] py-6"
       data-testid="ask-form"
     >
-      <h2 className="mb-2 text-[18px] font-semibold">Ask something we have not answered.</h2>
+      <h2 className="mb-2 text-[18px] font-semibold">Ask a question</h2>
       <p className="text-l2 mb-1.5 text-[15px] leading-[1.62]">
-        Send one question and the email address where you want the answer. A person replies once. Your address is not
-        added to a marketing list.
+        Send one question and the email address for the answer.
       </p>
       <p className="text-l3 mb-4 font-mono text-[11px] leading-[1.6]">
-        This opens an email with your question filled in. The text is also copied in case your email app does not open.
+        A person replies once by email. Your address is not added to a list.
       </p>
       <div className="flex max-w-[560px] flex-col gap-3">
         <label className="block">
@@ -61,7 +60,7 @@ export function AskForm() {
             rows={3}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask about fees, privacy, fit, timing, your buyer, or your offer."
+            placeholder="Fees, privacy, fit, timing, or your offer."
             className="border-hair-2 bg-paper-2 placeholder:text-l4 w-full resize-y rounded-[9px] border px-[13px] py-[11px] text-[15px]"
           />
         </label>
@@ -87,14 +86,12 @@ export function AskForm() {
         ) : null}
         {error ? (
           <p aria-live="polite" className="text-error text-[13px]">
-            We could not prepare the message. Email {error} directly and we will help.
+            We could not prepare the message. Email {error} directly.
           </p>
         ) : null}
         {sent ? (
           <div aria-live="polite" data-testid="ask-sent">
-            <p className="text-filament-ink text-[13px]">
-              Your email app opened with the question filled in. Send it to reach Heirloom.
-            </p>
+            <p className="text-filament-ink text-[13px]">Your email app opened with the question filled in.</p>
             <p className="text-l3 mt-1.5 font-mono text-[11px] leading-[1.6]">
               If your email app did not open, paste the copied question into a message to {CONTACT.hello}.
             </p>

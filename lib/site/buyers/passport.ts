@@ -93,47 +93,44 @@ export function passportShareText(tier: PassportTierIndex): string {
 }
 
 export const PASSPORT_HOW: Array<{ label: string; body: string }> = [
-  { label: "Private sharing", body: "You choose which approved details each recipient can see." },
-  {
-    label: "Range, not balance",
-    body: "Capacity appears as a verified range unless you authorize a more detailed view.",
-  },
+  { label: "Private sharing", body: "You choose what each recipient sees." },
+  { label: "Range, not balance", body: "Capacity appears as a range unless you authorize more." },
   { label: "Dated verification", body: "Acquisition criteria and financial evidence expire and must be refreshed." },
   {
     label: "No recipient account required",
-    body: "A seller or advisor can verify an authentic Passport without creating a Heirloom account.",
+    body: "A seller or advisor can verify a Passport without a Heirloom account.",
   },
   {
-    label: "No public buyer score",
-    body: "The Passport presents factual checks and dates, not a public numerical rating.",
+    label: "No public score",
+    body: "The Passport shows checks and dates only.",
   },
-  { label: "Human review for status changes", body: "Verification is not downgraded or revoked automatically." },
+  { label: "Human review", body: "Verification is never downgraded or revoked automatically." },
   {
     label: "Outside advisors keep their clients",
-    body: "An advisor can request a Passport from a buyer without giving Heirloom the seller relationship.",
+    body: "An advisor can request a buyer’s Passport without involving Heirloom in the seller relationship.",
   },
 ]
 
 export const PASSPORT_BENEFITS: Array<{ title: string; body: string }> = [
   {
-    title: "Move faster with sellers",
-    body: "Give an owner and advisor a current, verifiable record of your identity, criteria, and acquisition capacity.",
+    title: "Faster seller review",
+    body: "Owners and advisors see a current, verified record of your identity and criteria.",
   },
   {
-    title: "Repeat less paperwork",
-    body: "Reuse approved verification instead of starting from zero on every opportunity.",
+    title: "Less repeat paperwork",
+    body: "Approved verification is reused on each opportunity.",
   },
   {
-    title: "See fitting opportunities sooner",
-    body: "Verified buyers can receive earlier alerts and richer anonymous information when the seller’s rules allow it.",
+    title: "Earlier access",
+    body: "Verified buyers can receive earlier alerts and more anonymous detail when the seller’s rules allow it.",
   },
   {
-    title: "Protect financial privacy",
-    body: "Show a verified capacity range by default. Exact account balances remain private unless you authorize more.",
+    title: "Financial privacy",
+    body: "Sellers see a verified capacity range. Exact balances stay private unless you authorize more.",
   },
   {
-    title: "Prove seriousness before the meeting",
-    body: "Help sellers spend time on buyers whose identity, financing path, and acquisition criteria have been reviewed.",
+    title: "Verified before the meeting",
+    body: "Sellers see that your identity, financing path, and criteria were reviewed.",
   },
 ]
 

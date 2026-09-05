@@ -111,10 +111,9 @@ export function DisclosureLevels() {
             <span className="bg-signal h-1.5 w-1.5 rounded-full" />
             <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">Access history</span>
           </div>
-          <h3 className="font-display text-d1 mb-2 text-[22px] leading-[1.15] font-normal">See who opened what.</h3>
+          <h3 className="font-display text-d1 mb-2 text-[22px] leading-[1.15] font-normal">Who opened what</h3>
           <p className="text-d3 mb-2 text-[13.5px] leading-[1.6]">
-            Each entry shows the person, file, time, and access decision. You can see new access, downloads, expiry, and
-            revocation.
+            Each entry shows the person, file, time, and access decision.
           </p>
           <div role="group" aria-label="Buyer access history">
             {ACCESS_LOG.map((e) => (

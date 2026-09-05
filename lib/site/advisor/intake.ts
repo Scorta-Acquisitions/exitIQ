@@ -135,7 +135,7 @@ export function openAdvisor(state: AdvisorState, ctx: PrefillContext): AdvisorSt
   const left = ADVISOR_QUESTION_COUNT - Object.keys(merged).length
   const ack =
     carried > 0 && step < ADVISOR_NOTE_STEP
-      ? `What you already told us carried over. ${left === 1 ? "One question" : `${left} questions`} left before booking.`
+      ? `Your earlier answers carried over. ${left === 1 ? "One question" : `${left} questions`} left before booking.`
       : state.ack
   return { ...state, open: true, emailed: false, answers: merged, labels, prefilled, step, ack }
 }

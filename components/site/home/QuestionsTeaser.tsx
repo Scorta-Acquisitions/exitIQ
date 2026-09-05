@@ -15,7 +15,7 @@ export function QuestionsTeaser() {
       <Container className="border-hair border-b pb-[clamp(44px,5vw,64px)]">
         <div className="mb-[18px] max-w-[720px]">
           <h2 className="font-display text-[clamp(28px,3.6vw,42px)] leading-[1.06] font-normal tracking-[-.9px]">
-            Questions owners ask before they sell.
+            Questions
           </h2>
         </div>
         <div className="border-hair-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] items-start gap-x-12 border-t">
@@ -33,7 +33,7 @@ export function QuestionsTeaser() {
         </div>
         <div className="mt-5">
           <TextLink href={ROUTES.questions} className="text-[14px]">
-            Read every answer →
+            See all questions
           </TextLink>
         </div>
       </Container>

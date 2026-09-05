@@ -39,9 +39,7 @@ export function PassportTiers() {
       data-testid="passport-tiers"
     >
       <div className="border-dhair-2 border-b px-[18px] py-4">
-        <div className="text-d4 mb-2.5 font-mono text-[11.5px] tracking-[1px] uppercase">
-          Four levels of buyer readiness
-        </div>
+        <div className="text-d4 mb-2.5 font-mono text-[11.5px] tracking-[1px] uppercase">Verification levels</div>
         <div role="group" aria-label="Choose a Buyer Passport verification level" className="flex flex-wrap gap-1.5">
           {PASSPORT_TIERS.map((t, i) => {
             const on = i === tier

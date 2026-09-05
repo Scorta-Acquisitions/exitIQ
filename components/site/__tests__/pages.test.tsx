@@ -70,7 +70,7 @@ function countText(container: HTMLElement, needle: RegExp) {
 describe("Home page", () => {
   it("renders exactly one h1 with the hero headline", () => {
     renderPage(<HomePage />)
-    onlyH1("Sell your business to the right buyer, on the right terms.")
+    onlyH1("Sell your business privately, with qualified buyers competing.")
   })
 
   it("links only to known routes, contact addresses, and safe external targets", () => {
@@ -91,16 +91,19 @@ describe("Home page", () => {
     expect(countText(container, /Project Ridgeline/g)).toBeGreaterThanOrEqual(1)
   })
 
-  it("routes the founder email to the hello inbox", () => {
+  it("carries the speed section and no founder or experience block", () => {
     renderPage(<HomePage />)
-    expect(screen.getByRole("link", { name: "Email Suyash" })).toHaveAttribute("href", `mailto:${CONTACT.hello}`)
+    expect(screen.getByRole("heading", { level: 2, name: "40% faster than a traditional sale." })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Transaction experience" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Email Suyash" })).toBeNull()
+    expect(screen.queryByRole("img", { name: "Suyash Agrawal, founder and CEO of Heirloom" })).toBeNull()
   })
 })
 
 describe("Score page", () => {
   it("renders exactly one h1 with the exitIQ headline", () => {
     renderPage(<ScorePage />)
-    onlyH1("See how buyers would view your business today.")
+    onlyH1("Is the business ready to sell?")
   })
 
   it("exports the exitIQ page metadata", () => {
@@ -114,23 +117,22 @@ describe("Score page", () => {
 
   it("points the result cards and footer links at fees, how it works, and offer review", () => {
     renderPage(<ScorePage />)
-    expect(screen.getByRole("link", { name: /See how Heirloom runs a sale/ })).toHaveAttribute(
-      "href",
-      ROUTES.howItWorks
-    )
+    const process = screen.getAllByRole("link", { name: /^See how it works/ })
+    expect(process).toHaveLength(2)
+    expect(process[0]).toHaveTextContent("See how it worksThe eight stages from preparation to closing.")
+    for (const link of process) expect(link).toHaveAttribute("href", ROUTES.howItWorks)
+    expect(process[1]).toHaveTextContent("See how it works →")
     expect(screen.getByRole("link", { name: "See fees →" })).toHaveAttribute("href", ROUTES.fees)
-    expect(screen.getByRole("link", { name: /Ready to sell\? See how Heirloom runs the process\./ })).toHaveAttribute(
-      "href",
-      ROUTES.howItWorks
-    )
-    expect(
-      screen.getByRole("link", { name: /Already have a buyer\? Have the offer reviewed first\./ })
-    ).toHaveAttribute("href", ROUTES.offerReview)
+    expect(screen.getByRole("link", { name: "Review my offer" })).toHaveAttribute("href", ROUTES.offerReview)
   })
 
-  it("states the educational disclaimer under the run", () => {
+  it("states the readiness-screen disclaimer under the run", () => {
     renderPage(<ScorePage />)
-    expect(screen.getByText(/exitIQ is an educational readiness screen/)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "exitIQ is a readiness screen based on your answers. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
+      )
+    ).toBeInTheDocument()
   })
 })
 
@@ -139,7 +141,7 @@ describe("Offer review page", () => {
 
   it("renders exactly one h1 with the offer review headline", async () => {
     renderPage(await OfferReviewPage({ searchParams: params() }))
-    onlyH1("Before you sign, know what the offer really pays.")
+    onlyH1("Know what the offer pays before you sign.")
   })
 
   it("exports the offer review page metadata", () => {
@@ -210,7 +212,7 @@ describe("Offer review page", () => {
 describe("How it works page", () => {
   it("renders exactly one h1 with the process headline", () => {
     renderPage(<HowItWorksPage />)
-    onlyH1("You make the decisions. We carry the deal.")
+    onlyH1("The eight stages of a private sale.")
   })
 
   it("exports the how it works page metadata", () => {
@@ -225,7 +227,7 @@ describe("How it works page", () => {
   it("routes the fee and readiness buttons to /fees and /score", () => {
     renderPage(<HowItWorksPage />)
     expect(screen.getByRole("link", { name: "See fees" })).toHaveAttribute("href", ROUTES.fees)
-    expect(screen.getByRole("link", { name: "Check if my business is ready" })).toHaveAttribute("href", ROUTES.score)
+    expect(screen.getByRole("link", { name: "Check sale readiness" })).toHaveAttribute("href", ROUTES.score)
   })
 
   it("renders every timing row label and value", () => {
@@ -255,7 +257,22 @@ describe("How it works page", () => {
 describe("Fees page", () => {
   it("renders exactly one h1 with the fees headline", () => {
     renderPage(<FeesPage />)
-    onlyH1("What Heirloom costs.")
+    onlyH1("Fees")
+  })
+
+  it("frames the ledger photograph beside the hero copy with its caption", () => {
+    renderPage(<FeesPage />)
+    const img = screen.getByRole("img", {
+      name: "Financial records bound between sheets of glass, arranged on a travertine table",
+    })
+    expect(decodeURIComponent(img.getAttribute("src") ?? "")).toContain("/media/fees.png")
+    const figure = screen.getByTestId("fees-figure")
+    expect(figure.tagName).toBe("FIGURE")
+    expect(figure).toContainElement(img)
+    expect(
+      within(figure).getByText("Every fee term is written into your engagement agreement before you sign.").tagName
+    ).toBe("FIGCAPTION")
+    expect(screen.queryByRole("img", { hidden: true, name: "" })).toBeNull()
   })
 
   it("exports the fees page metadata", () => {
@@ -270,38 +287,34 @@ describe("Fees page", () => {
   it("headlines the three fee numbers with their notes", () => {
     renderPage(<FeesPage />)
     const bigNumber = (note: string) => screen.getByText(note).previousSibling
-    expect(bigNumber("Full private sale, paid when the transaction closes")).toHaveTextContent("5%")
+    expect(bigNumber("Success fee on a full private sale")).toHaveTextContent("5%")
     expect(
-      bigNumber("Engagement commitment, credited in full toward the 5% success fee if the business sells")
+      bigNumber("Engagement commitment, credited against the success fee if the business sells")
     ).toHaveTextContent("$5,000")
     expect(
-      bigNumber("Existing-buyer transaction, with a free offer review first and no upfront fee")
+      bigNumber("Success fee when you already have the buyer, after a free offer review, no upfront fee")
     ).toHaveTextContent("2.5%")
   })
 
   it("scrolls the calculator buttons to the #fees-calc heading", () => {
     const { container } = renderPage(<FeesPage />)
-    expect(screen.getByRole("link", { name: "Calculate my fee" })).toHaveAttribute("href", "#fees-calc")
-    expect(screen.getByRole("link", { name: "Compare the fees on my sale →" })).toHaveAttribute("href", "#fees-calc")
-    expect(container.querySelector("#fees-calc")).toHaveTextContent("What would Heirloom cost on your sale?")
+    const calc = screen.getAllByRole("link", { name: "Calculate my fee" })
+    expect(calc).toHaveLength(2)
+    for (const link of calc) expect(link).toHaveAttribute("href", "#fees-calc")
+    expect(container.querySelector("#fees-calc")).toHaveTextContent("Fee calculator")
   })
 
   it("routes both offer review links to /offer-review", () => {
     renderPage(<FeesPage />)
-    expect(screen.getByRole("link", { name: "Review my offer →" })).toHaveAttribute("href", ROUTES.offerReview)
-    expect(screen.getByRole("link", { name: "Review my offer" })).toHaveAttribute("href", ROUTES.offerReview)
+    const links = screen.getAllByRole("link", { name: "Review my offer" })
+    expect(links).toHaveLength(2)
+    for (const link of links) expect(link).toHaveAttribute("href", ROUTES.offerReview)
   })
 
   it("routes the closing links to /score and /how-it-works", () => {
     renderPage(<FeesPage />)
-    expect(screen.getByRole("link", { name: /Still deciding\? Check if my business is ready\./ })).toHaveAttribute(
-      "href",
-      ROUTES.score
-    )
-    expect(screen.getByRole("link", { name: /Want the details\? See how the sale works\./ })).toHaveAttribute(
-      "href",
-      ROUTES.howItWorks
-    )
+    expect(screen.getByRole("link", { name: "Check sale readiness" })).toHaveAttribute("href", ROUTES.score)
+    expect(screen.getByRole("link", { name: "See how it works →" })).toHaveAttribute("href", ROUTES.howItWorks)
   })
 
   it("answers the five common fee questions", () => {
@@ -316,13 +329,7 @@ describe("Fees page", () => {
 
   it("lists the five separate third-party costs", () => {
     renderPage(<FeesPage />)
-    for (const title of [
-      "Readiness work",
-      "Your lawyer",
-      "Your accountant or quality-of-earnings provider",
-      "Tax advice",
-      "Other specialists",
-    ]) {
+    for (const title of ["Readiness work", "Your lawyer", "Your accountant", "Tax advice", "Other specialists"]) {
       expect(screen.getByText(title)).toBeInTheDocument()
     }
   })
@@ -331,7 +338,7 @@ describe("Fees page", () => {
 describe("Confidentiality page", () => {
   it("renders exactly one h1 with the confidentiality headline", () => {
     renderPage(<ConfidentialityPage />)
-    onlyH1("Deciding to sell should stay private.")
+    onlyH1("Confidentiality")
   })
 
   it("exports the confidentiality page metadata", () => {
@@ -354,7 +361,7 @@ describe("Confidentiality page", () => {
 
   it("routes the private check to /score", () => {
     renderPage(<ConfidentialityPage />)
-    expect(screen.getByRole("link", { name: "Check my business privately" })).toHaveAttribute("href", ROUTES.score)
+    expect(screen.getByRole("link", { name: "Check sale readiness" })).toHaveAttribute("href", ROUTES.score)
   })
 
   it("numbers and renders every confidentiality rule", () => {
@@ -386,7 +393,7 @@ describe("Confidentiality page", () => {
 describe("Buyers page", () => {
   it("renders exactly one h1 with the Buyer Passport headline", () => {
     renderPage(<BuyersPage />)
-    onlyH1("Prove you are ready to close.")
+    onlyH1("A verified record of who you are and what you buy")
   })
 
   it("exports the buyers page metadata", () => {
@@ -405,7 +412,7 @@ describe("Buyers page", () => {
     expect(verified).toHaveLength(2)
     expect(register).toHaveLength(2)
     for (const a of [...verified, ...register]) expect(a).toHaveAttribute("href", "#buyer-register")
-    expect(container.querySelector("#buyer-register")).toHaveTextContent("Tell us what you buy.")
+    expect(container.querySelector("#buyer-register")).toHaveTextContent("Register my criteria")
   })
 
   it("renders every passport benefit", () => {
@@ -428,7 +435,7 @@ describe("Buyers page", () => {
 describe("Who we are page", () => {
   it("renders exactly one h1 with the firm headline", () => {
     renderPage(<WhoWeArePage />)
-    onlyH1("M&A experience from both sides of the table.")
+    onlyH1("Who we are")
   })
 
   it("exports the who we are page metadata", () => {
@@ -442,11 +449,15 @@ describe("Who we are page", () => {
 
   it("renders the four firm facts", () => {
     renderPage(<WhoWeArePage />)
-    expect(screen.getByText("Heirloom transactions").nextSibling).toHaveTextContent("Millions in enterprise value")
-    expect(screen.getByText("Founder buy-side experience").nextSibling).toHaveTextContent(
-      "Millions in enterprise value, before Heirloom"
+    expect(screen.getByText("Heirloom transactions").nextSibling).toHaveTextContent(
+      "Millions in enterprise value transacted"
     )
-    expect(screen.getByText("Engagement model").nextSibling).toHaveTextContent("One accountable M&A advisor")
+    expect(screen.getByText("Founder buy-side experience").nextSibling).toHaveTextContent(
+      "Small-business acquisitions as a micro-PE investor before Heirloom"
+    )
+    expect(screen.getByText("Engagement model").nextSibling).toHaveTextContent(
+      "One named advisor from first call to closing"
+    )
     expect(screen.getByText("Backing").nextSibling).toHaveTextContent("Y Combinator")
   })
 
@@ -459,29 +470,27 @@ describe("Who we are page", () => {
   it("emails Suyash at the hello inbox and shows the address", () => {
     renderPage(<WhoWeArePage />)
     expect(screen.getByRole("link", { name: "Email Suyash" })).toHaveAttribute("href", `mailto:${CONTACT.hello}`)
-    expect(screen.getByText(CONTACT.hello)).toBeInTheDocument()
+    expect(screen.queryByText(CONTACT.hello)).toBeNull()
   })
 
-  it("labels both advisor calls to action with the founder's name", () => {
+  it("labels both advisor calls to action Talk to an M&A advisor", () => {
     renderPage(<WhoWeArePage />)
     const ctas = screen.getAllByTestId("open-advisor")
-    expect(ctas.map((b) => b.textContent)).toEqual(["Talk to Suyash", "Talk to Suyash about my business"])
+    expect(ctas.map((b) => b.textContent)).toEqual(["Talk to an M&A advisor", "Talk to an M&A advisor"])
   })
 
   it("routes both process links to /how-it-works", () => {
     renderPage(<WhoWeArePage />)
-    expect(screen.getByRole("link", { name: "See how Heirloom sells a business →" })).toHaveAttribute(
-      "href",
-      ROUTES.howItWorks
-    )
-    expect(screen.getByRole("link", { name: "See how Heirloom works →" })).toHaveAttribute("href", ROUTES.howItWorks)
+    const links = screen.getAllByRole("link", { name: "See how it works →" })
+    expect(links).toHaveLength(2)
+    for (const link of links) expect(link).toHaveAttribute("href", ROUTES.howItWorks)
   })
 })
 
 describe("Questions page", () => {
   it("renders exactly one h1 with the questions headline", () => {
     renderPage(<QuestionsPage />)
-    onlyH1("What owners ask before they sell.")
+    onlyH1("Questions owners ask.")
   })
 
   it("exports the questions page metadata", () => {
@@ -519,7 +528,7 @@ describe("Questions page", () => {
 describe("Why page", () => {
   it("renders exactly one h1 with the why headline", () => {
     renderPage(<WhyPage />)
-    onlyH1("Owners deserve the same deal discipline as buyers.")
+    onlyH1("The buyer usually has more experience.")
   })
 
   it("exports the why page metadata", () => {
@@ -533,36 +542,38 @@ describe("Why page", () => {
 
   it("routes each closing card to its destination", () => {
     renderPage(<WhyPage />)
-    expect(screen.getByRole("link", { name: "See how Heirloom works" })).toHaveAttribute("href", ROUTES.howItWorks)
-    expect(screen.getByRole("link", { name: "See the full sale process →" })).toHaveAttribute("href", ROUTES.howItWorks)
-    expect(screen.getByRole("link", { name: "Compare the fees →" })).toHaveAttribute("href", ROUTES.fees)
-    expect(screen.getByRole("link", { name: "See our confidentiality controls →" })).toHaveAttribute(
+    const process = screen.getAllByRole("link", { name: /^See how it works/ })
+    expect(process.map((l) => l.textContent)).toEqual(["See how it works", "See how it works →"])
+    for (const link of process) expect(link).toHaveAttribute("href", ROUTES.howItWorks)
+    expect(screen.getByRole("link", { name: "See fees →" })).toHaveAttribute("href", ROUTES.fees)
+    expect(screen.getByRole("link", { name: "See who can access what" })).toHaveAttribute(
       "href",
       ROUTES.confidentiality
     )
-    expect(screen.getByRole("link", { name: "Read who we are →" })).toHaveAttribute("href", ROUTES.whoWeAre)
-    expect(screen.getByRole("link", { name: "Check my business →" })).toHaveAttribute("href", ROUTES.score)
-    expect(screen.getByRole("link", { name: "Review my offer →" })).toHaveAttribute("href", ROUTES.offerReview)
-    expect(screen.getByRole("link", { name: "Get Heirloom Verified →" })).toHaveAttribute("href", ROUTES.buyers)
+    expect(screen.getByRole("link", { name: "Who we are" })).toHaveAttribute("href", ROUTES.whoWeAre)
+    expect(screen.getByRole("link", { name: "Check sale readiness" })).toHaveAttribute("href", ROUTES.score)
+    expect(screen.getByRole("link", { name: "Review my offer" })).toHaveAttribute("href", ROUTES.offerReview)
+    expect(screen.getByRole("link", { name: "Get Heirloom Verified" })).toHaveAttribute("href", ROUTES.buyers)
   })
 
-  it("shows the general contact address as a mailto link", () => {
+  it("prints no general contact address", () => {
     renderPage(<WhyPage />)
-    expect(screen.getByRole("link", { name: CONTACT.hello })).toHaveAttribute("href", `mailto:${CONTACT.hello}`)
+    expect(screen.queryByText(CONTACT.hello)).toBeNull()
+    expect(screen.queryByRole("link", { name: /@/ })).toBeNull()
   })
 
   it("names the three paths an owner can take", () => {
     renderPage(<WhyPage />)
-    expect(screen.getByText("Broad exposure")).toBeInTheDocument()
-    expect(screen.getByText("No market test")).toBeInTheDocument()
-    expect(screen.getByText("A private market, fully managed")).toBeInTheDocument()
+    expect(screen.getByText("Public listing")).toBeInTheDocument()
+    expect(screen.getByText("A single direct buyer")).toBeInTheDocument()
+    expect(screen.getByText("Heirloom", { selector: "div.font-display" })).toBeInTheDocument()
   })
 
-  it("labels both advisor calls to action Talk to Suyash", () => {
+  it("labels both advisor calls to action Talk to an M&A advisor", () => {
     renderPage(<WhyPage />)
     const ctas = screen.getAllByTestId("open-advisor")
     expect(ctas).toHaveLength(2)
-    for (const b of ctas) expect(b).toHaveTextContent("Talk to Suyash")
+    for (const b of ctas) expect(b).toHaveTextContent("Talk to an M&A advisor")
   })
 })
 

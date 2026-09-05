@@ -29,13 +29,13 @@ const STEPS = [
   {
     q: "About how much revenue last year?",
     chip: "$1M to $2M",
-    ack: "This range draws individual and SBA-financed buyers. We will prepare for that market.",
+    ack: "This range draws individual and SBA-financed buyers.",
     row: "Revenue",
   },
   {
     q: "When would you want a sale to close?",
     chip: "In 1 to 2 years",
-    ack: "Enough runway to fix what buyers would flag before they see the business.",
+    ack: "There is time to fix what buyers would flag before they see the business.",
     row: "Target timing",
   },
   {
@@ -70,7 +70,7 @@ test.describe("advisor dialog", () => {
 
     await expect(dialog.getByText("QUESTION 1 OF 5", { exact: true })).toBeVisible()
     await expect(dialog.getByText("Before you book · question 1 of 5")).toBeVisible()
-    await expect(dialog.getByText("This sets the agenda, not a commitment.")).toBeVisible()
+    await expect(dialog.getByText("This only sets the agenda.")).toBeVisible()
     await expect(dialog.getByText("To be discussed", { exact: true })).toHaveCount(6)
     await expect(progress(dialog)).toHaveAttribute("aria-valuemax", "5")
     await expect(progress(dialog)).toHaveAttribute("aria-valuenow", "0")
@@ -90,7 +90,7 @@ test.describe("advisor dialog", () => {
       if (i < STEPS.length - 1) {
         // The acknowledgement stays on screen while the next question is asked.
         await expect(dialog.getByRole("heading", { name: STEPS[i + 1]!.q })).toBeVisible()
-        await expect(dialog.getByText("How we prepare")).toBeVisible()
+        await expect(dialog.getByText("On the call")).toBeVisible()
         await expect(dialog.getByText(step.ack)).toBeVisible()
       }
     }
@@ -101,17 +101,17 @@ test.describe("advisor dialog", () => {
     await expect(
       dialog.getByRole("heading", { name: "Anything the advisor should read before the call?" })
     ).toBeVisible()
-    await expect(dialog.getByText("How we prepare")).toBeHidden()
+    await expect(dialog.getByText("On the call")).toBeHidden()
     await expect(briefingRow(dialog, "Advisor note")).toHaveText("To be discussed")
     await dialog.getByLabel("Note for the advisor").fill("Buyer X is off limits.")
     await expect(briefingRow(dialog, "Advisor note")).toHaveText("Attached")
 
     const inquiry = waitForInquiry(page)
-    await dialog.getByRole("button", { name: "Finish the briefing →" }).click()
+    await dialog.getByRole("button", { name: "Finish" }).click()
     expect((await inquiry).postDataJSON()).toEqual({ kind: "advisor_briefing", body: FULL_BRIEFING, source: "advisor" })
     await expect(dialog.getByText("BRIEFING READY", { exact: true })).toBeVisible()
-    await expect(dialog.getByRole("heading", { name: "Your advisor reads this before you say a word." })).toBeVisible()
-    const book = dialog.getByRole("link", { name: "Book the call →" })
+    await expect(dialog.getByRole("heading", { name: "Your advisor reads this before the call." })).toBeVisible()
+    const book = dialog.getByRole("link", { name: "Book the call" })
     await expect(book).toHaveAttribute("href", `${CAL}?notes=${encodeURIComponent(FULL_BRIEFING)}`)
     await expect(book).toHaveAttribute("target", "_blank")
     await expect(book).toHaveAttribute("rel", "noopener")
@@ -137,7 +137,7 @@ test.describe("advisor dialog", () => {
     const expected =
       "Advisor call briefing\nConversation: Confidentiality concerns\nBusiness: Not answered\nRevenue: Not answered" +
       "\nTarget timing: Not answered\nMatters most: Not answered"
-    await expect(dialog.getByRole("link", { name: "Book the call →" })).toHaveAttribute(
+    await expect(dialog.getByRole("link", { name: "Book the call" })).toHaveAttribute(
       "href",
       `${CAL}?notes=${encodeURIComponent(expected)}`
     )
@@ -149,15 +149,15 @@ test.describe("advisor dialog", () => {
     await expect(dialog).toBeHidden()
   })
 
-  test("Prefer email copies the briefing with a call request and confirms the handoff", async ({ page }) => {
+  test("Send by email copies the briefing with a call request and confirms the handoff", async ({ page }) => {
     await page.goto("/fees")
     const dialog = await openAdvisorFromHeader(page)
     await dialog.getByRole("button", { name: "Skip the questions, just book" }).click()
     await expect(dialog.getByText("BRIEFING READY", { exact: true })).toBeVisible()
-    await dialog.getByRole("button", { name: "Prefer email? Send the briefing instead" }).click()
+    await dialog.getByRole("button", { name: "Send the briefing by email instead" }).click()
     await expect(
       dialog.getByText(
-        "Your email app opened with the briefing filled in. If it did not open, the text is copied; paste it into a message to hello@heirloom.com."
+        "Your email app opened with the briefing. If it did not, the text is copied. Paste it into a message to suyash@heirloomadvisory.ai."
       )
     ).toBeVisible()
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
@@ -187,7 +187,7 @@ test.describe("advisor dialog", () => {
       "aria-pressed",
       "false"
     )
-    await expect(dialog.getByText("How we prepare")).toBeHidden()
+    await expect(dialog.getByText("On the call")).toBeHidden()
     await expect(briefingRow(dialog, "Business")).toHaveText("Home or field services")
     await expect(progress(dialog)).toHaveAttribute("aria-valuenow", "2")
 
@@ -241,9 +241,7 @@ test.describe("advisor dialog", () => {
     await expect(again.getByRole("heading", { name: "About how much revenue last year?" })).toBeVisible()
     await expect(briefingRow(again, "Conversation")).toHaveText("Selling the business")
     await expect(briefingRow(again, "Business")).toHaveText("Manufacturing or distribution")
-    await expect(
-      again.getByText("Inventory and working capital will come up. They shape these transactions.")
-    ).toBeVisible()
+    await expect(again.getByText("Inventory and working capital will come up.")).toBeVisible()
 
     const fresh = await browser.newContext()
     try {
@@ -265,9 +263,7 @@ test.describe("advisor dialog", () => {
     await expect(page.getByTestId("exitiq-done")).toBeVisible()
 
     const dialog = await openAdvisorFromHeader(page)
-    await expect(
-      dialog.getByText("What you already told us carried over. 2 questions left before booking.")
-    ).toBeVisible()
+    await expect(dialog.getByText("Your earlier answers carried over. 2 questions left before booking.")).toBeVisible()
     await expect(dialog.getByText("QUESTION 1 OF 2", { exact: true })).toBeVisible()
     await expect(dialog.getByRole("heading", { name: "When would you want a sale to close?" })).toBeVisible()
     await expect(briefingRow(dialog, "Conversation")).toHaveText("Value and timing")
@@ -286,7 +282,7 @@ test.describe("advisor dialog", () => {
     const expected =
       "Advisor call briefing\nConversation: Value and timing\nBusiness: Business or professional services\nRevenue: $2M to $3M" +
       "\nTarget timing: Within a year\nMatters most: Certainty it closes"
-    await expect(dialog.getByRole("link", { name: "Book the call →" })).toHaveAttribute(
+    await expect(dialog.getByRole("link", { name: "Book the call" })).toHaveAttribute(
       "href",
       `${CAL}?notes=${encodeURIComponent(expected)}`
     )
@@ -297,9 +293,7 @@ test.describe("advisor dialog", () => {
     await page.getByTestId("hero-option-offer").click()
     await expect(page.getByTestId("hero-offer")).toBeVisible()
     const dialog = await openAdvisorFromHeader(page)
-    await expect(
-      dialog.getByText("What you already told us carried over. 4 questions left before booking.")
-    ).toBeVisible()
+    await expect(dialog.getByText("Your earlier answers carried over. 4 questions left before booking.")).toBeVisible()
     await expect(dialog.getByText("QUESTION 1 OF 4", { exact: true })).toBeVisible()
     await expect(dialog.getByRole("heading", { name: "What kind of business is it?" })).toBeVisible()
     await expect(briefingRow(dialog, "Conversation")).toHaveText("An offer or buyer I already have")

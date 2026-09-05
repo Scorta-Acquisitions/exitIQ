@@ -44,11 +44,11 @@ describe("<MarketScene />", () => {
     expect(activeFlags()).toEqual(["false", "false", "false", "false"])
   })
 
-  it("activates step 01 'One buyer appears' for progress below 0.22", () => {
+  it("activates step 01 'Inbound offer' for progress below 0.22", () => {
     const { scene } = setup()
     driveScene(drivers, scene, 0.1)
     expect(activeFlags()).toEqual(["true", "false", "false", "false"])
-    expect(screen.getByTestId("market-step-0")).toHaveTextContent("01One buyer appears")
+    expect(screen.getByTestId("market-step-0")).toHaveTextContent("01Inbound offer")
   })
 
   it("flips to step 02 exactly at progress 0.22", () => {
@@ -57,7 +57,7 @@ describe("<MarketScene />", () => {
     expect(activeFlags()).toEqual(["true", "false", "false", "false"])
     driveScene(drivers, scene, 0.22)
     expect(activeFlags()).toEqual(["false", "true", "false", "false"])
-    expect(screen.getByTestId("market-step-1")).toHaveTextContent("We build the buyer list")
+    expect(screen.getByTestId("market-step-1")).toHaveTextContent("Buyer research")
   })
 
   it("flips to step 03 at progress 0.48 and step 04 at 0.74", () => {
@@ -66,7 +66,7 @@ describe("<MarketScene />", () => {
     expect(activeFlags()).toEqual(["false", "false", "true", "false"])
     driveScene(drivers, scene, 0.74)
     expect(activeFlags()).toEqual(["false", "false", "false", "true"])
-    expect(screen.getByTestId("market-step-3")).toHaveTextContent("You choose from real options")
+    expect(screen.getByTestId("market-step-3")).toHaveTextContent("Offer comparison")
   })
 
   it("keeps step 04 active at the very end of the scene", () => {
@@ -78,10 +78,7 @@ describe("<MarketScene />", () => {
   it("links the last step to the full sale process page", () => {
     setup()
     const step = screen.getByTestId("market-step-3")
-    expect(within(step).getByRole("link", { name: "See the full sale process →" })).toHaveAttribute(
-      "href",
-      "/how-it-works"
-    )
+    expect(within(step).getByRole("link", { name: "See how it works →" })).toHaveAttribute("href", "/how-it-works")
   })
 
   it("renders eighteen teaser slips, one per buyer id", () => {

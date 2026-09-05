@@ -165,7 +165,7 @@ describe("<PrivacyScene />", () => {
 
   it("links to the confidentiality page", () => {
     render(<PrivacyScene />)
-    expect(screen.getByRole("link", { name: "See who can access what →" })).toHaveAttribute("href", "/confidentiality")
+    expect(screen.getByRole("link", { name: "See who can access what" })).toHaveAttribute("href", "/confidentiality")
   })
 
   it("renders and scrolls normally when the visitor prefers reduced motion", () => {

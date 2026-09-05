@@ -6,7 +6,7 @@ import type { ExitIqAnswers } from "@/lib/site/exitiq/scoring"
 import { INITIAL_SITE_STATE, type SiteState } from "@/lib/site/state/reducer"
 import { renderWithSeededSite, renderWithSite } from "./test-utils"
 
-const FOOTNOTE = "About 2 minutes. No name, email, phone number, or documents required."
+const FOOTNOTE = "About 2 minutes. No name, email, or documents required."
 const ADVANCE_MS = 400
 
 /** State for a visitor sitting on question `phase` having answered every question before it. */

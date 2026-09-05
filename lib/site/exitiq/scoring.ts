@@ -218,7 +218,7 @@ export function planText(r: ExitIqResult): string {
     r.findings.map((f, i) => `${i + 1}. ${f.t}\n   ${f.b}`).join("\n") +
     "\n\nYour next 90 days:\n" +
     r.plan.map((p, i) => `${i + 1}. ${p}`).join("\n") +
-    "\n\nexitIQ is an educational readiness screen based on answers you provide. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
+    "\n\nexitIQ is a readiness screen based on your answers. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
   )
 }
 

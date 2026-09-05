@@ -42,7 +42,7 @@ describe("<FeeCalculator />", () => {
     fireEvent.change(screen.getByLabelText("Expected transaction value"), { target: { value: "7000000" } })
     expect(screen.getByTestId("fee-price")).toHaveTextContent("$7,000,000")
     expect(screen.getByTestId("fee-total")).toHaveTextContent("$350,000")
-    expect(screen.getByTestId("fee-traditional")).toHaveTextContent(/Enter the quoted rate/)
+    expect(screen.getByTestId("fee-traditional")).toHaveTextContent("Above $5M, enter the quoted rate to compare.")
   })
 
   it("accepts a quoted rate and resets", () => {
@@ -53,7 +53,10 @@ describe("<FeeCalculator />", () => {
     expect(screen.getByTestId("fee-traditional")).toHaveTextContent("$192,000")
     expect(screen.getByTestId("fee-difference")).toHaveTextContent("$72,000")
     fireEvent.change(rate, { target: { value: "99" } })
-    expect(screen.getByTestId("fee-difference")).toHaveTextContent(/cannot calculate/)
+    expect(screen.getByTestId("fee-difference")).toHaveTextContent("–")
+    expect(screen.getByTestId("fee-traditional")).toHaveTextContent("Enter a rate between 0 and 50.")
+    expect(screen.getByTestId("fee-traditional")).toHaveClass("text-[12px]", "text-right")
+    expect(screen.getByTestId("fee-traditional")).not.toHaveClass("tabular")
     fireEvent.click(screen.getByRole("button", { name: "Reset calculator" }))
     expect(screen.getByTestId("fee-traditional")).toHaveTextContent("$240,000")
     expect(screen.queryByLabelText("Traditional comparison rate")).toBeNull()
@@ -88,7 +91,7 @@ describe("<FeeCalculator />", () => {
     expect(screen.getByTestId("fee-price")).toHaveTextContent("$10,000,000")
     expect(screen.getByTestId("fee-total")).toHaveTextContent("$500,000")
     expect(screen.getByTestId("fee-traditional")).toHaveTextContent(RATE_LARGE)
-    expect(screen.getByTestId("fee-difference")).toHaveTextContent(RATE_PENDING)
+    expect(screen.getByTestId("fee-difference")).toHaveTextContent("–")
     expectRowsToMatch({ ...DEFAULT_FEE_INPUTS, price: 10_000_000 })
   })
 
@@ -109,10 +112,11 @@ describe("<FeeCalculator />", () => {
     expect(rate).toHaveAttribute("min", "1")
     expect(rate).toHaveAttribute("max", "15")
     expect(rate).toHaveAttribute("step", "0.5")
-    expect(rate).toHaveAttribute("placeholder", "Enter quoted rate")
+    expect(rate).toHaveAttribute("placeholder", "Quoted rate")
     expect(rate.value).toBe("")
     expect(screen.getByTestId("fee-traditional")).toHaveTextContent(RATE_PENDING)
-    expect(screen.getByTestId("fee-difference")).toHaveTextContent(RATE_PENDING)
+    expect(screen.getByTestId("fee-difference")).toHaveTextContent("–")
+    expect(screen.getByTestId("fee-difference")).not.toHaveClass("tabular")
   })
 
   it("re-selects the 10% illustration, hides the rate input, and restores the illustrated comparison", () => {
@@ -131,6 +135,7 @@ describe("<FeeCalculator />", () => {
     expect(screen.queryByLabelText("Traditional comparison rate")).toBeNull()
     expect(screen.getByTestId("fee-traditional")).toHaveTextContent("$240,000")
     expect(screen.getByTestId("fee-difference")).toHaveTextContent("$120,000")
+    expect(screen.getByTestId("fee-difference")).toHaveClass("tabular", "font-mono", "text-[16px]")
   })
 
   it("remembers the typed rate when the visitor returns to the quoted mode", () => {

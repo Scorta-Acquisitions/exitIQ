@@ -10,7 +10,6 @@ import { useInstrumentField } from "@/components/site/hero/useInstrumentField"
 import { useSiteState } from "@/components/site/providers/SiteStateProvider"
 import { Button } from "@/components/site/ui/Button"
 import { Chip } from "@/components/site/ui/Chip"
-import { LiveDot } from "@/components/site/ui/primitives"
 import { scoreExitIq } from "@/lib/site/exitiq/scoring"
 import {
   HERO_OPTIONS,
@@ -65,11 +64,7 @@ export function HeroConsole() {
       <div className="relative flex flex-1 flex-col">
         <div className="border-dhair-2 flex flex-wrap items-center justify-between gap-3 border-b bg-[rgba(4,15,10,.42)] px-5 py-[11px]">
           <div className="flex items-center gap-2.5">
-            <LiveDot />
             <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">Heirloom</span>
-            <span className="text-d4 tab:inline hidden font-mono text-[9.5px] tracking-[1px] uppercase">
-              Seller represented · Private by default
-            </span>
           </div>
           <div className="flex items-center gap-3.5">
             <span className="text-d4 font-mono text-[11.5px] tracking-[1px]" data-testid="hero-progress">
@@ -127,7 +122,7 @@ export function HeroConsole() {
                           >
                             →
                           </span>
-                          <span className="sr-only">Choose this path</span>
+                          <span className="sr-only">Continue</span>
                         </button>
                       )
                     })}
@@ -155,11 +150,9 @@ export function HeroConsole() {
 
               {funnel.stage === "sellQ2" ? (
                 <div>
-                  <div className={eyebrow}>About your timing</div>
+                  <div className={eyebrow}>About your revenue</div>
                   <h2 className={`${h2} mb-1.5`}>About how much revenue did the business generate last year?</h2>
-                  <p className="text-d4 mb-[18px] font-mono text-[11px]">
-                    A rough answer is enough. No one is checking the number here.
-                  </p>
+                  <p className="text-d4 mb-[18px] font-mono text-[11px]">A rough answer is enough.</p>
                   <div role="group" className="flex flex-wrap gap-[9px]">
                     {SELL_REVENUE_CHIPS.map(([v, l]) => (
                       <Chip
@@ -176,22 +169,20 @@ export function HeroConsole() {
 
               {funnel.stage === "sellDone" ? (
                 <div data-testid="hero-sell-done">
-                  <div className={eyebrow}>About your timing</div>
                   <h2 className="font-display text-d1 mb-2.5 text-[clamp(21px,2.4vw,27px)] leading-[1.18] font-normal">
-                    See what your sale would require.
+                    Timing and fit
                   </h2>
                   <p className="text-d1 mb-1.5 text-[14px] leading-[1.55] font-semibold">
                     {sellDoneTitle(funnel.sellTiming)}
                   </p>
                   <p className="text-d2 mb-2.5 text-[13.5px] leading-[1.55]">{sellDoneSubtitle(funnel.sellRevenue)}</p>
                   <p className="text-d2 mb-[18px] text-[13.5px] leading-[1.55]">
-                    Heirloom can assess the business, explain the likely buyer market, and tell you whether the timing
-                    looks right. There is no obligation to enter the market.
+                    An advisor can look at the business, describe the likely buyers, and give a view on timing.
                   </p>
                   <div className="flex flex-wrap items-center gap-2.5">
                     <AdvisorCtaButton variant="cta" size="md" className="h-11" />
                     <Link href={ROUTES.howItWorks} className="border-dhair text-d2 border-b pb-0.5 text-[13.5px]">
-                      See the sale process →
+                      See how it works
                     </Link>
                   </div>
                 </div>
@@ -199,11 +190,11 @@ export function HeroConsole() {
 
               {funnel.stage === "offer" ? (
                 <div data-testid="hero-offer">
-                  <div className={eyebrow}>Free Offer Review</div>
-                  <h2 className={h2}>Have the offer read before you sign.</h2>
+                  <div className={eyebrow}>Free offer review</div>
+                  <h2 className={h2}>What the offer pays</h2>
                   <p className="text-d2 mb-4 text-[13.5px] leading-[1.55]">
-                    We review the headline price, cash at closing, money paid later, buyer financing, exclusivity,
-                    working capital, transition demands, and terms that are missing. The first review is free.
+                    We show you how much of the price is cash at closing, what is paid later or depends on financing,
+                    and which terms are missing.
                   </p>
                   <div className="mb-4 flex flex-col gap-2">
                     {[
@@ -212,7 +203,7 @@ export function HeroConsole() {
                       {
                         href: `${ROUTES.offerReview}?mode=verbal`,
                         label: "Tell us what was said",
-                        note: "rough notes are fine",
+                        note: "Rough notes are fine",
                       },
                     ].map((row) =>
                       row.href.startsWith("/") ? (
@@ -236,9 +227,7 @@ export function HeroConsole() {
                       )
                     )}
                   </div>
-                  <p className="text-d4 font-mono text-[11.5px]">
-                    Confidential. No commitment. We do not contact the buyer during the review.
-                  </p>
+                  <p className="text-d4 font-mono text-[11.5px]">Confidential. We do not contact the buyer.</p>
                 </div>
               ) : null}
 
@@ -247,9 +236,9 @@ export function HeroConsole() {
                   {showIntro ? (
                     <div>
                       <div className={eyebrow}>exitIQ by Heirloom</div>
-                      <h2 className={h2}>See how the business looks to buyers today.</h2>
+                      <h2 className={h2}>Is the business ready to sell?</h2>
                       <p className="text-d2 mb-[18px] text-[13.5px] leading-[1.55]">
-                        Answer seven questions and get the issues that matter most, plus a practical 90-day plan.
+                        Seven questions. You get the issues a buyer would raise first and a 90-day plan.
                       </p>
                       <Button
                         variant="cta"
@@ -260,14 +249,14 @@ export function HeroConsole() {
                         Start exitIQ
                       </Button>
                       <p className="text-d4 font-mono text-[11.5px]">
-                        About 2 minutes. No name, email, phone number, or documents required.
+                        About 2 minutes. No name, email, or documents required.
                       </p>
                     </div>
                   ) : null}
                   {showRun ? <ExitIqQuestion variant="hero" /> : null}
                   {iq.done ? (
                     <div data-testid="hero-iq-done">
-                      <div className={eyebrow}>Your exitIQ result is ready.</div>
+                      <div className={eyebrow}>Your result is ready.</div>
                       <div className="mb-2.5">
                         <span className="font-display text-filament text-[clamp(24px,2.6vw,32px)] leading-[1.1]">
                           {result.state}
@@ -279,7 +268,7 @@ export function HeroConsole() {
                       </p>
                       <div className="flex flex-wrap items-center gap-2.5">
                         <Button variant="cta" size="md" href={ROUTES.score} className="h-11">
-                          See my findings and 90-day plan →
+                          See my findings and 90-day plan
                         </Button>
                         <button
                           type="button"

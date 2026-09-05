@@ -45,21 +45,21 @@ export const HERO_OPTIONS: HeroOption[] = [
     k: "sell",
     num: "01",
     title: "I want to sell",
-    sub: "Prepare the business, bring qualified buyers into a private process, and run the sale through closing.",
+    sub: "A full private sale.",
     stage: "sellQ1",
   },
   {
     k: "offer",
     num: "02",
     title: "I already have a buyer or offer",
-    sub: "See what the offer really pays, what is missing, and what could keep it from closing.",
+    sub: "A free review of the offer before you sign.",
     stage: "offer",
   },
   {
     k: "ready",
     num: "03",
     title: "I'm not sure I'm ready",
-    sub: "See how buyers and lenders would view the business today and what to improve first.",
+    sub: "Seven questions on how buyers would see the business today.",
     stage: "ready",
   },
 ]
@@ -78,14 +78,14 @@ export const SELL_REVENUE_CHIPS: Array<[SellRevenue, string]> = [
 ]
 
 export function sellDoneTitle(timing: SellTiming | null): string {
-  if (timing === "now") return "You may be ready to begin a full sale process."
-  if (timing === "mid") return "The strongest sale often starts with work completed before buyers see the business."
-  return "You can understand your position without committing to a sale."
+  if (timing === "now") return "You could start a full sale process now."
+  if (timing === "mid") return "This timing leaves room to prepare before buyers see the business."
+  return "An advisor call does not commit you to selling."
 }
 
 export function sellDoneSubtitle(rev: SellRevenue | null): string {
   if (rev === "u1")
-    return "Full representation usually begins around $1M in annual revenue. We can still help you identify the right next step."
+    return "Full representation usually begins around $1M in annual revenue. An advisor can still suggest a next step."
   if (rev === "10+") return "We review larger businesses individually."
-  return "Your business is in Heirloom’s core range."
+  return "Your business is in Heirloom’s usual range."
 }

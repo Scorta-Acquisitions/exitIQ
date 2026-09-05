@@ -20,16 +20,16 @@ export const META_BY_PATH = Object.fromEntries(
 
 /** The exact h1 of every public page, read from `app/**\/page.tsx`. */
 export const H1_BY_PATH: Record<RoutePath, string> = {
-  "/": "Sell your business to the right buyer, on the right terms.",
-  "/score": "See how buyers would view your business today.",
-  "/offer-review": "Before you sign, know what the offer really pays.",
-  "/how-it-works": "You make the decisions. We carry the deal.",
-  "/fees": "What Heirloom costs.",
-  "/confidentiality": "Deciding to sell should stay private.",
-  "/buyers": "Prove you are ready to close.",
-  "/who-we-are": "M&A experience from both sides of the table.",
-  "/questions": "What owners ask before they sell.",
-  "/why": "Owners deserve the same deal discipline as buyers.",
+  "/": "Sell your business privately, with qualified buyers competing.",
+  "/score": "Is the business ready to sell?",
+  "/offer-review": "Know what the offer pays before you sign.",
+  "/how-it-works": "The eight stages of a private sale.",
+  "/fees": "Fees",
+  "/confidentiality": "Confidentiality",
+  "/buyers": "A verified record of who you are and what you buy",
+  "/who-we-are": "Who we are",
+  "/questions": "Questions owners ask.",
+  "/why": "The buyer usually has more experience.",
 }
 
 export function h1For(path: string): string {
@@ -114,7 +114,7 @@ export async function expectRouteRenders(page: Page, path: RoutePath, layout: "d
     await expect(primaryNav).toBeHidden()
     await expect(burger).toBeVisible()
   }
-  await expect(page.getByRole("contentinfo")).toContainText("We represent sellers.")
+  await expect(page.getByRole("contentinfo")).toContainText("Heirloom works for sellers only.")
 
   await page.getByRole("banner").getByTestId("open-advisor").click()
   const dialog = page.getByRole("dialog", { name: "Talk to an M&A advisor" })
@@ -251,7 +251,7 @@ export const EXITIQ_EXPECTED = {
     "2. Stop running personal expenses through the business at the start of the next accounting period.\n" +
     "3. Document customer retention and repeat revenue for the last 36 months.\n" +
     "4. Prepare monthly profit and loss statements for the last 12 months." +
-    "\n\nexitIQ is an educational readiness screen based on answers you provide. It is not a valuation, appraisal, financing decision, or assurance that a business will sell.",
+    "\n\nexitIQ is a readiness screen based on your answers. It is not a valuation, appraisal, financing decision, or assurance that a business will sell.",
   reviewBody:
     "exitIQ result review\nRecommendation: Prepare First\nFinanceability: 76\nTransferability: 59\nEvidence quality: 64\n\nTop findings:\n" +
     "1. Client relationships may depend on you\n2. Revenue has been flat\n3. Minor book-to-tax differences need documentation" +

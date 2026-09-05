@@ -12,9 +12,9 @@ export function ReviewWithAdvisorCard() {
       onClick={send}
       className="hover-green border-hair block w-full border-b border-l py-[22px] pl-[26px] text-left"
     >
-      <div className="font-display mb-2 text-[22px] leading-[1.18]">Ask an advisor to review the result</div>
+      <div className="font-display mb-2 text-[22px] leading-[1.18]">Review it with an advisor</div>
       <p className="text-l2 text-[14px] leading-[1.62]">
-        Book a call with Suyash. Your result rides along in the booking notes.
+        Book a call with Suyash. Your result goes into the booking notes.
       </p>
     </button>
   )
@@ -27,7 +27,7 @@ export function ReviewWithAdvisorButton() {
       <div className="mb-[18px] flex flex-wrap items-center gap-x-[18px] gap-y-3">
         <Button onClick={send}>Review my result with an advisor</Button>
         <span className="text-l3 max-w-[420px] font-mono text-[11.5px] leading-[1.6]">
-          Your exitIQ result rides along in the booking notes so you do not have to repeat it.
+          Your result goes into the booking notes.
         </span>
       </div>
       {sent ? (

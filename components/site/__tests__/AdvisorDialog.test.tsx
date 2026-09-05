@@ -179,14 +179,14 @@ describe("<AdvisorDialog />", () => {
     await walkToNote(dialog)
     fireEvent.change(within(dialog).getByLabelText("Note for the advisor"), { target: { value: "Deadline in June" } })
     expect(row(dialog, "Advisor note")).toBe("Attached")
-    fireEvent.click(within(dialog).getByRole("button", { name: "Finish the briefing →" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Finish" }))
     await act(async () => {})
     expect(within(dialog).getByText("BRIEFING READY")).toBeInTheDocument()
     const briefing =
       "Advisor call briefing\nConversation: Selling the business\nBusiness: Home or field services\nRevenue: $1M to $2M\nTarget timing: Within a year\nMatters most: Cash at closing\nNote for the advisor: Deadline in June"
     expect(copyText).toHaveBeenCalledTimes(1)
     expect(copyText).toHaveBeenCalledWith(briefing)
-    const book = within(dialog).getByRole("link", { name: "Book the call →" })
+    const book = within(dialog).getByRole("link", { name: "Book the call" })
     expect(book).toHaveAttribute("href", `${CALENDAR}?notes=${encodeURIComponent(briefing)}`)
     expect(book).toHaveAttribute("target", "_blank")
     expect(book).toHaveAttribute("rel", "noopener")
@@ -200,7 +200,7 @@ describe("<AdvisorDialog />", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Nothing to add" }))
     await act(async () => {})
     expect(within(dialog).getByText("BRIEFING READY")).toBeInTheDocument()
-    expect(within(dialog).getByText("Your advisor reads this before you say a word.")).toBeInTheDocument()
+    expect(within(dialog).getByText("Your advisor reads this before the call.")).toBeInTheDocument()
     expect(copyText).toHaveBeenCalledWith(
       "Advisor call briefing\nConversation: Selling the business\nBusiness: Home or field services\nRevenue: $1M to $2M\nTarget timing: Within a year\nMatters most: Cash at closing"
     )
@@ -212,18 +212,18 @@ describe("<AdvisorDialog />", () => {
     const dialog = openDialog()
     fireEvent.click(within(dialog).getByRole("button", { name: "Skip the questions, just book" }))
     await act(async () => {})
-    fireEvent.click(within(dialog).getByRole("button", { name: "Prefer email? Send the briefing instead" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Send the briefing by email instead" }))
     await act(async () => {})
     const body = EMPTY_BRIEFING + "\n\nPlease reply with times for a call."
     expect(copyText).toHaveBeenLastCalledWith(body)
     expect(openMail).toHaveBeenCalledTimes(1)
     const href = vi.mocked(openMail).mock.calls[0]![0]
-    expect(href).toBe(mailtoHref("hello@heirloom.com", "Advisor call briefing", body, 1400))
-    expect(href.startsWith("mailto:hello@heirloom.com?subject=Advisor%20call%20briefing&body=")).toBe(true)
+    expect(href).toBe(mailtoHref("suyash@heirloomadvisory.ai", "Advisor call briefing", body, 1400))
+    expect(href.startsWith("mailto:suyash@heirloomadvisory.ai?subject=Advisor%20call%20briefing&body=")).toBe(true)
     expect(new URLSearchParams(href.slice(href.indexOf("?") + 1)).get("body")).toBe(body)
     expect(
       within(dialog).getByText(
-        "Your email app opened with the briefing filled in. If it did not open, the text is copied; paste it into a message to hello@heirloom.com."
+        "Your email app opened with the briefing. If it did not, the text is copied. Paste it into a message to suyash@heirloomadvisory.ai."
       )
     ).toBeInTheDocument()
   })
@@ -234,12 +234,10 @@ describe("<AdvisorDialog />", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Skip the questions, just book" }))
     await act(async () => {})
     vi.mocked(copyText).mockRejectedValueOnce(new Error("clipboard unavailable"))
-    fireEvent.click(within(dialog).getByRole("button", { name: "Prefer email? Send the briefing instead" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Send the briefing by email instead" }))
     await act(async () => {})
     expect(
-      within(dialog).getByText(
-        "We could not prepare the email. Write to hello@heirloom.com directly and we will set up the call."
-      )
+      within(dialog).getByText("We could not prepare the email. Write to suyash@heirloomadvisory.ai directly.")
     ).toBeInTheDocument()
     expect(openMail).not.toHaveBeenCalled()
     expect(within(dialog).queryByText(/Your email app opened/)).toBeNull()
@@ -255,7 +253,7 @@ describe("<AdvisorDialog />", () => {
     expect(within(dialog).getByText("QUESTION 1 OF 5")).toBeInTheDocument()
     expect(within(dialog).getByRole("button", { name: "Selling the business" })).toHaveAttribute("aria-pressed", "true")
     expect(within(dialog).getByRole("button", { name: "Value and timing" })).toHaveAttribute("aria-pressed", "false")
-    expect(within(dialog).queryByText("How we prepare")).toBeNull()
+    expect(within(dialog).queryByText("On the call")).toBeNull()
     expect(row(dialog, "Conversation")).toBe("Selling the business")
     expect(within(dialog).queryByRole("button", { name: "Change my last answer" })).toBeNull()
   })
@@ -296,7 +294,7 @@ describe("<AdvisorDialog />", () => {
     expect(screen.getByTestId("hero-offer")).toBeInTheDocument()
     const dialog = openDialog()
     expect(
-      within(dialog).getByText("What you already told us carried over. 4 questions left before booking.")
+      within(dialog).getByText("Your earlier answers carried over. 4 questions left before booking.")
     ).toBeInTheDocument()
     expect(within(dialog).getByText("QUESTION 1 OF 4")).toBeInTheDocument()
     expect(within(dialog).getByText("What kind of business is it?")).toBeInTheDocument()
@@ -350,7 +348,7 @@ describe("<AdvisorDialog />", () => {
       body: EMPTY_BRIEFING.replace("Conversation: Not answered", "Conversation: Selling the business"),
       source: "advisor",
     })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Prefer email? Send the briefing instead" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Send the briefing by email instead" }))
     await act(async () => {})
     expect(submitInquiry).toHaveBeenCalledTimes(1)
   })

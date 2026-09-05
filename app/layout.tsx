@@ -42,7 +42,7 @@ export const OG_IMAGE = {
   url: "/og/heirloom-og.png",
   width: 1200,
   height: 630,
-  alt: `${SITE_NAME} — sell-side M&A for established private businesses`,
+  alt: `${SITE_NAME}, sell-side M&A for established private businesses`,
 }
 
 export const metadata: Metadata = {

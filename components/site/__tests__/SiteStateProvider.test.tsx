@@ -270,7 +270,7 @@ describe("<SiteStateProvider />", () => {
       expect(a.labels).toEqual({ topic: "Value and timing", type: "Recurring commercial services", rev: "$3M to $5M" })
       expect(a.prefilled).toEqual({ topic: true, type: true, rev: true })
       expect(a.step).toBe(3)
-      expect(a.ack).toBe("What you already told us carried over. One question left before booking.")
+      expect(a.ack).toBe("Your earlier answers carried over. One question left before booking.")
     })
 
     it("on the home page with the same answers does not prefill a topic", () => {

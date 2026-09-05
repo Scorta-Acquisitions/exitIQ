@@ -8,7 +8,7 @@ const FORWARD_BODY =
   "I received an offer or indication of interest for my business. The original message or document is attached.\n\n" +
   OFFER_ASK +
   SIGN_OFF
-const FORWARD_MAILTO = `mailto:offers@heirloom.com?subject=Free%20Offer%20Review&body=${encodeURIComponent(FORWARD_BODY)}`
+const FORWARD_MAILTO = `mailto:offers@heirloom.com?subject=Free%20offer%20review&body=${encodeURIComponent(FORWARD_BODY)}`
 
 const VERBAL = {
   "Price or range discussed": "$4.5M",
@@ -50,7 +50,7 @@ test.describe("/offer-review intake", () => {
     await expect(attach).toHaveAttribute("href", FORWARD_MAILTO)
     expect((await attach.getAttribute("href"))!.startsWith("mailto:offers@heirloom.com")).toBe(true)
     await expect(intake.getByTestId("oi-send")).toBeHidden()
-    await expect(intake).toContainText("Confidential. No commitment. We do not contact the buyer during the review.")
+    await expect(intake).toContainText("A person reviews it. You usually hear back the same business day.")
     console.assertClean()
   })
 
@@ -169,11 +169,9 @@ test.describe("/offer-review intake", () => {
     await page.goto("/offer-review")
     const main = page.getByRole("main")
     await expect(main.getByText("Worked example", { exact: true })).toBeVisible()
-    await expect(main.getByRole("heading", { name: "The number is only the first line." })).toBeVisible()
+    await expect(main.getByRole("heading", { name: "What the letter of intent leaves open" })).toBeVisible()
     await expect(
-      main.getByText(
-        "This fictional offer shows the phrases that determine what the seller receives, how long the buyer controls the process, and what can still change."
-      )
+      main.getByText("A fictional letter of intent. The terms below decide what the seller actually receives.")
     ).toBeVisible()
     await expect(main.getByText("Letter of intent · Project Ridgeline")).toBeVisible()
     await expect(main.getByText("Headline price", { exact: true }).locator("xpath=following-sibling::span")).toHaveText(

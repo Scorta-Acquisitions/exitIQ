@@ -9,13 +9,41 @@ import {
 import { HERO_CX, HERO_CY, heroGeometry } from "@/lib/site/hero/geometry"
 
 describe("heroGeometry", () => {
-  it("places twelve nodes, six edges, three rings, six evidence markers, and seven modules", () => {
+  it("places twelve nodes, six edges, three rings, four evidence markers, and four modules", () => {
     const g = heroGeometry("sell", 0, false)
     expect(g.nodes).toHaveLength(12)
     expect(g.edges).toHaveLength(6)
     expect(g.rings).toHaveLength(3)
-    expect(g.evidence).toHaveLength(6)
-    expect(g.modules).toHaveLength(7)
+    expect(g.evidence).toHaveLength(4)
+    expect(g.modules).toHaveLength(4)
+  })
+
+  it("labels only the live offer node on the sell path and captions the rings in one or two words", () => {
+    const g = heroGeometry("sell", 0)
+    expect(g.nodes.filter((n) => n.l !== "").map((n) => n.l)).toEqual(["OFFER"])
+    expect(g.rings.map((r) => r.l)).toEqual(["MATCHED", "NDA SIGNED", "FINALISTS"])
+  })
+
+  it("keeps the evidence markers off the vertical axis so labels clear the ring captions", () => {
+    const g = heroGeometry("ready", 0)
+    expect(g.evidence.map((e) => e.l)).toEqual([
+      "FINANCIALS RECONCILED",
+      "RECURRING REVENUE",
+      "DOCUMENTATION GAPS",
+      "OWNER DEPENDENCE",
+    ])
+    expect(g.evidence.map((e) => e.ta)).toEqual(["start", "start", "end", "end"])
+    for (const e of g.evidence) expect(Math.abs(+e.x - HERO_CX)).toBeGreaterThan(80)
+  })
+
+  it("lays the four offer modules out as a two-by-two grid under the buyer edge", () => {
+    const g = heroGeometry("offer", 0)
+    expect(g.modules.map((m) => [m.l, +m.x, +m.y])).toEqual([
+      ["PRICE", 650, 392],
+      ["CASH AT CLOSING", 776, 392],
+      ["FINANCING", 650, 426],
+      ["CLOSING RISK", 776, 426],
+    ])
   })
 
   it("lights exactly one live offer node on the sell path and rotates it with the tick", () => {
@@ -44,7 +72,7 @@ describe("heroGeometry", () => {
     const g = heroGeometry("ready", 0)
     expect(g.nodes.every((n) => n.o === 0)).toBe(true)
     expect(g.evidence.every((e) => e.o === 1)).toBe(true)
-    expect(g.rings[0]?.l).toBe("HOW BUYERS WOULD VIEW IT")
+    expect(g.rings[0]?.l).toBe("BUYER VIEW")
     expect(g.evidence.filter((e) => e.go > 0)).toHaveLength(1)
   })
 
@@ -83,10 +111,13 @@ describe("hero funnel copy", () => {
   })
 
   it("writes the result copy from timing and revenue", () => {
-    expect(sellDoneTitle("now")).toMatch(/ready to begin/)
-    expect(sellDoneTitle(null)).toMatch(/without committing/)
-    expect(sellDoneSubtitle("u1")).toMatch(/around \$1M/)
+    expect(sellDoneTitle("now")).toBe("You could start a full sale process now.")
+    expect(sellDoneTitle("mid")).toBe("This timing leaves room to prepare before buyers see the business.")
+    expect(sellDoneTitle(null)).toBe("An advisor call does not commit you to selling.")
+    expect(sellDoneSubtitle("u1")).toBe(
+      "Full representation usually begins around $1M in annual revenue. An advisor can still suggest a next step."
+    )
     expect(sellDoneSubtitle("10+")).toBe("We review larger businesses individually.")
-    expect(sellDoneSubtitle("1-3")).toMatch(/core range/)
+    expect(sellDoneSubtitle("1-3")).toBe("Your business is in Heirloom’s usual range.")
   })
 })

@@ -110,7 +110,7 @@ export function AdvisorDialog() {
                   <div className="border-filament/50 bg-filament/[6%] rounded-r-[10px] border-l-2 px-[13px] py-2.5">
                     <p className="text-d2 text-[13px] leading-[1.55]">
                       <span className="text-signal mb-1 block font-mono text-[11px] tracking-[1px] uppercase">
-                        How we prepare
+                        On the call
                       </span>
                       {advisor.ack}
                     </p>
@@ -135,7 +135,7 @@ export function AdvisorDialog() {
                 />
                 <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
                   <Button variant="cta" size="md" className="h-11 font-semibold" onClick={finish}>
-                    Finish the briefing →
+                    Finish
                   </Button>
                   <button
                     type="button"
@@ -152,11 +152,10 @@ export function AdvisorDialog() {
               <div>
                 <div className="eyebrow text-filament mb-3">Briefing ready</div>
                 <h2 className="font-display text-d1 mb-2.5 text-[clamp(23px,2.8vw,32px)] leading-[1.14] font-normal">
-                  Your advisor reads this before you say a word.
+                  Your advisor reads this before the call.
                 </h2>
                 <p className="text-d2 mb-[18px] max-w-[440px] text-[14px] leading-[1.6]">
-                  Book the call and the conversation starts from your situation, not from zero. A copy of the briefing
-                  is on your clipboard for the booking notes.
+                  We copied the briefing so you can paste it into the booking notes.
                 </p>
                 <div className="mb-3.5 flex flex-wrap items-center gap-x-[18px] gap-y-3">
                   <Button
@@ -167,29 +166,29 @@ export function AdvisorDialog() {
                     rel="noopener"
                     className="px-6"
                   >
-                    Book the call →
+                    Book the call
                   </Button>
                   <button
                     type="button"
                     onClick={emailInstead}
                     className="hover-green-dark border-dhair text-d2 border-b pb-0.5 text-[13.5px]"
                   >
-                    Prefer email? Send the briefing instead
+                    Send the briefing by email instead
                   </button>
                 </div>
                 {emailError ? (
                   <p aria-live="polite" className="text-signal mb-3 text-[12.5px] leading-[1.6]">
-                    We could not prepare the email. Write to {CONTACT.hello} directly and we will set up the call.
+                    We could not prepare the email. Write to {CONTACT.hello} directly.
                   </p>
                 ) : null}
                 {advisor.emailed ? (
                   <p aria-live="polite" className="text-filament mb-3 text-[12.5px] leading-[1.6]">
-                    Your email app opened with the briefing filled in. If it did not open, the text is copied; paste it
-                    into a message to {CONTACT.hello}.
+                    Your email app opened with the briefing. If it did not, the text is copied. Paste it into a message
+                    to {CONTACT.hello}.
                   </p>
                 ) : null}
                 <p className="text-d4 font-mono text-[11px] leading-[1.7]">
-                  No documents required. Nothing you shared here leaves this page until you book or email.
+                  Nothing you enter here leaves this page until you book or email.
                 </p>
                 <button
                   type="button"
@@ -253,9 +252,7 @@ export function AdvisorDialog() {
                 </div>
               ))}
             </div>
-            <p className="text-d4 mt-3.5 font-mono text-[10.5px] leading-[1.65]">
-              Read by your advisor before the call. Not shared outside Heirloom.
-            </p>
+            <p className="text-d4 mt-3.5 font-mono text-[10.5px] leading-[1.65]">Not shared outside Heirloom.</p>
           </div>
         </div>
       </div>

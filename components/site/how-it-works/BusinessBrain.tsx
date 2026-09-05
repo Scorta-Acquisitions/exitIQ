@@ -28,14 +28,12 @@ export function BusinessBrain() {
     <section className="aurora panel-market text-d1 relative overflow-hidden px-6 py-[clamp(56px,7vw,90px)]">
       <Container>
         <div className="relative mb-[34px] max-w-[760px]">
-          <div className="eyebrow text-signal mb-4">One approved answer, used everywhere</div>
           <h2 className="font-display text-d1 mb-4 text-[clamp(28px,4vw,46px)] leading-[1.08] font-normal tracking-[-.9px]">
-            Keep every number consistent.
+            Financial preparation
           </h2>
           <p className="text-d2 mb-2.5 text-[16.5px] leading-[1.68]">
-            The books, payroll, tax return, and owner explanation can disagree. We flag the conflict, your advisor
-            records the answer and supporting evidence, and every valuation, buyer document, lender package, and
-            diligence response uses the same approved figure.
+            The books, payroll, tax return, and your own explanation often disagree. Your advisor records the resolution
+            and the evidence for it, and every buyer document, lender package, and diligence answer uses that figure.
           </p>
         </div>
         <div

@@ -77,13 +77,13 @@ const ANGLES = [-75, -58, -42, -27, -13, 0, 13, 27, 42, 58, 70, -68]
 /** Per-node sell config: [radius, opacity, label, tier]. Tier: 0 faded · 1 matched · 2 NDA · 3 reviewed · 4 finalist · 5 offer. */
 const SELL: Array<[number, number, string, number]> = [
   [258, 0.2, "", 0],
-  [205, 0.5, "MATCH", 1],
-  [120, 0.85, "REVIEWED", 3],
+  [205, 0.5, "", 1],
+  [120, 0.85, "", 3],
   [255, 0.2, "", 0],
   [205, 0.5, "", 1],
-  [150, 0.72, "NDA SIGNED", 2],
+  [150, 0.72, "", 2],
   [70, 1, "OFFER", 5],
-  [95, 0.95, "FINALIST", 4],
+  [95, 0.95, "", 4],
   [150, 0.72, "", 2],
   [95, 0.95, "", 4],
   [250, 0.2, "", 0],
@@ -103,16 +103,20 @@ const TIPS = [
   "Excluded by your rules",
   "Outside your criteria",
 ]
+/** Four evidence markers, kept to the east and west so their labels never cross the ring captions above and below. */
 const EVIDENCE: Array<[number, string, 0 | 1]> = [
-  [-90, "FINANCIALS: 3 SOURCES RECONCILED", 1],
-  [-30, "RECURRING REVENUE", 1],
-  [30, "LENDER READ", 1],
-  [90, "DOCUMENTATION: 2 GAPS", 0],
-  [150, "CUSTOMER CONCENTRATION", 0],
+  [-30, "FINANCIALS RECONCILED", 1],
+  [30, "RECURRING REVENUE", 1],
+  [150, "DOCUMENTATION GAPS", 0],
   [210, "OWNER DEPENDENCE", 0],
 ]
-const MODULE_ANGLES = [-90, -38.6, 12.9, 64.3, 115.7, 167.1, -141.4]
-const MODULE_LABELS = ["PRICE", "CASH AT CLOSING", "FINANCING", "DILIGENCE", "TERMS", "EXCLUSIVITY", "CLOSING RISK"]
+/** Offer modules sit in a two-by-two grid under the buyer edge, clear of the seal and its caption. */
+const MODULES: Array<[number, number, string]> = [
+  [650, 392, "PRICE"],
+  [776, 392, "CASH AT CLOSING"],
+  [650, 426, "FINANCING"],
+  [776, 426, "CLOSING RISK"],
+]
 
 function pos(ang: number, R: number) {
   return { x: HERO_CX + Math.cos(ang * D2R) * R, y: HERO_CY + Math.sin(ang * D2R) * R * 0.82 }
@@ -198,12 +202,12 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
   const RINGS =
     path === "ready"
       ? [
-          { r: 150, l: "HOW BUYERS WOULD VIEW IT", o: 0.8 },
+          { r: 150, l: "BUYER VIEW", o: 0.8 },
           { r: 105, l: "EVIDENCE", o: 0.8 },
           { r: 205, l: "", o: 0 },
         ]
       : [
-          { r: 205, l: "MATCHES YOUR CRITERIA", o: path === "sell" ? 0.9 : 0.07 },
+          { r: 205, l: "MATCHED", o: path === "sell" ? 0.9 : 0.07 },
           { r: 150, l: "NDA SIGNED", o: path === "sell" ? 0.9 : 0.07 },
           { r: 95, l: "FINALISTS", o: path === "sell" ? 0.9 : 0.07 },
         ]
@@ -224,7 +228,7 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
       y: p.y.toFixed(1),
       o: path === "ready" ? 1 : 0,
       f: ok ? FILAMENT : "rgba(240,248,243,.15)",
-      go: path === "ready" && tick % 6 === vi ? 0.8 : 0,
+      go: path === "ready" && tick % EVIDENCE.length === vi ? 0.8 : 0,
       tx: east ? 14 : west ? -14 : 0,
       ta: east ? "start" : west ? "end" : "middle",
       tc: ok ? FILAMENT : DIM_STROKE,
@@ -232,17 +236,13 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
     }
   })
 
-  const modules: HeroModule[] = MODULE_ANGLES.map((ang, i) => {
-    const mx = 630 + Math.cos(ang * D2R) * 150
-    const my = HERO_CY + Math.sin(ang * D2R) * 98
-    return {
-      x: mx.toFixed(1),
-      y: my.toFixed(1),
-      o: path === "offer" ? 1 : 0,
-      l: MODULE_LABELS[i] as string,
-      hs: path === "offer" && tick % 7 === i ? FILAMENT : "rgba(240,248,243,.25)",
-    }
-  })
+  const modules: HeroModule[] = MODULES.map(([mx, my, l], i) => ({
+    x: mx.toFixed(1),
+    y: my.toFixed(1),
+    o: path === "offer" ? 1 : 0,
+    l,
+    hs: path === "offer" && tick % MODULES.length === i ? FILAMENT : "rgba(240,248,243,.25)",
+  }))
 
   return { nodes, edges, rings, evidence, modules, offerOpacity: path === "offer" ? 1 : 0 }
 }

@@ -22,31 +22,16 @@ test.describe("home hero console", () => {
     await expect(options.nth(0)).toContainText("I want to sell")
     await expect(options.nth(1)).toContainText("I already have a buyer or offer")
     await expect(options.nth(2)).toContainText("I'm not sure I'm ready")
-    await expect(
-      hero.getByText(
-        "Prepare the business, bring qualified buyers into a private process, and run the sale through closing."
-      )
-    ).toBeVisible()
-    await expect(
-      hero.getByText("See what the offer really pays, what is missing, and what could keep it from closing.")
-    ).toBeHidden()
+    await expect(hero.getByText("A full private sale.")).toBeVisible()
+    await expect(hero.getByText("A free review of the offer before you sign.")).toBeHidden()
 
     await hero.getByTestId("hero-option-offer").hover()
-    await expect(
-      hero.getByText("See what the offer really pays, what is missing, and what could keep it from closing.")
-    ).toBeVisible()
-    await expect(
-      hero.getByText(
-        "Prepare the business, bring qualified buyers into a private process, and run the sale through closing."
-      )
-    ).toBeHidden()
+    await expect(hero.getByText("A free review of the offer before you sign.")).toBeVisible()
+    await expect(hero.getByText("A full private sale.")).toBeHidden()
 
     const graph = page.getByTestId("hero-graph")
     await expect(graph).toBeVisible()
-    await expect(graph).toHaveAttribute(
-      "aria-label",
-      "A live map of a private transaction forming around one protected business"
-    )
+    await expect(graph).toHaveAttribute("aria-label", "Diagram of a private buyer process around one business")
     await expect(graph).toContainText("YOUR BUSINESS")
   })
 
@@ -67,18 +52,14 @@ test.describe("home hero console", () => {
 
     await expect(hero.getByTestId("hero-progress")).toHaveText("YOUR RESULT")
     const done = hero.getByTestId("hero-sell-done")
-    await expect(done).toContainText(
-      "The strongest sale often starts with work completed before buyers see the business."
-    )
-    await expect(done).toContainText("Your business is in Heirloom’s core range.")
-    await expect(done.getByRole("link", { name: "See the sale process →" })).toHaveAttribute("href", "/how-it-works")
+    await expect(done).toContainText("This timing leaves room to prepare before buyers see the business.")
+    await expect(done).toContainText("Your business is in Heirloom’s usual range.")
+    await expect(done.getByRole("link", { name: "See how it works" })).toHaveAttribute("href", "/how-it-works")
 
     await done.getByTestId("open-advisor").click()
     const dialog = advisorDialog(page)
     await expect(dialog).toBeVisible()
-    await expect(
-      dialog.getByText("What you already told us carried over. 2 questions left before booking.")
-    ).toBeVisible()
+    await expect(dialog.getByText("Your earlier answers carried over. 2 questions left before booking.")).toBeVisible()
     await expect(dialog.getByText("QUESTION 1 OF 2", { exact: true })).toBeVisible()
     await expect(dialog.getByRole("heading", { name: "What kind of business is it?" })).toBeVisible()
     await expect(briefingRow(dialog, "Conversation")).toHaveText("Selling the business")
@@ -101,7 +82,7 @@ test.describe("home hero console", () => {
     await hero.getByRole("button", { name: "I am only exploring", exact: true }).click()
     await hero.getByRole("button", { name: "More than $10M", exact: true }).click()
     const done = hero.getByTestId("hero-sell-done")
-    await expect(done).toContainText("You can understand your position without committing to a sale.")
+    await expect(done).toContainText("An advisor call does not commit you to selling.")
     await expect(done).toContainText("We review larger businesses individually.")
   })
 
@@ -113,7 +94,7 @@ test.describe("home hero console", () => {
     await hero.getByTestId("hero-option-offer").click()
     await expect(hero.getByTestId("hero-progress")).toHaveText("FREE OFFER REVIEW")
     const offer = hero.getByTestId("hero-offer")
-    await expect(offer.getByRole("heading", { name: "Have the offer read before you sign." })).toBeVisible()
+    await expect(offer.getByRole("heading", { name: "What the offer pays" })).toBeVisible()
     await expect(offer.getByRole("link", { name: /Forward or attach the offer/ })).toHaveAttribute(
       "href",
       "mailto:offers@heirloom.com"
@@ -135,7 +116,7 @@ test.describe("home hero console", () => {
     const hero = page.getByTestId("hero-console")
     await hero.getByTestId("hero-option-ready").click()
     await expect(hero.getByTestId("hero-progress")).toHaveText("EXITIQ")
-    await expect(hero.getByRole("heading", { name: "See how the business looks to buyers today." })).toBeVisible()
+    await expect(hero.getByRole("heading", { name: "Is the business ready to sell?" })).toBeVisible()
     await hero.getByRole("button", { name: "Start exitIQ" }).click()
     await expect(hero.getByText("exitIQ · Question 1 of 7")).toBeVisible()
 
@@ -143,10 +124,10 @@ test.describe("home hero console", () => {
 
     const done = hero.getByTestId("hero-iq-done")
     await expect(done).toBeVisible()
-    await expect(done).toContainText("Your exitIQ result is ready.")
+    await expect(done).toContainText("Your result is ready.")
     await expect(done).toContainText(EXITIQ_EXPECTED.state)
     await expect(done).toContainText(`${EXITIQ_EXPECTED.findings[0]}. ${EXITIQ_EXPECTED.findingBodies[0]}`)
-    const see = done.getByRole("link", { name: "See my findings and 90-day plan →" })
+    const see = done.getByRole("link", { name: "See my findings and 90-day plan" })
     await expect(see).toHaveAttribute("href", "/score")
     await see.click()
 
@@ -184,17 +165,18 @@ test.describe("home sections", () => {
     await page.goto("/")
     await scrollScene(page, "market-scene", 0.05)
     await expect(page.getByTestId("market-step-0")).toHaveAttribute("data-active", "true")
-    await expect(page.getByTestId("market-step-0")).toContainText("One buyer appears")
+    await expect(page.getByTestId("market-step-0")).toContainText("Inbound offer")
     await expect(page.getByTestId("market-step-1")).toHaveAttribute("data-active", "false")
     await scrollScene(page, "market-scene", 0.6)
     await expectPinned(page, "market-scene")
     await expect(page.getByTestId("market-step-2")).toHaveAttribute("data-active", "true")
-    await expect(page.getByTestId("market-step-2")).toContainText("We qualify interest")
+    await expect(page.getByTestId("market-step-2")).toContainText("NDA and qualification")
     await scrollScene(page, "market-scene", 0.95)
     await expect(page.getByTestId("market-step-3")).toHaveAttribute("data-active", "true")
-    await expect(
-      page.getByTestId("market-step-3").getByRole("link", { name: "See the full sale process →" })
-    ).toHaveAttribute("href", "/how-it-works")
+    await expect(page.getByTestId("market-step-3").getByRole("link", { name: "See how it works →" })).toHaveAttribute(
+      "href",
+      "/how-it-works"
+    )
   })
 
   test("privacy scene walks disclosure levels with scroll", async ({ page }) => {
@@ -211,7 +193,7 @@ test.describe("home sections", () => {
       "Ridgeline Mechanical Services"
     )
     await expect(
-      page.getByTestId("privacy-scene").getByRole("link", { name: "See who can access what →" })
+      page.getByTestId("privacy-scene").getByRole("link", { name: "See who can access what" })
     ).toHaveAttribute("href", "/confidentiality")
   })
 
@@ -234,7 +216,7 @@ test.describe("home sections", () => {
     await q.scrollIntoViewIfNeeded()
     await expect(q).toHaveAttribute("aria-expanded", "false")
     const answer = page.getByText(
-      "Heirloom never contacts your employees, customers, or suppliers without your approval. Buyers see an anonymous overview before your identity is released."
+      "Not from Heirloom. We do not contact employees, customers, or suppliers without your approval."
     )
     await expect(answer).toBeHidden()
     await q.click()
