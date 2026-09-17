@@ -74,14 +74,14 @@ const BEATS: PrivacyBeatSpec[] = [
     adds: [5],
     say: "Before outreach: nothing public, and an excluded competitor is never contacted",
   },
-  { id: "overview", at: 1800, level: 1, adds: [], say: "Level 1: an anonymous overview, two of seven fields" },
+  { id: "overview", at: 1800, level: 1, adds: [], say: "Level 1: an anonymous overview, two of five fields" },
   { id: "nda", at: 3600, level: 2, adds: [4], say: "Level 2: the company name, after an NDA" },
   {
     id: "qualified",
     at: 5400,
     level: 3,
     adds: [2],
-    say: "Level 3: contracts and a role-level list, after qualification",
+    say: "Level 3: the customer's contract and the adjustment schedule, after qualification",
   },
   { id: "selected", at: 7200, level: 4, adds: [0], say: "Level 4: the finalist the owner selected sees the names" },
   { id: "expired", at: 9000, level: 4, adds: [3], say: "Every view is recorded, and access expires" },
@@ -117,7 +117,7 @@ export interface PrivacyView {
   viewer: ViewerKey
   /** The record card's title: "Company record" until someone is looking, then "Viewing as …". */
   title: string
-  /** The line under the record: "Level 2 · NDA signed · Visible 4 of 7". */
+  /** The line under the record: "Level 2 · NDA signed · Visible 3 of 5". */
   levelLine: string
   visible: number
   rows: BuyerRowView[]
@@ -128,7 +128,7 @@ export interface PrivacyView {
 }
 
 /**
- * How many of the seven home record rows are open at `level`: the rows whose open level is at or below it,
+ * How many of the five home record rows are open at `level`: the rows whose open level is at or below it,
  * counted over the whole record on every viewport. Outside the record's levels nothing is open.
  */
 export function visibleCount(level: number): number {
@@ -140,10 +140,10 @@ export function visibleCount(level: number): number {
 export const NARROW_PHONE = 360
 
 /**
- * How many record rows the screen shows: seven from the tablet breakpoint, four compact ones on a phone, and
+ * How many record rows the screen shows: five from the tablet breakpoint, four compact ones on a phone, and
  * the company's name alone on the narrowest phones (320 × 640), where the frame still has to stand inside one
  * screen under the bar and every value needs two lines. The count under the record reads the whole
- * seven-field record whatever the screen shows.
+ * five-field record whatever the screen shows.
  */
 export function privacyFieldCount(width: number): number {
   if (width >= TAB_BREAKPOINT) return HOME_RECORD_FIELD_COUNT
@@ -164,9 +164,9 @@ export function privacyTitleLines(width: number): 1 | 2 {
   return width >= NARROW_PHONE ? 1 : 2
 }
 
-/** How many access-log lines fit under the record: three from the tablet breakpoint, the latest one on a phone. */
+/** How many access-log lines fit under the record: two from the tablet breakpoint, the latest one on a phone. */
 export function privacyLogLimit(width: number): number {
-  return width >= TAB_BREAKPOINT ? 3 : 1
+  return width >= TAB_BREAKPOINT ? 2 : 1
 }
 
 /** The stage name at `level`: the public level has its own name, the other five are the disclosure stages. */

@@ -90,18 +90,17 @@ describe("PrivacyScene: the words and the screen", () => {
   it("opens with nothing public, the competitor already stopped and one advisor line in the log", () => {
     renderWithSite(<PrivacyScene />)
     expect(within(record()).getByText("Company record")).toBeInTheDocument()
-    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 5")
     expect(valueOf("Company name")).toHaveTextContent("No sale record")
     expect(valueOf("Company name")).toHaveClass("bg-fg/10", "rounded-xs", "px-1.5")
     expect(caption("competitor").textContent).toBe("Matched an owner exclusion · never contacted")
     expect(buyer("competitor")).toHaveAttribute("data-state", "stopped")
     expect(caption("pe").textContent).toBe("Not yet contacted")
     expect(buyer("pe")).toHaveAttribute("data-state", "waiting")
-    expect(logRows()).toHaveLength(3)
+    expect(logRows()).toHaveLength(2)
     expect(logRows()[0]).toHaveTextContent("Heirloom · Revoked Northgate HVAC access · Matched an owner exclusion")
     expect(logRows()[1]).toHaveTextContent("No entry yet")
     expect(logRows()[1]).toHaveAttribute("data-pending", "true")
-    expect(logRows()[2]).toHaveAttribute("data-pending", "true")
   })
 
   it("lists the four buyers in reach order as 44px toggles, under the closing-parties line", () => {
@@ -130,7 +129,7 @@ describe("PrivacyScene: the play", () => {
     expect(root()).toHaveAttribute("data-level", "1")
     expect(root()).toHaveAttribute("data-viewer", "matching")
     expect(within(record()).getByText("Viewing as a buyer who matches your rules")).toBeInTheDocument()
-    expect(levelLine()).toHaveTextContent("Level 1 · Anonymous overview · Visible 2 of 7")
+    expect(levelLine()).toHaveTextContent("Level 1 · Anonymous overview · Visible 2 of 5")
     expect(valueOf("Location")).toHaveTextContent("Southeastern United States")
     expect(valueOf("Location")).not.toHaveClass("bg-fg/10")
     expect(caption("pe").textContent).toBe("Anonymous overview · L1")
@@ -139,13 +138,13 @@ describe("PrivacyScene: the play", () => {
     expect(root()).toHaveAttribute("data-beat", "nda")
     expect(root()).toHaveAttribute("data-viewer", "strategic")
     expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
-    expect(levelLine()).toHaveTextContent("Level 2 · NDA signed · Visible 4 of 7")
+    expect(levelLine()).toHaveTextContent("Level 2 · NDA signed · Visible 3 of 5")
     expect(logRows()[0]).toHaveTextContent("K. Ortiz · Meridian Trades Group · Signed NDA · Wednesday, 9:03 AM")
 
     advance(1800)
     expect(root()).toHaveAttribute("data-beat", "qualified")
     expect(valueOf("Largest customer")).toHaveTextContent("Regional grocery group, contracted through 2029")
-    expect(valueOf("Employees and payroll")).toHaveTextContent("Role-level employee list, no names")
+    expect(valueOf("Adjusted earnings")).toHaveTextContent("$845K, with the adjustment schedule")
     expect(caption("individual").textContent).toBe("Buyer qualified · L3")
 
     advance(1800)
@@ -158,8 +157,8 @@ describe("PrivacyScene: the play", () => {
     advance(1800)
     expect(root()).toHaveAttribute("data-beat", "expired")
     expect(root()).toHaveAttribute("data-demo-state", "ended")
-    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
-    expect(logRows()).toHaveLength(3)
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 5 of 5")
+    expect(logRows()).toHaveLength(2)
     expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
   })
 
@@ -183,23 +182,24 @@ describe("PrivacyScene: the play", () => {
     expect(banded()[0]).toHaveTextContent("Last 12 months revenue")
     // The band changes no word: the record still reads the level the play ended on.
     expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
-    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 5 of 5")
   })
 })
 
 describe("PrivacyScene: the screen holds its shape", () => {
-  it("keeps three log rows from the first beat and fills them as the history records a view", () => {
+  it("keeps two log rows from the first beat and fills them as the history records a view", () => {
     renderWithSite(<PrivacyScene />)
     play()
     const pending = () => Array.from(logRows()).filter((li) => li.getAttribute("data-pending") === "true").length
-    expect(logRows()).toHaveLength(3)
-    expect(pending()).toBe(2)
+    expect(logRows()).toHaveLength(2)
+    expect(pending()).toBe(1)
     advance(3600)
     expect(root()).toHaveAttribute("data-beat", "nda")
-    expect(logRows()).toHaveLength(3)
-    expect(pending()).toBe(1)
+    expect(logRows()).toHaveLength(2)
+    expect(pending()).toBe(0)
+    expect(logRows()[1]).toHaveTextContent("Heirloom · Revoked Northgate HVAC access · Matched an owner exclusion")
     advance(5400)
-    expect(logRows()).toHaveLength(3)
+    expect(logRows()).toHaveLength(2)
     expect(pending()).toBe(0)
     expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
   })
@@ -207,15 +207,15 @@ describe("PrivacyScene: the screen holds its shape", () => {
   it("staggers the record's values in order on the first play and changes them in place on the replay", () => {
     renderWithSite(<PrivacyScene />)
     play()
-    const delays = () => RECORD_FIELDS.slice(0, 7).map((f) => (valueOf(f.l) as HTMLElement).style.animationDelay)
+    const delays = () => RECORD_FIELDS.slice(0, 5).map((f) => (valueOf(f.l) as HTMLElement).style.animationDelay)
     // `demoStagger(0, i)`: 60ms apart, capped at 300, the grammar the other demo rows follow.
-    expect(delays()).toEqual(["0ms", "60ms", "120ms", "180ms", "240ms", "300ms", "300ms"])
+    expect(delays()).toEqual(["0ms", "60ms", "120ms", "180ms", "240ms"])
     advance(9000)
     expect(root()).toHaveAttribute("data-demo-state", "ended")
     advance(8000)
     expect(root()).toHaveAttribute("data-cycle", "1")
     // `demoStagger(1, i)`: on a replay nothing re-staggers from nothing, so every value changes where it is.
-    expect(delays()).toEqual(Array.from({ length: 7 }, () => "0ms"))
+    expect(delays()).toEqual(Array.from({ length: 5 }, () => "0ms"))
   })
 
   it("takes no row away when the play comes round again", () => {
@@ -228,13 +228,13 @@ describe("PrivacyScene: the screen holds its shape", () => {
     expect(root()).toHaveAttribute("data-cycle", "1")
     expect(root()).toHaveAttribute("data-beat", "rules")
     expect(root().querySelectorAll("*").length).toBe(ended)
-    expect(logRows()).toHaveLength(3)
-    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
+    expect(logRows()).toHaveLength(2)
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 5")
   })
 
   it("holds every record value to two lines and the title to one, so the card never moves", () => {
     renderWithSite(<PrivacyScene />)
-    for (const field of RECORD_FIELDS.slice(0, 7)) {
+    for (const field of RECORD_FIELDS.slice(0, 5)) {
       expect(valueOf(field.l)).toHaveClass("line-clamp-2", "min-h-[41px]")
     }
     expect(within(record()).getByText("Company record")).toHaveClass("line-clamp-1", "min-h-[19px]")
@@ -251,8 +251,8 @@ describe("PrivacyScene: the still", () => {
     expect(root()).toHaveAttribute("data-beat", "expired")
     expect(drivers.pendingFrames()).toBe(0)
     expect(within(record()).getByText("Viewing as Cadence Facility Partners")).toBeInTheDocument()
-    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
-    expect(logRows()).toHaveLength(3)
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 5 of 5")
+    expect(logRows()).toHaveLength(2)
     expect(valueOf("Largest customer")).toHaveTextContent("Carolina Foods Group, 14%, contract attached")
     const film = screen.getByTestId("privacy-room-frame").querySelector("video")!
     expect(film).toHaveAttribute("poster", "/media/privacy-room-poster.jpg")
@@ -276,7 +276,7 @@ describe("PrivacyScene: the buyer preview", () => {
     expect(root()).toHaveAttribute("data-viewer", "competitor")
     expect(within(record()).getByText("Viewing as Northgate HVAC")).toBeInTheDocument()
     expect(valueOf("Company name")).toHaveTextContent("No sale record")
-    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 5")
     expect(logRows()[0]).toHaveTextContent("Heirloom · Revoked Northgate HVAC access · Matched an owner exclusion")
     expect(logRows()[0]).toHaveClass(BAND)
     expect(buyer("competitor")).toHaveAttribute("aria-pressed", "true")
@@ -303,9 +303,7 @@ describe("PrivacyScene: the buyer preview", () => {
     }
     fireEvent.pointerOver(buyer("pe"))
     expect(root()).toHaveAttribute("data-level", "4")
-    expect(valueOf("Employees and payroll")).toHaveTextContent(
-      "Full payroll register with names restricted until required"
-    )
+    expect(valueOf("Adjusted earnings")).toHaveTextContent("$845K, with full supporting records")
     // L5 is the closing parties' own level: the furthest buyer never reads the closing addresses.
     expect(valueOf("Location")).toHaveTextContent("Greenville, South Carolina, two facilities")
     expect(within(record()).queryByText("Full addresses for closing parties")).toBeNull()
@@ -316,13 +314,13 @@ describe("PrivacyScene: the buyer preview", () => {
     play()
     act(() => buyer("individual").focus())
     expect(root()).toHaveAttribute("data-preview", "individual")
-    expect(valueOf("Employees and payroll")).toHaveTextContent("Role-level employee list, no names")
+    expect(valueOf("Adjusted earnings")).toHaveTextContent("$845K, with the adjustment schedule")
     act(() => buyer("individual").blur())
     expect(root()).toHaveAttribute("data-preview", "")
 
     fireEvent.keyDown(root(), { key: "ArrowRight" })
     expect(root()).toHaveAttribute("data-beat", "overview")
-    expect(announced()).toBe("Level 1: an anonymous overview, two of seven fields")
+    expect(announced()).toBe("Level 1: an anonymous overview, two of five fields")
     fireEvent.keyDown(root(), { key: "ArrowLeft" })
     expect(root()).toHaveAttribute("data-beat", "rules")
     fireEvent.keyDown(root(), { key: "End" })
@@ -367,7 +365,7 @@ describe("PrivacyScene: the phone", () => {
     advance(9000)
     expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(1)
     expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
-    expect(levelLine()).toHaveTextContent("L4 · Final diligence · 6 of 7")
+    expect(levelLine()).toHaveTextContent("L4 · Final diligence · 5 of 5")
     expect(within(record()).getByText("Viewing as Cadence Facility Partners")).toHaveClass("line-clamp-2")
     expect(logRows()).toHaveLength(1)
     expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
@@ -377,28 +375,29 @@ describe("PrivacyScene: the phone", () => {
     setWidth(TAB_BREAKPOINT)
     expect(TAB_BREAKPOINT).toBe(736)
     const { rerender } = renderWithSite(<PrivacyScene />)
-    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
-    expect(logRows()).toHaveLength(3)
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(5)
+    expect(logRows()).toHaveLength(2)
     // The measure only re-renders on a width that actually changed, so the rows stay as they are.
     act(() => {
       window.dispatchEvent(new Event("resize"))
     })
-    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
-    expect(logRows()).toHaveLength(3)
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(5)
+    expect(logRows()).toHaveLength(2)
     rerender(<PrivacyScene />)
-    expect(within(record()).getByText("Owner")).toBeInTheDocument()
+    expect(within(record()).getByText("Largest customer")).toBeInTheDocument()
   })
 
-  it("goes back to the seven-row record when the window widens", () => {
+  it("goes back to the five-row record when the window widens", () => {
     setWidth(390)
     renderWithSite(<PrivacyScene />)
     expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(4)
+    expect(within(record()).queryByText("Largest customer")).toBeNull()
     setWidth(1200)
     act(() => {
       window.dispatchEvent(new Event("resize"))
     })
-    expect(within(record()).getByText("Owner")).toBeInTheDocument()
-    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
-    expect(logRows()).toHaveLength(3)
+    expect(within(record()).getByText("Largest customer")).toBeInTheDocument()
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(5)
+    expect(logRows()).toHaveLength(2)
   })
 })

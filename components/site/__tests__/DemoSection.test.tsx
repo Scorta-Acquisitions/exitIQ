@@ -18,9 +18,9 @@ const WORDS: Record<string, DemoWords & { link: { href: string; label: string } 
     link: { href: "/confidentiality", label: "The six levels" },
   },
   decisions: {
-    heading: "The whole sale asks four decisions of you.",
+    heading: "You make four decisions. We run the rest.",
     sentence:
-      "Heirloom handles the preparation, buyer work, negotiation, and closing while you keep running the company.",
+      "Eight stages take a company from preparation to closing. Heirloom carries all eight, and brings you the four decisions only an owner can make.",
     link: { href: "/how-it-works#stages", label: "The eight stages" },
   },
 }

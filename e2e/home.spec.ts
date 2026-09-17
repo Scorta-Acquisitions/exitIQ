@@ -479,7 +479,7 @@ test.describe("home films and instrument", () => {
     await expectFilmHeld(page.getByTestId("fin-frame-film").locator("video"), "/media/ledger-glass-poster.jpg")
     await page.getByTestId("privacy-scene").scrollIntoViewIfNeeded()
     await expect(page.getByTestId("priv-demo")).toHaveAttribute("data-demo-state", "still")
-    await expect(page.getByTestId("priv-level")).toHaveText("Level 4 · Final diligence · Visible 6 of 7")
+    await expect(page.getByTestId("priv-level")).toHaveText("Level 4 · Final diligence · Visible 5 of 5")
     await expect(page.getByTestId("priv-level")).toHaveCSS("animation-name", "none")
     await expectFilmHeld(
       page.getByTestId("privacy-scene").getByTestId("ambient-video"),

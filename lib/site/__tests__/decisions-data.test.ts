@@ -72,9 +72,9 @@ const COPY_LINES = [
 
 describe("decisions data: the words beside the screen", () => {
   it("keeps the section to one heading, one sentence and one link", () => {
-    expect(SECTION_WORDS.heading).toBe("The whole sale asks four decisions of you.")
+    expect(SECTION_WORDS.heading).toBe("You make four decisions. We run the rest.")
     expect(SECTION_WORDS.sentence).toBe(
-      "Heirloom handles the preparation, buyer work, negotiation, and closing while you keep running the company."
+      "Eight stages take a company from preparation to closing. Heirloom carries all eight, and brings you the four decisions only an owner can make."
     )
     expect(SECTION_LINK).toEqual({ href: ANCHORS.saleStages, label: "The eight stages" })
     expect(ANCHORS.saleStages).toBe(`${ROUTES.howItWorks}#stages`)

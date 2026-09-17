@@ -52,9 +52,9 @@ describe("the privacy demo's script", () => {
     expect(PRIVACY_SCRIPT.label).toBe("Who sees what, a worked example that plays itself")
     expect(PRIVACY_SCRIPT.beats.map((b) => b.say)).toEqual([
       "Before outreach: nothing public, and an excluded competitor is never contacted",
-      "Level 1: an anonymous overview, two of seven fields",
+      "Level 1: an anonymous overview, two of five fields",
       "Level 2: the company name, after an NDA",
-      "Level 3: contracts and a role-level list, after qualification",
+      "Level 3: the customer's contract and the adjustment schedule, after qualification",
       "Level 4: the finalist the owner selected sees the names",
       "Every view is recorded, and access expires",
     ])
@@ -73,8 +73,8 @@ describe("the privacy demo's script", () => {
 })
 
 describe("the record's levels", () => {
-  it("counts the open rows of the seven-field record at every level", () => {
-    expect([0, 1, 2, 3, 4, 5].map(visibleCount)).toEqual([0, 2, 4, 5, 6, 7])
+  it("counts the open rows of the five-field record at every level", () => {
+    expect([0, 1, 2, 3, 4, 5].map(visibleCount)).toEqual([0, 2, 3, 4, 5, 5])
     expect(visibleCount(6)).toBe(0)
     expect(visibleCount(-1)).toBe(0)
     expect(HOME_FIELD_OPEN_AT).toHaveLength(HOME_RECORD_FIELD_COUNT)
@@ -93,11 +93,11 @@ describe("the record's levels", () => {
 
   it("writes the line under the record from the level and the count", () => {
     expect([0, 1, 2, 3, 4].map(levelLine)).toEqual([
-      "Level 0 · Nothing public · Visible 0 of 7",
-      "Level 1 · Anonymous overview · Visible 2 of 7",
-      "Level 2 · NDA signed · Visible 4 of 7",
-      "Level 3 · Buyer qualified · Visible 5 of 7",
-      "Level 4 · Final diligence · Visible 6 of 7",
+      "Level 0 · Nothing public · Visible 0 of 5",
+      "Level 1 · Anonymous overview · Visible 2 of 5",
+      "Level 2 · NDA signed · Visible 3 of 5",
+      "Level 3 · Buyer qualified · Visible 4 of 5",
+      "Level 4 · Final diligence · Visible 5 of 5",
     ])
   })
 
@@ -107,14 +107,14 @@ describe("the record's levels", () => {
     expect(PRIVACY_CLOSING_LINE).toBe("L5 · Closing parties only · closing documents move outside the buyer log")
   })
 
-  it("shows seven rows from the tablet breakpoint, four on a phone and the name alone at 320", () => {
-    expect(privacyFieldCount(TAB_BREAKPOINT)).toBe(7)
+  it("shows five rows from the tablet breakpoint, four on a phone and the name alone at 320", () => {
+    expect(privacyFieldCount(TAB_BREAKPOINT)).toBe(5)
     expect(privacyFieldCount(TAB_BREAKPOINT - 1)).toBe(4)
     expect(privacyFieldCount(390)).toBe(4)
     expect(privacyFieldCount(NARROW_PHONE)).toBe(4)
     expect(privacyFieldCount(NARROW_PHONE - 1)).toBe(1)
     expect(privacyFieldCount(320)).toBe(1)
-    expect(privacyLogLimit(TAB_BREAKPOINT)).toBe(3)
+    expect(privacyLogLimit(TAB_BREAKPOINT)).toBe(2)
     expect(privacyLogLimit(TAB_BREAKPOINT - 1)).toBe(1)
   })
 
@@ -129,14 +129,14 @@ describe("the record's levels", () => {
 
   it("writes the phone's one-line reading of the level line", () => {
     expect([0, 1, 2, 3, 4].map(shortLevelLine)).toEqual([
-      "L0 · Nothing public · 0 of 7",
-      "L1 · Anonymous overview · 2 of 7",
-      "L2 · NDA signed · 4 of 7",
-      "L3 · Buyer qualified · 5 of 7",
-      "L4 · Final diligence · 6 of 7",
+      "L0 · Nothing public · 0 of 5",
+      "L1 · Anonymous overview · 2 of 5",
+      "L2 · NDA signed · 3 of 5",
+      "L3 · Buyer qualified · 4 of 5",
+      "L4 · Final diligence · 5 of 5",
     ])
-    expect(levelLineFor(4, TAB_BREAKPOINT)).toBe("Level 4 · Final diligence · Visible 6 of 7")
-    expect(levelLineFor(4, TAB_BREAKPOINT - 1)).toBe("L4 · Final diligence · 6 of 7")
+    expect(levelLineFor(4, TAB_BREAKPOINT)).toBe("Level 4 · Final diligence · Visible 5 of 5")
+    expect(levelLineFor(4, TAB_BREAKPOINT - 1)).toBe("L4 · Final diligence · 5 of 5")
     for (const level of [0, 1, 2, 3, 4]) expect(shortLevelLine(level).length).toBeLessThan(levelLine(level).length)
   })
 })
@@ -178,7 +178,7 @@ describe("recordAt", () => {
     expect(view.level).toBe(0)
     expect(view.viewer).toBe("none")
     expect(view.title).toBe("Company record")
-    expect(view.levelLine).toBe("Level 0 · Nothing public · Visible 0 of 7")
+    expect(view.levelLine).toBe("Level 0 · Nothing public · Visible 0 of 5")
     expect(view.visible).toBe(0)
     expect(RECORD_FIELDS[0]!.v[view.level]).toBe("No sale record")
     expect(view.rows.map((r) => r.caption)).toEqual([
@@ -214,7 +214,7 @@ describe("recordAt", () => {
     expect(view.level).toBe(2)
     expect(view.viewer).toBe("strategic")
     expect(view.title).toBe("Viewing as Meridian Trades Group")
-    expect(view.levelLine).toBe("Level 2 · NDA signed · Visible 4 of 7")
+    expect(view.levelLine).toBe("Level 2 · NDA signed · Visible 3 of 5")
     expect(RECORD_FIELDS[0]!.v[view.level]).toBe("Ridgeline Mechanical Services, Inc.")
     expect(RECORD_FIELDS[1]!.v[view.level]).toBe("Upstate South Carolina")
     expect(view.rows.map((r) => r.level)).toEqual([0, 2, 2, 2])
@@ -222,27 +222,27 @@ describe("recordAt", () => {
     expect(recordAt("selected").rows[1]!.caption).toBe("NDA signed · L2")
   })
 
-  it("opens the contracts and the role-level list to the qualified buyer", () => {
+  it("opens the adjustment schedule and the contracted customer to the qualified buyer", () => {
     const view = recordAt("qualified")
     expect(view.level).toBe(3)
     expect(view.viewer).toBe("individual")
     expect(view.title).toBe("Viewing as Bellhaven Search")
-    expect(view.visible).toBe(5)
+    expect(view.visible).toBe(4)
     expect(RECORD_FIELDS[4]!.v[view.level]).toBe("Regional grocery group, contracted through 2029")
-    expect(RECORD_FIELDS[5]!.v[view.level]).toBe("Role-level employee list, no names")
+    expect(RECORD_FIELDS[3]!.v[view.level]).toBe("$845K, with the adjustment schedule")
     expect(view.rows[2]!.caption).toBe("Buyer qualified · L3")
     expect(view.log).toEqual([2, 4, 5])
   })
 
-  it("names the customer and the payroll only for the finalist the owner selected", () => {
+  it("names the customer and the facilities only for the finalist the owner selected", () => {
     const view = recordAt("selected")
     expect(view.level).toBe(4)
     expect(view.viewer).toBe("pe")
     expect(view.title).toBe("Viewing as Cadence Facility Partners")
-    expect(view.levelLine).toBe("Level 4 · Final diligence · Visible 6 of 7")
+    expect(view.levelLine).toBe("Level 4 · Final diligence · Visible 5 of 5")
     expect(RECORD_FIELDS[1]!.v[view.level]).toBe("Greenville, South Carolina, two facilities")
     expect(RECORD_FIELDS[4]!.v[view.level]).toBe("Carolina Foods Group, 14%, contract attached")
-    expect(RECORD_FIELDS[5]!.v[view.level]).toBe("Full payroll register with names restricted until required")
+    expect(RECORD_FIELDS[3]!.v[view.level]).toBe("$845K, with full supporting records")
     expect(view.rows.map((r) => r.caption)).toEqual([
       "Matched an owner exclusion · never contacted",
       "NDA signed · L2",
@@ -276,7 +276,7 @@ describe("previewFor", () => {
     expect(view.viewer).toBe("competitor")
     expect(view.title).toBe("Viewing as Northgate HVAC")
     expect(view.visible).toBe(0)
-    expect(view.levelLine).toBe("Level 0 · Nothing public · Visible 0 of 7")
+    expect(view.levelLine).toBe("Level 0 · Nothing public · Visible 0 of 5")
     expect(view.log[0]).toBe(5)
     expect(view.banded).toBe(5)
     expect(RECORD_FIELDS[0]!.v[view.level]).toBe("No sale record")

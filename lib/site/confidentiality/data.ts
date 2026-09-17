@@ -356,17 +356,17 @@ export const STAND_INS: Record<StandInKey, StandIn> = {
 /** Where the record leaves the buyer log: the clause the closing level's log sentence and the buyer list's closing line both read. */
 export const CLOSING_LOG_CLAUSE = "Closing documents move outside the buyer log"
 
-/** The home record is the first seven fields of RECORD_FIELDS; phones show the first four rows of it. */
-export const HOME_RECORD_FIELD_COUNT = 7
+/** The home record is the first five fields of RECORD_FIELDS; phones show the first four rows of it. */
+export const HOME_RECORD_FIELD_COUNT = 5
 
 /**
- * The level at which each of the seven home rows first counts as visible, in RECORD_FIELDS order: a row opens when
+ * The level at which each of the five home rows first counts as visible, in RECORD_FIELDS order: a row opens when
  * it shows the fact it is for at the resolution the level allows. The broad region and the revenue range are the
- * overview's two disclosures (L1); the name and the owner come with the NDA (L2); the adjustment schedule with
- * qualification (L3); the customer's name for a finalist (L4); the employees' names in the full register (L5). So
- * the count climbs 0, 2, 4, 5, 6, 7 across the levels.
+ * overview's two disclosures (L1); the name comes with the NDA (L2); the adjustment schedule with qualification
+ * (L3); the customer's name for a finalist (L4). So the count climbs 0, 2, 3, 4, 5 across the levels the demo
+ * plays, and the record stands fully open to the finalist the owner selected.
  */
-export const HOME_FIELD_OPEN_AT: number[] = [2, 1, 1, 3, 4, 5, 2]
+export const HOME_FIELD_OPEN_AT: number[] = [2, 1, 1, 3, 4]
 
 export const FIGURE_LABELS = {
   visible: (n: number, of: number) => `Visible ${n} of ${of}`,

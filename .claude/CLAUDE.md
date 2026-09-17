@@ -32,7 +32,12 @@ app/
                              hold and the 240ms re-key are unchanged) and for the LAST DEPLOYED BUILD's words back
                              (e35fbbe) in place of "AI slop": "Financial preparation", "Who sees what" and "The whole
                              sale asks four decisions of you.", each with its own sentence verbatim and NO EYEBROW,
-                             so `DemoWords` is a heading and a sentence and nothing else.
+                             so `DemoWords` is a heading and a sentence and nothing else. On 2026-09-17 two cuts
+                             followed: the decisions section's words became "You make four decisions. We run the
+                             rest." over "Eight stages take a company from preparation to closing. Heirloom carries
+                             all eight, and brings you the four decisions only an owner can make." (four against the
+                             link "The eight stages" had read as a contradiction), and the privacy demo's home
+                             record dropped from seven rows to five.
   score/                     exitIQ — seven-question readiness run (ExitIqRun) + result panel
   offer-review/              Free Offer Review intake (OfferIntake; `?mode=forward|paste|verbal`)
   how-it-works/              StagesScene (8-stage scroll roadmap) + BusinessBrain reconciliation demo
@@ -233,11 +238,13 @@ components/site/
                pins: a `DemoSection` whose screen (`priv-demo`, `data-level|viewer|preview`) is a `DemoFrame` with
                `privacy/BuyerList` (the four stand-in buyers in reach order, 44px rows) beside the record column,
                where the room loop sits FRAMED at 60% with `object-right`, tablet up, under `CompanyRecord` (opt-in
-               `animated` + `banded`), the `priv-level` line "Level n · {stage} · Visible n of 7" and
+               `animated` + `banded`), the `priv-level` line "Level n · {stage} · Visible n of 5" and
                `privacy/AccessLogLines` (the latest two, re-keying 40ms apart). Six beats open the record a level at
                a time for a buyer who reached it; resting on a buyer row previews that buyer's own furthest level,
-               the competitor's being level 0 with its revocation leading the log. Seven fields from the tablet
-               breakpoint, four compact rows under it, `privacyFieldCount(innerWidth)` measured on mount and resize) ·
+               the competitor's being level 0 with its revocation leading the log. Five fields from the tablet
+               breakpoint (`RECORD_FIELDS.slice(0, 5)`: the payroll and owner rows were cut on 2026-09-17, with the
+               log's third desktop line, to bring the section's tile back beside its two siblings), four compact rows
+               under it, `privacyFieldCount(innerWidth)` measured on mount and resize) ·
                StagesScene (framed path film, tablet up; a 460vh tile whose panel pins with
                the one `scene-pin`)
   home/        TermsStrip + ObjectFilm (five framed 1:1 turntable films with `shadow-product`, decorative inside the
@@ -252,7 +259,7 @@ components/site/
                family-payroll line once it is settled previews the one alternative the data holds, $817,400 with the
                add-back left in costs) · OfferComparison (rank order by `offerScore`,
                FLIP travel on re-rank, chip hover previews the strongest fit, parallax on the envelopes) ·
-               SellerWorkload (the "The whole sale asks four decisions of you." DEMO: a `DemoSection` whose screen (`dec-demo`,
+               SellerWorkload (the "You make four decisions. We run the rest." DEMO: a `DemoSection` whose screen (`dec-demo`,
                `data-on-table|lit|preview`) is a `DemoFrame` over the status-board loop at 20%, one column of
                `decisions/StageStrip` (eight 2px rules, `{ lit, current }`; ticks and one "Stage n of 8 · {label}"
                line on phones) · `DecisionLine` (the decision the owner is making, or "Heirloom is working" between
@@ -330,8 +337,9 @@ lib/site/
                    access log, `PRIVACY_TITLE`) · demo.ts (`PRIVACY_SCRIPT`, six beats at 0 / 1800 / 3600 / 5400 / 7200 / 9000, still `expired`;
                    `recordAt(beat)` → `{ level, viewer, title, rows, log }` with values read only from
                    `RECORD_FIELDS[i].v[level]` and the count only from `HOME_FIELD_OPEN_AT`, `previewFor(key)` for a
-                   buyer row's own furthest level, `visibleCount`, `levelLine`, `logLine`, `privacyFieldCount` 7 or 4
-                   at the tablet breakpoint, `privacyLogLimit`)
+                   buyer row's own furthest level, `visibleCount`, `levelLine`, `logLine`, `privacyFieldCount` 5 or 4
+                   at the tablet breakpoint (`HOME_RECORD_FIELD_COUNT` 5, `HOME_FIELD_OPEN_AT` [2, 1, 1, 3, 4], so the
+                   count climbs 0 · 2 · 3 · 4 · 5 and the last beat reads "Visible 5 of 5"), `privacyLogLimit` 2 or 1)
   offers/ · fees/ · buyers/ · questions/ · content/stages.ts · content/speed.ts · format.ts   page data + pure
                    helpers, and every visitor-read string of the sections that render them: `OFFER_COPY` /
                    `letterTitle` in offers/data.ts with `rankFor` / `closingRisk` in offers/score.ts,

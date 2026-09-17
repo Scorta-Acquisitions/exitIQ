@@ -11,9 +11,9 @@ import { ANCHORS } from "@/lib/site/routes"
 
 /** The few words beside the screen: what the demo argues, in one heading and one sentence, with no eyebrow. */
 export const SECTION_WORDS: DemoWords = {
-  heading: "The whole sale asks four decisions of you.",
+  heading: "You make four decisions. We run the rest.",
   sentence:
-    "Heirloom handles the preparation, buyer work, negotiation, and closing while you keep running the company.",
+    "Eight stages take a company from preparation to closing. Heirloom carries all eight, and brings you the four decisions only an owner can make.",
 }
 
 /** The section's one link: the stage roadmap the strip across the screen is drawn from. */

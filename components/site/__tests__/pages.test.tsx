@@ -87,7 +87,7 @@ describe("Home page", () => {
       "Financial preparation",
       "Who sees what",
       "Compare offers",
-      "The whole sale asks four decisions of you.",
+      "You make four decisions. We run the rest.",
       "40%faster than a traditional sale.",
       "Employees, customers, and the company name change hands too.",
       "Questions",

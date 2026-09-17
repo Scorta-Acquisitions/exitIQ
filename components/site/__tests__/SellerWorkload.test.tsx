@@ -50,7 +50,7 @@ describe("<SellerWorkload /> words", () => {
   it("sets a few words beside the screen and one link to the stages, with no eyebrow", () => {
     render(<SellerWorkload />)
     const heading = screen.getByRole("heading", { level: 2 })
-    expect(heading).toHaveTextContent("The whole sale asks four decisions of you.")
+    expect(heading).toHaveTextContent("You make four decisions. We run the rest.")
     expect(heading).not.toHaveClass("mt-3")
     expect(heading.parentElement!.firstElementChild).toBe(heading)
     expect(screen.getByText(SECTION_WORDS.sentence)).toBeInTheDocument()
