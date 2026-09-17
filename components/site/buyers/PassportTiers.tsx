@@ -2,6 +2,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/site/ui/Button"
+import { Chip } from "@/components/site/ui/Chip"
+import { Card, Eyebrow, KeyValueRow } from "@/components/site/ui/primitives"
 import {
   DEFAULT_PASSPORT_TIER,
   isMutedPassportValue,
@@ -17,12 +20,18 @@ import { copyText } from "@/lib/site/mailto"
 import { CONTACT } from "@/lib/site/routes"
 
 const BUSY_MS = 320
-const pill = "hover-green-dark rounded-full border border-dhair px-[13px] py-[7px] font-mono text-[11px] text-d2"
+
+/** Hairline row shared by the Passport card and the "How Buyer Passport works" list; values sit beside the label. */
+const ROW = "border-line justify-start border-b last:border-b-0"
+/** Two-column record rows: the label keeps a fixed basis and the value takes the rest, as CompanyRecord does. */
+const ROW_LABEL = "flex-[0_1_150px]"
+const ROW_VALUE = "type-body flex-[2_1_190px] min-w-0"
 
 export function PassportTiers() {
   const [tier, setTier] = useState<PassportTierIndex>(DEFAULT_PASSPORT_TIER)
   const [busy, setBusy] = useState(false)
   const [shared, setShared] = useState(false)
+  const [shareError, setShareError] = useState(false)
   const timer = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
@@ -34,124 +43,119 @@ export function PassportTiers() {
   }
 
   return (
-    <div
-      className="border-dhair overflow-hidden rounded-[18px] border bg-[rgba(3,12,8,.5)]"
-      data-testid="passport-tiers"
-    >
-      <div className="border-dhair-2 border-b px-[18px] py-4">
-        <div className="text-d4 mb-2.5 font-mono text-[11.5px] tracking-[1px] uppercase">Verification levels</div>
-        <div role="group" aria-label="Choose a Buyer Passport verification level" className="flex flex-wrap gap-1.5">
-          {PASSPORT_TIERS.map((t, i) => {
-            const on = i === tier
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={on}
-                aria-label={`View ${t}`}
-                onClick={() => choose(i as PassportTierIndex)}
-                className={`ease-e1 min-w-[132px] flex-1 rounded-[9px] border px-3 py-[11px] text-center text-[13px] font-medium transition-all duration-200 ${
-                  on ? "border-filament/55 bg-filament/12 text-filament" : "border-dhair text-dfull/62"
-                }`}
-                data-testid={`passport-tier-${i}`}
-              >
-                {t}
-              </button>
-            )
-          })}
-          {busy ? (
-            <p aria-live="polite" className="text-d4 mt-2 w-full font-mono text-[10.5px]">
-              Loading the selected verification level...
-            </p>
-          ) : null}
+    <Card padded={false} className="overflow-hidden" data-testid="passport-tiers">
+      <div className="border-line-soft border-b px-6 py-4">
+        <Eyebrow>Verification levels</Eyebrow>
+        <div role="group" aria-label="Choose a Buyer Passport verification level" className="mt-3 flex flex-wrap gap-2">
+          {PASSPORT_TIERS.map((t, i) => (
+            <Chip
+              key={t}
+              selected={i === tier}
+              aria-label={`View ${t}`}
+              onClick={() => choose(i as PassportTierIndex)}
+              className="min-w-[132px] flex-1 justify-center text-center"
+              data-testid={`passport-tier-${i}`}
+            >
+              {t}
+            </Chip>
+          ))}
+          {/* Always mounted so the meter and panes below do not jump while a tier loads. */}
+          <p aria-live="polite" className="type-caption text-fg-3 min-h-5 w-full">
+            {busy ? "Loading the selected verification level..." : ""}
+          </p>
         </div>
-        <div aria-hidden="true" className="bg-dfull/8 mt-2.5 h-[2px] overflow-hidden rounded-full">
+        <div aria-hidden="true" className="bg-fg/15 rounded-pill mt-4 h-[3px] overflow-hidden">
           <div
-            className="bg-filament ease-e1 h-full shadow-[0_0_10px_rgba(76,226,126,.5)] transition-[width] duration-[550ms]"
+            className="bg-accent ease-e1 rounded-pill h-full transition-[width] duration-300"
             style={{ width: passportProgress(tier) }}
           />
         </div>
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,310px),1fr))]">
-        <div className="border-dhair-2 border-r px-[22px] py-6">
-          <div
-            className="text-signal mb-1.5 font-mono text-[11.5px] tracking-[1px] uppercase"
-            data-testid="passport-tier-name"
-          >
+
+      <div className="tab:grid-cols-2 grid grid-cols-1">
+        <div className="px-6 py-6">
+          <p className="type-display-md text-fg" data-testid="passport-tier-name">
             {PASSPORT_TIERS[tier]}
-          </div>
-          <p className="text-d2 mb-5 text-[15px] leading-[1.65]">{PASSPORT_TIER_DESCRIPTIONS[tier]}</p>
-          <div className="border-dhair-2 bg-dfull/[2.5%] overflow-hidden rounded-xl border">
-            <div className="border-dhair-2 flex items-center justify-between border-b px-4 py-[11px]">
-              <span className="text-d4 font-mono text-[11.5px] tracking-[1px] uppercase">
-                Buyer Passport card · details shared in this view
-              </span>
+          </p>
+          <p className="type-body text-fg-2 mt-3">{PASSPORT_TIER_DESCRIPTIONS[tier]}</p>
+
+          <Card padded={false} className="mt-6 overflow-hidden">
+            <div className="border-line-soft border-b px-5 py-3">
+              <Eyebrow as="span">Buyer Passport card · details shared in this view</Eyebrow>
             </div>
-            <div className="px-4 pt-1.5 pb-3.5">
-              {PASSPORT_ROWS.map((r, i) => {
+            <div className="px-5 pt-0.5 pb-1.5">
+              {PASSPORT_ROWS.map((r) => {
                 const value = r.v[tier]
                 return (
-                  <div
+                  <KeyValueRow
                     key={`${tier}-${r.l}`}
-                    className="border-dfull/5 flex flex-wrap gap-x-3.5 gap-y-1 border-b py-2.5"
+                    label={r.l}
+                    className={ROW}
+                    labelClassName={ROW_LABEL}
+                    valueClassName={`${ROW_VALUE} ${isMutedPassportValue(value) ? "text-fg-3" : "text-fg"}`}
                   >
-                    <span className="text-d4 flex-[0_1_168px] font-mono text-[11px] leading-[1.5]">{r.l}</span>
-                    <span
-                      className={`animate-row text-[14px] leading-[1.5] motion-reduce:animate-none ${
-                        isMutedPassportValue(value) ? "text-dfull/30" : "text-d1"
-                      }`}
-                      style={{ animationDelay: `${(i * 0.045).toFixed(3)}s` }}
-                    >
-                      {value}
-                    </span>
-                  </div>
+                    {value}
+                  </KeyValueRow>
                 )
               })}
             </div>
-          </div>
-          <div className="mt-3.5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={async () => {
-                await copyText(passportShareText(tier))
-                setShared(true)
-              }}
-              className={pill}
-            >
-              Share this Passport
-            </button>
-            <a href={`mailto:${CONTACT.buyers}?subject=Request%20updated%20verification`} className={pill}>
-              Request updated verification
-            </a>
-            <a href={`mailto:${CONTACT.buyers}?subject=Verify%20this%20Passport`} className={pill}>
-              Verify this Passport
-            </a>
-          </div>
-          {shared ? (
-            <p aria-live="polite" className="text-signal mt-2.5 font-mono text-[10.5px]">
-              A shareable Passport summary has been copied.
-            </p>
-          ) : null}
+          </Card>
         </div>
-        <div className="px-[22px] py-6">
-          <div className="text-d4 mb-3.5 font-mono text-[11.5px] tracking-[1px] uppercase">
-            How Buyer Passport works
-          </div>
-          <div className="flex flex-col">
-            {PASSPORT_HOW.map((h, i) => (
-              <div
+
+        <div className="border-line-soft tab:border-t-0 tab:border-l border-t px-6 py-6">
+          <Eyebrow>How Buyer Passport works</Eyebrow>
+          <div className="mt-2">
+            {PASSPORT_HOW.map((h) => (
+              <KeyValueRow
                 key={h.label}
-                className={`flex flex-wrap items-baseline gap-x-3.5 gap-y-0.5 py-2.5 ${i < PASSPORT_HOW.length - 1 ? "border-dhair-2 border-b" : ""}`}
+                label={h.label}
+                className={ROW}
+                labelClassName={ROW_LABEL}
+                valueClassName={`${ROW_VALUE} text-fg`}
               >
-                <span className="text-d4 flex-[0_0_130px] font-mono text-[11px] tracking-[.7px] uppercase">
-                  {h.label}
-                </span>
-                <span className="text-d1 flex-[1_1_200px] text-[14.5px] leading-[1.5]">{h.body}</span>
-              </div>
+                {h.body}
+              </KeyValueRow>
             ))}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* The card's single action row, in a footer so neither pane carries a trailing orphan. */}
+      <div className="border-line-soft flex flex-wrap items-center gap-2 border-t px-6 py-4">
+        <Button
+          variant="secondary"
+          size="compact"
+          onClick={async () => {
+            // The clipboard is the whole action here: a refused write resolves false (copyText never
+            // rejects), and the row says so instead of confirming a copy that never happened.
+            const copied = await copyText(passportShareText(tier))
+            setShared(copied)
+            setShareError(!copied)
+          }}
+        >
+          Share this Passport
+        </Button>
+        <Button
+          variant="secondary"
+          size="compact"
+          href={`mailto:${CONTACT.buyers}?subject=Request%20updated%20verification`}
+        >
+          Request updated verification
+        </Button>
+        <Button variant="secondary" size="compact" href={`mailto:${CONTACT.buyers}?subject=Verify%20this%20Passport`}>
+          Verify this Passport
+        </Button>
+        {shared ? (
+          <p aria-live="polite" className="type-caption text-accent">
+            A shareable Passport summary has been copied.
+          </p>
+        ) : null}
+        {shareError ? (
+          <p aria-live="polite" className="type-caption text-error">
+            We could not copy the summary. Email {CONTACT.buyers} directly.
+          </p>
+        ) : null}
+      </div>
+    </Card>
   )
 }

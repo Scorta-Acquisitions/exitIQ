@@ -32,7 +32,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      /* Headless Chromium ships without a GPU: the SwiftShader flags give it WebGL so the instrument field runs. */
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--ignore-gpu-blocklist", "--enable-unsafe-swiftshader"] },
+      },
     },
 
     {

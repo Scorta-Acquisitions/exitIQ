@@ -1,188 +1,404 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { BAND } from "@/components/site/demo/classes"
 import { PrivacyScene } from "@/components/site/scenes/PrivacyScene"
-import { PERMISSION_LEVELS, RECORD_FIELDS } from "@/lib/site/confidentiality/data"
-import { driveScene, installSceneDrivers, pinViewport, type SceneDrivers } from "./scene-test-utils"
+import { RECORD_FIELDS } from "@/lib/site/confidentiality/data"
+import { DEMO_IDLE_MS } from "@/lib/site/demo/clock"
+import { TAB_BREAKPOINT } from "@/lib/site/scroll"
+import { installSceneDrivers, restoreMatchMedia, type SceneDrivers, stubMatchMedia } from "./scene-test-utils"
+import { renderWithSite } from "./test-utils"
 
-const realMatchMedia = window.matchMedia
+const realInnerWidth = window.innerWidth
 
-function reducedMotion(matches: boolean) {
-  window.matchMedia = (query: string) =>
-    ({
-      matches,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }) as MediaQueryList
+function setWidth(value: number) {
+  Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value })
 }
 
-/** The seven record rows as [label, value] for the record currently on screen. */
-function recordRows() {
-  const record = screen.getByTestId("company-record")
-  return RECORD_FIELDS.slice(0, 7).map((f) => {
-    const label = within(record).getByText(f.l)
-    const value = label.nextElementSibling as HTMLElement
-    return [f.l, value.textContent] as const
-  })
+let now = 10_000
+let drivers: SceneDrivers
+
+const root = () => screen.getByTestId("priv-demo")
+const record = () => screen.getByTestId("company-record")
+const levelLine = () => screen.getByTestId("priv-level")
+const buyer = (key: string) => screen.getByTestId(`priv-buyer-${key}`)
+const caption = (key: string) => screen.getByTestId(`priv-buyer-${key}-caption`)
+const logRows = () => screen.getByTestId("priv-log").querySelectorAll("li")
+const announced = () => screen.getByTestId("priv-announce").textContent
+/** The record's value cell for a field, by the row's label. */
+const valueOf = (label: string) => within(record()).getByText(label).parentElement!.querySelector("span:last-child")!
+
+/** Put the demo on screen and take the loop's first reading, which costs the clock no time. */
+function play() {
+  act(() => drivers.intersect(root(), true))
+  act(() => drivers.flushFrames())
 }
 
-describe("<PrivacyScene />", () => {
-  let drivers: SceneDrivers
-  beforeEach(() => {
-    drivers = installSceneDrivers()
-    pinViewport(1000)
-    HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined)
-    HTMLMediaElement.prototype.pause = vi.fn()
-  })
-  afterEach(() => {
-    drivers.restore()
-    pinViewport(768)
-    window.matchMedia = realMatchMedia
+/** Let `ms` of wall clock pass and run the frame the loop has queued. */
+function advance(ms: number) {
+  now += ms
+  act(() => drivers.flushFrames())
+}
+
+beforeEach(() => {
+  drivers = installSceneDrivers()
+  now = 10_000
+  vi.spyOn(performance, "now").mockImplementation(() => now)
+  setWidth(1024)
+  window.history.replaceState({}, "", "/")
+})
+
+afterEach(() => {
+  drivers.restore()
+  vi.restoreAllMocks()
+  vi.useRealTimers()
+  restoreMatchMedia()
+  setWidth(realInnerWidth)
+  window.history.replaceState({}, "", "/")
+})
+
+describe("PrivacyScene: the words and the screen", () => {
+  it("sets the section's few words, its one link and the frame's header", () => {
+    renderWithSite(<PrivacyScene />)
+    const heading = screen.getByRole("heading", { level: 2 })
+    expect(heading).toHaveTextContent("Who sees what")
+    expect(heading).toHaveClass("type-display-lg", "text-fg")
+    expect(
+      screen.getByText(
+        "Buyers start with an anonymous overview. They learn your name after signing an NDA and see detailed records only after we qualify them."
+      )
+    ).toHaveClass("type-body", "text-fg-2")
+    const link = screen.getByRole("link", { name: "The six levels" })
+    expect(link).toHaveAttribute("href", "/confidentiality")
+    expect(screen.getByTestId("privacy-scene")).toHaveAttribute("data-tone", "dark")
+    expect(screen.getByText("Project Ridgeline · Company record")).toBeInTheDocument()
+    expect(screen.getByText("Worked example")).toBeInTheDocument()
   })
 
-  it("keeps the panel pinned with the sticky and top-[78px] classes on the scene root's direct child", () => {
-    render(<PrivacyScene />)
-    const panel = screen.getByTestId("privacy-scene").firstElementChild as HTMLElement
-    expect(panel).toHaveClass("sticky")
-    expect(panel).toHaveClass("top-[78px]")
+  it("names the demo as one keyboard-reachable group on its first beat", () => {
+    renderWithSite(<PrivacyScene />)
+    expect(root()).toHaveAttribute("role", "group")
+    expect(root()).toHaveAttribute("aria-label", "Who sees what, a worked example that plays itself")
+    expect(root()).toHaveAttribute("tabindex", "0")
+    expect(root()).toHaveAttribute("data-beat", "rules")
+    expect(root()).toHaveAttribute("data-demo-state", "playing")
+    expect(root()).toHaveAttribute("data-level", "0")
+    expect(root()).toHaveAttribute("data-viewer", "none")
+    expect(root()).toHaveAttribute("data-preview", "")
+    expect(announced()).toBe("")
   })
 
-  it("starts at level L1 'Anonymous overview' before any scrolling", () => {
-    render(<PrivacyScene />)
-    const level = screen.getByTestId("privacy-level")
-    expect(level).toHaveTextContent("L1")
-    expect(level).toHaveClass("text-glow-filament")
-    expect(level.nextElementSibling).toHaveTextContent("Anonymous overview")
-    expect(screen.getByText(PERMISSION_LEVELS[1]!.trig)).toBeInTheDocument()
+  it("opens with nothing public, the competitor already stopped and one advisor line in the log", () => {
+    renderWithSite(<PrivacyScene />)
+    expect(within(record()).getByText("Company record")).toBeInTheDocument()
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
+    expect(valueOf("Company name")).toHaveTextContent("No sale record")
+    expect(valueOf("Company name")).toHaveClass("bg-fg/10", "rounded-xs", "px-1.5")
+    expect(caption("competitor").textContent).toBe("Matched an owner exclusion · never contacted")
+    expect(buyer("competitor")).toHaveAttribute("data-state", "stopped")
+    expect(caption("pe").textContent).toBe("Not yet contacted")
+    expect(buyer("pe")).toHaveAttribute("data-state", "waiting")
+    expect(logRows()).toHaveLength(3)
+    expect(logRows()[0]).toHaveTextContent("Heirloom · Revoked Northgate HVAC access · Matched an owner exclusion")
+    expect(logRows()[1]).toHaveTextContent("No entry yet")
+    expect(logRows()[1]).toHaveAttribute("data-pending", "true")
+    expect(logRows()[2]).toHaveAttribute("data-pending", "true")
   })
 
-  it("shows the anonymous-overview record at L1: name and owner hidden, revenue as a range", () => {
-    render(<PrivacyScene />)
-    expect(recordRows()).toEqual([
-      ["Company name", "Hidden"],
-      ["Location", "Southeastern United States"],
-      ["Last 12 months revenue", "$3M to $5M"],
-      ["Adjusted earnings", "Not disclosed"],
-      ["Largest customer", "Not disclosed"],
-      ["Employees and payroll", "25 to 50 employees"],
-      ["Owner", "Hidden"],
-    ])
+  it("lists the four buyers in reach order as 44px toggles, under the closing-parties line", () => {
+    renderWithSite(<PrivacyScene />)
+    const keys = ["competitor", "strategic", "individual", "pe"]
+    const buttons = screen.getByTestId("priv-buyers").querySelectorAll("button")
+    expect(Array.from(buttons).map((b) => b.getAttribute("data-testid"))).toEqual(keys.map((k) => `priv-buyer-${k}`))
+    for (const key of keys) {
+      expect(buyer(key)).toHaveClass("min-h-[44px]")
+      expect(buyer(key)).toHaveAttribute("aria-pressed", "false")
+    }
+    expect(screen.getByTestId("priv-closing").textContent).toBe(
+      "L5 · Closing parties only · closing documents move outside the buyer log"
+    )
+  })
+})
+
+describe("PrivacyScene: the play", () => {
+  it("opens the record one level at a time and rests on the last beat", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    expect(root()).toHaveAttribute("data-beat", "rules")
+
+    advance(1800)
+    expect(root()).toHaveAttribute("data-beat", "overview")
+    expect(root()).toHaveAttribute("data-level", "1")
+    expect(root()).toHaveAttribute("data-viewer", "matching")
+    expect(within(record()).getByText("Viewing as a buyer who matches your rules")).toBeInTheDocument()
+    expect(levelLine()).toHaveTextContent("Level 1 · Anonymous overview · Visible 2 of 7")
+    expect(valueOf("Location")).toHaveTextContent("Southeastern United States")
+    expect(valueOf("Location")).not.toHaveClass("bg-fg/10")
+    expect(caption("pe").textContent).toBe("Anonymous overview · L1")
+
+    advance(1800)
+    expect(root()).toHaveAttribute("data-beat", "nda")
+    expect(root()).toHaveAttribute("data-viewer", "strategic")
+    expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
+    expect(levelLine()).toHaveTextContent("Level 2 · NDA signed · Visible 4 of 7")
+    expect(logRows()[0]).toHaveTextContent("K. Ortiz · Meridian Trades Group · Signed NDA · Wednesday, 9:03 AM")
+
+    advance(1800)
+    expect(root()).toHaveAttribute("data-beat", "qualified")
+    expect(valueOf("Largest customer")).toHaveTextContent("Regional grocery group, contracted through 2029")
+    expect(valueOf("Employees and payroll")).toHaveTextContent("Role-level employee list, no names")
+    expect(caption("individual").textContent).toBe("Buyer qualified · L3")
+
+    advance(1800)
+    expect(root()).toHaveAttribute("data-beat", "selected")
+    expect(root()).toHaveAttribute("data-level", "4")
+    expect(valueOf("Location")).toHaveTextContent("Greenville, South Carolina, two facilities")
+    expect(valueOf("Largest customer")).toHaveTextContent("Carolina Foods Group, 14%, contract attached")
+    expect(caption("strategic").textContent).toBe("NDA signed · L2")
+
+    advance(1800)
+    expect(root()).toHaveAttribute("data-beat", "expired")
+    expect(root()).toHaveAttribute("data-demo-state", "ended")
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
+    expect(logRows()).toHaveLength(3)
+    expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
   })
 
-  it("limits the home record to seven fields, leaving bank statements and closing documents off", () => {
-    render(<PrivacyScene />)
-    const record = screen.getByTestId("company-record")
-    expect(within(record).queryByText("Bank statements")).toBeNull()
-    expect(within(record).queryByText("Purchase agreement and funds flow")).toBeNull()
+  it("walks the band down the record's rows only once the play has ended", () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] })
+    renderWithSite(<PrivacyScene />)
+    play()
+    const banded = () => Array.from(record().querySelectorAll("div")).filter((d) => d.classList.contains(BAND))
+    advance(1800)
+    expect(banded()).toHaveLength(0)
+    advance(7200)
+    expect(root()).toHaveAttribute("data-demo-state", "ended")
+    // The idle beat starts watching only once the play has ended; the observer reports the section then.
+    act(() => drivers.intersect(root(), true))
+    expect(banded()).toHaveLength(1)
+    expect(banded()[0]).toHaveTextContent("Company name")
+    act(() => vi.advanceTimersByTime(DEMO_IDLE_MS))
+    expect(banded()).toHaveLength(1)
+    expect(banded()[0]).toHaveTextContent("Location")
+    act(() => vi.advanceTimersByTime(DEMO_IDLE_MS))
+    expect(banded()[0]).toHaveTextContent("Last 12 months revenue")
+    // The band changes no word: the record still reads the level the play ended on.
+    expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
+  })
+})
+
+describe("PrivacyScene: the screen holds its shape", () => {
+  it("keeps three log rows from the first beat and fills them as the history records a view", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    const pending = () => Array.from(logRows()).filter((li) => li.getAttribute("data-pending") === "true").length
+    expect(logRows()).toHaveLength(3)
+    expect(pending()).toBe(2)
+    advance(3600)
+    expect(root()).toHaveAttribute("data-beat", "nda")
+    expect(logRows()).toHaveLength(3)
+    expect(pending()).toBe(1)
+    advance(5400)
+    expect(logRows()).toHaveLength(3)
+    expect(pending()).toBe(0)
+    expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
   })
 
-  it("moves to L2 'NDA signed' at progress 0.25 and reveals the company identity", () => {
-    render(<PrivacyScene />)
-    driveScene(drivers, screen.getByTestId("privacy-scene"), 0.25)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L2")
-    expect(screen.getByTestId("privacy-level").nextElementSibling).toHaveTextContent("NDA signed")
-    expect(screen.getByText(PERMISSION_LEVELS[2]!.trig)).toBeInTheDocument()
-    expect(recordRows()).toEqual([
-      ["Company name", "Ridgeline Mechanical Services, Inc."],
-      ["Location", "Upstate South Carolina"],
-      ["Last 12 months revenue", "$4.24M"],
-      ["Adjusted earnings", "$845K, with a summary of adjustments"],
-      ["Largest customer", "14% of revenue"],
-      ["Employees and payroll", "31 employees"],
-      ["Owner", "D. Whitmore, owner since 2003"],
-    ])
+  it("staggers the record's values in order on the first play and changes them in place on the replay", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    const delays = () => RECORD_FIELDS.slice(0, 7).map((f) => (valueOf(f.l) as HTMLElement).style.animationDelay)
+    // `demoStagger(0, i)`: 60ms apart, capped at 300, the grammar the other demo rows follow.
+    expect(delays()).toEqual(["0ms", "60ms", "120ms", "180ms", "240ms", "300ms", "300ms"])
+    advance(9000)
+    expect(root()).toHaveAttribute("data-demo-state", "ended")
+    advance(8000)
+    expect(root()).toHaveAttribute("data-cycle", "1")
+    // `demoStagger(1, i)`: on a replay nothing re-staggers from nothing, so every value changes where it is.
+    expect(delays()).toEqual(Array.from({ length: 7 }, () => "0ms"))
   })
 
-  it("stays at L1 just below the first threshold and flips to L2 exactly at 0.2002", () => {
-    render(<PrivacyScene />)
-    const scene = screen.getByTestId("privacy-scene")
-    driveScene(drivers, scene, 0.2)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L1")
-    driveScene(drivers, scene, 0.201)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L2")
+  it("takes no row away when the play comes round again", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    advance(9000)
+    expect(root()).toHaveAttribute("data-demo-state", "ended")
+    const ended = root().querySelectorAll("*").length
+    advance(8000)
+    expect(root()).toHaveAttribute("data-cycle", "1")
+    expect(root()).toHaveAttribute("data-beat", "rules")
+    expect(root().querySelectorAll("*").length).toBe(ended)
+    expect(logRows()).toHaveLength(3)
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
   })
 
-  it("moves to L3 'Buyer qualified' at progress 0.5 with the qualified-buyer record", () => {
-    render(<PrivacyScene />)
-    driveScene(drivers, screen.getByTestId("privacy-scene"), 0.5)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L3")
-    expect(screen.getByTestId("privacy-level").nextElementSibling).toHaveTextContent("Buyer qualified")
-    expect(recordRows()).toEqual([
-      ["Company name", "Ridgeline Mechanical Services, Inc."],
-      ["Location", "Greenville-Spartanburg area"],
-      ["Last 12 months revenue", "$4.24M"],
-      ["Adjusted earnings", "$845K, with the adjustment schedule"],
-      ["Largest customer", "Regional grocery group, contracted through 2029"],
-      ["Employees and payroll", "Role-level employee list, no names"],
-      ["Owner", "Transition plan attached"],
-    ])
+  it("holds every record value to two lines and the title to one, so the card never moves", () => {
+    renderWithSite(<PrivacyScene />)
+    for (const field of RECORD_FIELDS.slice(0, 7)) {
+      expect(valueOf(field.l)).toHaveClass("line-clamp-2", "min-h-[41px]")
+    }
+    expect(within(record()).getByText("Company record")).toHaveClass("line-clamp-1", "min-h-[19px]")
+    expect(levelLine()).toHaveClass("truncate")
+    expect(logRows()[0]).toHaveClass("truncate")
+  })
+})
+
+describe("PrivacyScene: the still", () => {
+  it("renders the finished record with no frame loop under reduced motion", () => {
+    stubMatchMedia(["prefers-reduced-motion"])
+    renderWithSite(<PrivacyScene />)
+    expect(root()).toHaveAttribute("data-demo-state", "still")
+    expect(root()).toHaveAttribute("data-beat", "expired")
+    expect(drivers.pendingFrames()).toBe(0)
+    expect(within(record()).getByText("Viewing as Cadence Facility Partners")).toBeInTheDocument()
+    expect(levelLine()).toHaveTextContent("Level 4 · Final diligence · Visible 6 of 7")
+    expect(logRows()).toHaveLength(3)
+    expect(valueOf("Largest customer")).toHaveTextContent("Carolina Foods Group, 14%, contract attached")
+    const film = screen.getByTestId("privacy-room-frame").querySelector("video")!
+    expect(film).toHaveAttribute("poster", "/media/privacy-room-poster.jpg")
+    expect(film).not.toHaveAttribute("src")
+    for (const el of [levelLine(), caption("pe"), logRows()[0]!]) {
+      expect(el).toHaveClass("motion-reduce:animate-none")
+    }
+  })
+})
+
+describe("PrivacyScene: the buyer preview", () => {
+  it("shows the excluded competitor nothing, with its own revocation at the top of the log", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    advance(7200)
+    expect(root()).toHaveAttribute("data-level", "4")
+
+    fireEvent.pointerOver(buyer("competitor"))
+    expect(root()).toHaveAttribute("data-preview", "competitor")
+    expect(root()).toHaveAttribute("data-level", "0")
+    expect(root()).toHaveAttribute("data-viewer", "competitor")
+    expect(within(record()).getByText("Viewing as Northgate HVAC")).toBeInTheDocument()
+    expect(valueOf("Company name")).toHaveTextContent("No sale record")
+    expect(levelLine()).toHaveTextContent("Level 0 · Nothing public · Visible 0 of 7")
+    expect(logRows()[0]).toHaveTextContent("Heirloom · Revoked Northgate HVAC access · Matched an owner exclusion")
+    expect(logRows()[0]).toHaveClass(BAND)
+    expect(buyer("competitor")).toHaveAttribute("aria-pressed", "true")
+    // The buyer list keeps the beat's own rows: the preview is of the record, not of the play.
+    expect(caption("pe").textContent).toBe("Final diligence · L4")
+
+    fireEvent.pointerOut(buyer("competitor"), { relatedTarget: document.body })
+    expect(root()).toHaveAttribute("data-preview", "")
+    expect(root()).toHaveAttribute("data-level", "4")
+    expect(valueOf("Largest customer")).toHaveTextContent("Carolina Foods Group, 14%, contract attached")
   })
 
-  it("reaches L5 'Closing parties only' at progress 0.99 and stays there at 1", () => {
-    render(<PrivacyScene />)
-    const scene = screen.getByTestId("privacy-scene")
-    driveScene(drivers, scene, 0.99)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L5")
-    expect(screen.getByTestId("privacy-level").nextElementSibling).toHaveTextContent("Closing parties only")
-    expect(recordRows()).toEqual([
-      ["Company name", "Ridgeline Mechanical Services, Inc."],
-      ["Location", "Full addresses for closing parties"],
-      ["Last 12 months revenue", "$4.24M"],
-      ["Adjusted earnings", "$845K, final agreed presentation"],
-      ["Largest customer", "Required consent obtained"],
-      ["Employees and payroll", "Full register and transfer schedule"],
-      ["Owner", "Executed transition agreement"],
-    ])
-    driveScene(drivers, scene, 1)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L5")
+  it("stops each buyer at the level it reached, and never at the closing parties", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    for (const [key, level] of [
+      ["strategic", "2"],
+      ["individual", "3"],
+      ["pe", "4"],
+    ] as const) {
+      fireEvent.pointerOver(buyer(key))
+      expect(root()).toHaveAttribute("data-level", level)
+      fireEvent.pointerOut(buyer(key), { relatedTarget: document.body })
+    }
+    fireEvent.pointerOver(buyer("pe"))
+    expect(root()).toHaveAttribute("data-level", "4")
+    expect(valueOf("Employees and payroll")).toHaveTextContent(
+      "Full payroll register with names restricted until required"
+    )
+    // L5 is the closing parties' own level: the furthest buyer never reads the closing addresses.
+    expect(valueOf("Location")).toHaveTextContent("Greenville, South Carolina, two facilities")
+    expect(within(record()).queryByText("Full addresses for closing parties")).toBeNull()
   })
 
-  it("highlights only the current stage chip", () => {
-    render(<PrivacyScene />)
-    driveScene(drivers, screen.getByTestId("privacy-scene"), 0.5)
-    const chips = [
-      "Anonymous overview",
-      "NDA signed",
-      "Buyer qualified",
-      "Final diligence",
-      "Closing parties only",
-    ].map((name) => screen.getAllByText(name).find((el) => el.classList.contains("rounded-full")) as HTMLElement)
-    expect(chips.map((c) => c.classList.contains("text-filament"))).toEqual([false, false, true, false, false])
+  it("previews from the keyboard as well, and speaks each step once", () => {
+    renderWithSite(<PrivacyScene />)
+    play()
+    act(() => buyer("individual").focus())
+    expect(root()).toHaveAttribute("data-preview", "individual")
+    expect(valueOf("Employees and payroll")).toHaveTextContent("Role-level employee list, no names")
+    act(() => buyer("individual").blur())
+    expect(root()).toHaveAttribute("data-preview", "")
+
+    fireEvent.keyDown(root(), { key: "ArrowRight" })
+    expect(root()).toHaveAttribute("data-beat", "overview")
+    expect(announced()).toBe("Level 1: an anonymous overview, two of seven fields")
+    fireEvent.keyDown(root(), { key: "ArrowLeft" })
+    expect(root()).toHaveAttribute("data-beat", "rules")
+    fireEvent.keyDown(root(), { key: "End" })
+    expect(root()).toHaveAttribute("data-beat", "expired")
+    fireEvent.keyDown(root(), { key: "Home" })
+    expect(root()).toHaveAttribute("data-beat", "rules")
   })
 
-  it("writes the veil opacity from veilOpacity(p)", () => {
-    render(<PrivacyScene />)
-    const scene = screen.getByTestId("privacy-scene")
-    const veil = screen.getByTestId("ambient-video").nextElementSibling as HTMLElement
-    expect(veil).toHaveClass("opacity-0")
-    driveScene(drivers, scene, 0.5)
-    expect(veil.style.opacity).toBe("0.11")
+  it("turns the preview into a toggling tap where the pointer cannot hover", () => {
+    stubMatchMedia(["hover: none"])
+    renderWithSite(<PrivacyScene />)
+    play()
+    fireEvent.pointerOver(buyer("pe"))
+    expect(root()).toHaveAttribute("data-preview", "")
+    fireEvent.click(buyer("pe"))
+    expect(root()).toHaveAttribute("data-preview", "pe")
+    expect(root()).toHaveAttribute("data-level", "4")
+    fireEvent.click(buyer("pe"))
+    expect(root()).toHaveAttribute("data-preview", "")
+    expect(root()).toHaveAttribute("data-level", "0")
+  })
+})
+
+describe("PrivacyScene: the phone", () => {
+  it("shows four compact record rows and one log line, and keeps the film off", () => {
+    setWidth(390)
+    renderWithSite(<PrivacyScene />)
+    play()
+    advance(9000)
+    const labels = Array.from(record().querySelectorAll("span.type-fine-print")).map((s) => s.textContent)
+    expect(labels).toEqual(["Company name", "Location", "Last 12 months revenue", "Adjusted earnings"])
+    expect(valueOf("Location")).toHaveClass("type-caption")
+    expect(logRows()).toHaveLength(1)
+    expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
+    expect(screen.getByTestId("privacy-room-frame")).toHaveClass("hidden", "tab:block")
   })
 
-  it("links to the confidentiality page", () => {
-    render(<PrivacyScene />)
-    expect(screen.getByRole("link", { name: "See who can access what" })).toHaveAttribute("href", "/confidentiality")
+  it("shows the company's name alone at 320, where the frame has one screen", () => {
+    setWidth(320)
+    renderWithSite(<PrivacyScene />)
+    play()
+    advance(9000)
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(1)
+    expect(valueOf("Company name")).toHaveTextContent("Ridgeline Mechanical Services, Inc.")
+    expect(levelLine()).toHaveTextContent("L4 · Final diligence · 6 of 7")
+    expect(within(record()).getByText("Viewing as Cadence Facility Partners")).toHaveClass("line-clamp-2")
+    expect(logRows()).toHaveLength(1)
+    expect(logRows()[0]).toHaveTextContent("Heirloom · R. Sandoval access expired after 30 days")
   })
 
-  it("renders and scrolls normally when the visitor prefers reduced motion", () => {
-    reducedMotion(true)
-    render(<PrivacyScene />)
-    const video = screen.getByTestId("ambient-video")
-    expect(video).not.toHaveAttribute("src")
-    driveScene(drivers, screen.getByTestId("privacy-scene"), 0.75)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L4")
-    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled()
+  it("keeps the wide record at exactly the tablet breakpoint, and a resize to the same width changes nothing", () => {
+    setWidth(TAB_BREAKPOINT)
+    expect(TAB_BREAKPOINT).toBe(736)
+    const { rerender } = renderWithSite(<PrivacyScene />)
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
+    expect(logRows()).toHaveLength(3)
+    // The measure only re-renders on a width that actually changed, so the rows stay as they are.
+    act(() => {
+      window.dispatchEvent(new Event("resize"))
+    })
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
+    expect(logRows()).toHaveLength(3)
+    rerender(<PrivacyScene />)
+    expect(within(record()).getByText("Owner")).toBeInTheDocument()
   })
 
-  it("keeps the level display working after the background video fails to load", () => {
-    render(<PrivacyScene />)
-    fireEvent.error(screen.getByTestId("ambient-video"))
-    expect(screen.queryByTestId("ambient-video")).toBeNull()
-    driveScene(drivers, screen.getByTestId("privacy-scene"), 0.5)
-    expect(screen.getByTestId("privacy-level")).toHaveTextContent("L3")
+  it("goes back to the seven-row record when the window widens", () => {
+    setWidth(390)
+    renderWithSite(<PrivacyScene />)
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(4)
+    setWidth(1200)
+    act(() => {
+      window.dispatchEvent(new Event("resize"))
+    })
+    expect(within(record()).getByText("Owner")).toBeInTheDocument()
+    expect(record().querySelectorAll("span.type-fine-print")).toHaveLength(7)
+    expect(logRows()).toHaveLength(3)
   })
 })

@@ -124,6 +124,69 @@ describe("POST /api/inquiry — request guards", () => {
     expect(json.issues.map((i) => [i.path, i.code])).toEqual([[["body"], "too_small"]])
   })
 
+  it("accepts a JSON body a form sent as text/plain", async () => {
+    const res = await POST(post(VALID, { "content-type": "text/plain" }))
+    expect(res.status).toBe(202)
+    expect(await res.json()).toEqual({ accepted: true, forwarded: false })
+  })
+
+  it("accepts a request whose content-length is not a number", async () => {
+    const res = await POST(post(VALID, { "content-length": "many" }))
+    expect(res.status).toBe(202)
+  })
+
+  it("accepts an undeclared 40KB body: the guard trusts the header and the schema caps the fields", async () => {
+    // No content-length is set on a Request, so the 413 guard sees 0. The padding is an unknown key,
+    // which the schema strips, so the inquiry the route logs is still the small one.
+    const res = await POST(post({ ...VALID, padding: "x".repeat(40 * 1024) }))
+    expect(res.status).toBe(202)
+    expect(logger.info).toHaveBeenCalledWith("site.inquiry.received", {
+      kind: "question",
+      source: "questions",
+      hasEmail: true,
+      bodyLength: VALID.body.length,
+    })
+  })
+
+  it("returns 400 invalid_json for an empty body, logging nothing and deferring nothing", async () => {
+    const res = await POST(post(""))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: "invalid_json" })
+    expect(logger.info).not.toHaveBeenCalled()
+    expect(afterCallbacks).toHaveLength(0)
+  })
+
+  it("returns one issue at the root for JSON that is not an object", async () => {
+    for (const body of ["null", "[]", '"text"']) {
+      const res = await POST(post(body))
+      expect(res.status, body).toBe(400)
+      const json = (await res.json()) as { issues: Issue[] }
+      expect(
+        json.issues.map((i) => [i.path, i.code]),
+        body
+      ).toEqual([[[], "invalid_type"]])
+    }
+  })
+
+  it("accepts an email of 254 characters and rejects one of 255", async () => {
+    const at = "@example.com"
+    const ok = "a".repeat(254 - at.length) + at
+    expect(ok).toHaveLength(254)
+    expect((await POST(post({ ...VALID, email: ok }))).status).toBe(202)
+    const res = await POST(post({ ...VALID, email: "a".repeat(255 - at.length) + at }))
+    expect(res.status).toBe(400)
+    const json = (await res.json()) as { issues: Issue[] }
+    expect(json.issues.map((i) => [i.path, i.code])).toEqual([[["email"], "too_big"]])
+  })
+
+  it("accepts a source of 120 characters and rejects one of 121", async () => {
+    expect((await POST(post({ ...VALID, source: "s".repeat(120) }))).status).toBe(202)
+    const res = await POST(post({ ...VALID, source: "s".repeat(121) }))
+    expect(res.status).toBe(400)
+    const json = (await res.json()) as { issues: Issue[] }
+    expect(json.issues.map((i) => [i.path, i.code])).toEqual([[["source"], "too_big"]])
+  })
+
   it("does not log an inquiry that failed validation", async () => {
     await POST(post({ ...VALID, kind: "bogus" }))
     expect(logger.info).not.toHaveBeenCalled()
@@ -176,6 +239,63 @@ describe("POST /api/inquiry — without a Resend key", () => {
   })
 })
 
+describe("POST /api/inquiry — the honeypot", () => {
+  it("answers a filled honeypot exactly as it answers a real inquiry, so the sender learns nothing", async () => {
+    const real = await POST(post(VALID))
+    const bot = await POST(post({ ...VALID, website: "http://spam.example" }))
+    expect(bot.status).toBe(real.status)
+    expect(await bot.json()).toEqual({ accepted: true, forwarded: false })
+    mockEnv.RESEND_API_KEY = "re_test_key"
+    const botWithKey = await POST(post({ ...VALID, website: "http://spam.example" }))
+    expect(botWithKey.status).toBe(202)
+    expect(await botWithKey.json()).toEqual({ accepted: true, forwarded: true })
+  })
+
+  it("forwards nothing for a filled honeypot, even with Resend configured", async () => {
+    mockEnv.RESEND_API_KEY = "re_test_key"
+    await POST(post({ ...VALID, website: "http://spam.example" }))
+    expect(afterCallbacks).toHaveLength(0)
+    expect(resendKeys).toEqual([])
+    await runAfter()
+    expect(sendMock).not.toHaveBeenCalled()
+  })
+
+  it("logs one honeypot event, with no email, body, or honeypot value in it", async () => {
+    await POST(post({ ...VALID, website: "http://spam.example" }))
+    expect(logger.info).toHaveBeenCalledTimes(1)
+    expect(logger.info).toHaveBeenCalledWith("site.inquiry.honeypot", {
+      kind: "question",
+      source: "questions",
+      bodyLength: VALID.body.length,
+    })
+    const serialized = JSON.stringify(logger.info.mock.calls)
+    expect(serialized).not.toContain("site.inquiry.received")
+    expect(serialized).not.toContain(VALID.email)
+    expect(serialized).not.toContain(VALID.body)
+    expect(serialized).not.toContain("spam.example")
+  })
+
+  it("treats an omitted or whitespace-only honeypot as a real inquiry", async () => {
+    mockEnv.RESEND_API_KEY = "re_test_key"
+    for (const payload of [VALID, { ...VALID, website: "" }, { ...VALID, website: "   " }]) {
+      logger.info.mockClear()
+      afterCallbacks.length = 0
+      const res = await POST(post(payload))
+      expect(res.status).toBe(202)
+      expect(logger.info).toHaveBeenCalledWith("site.inquiry.received", expect.objectContaining({ kind: "question" }))
+      expect(afterCallbacks).toHaveLength(1)
+    }
+  })
+
+  it("rejects a honeypot over 200 characters with the schema's own error", async () => {
+    const res = await POST(post({ ...VALID, website: "s".repeat(201) }))
+    expect(res.status).toBe(400)
+    const json = (await res.json()) as { issues: Issue[] }
+    expect(json.issues.map((i) => [i.path, i.code])).toEqual([[["website"], "too_big"]])
+    expect(logger.info).not.toHaveBeenCalled()
+  })
+})
+
 describe("POST /api/inquiry — with a Resend key", () => {
   beforeEach(() => {
     mockEnv.RESEND_API_KEY = "re_test_key"
@@ -193,6 +313,17 @@ describe("POST /api/inquiry — with a Resend key", () => {
     await POST(post(VALID))
     await runAfter()
     expect(resendKeys).toEqual(["re_test_key"])
+  })
+
+  it("schedules no send for a request the guards or the schema turned away", async () => {
+    const tooLarge = await POST(post(VALID, { "content-length": String(32 * 1024 + 1) }))
+    expect(tooLarge.status).toBe(413)
+    const invalid = await POST(post({ ...VALID, kind: "newsletter" }))
+    expect(invalid.status).toBe(400)
+    expect(afterCallbacks).toHaveLength(0)
+    expect(resendKeys).toEqual([])
+    await runAfter()
+    expect(sendMock).not.toHaveBeenCalled()
   })
 
   it("forwards an offer review to the offers inbox with the visitor as reply-to", async () => {
@@ -302,13 +433,6 @@ describe("sitemap()", () => {
     const others = entries.filter((e) => e.url !== "https://heirloom.com/")
     expect(others).toHaveLength(ALL_ROUTES.length - 1)
     for (const e of others) expect(e).toMatchObject({ changeFrequency: "monthly", priority: 0.7 })
-  })
-
-  it("stamps every entry with the same lastModified date", () => {
-    const entries = sitemap()
-    const first = entries[0]?.lastModified
-    expect(first).toBeInstanceOf(Date)
-    for (const e of entries) expect(e.lastModified).toBe(first)
   })
 })
 

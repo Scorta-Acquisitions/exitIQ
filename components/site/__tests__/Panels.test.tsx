@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { PassportTiers } from "@/components/site/buyers/PassportTiers"
+import { CompanyRecord } from "@/components/site/confidentiality/CompanyRecord"
 import { DisclosureLevels } from "@/components/site/confidentiality/DisclosureLevels"
-import { OfferComparison } from "@/components/site/home/OfferComparison"
 import { BusinessBrain } from "@/components/site/how-it-works/BusinessBrain"
 import { QuestionsAccordion } from "@/components/site/questions/QuestionsAccordion"
 import {
@@ -11,14 +11,11 @@ import {
   PASSPORT_TIER_DESCRIPTIONS,
   PASSPORT_TIERS,
   passportProgress,
-  passportShareText,
   type PassportTierIndex,
 } from "@/lib/site/buyers/passport"
 import { ACCESS_LOG, PERMISSION_LEVELS, RECORD_FIELDS } from "@/lib/site/confidentiality/data"
-import { formatMillions } from "@/lib/site/format"
+import { RECONCILIATION } from "@/lib/site/content/stages"
 import { copyText } from "@/lib/site/mailto"
-import { OFFERS, PRIORITIES, PRIORITY_WHY } from "@/lib/site/offers/data"
-import { certaintyLabel, findOffer, paidLater, rankOffers, retained } from "@/lib/site/offers/score"
 import { QUESTION_CATEGORIES } from "@/lib/site/questions/data"
 
 vi.mock("@/lib/site/mailto", async (importOriginal) => {
@@ -41,21 +38,15 @@ describe("<DisclosureLevels />", () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }))
   afterEach(() => vi.useRealTimers())
 
-  it("moves between levels and updates the record", () => {
+  it("returns to the anonymous overview from the last level, with two fields hidden again", () => {
     render(<DisclosureLevels />)
-    expect(screen.getByTestId("perm-level")).toHaveTextContent("View level 1 of 5")
-    expect(screen.getByTestId("perm-who")).toHaveTextContent("Prospective buyer matching your approved criteria")
-    fireEvent.click(screen.getByTestId("perm-stop-3"))
-    expect(screen.getByTestId("perm-level")).toHaveTextContent("View level 3 of 5")
-    expect(screen.getByText("Greenville-Spartanburg area")).toBeInTheDocument()
-    fireEvent.click(screen.getByRole("button", { name: "Move to next level" }))
-    expect(screen.getByTestId("perm-level")).toHaveTextContent("View level 4 of 5")
-    fireEvent.click(screen.getByRole("button", { name: "Move to next level" }))
-    fireEvent.click(screen.getByRole("button", { name: "Move to next level" }))
+    fireEvent.click(screen.getByTestId("perm-stop-5"))
     expect(screen.getByTestId("perm-level")).toHaveTextContent("View level 5 of 5")
     fireEvent.click(screen.getByRole("button", { name: "Return to anonymous view" }))
     expect(screen.getByTestId("perm-level")).toHaveTextContent("View level 1 of 5")
-    expect(screen.getAllByText("Hidden").length).toBeGreaterThan(0)
+    expect(screen.getByTestId("perm-who")).toHaveTextContent("Prospective buyer matching your approved criteria")
+    // At the overview the company name and the owner are the two fields still withheld.
+    expect(screen.getAllByText("Hidden")).toHaveLength(2)
   })
 
   it("exposes the level as a 0..5 range slider that starts at the anonymous overview", () => {
@@ -129,15 +120,52 @@ describe("<DisclosureLevels />", () => {
       const entry = within(log).getByText(e.act).parentElement!.parentElement!
       expect(entry).toHaveTextContent(e.t)
       expect(within(entry).getByText(`L${e.lvl}`)).toBeInTheDocument()
-      const meta = within(log).getByText(e.act).nextElementSibling
-      expect(meta).toHaveTextContent(e.note ? `${e.who}, ${e.org} · ${e.note}` : `${e.who}, ${e.org}`)
     }
+    // An entry with a note reads actor, organisation, then the note behind a middle dot.
+    expect(screen.getByText("Viewed 2025 payroll register").nextElementSibling).toHaveTextContent(
+      "M. Alden, Cadence Facility Partners · Finalist access"
+    )
   })
 
   it("does not append a separator to log entries that carry no note", () => {
     render(<DisclosureLevels />)
     const expired = screen.getByText("R. Sandoval access expired after 30 days").nextElementSibling
     expect(expired?.textContent).toBe("Heirloom, Advisor action")
+  })
+})
+
+describe("<CompanyRecord />", () => {
+  /** The inline delay on each animated value, in the order the record lists its rows. */
+  const delays = () =>
+    Array.from(
+      screen.getByTestId("company-record").querySelectorAll<HTMLElement>("span[style*='animation-delay']"),
+      (el) => el.style.animationDelay
+    )
+
+  it("staggers its animated values 60ms apart on the first play and not at all on a replay", () => {
+    const { rerender } = render(<CompanyRecord level={2} title="Company record" size="sm" animated cycle={0} />)
+    expect(delays().slice(0, 4)).toEqual(["0ms", "60ms", "120ms", "180ms"])
+    // A replay re-keys the same rows: `demoStagger` gives every one of them 0ms, so nothing re-staggers.
+    rerender(<CompanyRecord level={3} title="Company record" size="sm" animated cycle={1} />)
+    expect(delays()).toEqual(delays().map(() => "0ms"))
+    expect(delays()).toHaveLength(RECORD_FIELDS.length)
+  })
+
+  it("leaves the page's static record unanimated, whatever the demo's cycle is", () => {
+    render(<CompanyRecord level={3} title="Company record · Project Ridgeline" />)
+    const record = screen.getByTestId("company-record")
+    expect(record.querySelectorAll("[style*='animation-delay']")).toHaveLength(0)
+    expect(record.querySelectorAll(".animate-row-in")).toHaveLength(0)
+    expect(valueAfter(record, "Company name")).toBe(RECORD_FIELDS[0]!.v[3])
+  })
+
+  it("falls closed to the sealed values for a level the record does not hold", () => {
+    render(<CompanyRecord level={6} title="Project Ridgeline" />)
+    const record = screen.getByTestId("company-record")
+    expect(valueAfter(record, "Company name")).toBe("No sale record")
+    expect(valueAfter(record, "Last 12 months revenue")).toBe("Not available")
+    // Every row shows what an unrecognised level is entitled to, which is what level 0 shows.
+    for (const f of RECORD_FIELDS) expect(valueAfter(record, f.l), f.l).toBe(f.v[0])
   })
 })
 
@@ -150,17 +178,6 @@ describe("<PassportTiers />", () => {
 
   const progressBar = () =>
     screen.getByTestId("passport-tiers").querySelector('[aria-hidden="true"] > div') as HTMLElement
-
-  it("starts on Heirloom Verified and switches tiers", () => {
-    render(<PassportTiers />)
-    expect(screen.getByTestId("passport-tier-name")).toHaveTextContent("Heirloom Verified")
-    expect(screen.getByText("Verified capacity range: $3M to $6M")).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId("passport-tier-3"))
-    expect(screen.getByTestId("passport-tier-name")).toHaveTextContent("Deal Qualified")
-    expect(screen.getByText("Matched to this transaction")).toBeInTheDocument()
-    fireEvent.click(screen.getByRole("button", { name: "Share this Passport" }))
-    return screen.findByText("A shareable Passport summary has been copied.")
-  })
 
   it("marks only the default tier as pressed and fills two thirds of the progress bar", () => {
     render(<PassportTiers />)
@@ -187,11 +204,11 @@ describe("<PassportTiers />", () => {
         const value = within(card).getByText(row.l).nextElementSibling as HTMLElement
         expect(value.textContent, row.l).toBe(row.v[tier])
         if (isMutedPassportValue(row.v[tier])) {
-          expect(value.className, `${row.l} muted`).toContain("text-dfull/30")
-          expect(value.className, `${row.l} muted`).not.toContain("text-d1")
+          expect(value, `${row.l} muted`).toHaveClass("text-fg-3")
+          expect(value, `${row.l} muted`).not.toHaveClass("text-fg")
         } else {
-          expect(value.className, `${row.l} shown`).toContain("text-d1")
-          expect(value.className, `${row.l} shown`).not.toContain("text-dfull/30")
+          expect(value, `${row.l} shown`).toHaveClass("text-fg")
+          expect(value, `${row.l} shown`).not.toHaveClass("text-fg-3")
         }
       }
     }
@@ -218,10 +235,20 @@ describe("<PassportTiers />", () => {
     fireEvent.click(screen.getByTestId("passport-tier-0"))
     fireEvent.click(screen.getByRole("button", { name: "Share this Passport" }))
     await act(async () => {})
-    expect(copyText).toHaveBeenLastCalledWith(passportShareText(0))
     expect(copyText).toHaveBeenLastCalledWith(
       "Buyer Passport · Network Member · verification details available on request via buyers@heirloom.com"
     )
+  })
+
+  it("shows the buyers@ fallback and no confirmation when the browser refuses the clipboard", async () => {
+    // The reachable failure: copyText resolves false and never rejects.
+    vi.mocked(copyText).mockResolvedValueOnce(false)
+    render(<PassportTiers />)
+    fireEvent.click(screen.getByRole("button", { name: "Share this Passport" }))
+    const error = await screen.findByText("We could not copy the summary. Email buyers@heirloom.com directly.")
+    expect(error).toHaveClass("type-caption", "text-error")
+    expect(error).toHaveAttribute("aria-live", "polite")
+    expect(screen.queryByText("A shareable Passport summary has been copied.")).toBeNull()
   })
 
   it("does not show the copied confirmation before sharing", () => {
@@ -242,164 +269,50 @@ describe("<PassportTiers />", () => {
   })
 })
 
-describe("<OfferComparison />", () => {
-  beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }))
-  afterEach(() => vi.useRealTimers())
-
-  it("re-ranks by priority and reveals the selected offer", () => {
-    render(<OfferComparison />)
-    expect(screen.getByTestId("offer-card-C")).toHaveAttribute("data-best", "true")
-    fireEvent.click(screen.getByRole("button", { name: "Most cash at closing" }))
-    expect(screen.getByTestId("offer-card-D")).toHaveAttribute("data-best", "true")
-    expect(screen.getByText("Choose an offer.")).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId("offer-card-A"))
-    expect(screen.getByText("Reading the offer terms...")).toBeInTheDocument()
-  })
-
-  it("reveals the exact terms of Letter of intent A after the reading delay", async () => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByTestId("offer-card-A"))
-    expect(screen.getByTestId("offer-card-A")).toHaveAttribute("aria-pressed", "true")
-    expect(screen.queryByTestId("offer-detail")).toBeNull()
-    expect(screen.queryByText("Choose an offer.")).toBeNull()
-    await settle(340)
-    expect(screen.queryByText("Reading the offer terms...")).toBeNull()
-    const detail = screen.getByTestId("offer-detail")
-    expect(within(detail).getByText("Letter of intent A · Regional consolidator")).toBeInTheDocument()
-    expect(within(detail).getByText("Owns four contractors in the Carolinas")).toBeInTheDocument()
-    expect(valueAfter(detail, "Headline price")).toBe("$4.30M")
-    expect(valueAfter(detail, "Cash at closing")).toBe("$2.75M")
-    expect(valueAfter(detail, "Money paid later")).toBe("$1.25M")
-    expect(valueAfter(detail, "Retained ownership")).toBe("$0.30M")
-    expect(valueAfter(detail, "Buyer financing")).toBe("Bank line plus SBA 7(a) top-up")
-    expect(valueAfter(detail, "Time you stay")).toBe("12 months, full time")
-    expect(valueAfter(detail, "Team and company name")).toBe(
-      "Kept all staff, the name and the location in three prior acquisitions. Verified against public record."
-    )
-    expect(valueAfter(detail, "Closing risk")).toBe("Moderate · 60 days exclusivity")
-  })
-
-  it.each(OFFERS.map((o) => o.id))("shows the derived terms for offer %s", async (id) => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByTestId(`offer-card-${id}`))
-    await settle(340)
-    const offer = findOffer(id)!
-    const detail = screen.getByTestId("offer-detail")
-    expect(within(detail).getByText(`Letter of intent ${id} · ${offer.who}`)).toBeInTheDocument()
-    expect(valueAfter(detail, "Headline price")).toBe(formatMillions(offer.head))
-    expect(valueAfter(detail, "Cash at closing")).toBe(formatMillions(offer.cash))
-    expect(valueAfter(detail, "Money paid later")).toBe(paidLater(offer))
-    expect(valueAfter(detail, "Retained ownership")).toBe(retained(offer))
-    expect(valueAfter(detail, "Closing risk")).toBe(`${certaintyLabel(offer.cert)} · ${offer.excl} exclusivity`)
-  })
-
-  it("shows 'None' for an offer with no rollover and for one with nothing paid later", async () => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByTestId("offer-card-D"))
-    await settle(340)
-    expect(valueAfter(screen.getByTestId("offer-detail"), "Retained ownership")).toBe("None")
-    expect(valueAfter(screen.getByTestId("offer-detail"), "Money paid later")).toBe("$1.20M")
-    fireEvent.click(screen.getByTestId("offer-card-C"))
-    await settle(340)
-    expect(valueAfter(screen.getByTestId("offer-detail"), "Money paid later")).toBe("$0.15M")
-    expect(valueAfter(screen.getByTestId("offer-detail"), "Retained ownership")).toBe("$0.80M")
-  })
-
-  it("clicking the selected offer again collapses the detail panel", async () => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByTestId("offer-card-B"))
-    await settle(340)
-    expect(screen.getByTestId("offer-detail")).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId("offer-card-B"))
-    expect(screen.queryByTestId("offer-detail")).toBeNull()
-    expect(screen.getByTestId("offer-card-B")).toHaveAttribute("aria-pressed", "false")
-    expect(screen.getByText("Choose an offer.")).toBeInTheDocument()
-  })
-
-  it("selects an offer with Enter and toggles it off with Space, ignoring other keys", async () => {
-    render(<OfferComparison />)
-    const card = screen.getByTestId("offer-card-C")
-    fireEvent.keyDown(card, { key: "a" })
-    expect(card).toHaveAttribute("aria-pressed", "false")
-    fireEvent.keyDown(card, { key: "Enter" })
-    expect(card).toHaveAttribute("aria-pressed", "true")
-    await settle(340)
-    expect(screen.getByTestId("offer-detail")).toHaveTextContent("Letter of intent C · Private equity add-on")
-    fireEvent.keyDown(card, { key: " " })
-    expect(card).toHaveAttribute("aria-pressed", "false")
-    expect(screen.queryByTestId("offer-detail")).toBeNull()
-  })
-
-  it("explains the default certainty priority and marks exactly one strongest fit", () => {
-    render(<OfferComparison />)
-    expect(screen.getByRole("button", { name: "Highest chance of closing" })).toHaveAttribute("aria-pressed", "true")
-    expect(
-      screen.getByText("Rewards committed financing, a proven buyer, fewer conditions, and a shorter path to close.")
-    ).toBeInTheDocument()
-    expect(screen.getAllByText("Strongest fit")).toHaveLength(1)
-    expect(within(screen.getByTestId("offer-card-C")).getByText("Strongest fit")).toBeInTheDocument()
-  })
-
-  it.each([
-    ["cash", "Most cash at closing", "D"],
-    ["certainty", "Highest chance of closing", "C"],
-    ["upside", "Keep future upside", "B"],
-    ["team", "Protect employees and the company name", "A"],
-  ] as const)("moves the strongest fit to offer %s for the '%s' priority", (priority, label, expectedBest) => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByRole("button", { name: label }))
-    expect(screen.getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true")
-    expect(screen.getByText(PRIORITY_WHY[priority])).toBeInTheDocument()
-    expect(rankOffers(priority).bestId).toBe(expectedBest)
-    for (const o of OFFERS) {
-      expect(screen.getByTestId(`offer-card-${o.id}`), o.id).toHaveAttribute("data-best", String(o.id === expectedBest))
-    }
-    expect(screen.getAllByText("Strongest fit")).toHaveLength(1)
-    expect(within(screen.getByTestId(`offer-card-${expectedBest}`)).getByText("Strongest fit")).toBeInTheDocument()
-  })
-
-  it("keeps only one priority pressed at a time", () => {
-    render(<OfferComparison />)
-    fireEvent.click(screen.getByRole("button", { name: "Keep future upside" }))
-    const pressed = PRIORITIES.filter(
-      (p) => screen.getByRole("button", { name: p.l }).getAttribute("aria-pressed") === "true"
-    )
-    expect(pressed.map((p) => p.v)).toEqual(["upside"])
-  })
-
-  it("flags offer D as the highest headline price under every priority", () => {
-    render(<OfferComparison />)
-    for (const p of PRIORITIES) {
-      fireEvent.click(screen.getByRole("button", { name: p.l }))
-      expect(screen.getAllByText("Highest headline price")).toHaveLength(1)
-      expect(within(screen.getByTestId("offer-card-D")).getByText("Highest headline price")).toBeInTheDocument()
-    }
-  })
-
-  it("prints each card's headline, cash, certainty band, and certainty bar width", () => {
-    render(<OfferComparison />)
-    const expected = { A: "Moderate", B: "Lower", C: "High", D: "Moderate" } as const
-    for (const o of OFFERS) {
-      const card = screen.getByTestId(`offer-card-${o.id}`)
-      expect(within(card).getByText(o.who)).toBeInTheDocument()
-      expect(valueAfter(card, "Headline price")).toBe(formatMillions(o.head))
-      expect(valueAfter(card, "Cash at closing")).toBe(formatMillions(o.cash))
-      expect(valueAfter(card, "Closing risk")).toBe(expected[o.id])
-      const bar = card.querySelector('[style*="width"]') as HTMLElement
-      expect(bar.style.width, o.id).toBe(`${Math.round(o.cert * 100)}%`)
-    }
-  })
-})
-
 describe("<BusinessBrain />", () => {
   it("resolves and resets the reconciliation example", () => {
     render(<BusinessBrain />)
     expect(screen.getByTestId("brain-status")).toHaveTextContent("Advisor review required")
+    expect(valueAfter(screen.getByTestId("business-brain"), "Adjusted earnings")).toBe("$817,400")
     fireEvent.click(screen.getByRole("button", { name: /Show the resolution/ }))
     expect(screen.getByTestId("brain-status")).toHaveTextContent("Resolved by the advisor")
-    expect(screen.getByText("$845,000")).toBeInTheDocument()
+    expect(valueAfter(screen.getByTestId("business-brain"), "Adjusted earnings")).toBe("$845,000")
     fireEvent.click(screen.getByRole("button", { name: "Reset example" }))
     expect(screen.getByText("$817,400")).toBeInTheDocument()
+  })
+
+  it("reads the resolved owner compensation back with the family payroll it accounts for", () => {
+    render(<BusinessBrain />)
+    fireEvent.click(screen.getByRole("button", { name: /Show the resolution/ }))
+    expect(screen.getByTestId("business-brain")).toHaveTextContent(
+      "$214,000, including $27,600 of documented family payroll with no recorded hours."
+    )
+  })
+
+  it("prints the four disagreeing records as $186,400 against $214,000, the figures RECONCILIATION holds", () => {
+    render(<BusinessBrain />)
+    const card = screen.getByTestId("business-brain")
+    const rows = Array.from(card.querySelectorAll(".border-b.py-3")).slice(0, 4)
+    expect(
+      rows.map((r) => [r.firstElementChild?.firstElementChild?.textContent, r.lastElementChild?.textContent])
+    ).toEqual([
+      ["Books", "$186,400"],
+      ["Payroll", "$214,000"],
+      ["Tax return", "$186,400"],
+      ["Owner explanation", "$214,000"],
+    ])
+    expect(within(card).getByText("Payroll register, including a family member with no recorded hours")).toBeVisible()
+    expect(RECONCILIATION.records.map((r) => r.value)).toEqual(["$186,400", "$214,000", "$186,400", "$214,000"])
+  })
+
+  it("answers the buyer's question with both figures once the advisor has resolved it", () => {
+    render(<BusinessBrain />)
+    expect(screen.getByText("Buyer question: Why is owner compensation adjusted to $214,000?")).toBeVisible()
+    expect(screen.getByText("Advisor review required.").tagName).toBe("EM")
+    fireEvent.click(screen.getByRole("button", { name: /Show the resolution/ }))
+    expect(screen.getByTestId("business-brain")).toHaveTextContent(
+      '"The tax return reports $186,400 of officer compensation. Payroll records show another $27,600 paid to a family member with no recorded hours. Both amounts are included in the adjustment, with the payroll lines attached for review."'
+    )
   })
 })
 

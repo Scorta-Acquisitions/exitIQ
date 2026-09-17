@@ -1,26 +1,29 @@
 import Link from "next/link"
 import type { ComponentPropsWithoutRef, ReactNode } from "react"
-import { twMerge } from "tailwind-merge"
+import { cn } from "@/lib/site/cn"
 
-/** Inline text link. `tone="dark"` for links sitting on a green panel. */
+/** The 44px hit area an action-row link needs; the text stays on its line box. */
+export const STANDALONE_LINK = "inline-flex min-h-11 items-center"
+
+/**
+ * Inline text link in the accent colour. The colour and the hover underline come from the global
+ * `.text-link` rule in styles/site.css and resolve per surface (deep green on light tiles, bright green
+ * on dark ones), so the link carries no tone of its own. `standalone` is for a link that stands in an
+ * action row or under a paragraph (not inside prose): it gives the link a 44px touch target.
+ */
 export function TextLink({
   href,
   children,
-  tone = "light",
   className,
+  standalone = false,
   ...rest
 }: {
   href: string
   children: ReactNode
-  tone?: "light" | "dark"
   className?: string
+  standalone?: boolean
 } & Omit<ComponentPropsWithoutRef<"a">, "href" | "className" | "children">) {
-  const classes = twMerge(
-    // Colour and hover come from the global link rule in styles/site.css; the tone only sets the ink.
-    "pb-px",
-    tone === "dark" ? "text-d1" : "text-ink",
-    className
-  )
+  const classes = cn("text-link", standalone && STANDALONE_LINK, className)
   if (href.startsWith("/") && !href.startsWith("//")) {
     return (
       <Link href={href} className={classes} {...rest}>

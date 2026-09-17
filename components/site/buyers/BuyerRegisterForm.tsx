@@ -3,7 +3,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/site/ui/Button"
+import { HoneypotField } from "@/components/site/ui/primitives"
 import {
+  BUYER_SENT_COPY,
   BUYER_TYPES,
   type BuyerRegistration,
   buyerRegistrationBody,
@@ -13,11 +15,10 @@ import { submitInquiry } from "@/lib/site/inquiry"
 import { copyText, mailtoHref, openMail } from "@/lib/site/mailto"
 import { CONTACT } from "@/lib/site/routes"
 
-const label = "mb-1.5 block font-mono text-[11.5px] uppercase tracking-[.9px] text-l4"
-const input =
-  "h-11 w-full rounded-[9px] border border-hair-2 bg-card px-[13px] text-[15px] text-ink placeholder:text-l4"
+const label = "type-caption-strong text-fg-2 mb-2 block"
+const input = "h-11 w-full rounded-pill border border-line bg-surface px-5 type-body text-fg placeholder:text-fg-3"
 const textarea =
-  "w-full resize-y rounded-[9px] border border-hair-2 bg-card px-[13px] py-[11px] text-[15px] text-ink placeholder:text-l4"
+  "w-full rounded-lg border border-line bg-surface px-5 py-3 type-body text-fg placeholder:text-fg-3 resize-y"
 
 type Key = keyof BuyerRegistration
 
@@ -27,6 +28,11 @@ export function BuyerRegisterForm() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /* A refused clipboard (copyText resolves false, it never throws) changes only what the confirmation
+     says about the text: the registration still goes. */
+  const [copyFailed, setCopyFailed] = useState(false)
+  /* The honeypot's value: empty for every visitor, so it is left out of the record they send. */
+  const [website, setWebsite] = useState("")
 
   const bind = (key: Key) => ({
     value: form[key],
@@ -42,8 +48,17 @@ export function BuyerRegisterForm() {
     setError(null)
     try {
       const body = buyerRegistrationBody(form)
-      await copyText(body)
-      void submitInquiry({ kind: "buyer_passport", body, email: form.email, source: "buyers" })
+      // A refused clipboard resolves false (copyText never rejects). The copy is a convenience; the mail
+      // draft and the logged inquiry are the delivery, so the send goes on and the confirmation drops its
+      // claim that the text was copied.
+      setCopyFailed(!(await copyText(body)))
+      void submitInquiry({
+        kind: "buyer_passport",
+        body,
+        email: form.email,
+        source: "buyers",
+        ...(website ? { website } : {}),
+      })
       setSending(false)
       setSent(true)
       openMail(mailtoHref(CONTACT.buyers, "Buyer Passport registration", body, 1600))
@@ -54,7 +69,8 @@ export function BuyerRegisterForm() {
   }
 
   return (
-    <form className="flex flex-col gap-3.5" onSubmit={submit} data-testid="buyer-register-form">
+    <form className="flex flex-col gap-5" onSubmit={submit} data-testid="buyer-register-form">
+      <HoneypotField value={website} onChange={setWebsite} />
       <label className="block">
         <span className={label}>Your name</span>
         <input type="text" className={input} required {...bind("name")} />
@@ -65,13 +81,13 @@ export function BuyerRegisterForm() {
       </label>
       <label className="block">
         <span className={label}>What kind of buyer are you?</span>
-        <select className={`${input} px-[11px]`} {...bind("buyerType")}>
+        <select className={input} {...bind("buyerType")}>
           {BUYER_TYPES.map((t) => (
             <option key={t}>{t}</option>
           ))}
         </select>
       </label>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(140px,45%)),1fr))] gap-3.5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-5">
         <label className="block">
           <span className={label}>Target transaction size</span>
           <input type="text" placeholder="For example, $2M to $8M" className={input} {...bind("targetSize")} />
@@ -110,36 +126,36 @@ export function BuyerRegisterForm() {
         <span className={label}>Email</span>
         <input type="email" className={input} required {...bind("email")} />
       </label>
-      <label className="text-l2 flex items-start gap-2.5 text-[13.5px] leading-[1.5]">
+      <label className="type-caption text-fg-2 flex min-h-11 items-center gap-3">
         <input
           type="checkbox"
-          className="mt-0.5"
+          className="accent-accent h-4 w-4 flex-none"
           checked={confirmed}
           onChange={(e) => setConfirmed(e.target.checked)}
           required
         />
         I confirm that this information is accurate and may be verified.
       </label>
-      <Button type="submit" size="xl" className="self-start" disabled={sending} data-testid="buyer-register-submit">
+      <Button type="submit" className="self-start" disabled={sending} data-testid="buyer-register-submit">
         Register my criteria
       </Button>
       {sending ? (
-        <p aria-live="polite" className="text-l3 font-mono text-[11.5px]">
+        <p aria-live="polite" className="type-caption text-fg-3">
           Preparing your registration...
         </p>
       ) : null}
       {error ? (
-        <p aria-live="polite" className="text-error text-[13px]" data-testid="buyer-register-error">
+        <p aria-live="polite" className="type-caption text-error" data-testid="buyer-register-error">
           We could not prepare the registration. Email {error} directly and we will help.
         </p>
       ) : null}
       {sent ? (
         <div aria-live="polite" data-testid="buyer-register-sent">
-          <p className="text-filament-ink text-[13px]">
-            Your email app opened with the registration filled in. Send it to begin. The text has also been copied.
+          <p className="type-caption text-accent">
+            {(copyFailed ? BUYER_SENT_COPY.notCopied : BUYER_SENT_COPY.copied).lead}
           </p>
-          <p className="text-l3 mt-1.5 font-mono text-[11.5px] leading-[1.6]">
-            If your email app did not open, paste the copied registration into a message to {CONTACT.buyers}.
+          <p className="type-caption text-fg-3 mt-1.5">
+            {(copyFailed ? BUYER_SENT_COPY.notCopied : BUYER_SENT_COPY.copied).line}
           </p>
         </div>
       ) : null}

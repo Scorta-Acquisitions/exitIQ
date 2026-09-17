@@ -15,27 +15,25 @@ const h1 = (page: Page) => page.getByRole("heading", { level: 1 })
 
 test.describe("header navigation", () => {
   for (const group of NAV_GROUPS) {
-    for (const link of group.links) {
-      test(`"${group.label}" › "${link.label}" navigates to ${link.href}`, async ({ page }) => {
+    test(`"${group.label}": the card opens under the pointer and every row of it navigates`, async ({ page }) => {
+      const nav = (p: Page) => p.getByRole("navigation", { name: "Primary navigation" })
+      for (const link of group.links) {
         await page.goto("/")
-        const nav = page.getByRole("navigation", { name: "Primary navigation" })
-        const groupButton = nav.getByRole("button", { name: group.label, exact: true })
-        await expect(groupButton).toHaveAttribute("aria-haspopup", "true")
-        const menuLink = nav.getByRole("link").filter({ has: page.getByText(link.label, { exact: true }) })
+        const groupButton = nav(page).getByRole("button", { name: group.label, exact: true })
+        const menuLink = nav(page)
+          .getByRole("link")
+          .filter({ has: page.getByText(link.label, { exact: true }) })
         await expect(menuLink).toBeHidden()
-
         await groupButton.hover()
         await expect(menuLink).toBeVisible()
         // The dropdown fades and slides in over 180ms; wait for it to settle before clicking.
         await expect(groupButton.locator("xpath=..").locator(".nav-dd-menu")).toHaveCSS("opacity", "1")
         await expect(menuLink).toHaveAttribute("href", link.href)
-        await expect(menuLink).toContainText(link.note)
         await menuLink.click()
-
         await expectPath(page, link.href)
         await expect(h1(page)).toHaveText(h1For(link.href))
-      })
-    }
+      }
+    })
   }
 
   test("the For buyers link opens the Buyer Passport page", async ({ page }) => {
@@ -61,13 +59,15 @@ test.describe("header navigation", () => {
     await expect(h1(page)).toHaveText(H1_BY_PATH["/how-it-works"])
   })
 
-  test("the wordmark returns home from every page", async ({ page }) => {
+  test("the brand lockup returns home from every page and reads Heirloom", async ({ page }) => {
     for (const path of ALL_ROUTES) {
       await page.goto(path)
       await expect(h1(page)).toHaveText(H1_BY_PATH[path])
       const wordmark = page.getByRole("banner").getByRole("link", { name: "Heirloom home" })
       await expect(wordmark).toHaveAttribute("href", "/")
-      await expect(wordmark).toHaveText("Heirloom")
+      // The visible word is aria-hidden; the name is the link's label and its sr-only text reads Heirloom.
+      await expect(wordmark).toHaveAccessibleName("Heirloom home")
+      await expect(wordmark.locator(".sr-only")).toHaveText("Heirloom")
       await wordmark.click()
       await expectPath(page, "/")
       await expect(h1(page)).toHaveText(H1_BY_PATH["/"])
@@ -76,9 +76,11 @@ test.describe("header navigation", () => {
 })
 
 test.describe("footer navigation", () => {
-  for (const group of FOOTER_GROUPS) {
-    for (const link of group.links) {
-      test(`"${group.label}" › "${link.label}" navigates to ${link.href}`, async ({ page }) => {
+  test("every footer link carries its route and navigates, the one hash link landing under the bar", async ({
+    page,
+  }) => {
+    for (const group of FOOTER_GROUPS) {
+      for (const link of group.links) {
         await page.goto("/")
         const footerLink = page
           .getByRole("navigation", { name: "Footer" })
@@ -91,9 +93,9 @@ test.describe("footer navigation", () => {
           await expectPath(page, link.href)
         }
         await expect(h1(page)).toHaveText(h1For(link.href))
-      })
+      }
     }
-  }
+  })
 
   test("the footer advisor button opens the dialog", async ({ page }) => {
     await page.goto("/why")
@@ -104,55 +106,6 @@ test.describe("footer navigation", () => {
 })
 
 test.describe("home shortcuts", () => {
-  const TERMS = [
-    { label: "Representation", text: "Sellers only.", href: "/who-we-are" },
-    { label: "Listing", text: "Never public.", href: "/confidentiality" },
-    { label: "Company fit", text: "Usually $1M or more in annual revenue.", href: "/questions" },
-    {
-      label: "Experience",
-      text: "Millions in enterprise value transacted through Heirloom.",
-      href: "/who-we-are",
-    },
-    { label: "Timing", text: "40% faster than a traditional sale.", href: "/how-it-works" },
-  ]
-
-  for (const term of TERMS) {
-    test(`the "${term.label}" term links to ${term.href}`, async ({ page }) => {
-      await page.goto("/")
-      const link = page
-        .getByRole("main")
-        .getByRole("link")
-        .filter({ has: page.getByText(term.label, { exact: true }) })
-        .filter({ hasText: term.text })
-      await expect(link).toHaveAttribute("href", term.href)
-      await link.click()
-      await expectPath(page, term.href)
-      await expect(h1(page)).toHaveText(h1For(term.href))
-    })
-  }
-
-  const CARDS = [
-    { title: "Review my offer", href: "/offer-review", eyebrow: "Offer in hand" },
-    { title: "Check sale readiness", href: "/score", eyebrow: "Still deciding" },
-    { title: "See how it works", href: "/how-it-works", eyebrow: "The process" },
-  ]
-
-  for (const card of CARDS) {
-    test(`the closing "${card.title}" card links to ${card.href}`, async ({ page }) => {
-      await page.goto("/")
-      const section = page
-        .locator("section")
-        .filter({ has: page.getByRole("heading", { name: "Choose a next step." }) })
-      await expect(section.getByRole("heading", { name: "Choose a next step." })).toBeVisible()
-      const link = section.getByRole("link").filter({ has: page.getByText(card.title, { exact: true }) })
-      await expect(link).toContainText(card.eyebrow)
-      await expect(link).toHaveAttribute("href", card.href)
-      await link.click()
-      await expectPath(page, card.href)
-      await expect(h1(page)).toHaveText(h1For(card.href))
-    })
-  }
-
   test("the closing advisor card opens the dialog", async ({ page }) => {
     await page.goto("/")
     const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "Choose a next step." }) })
@@ -173,14 +126,6 @@ test.describe("in-page anchors", () => {
       await expectAnchorTarget(page, `/questions${link.href}`)
     })
   }
-
-  test("questions: every category anchor is a heading with the category name", async ({ page }) => {
-    await page.goto("/questions")
-    for (const link of QUESTION_CATEGORY_LINKS) {
-      await expect(page.locator(link.href)).toHaveText(link.label)
-      await expect(page.locator(link.href)).toHaveRole("heading")
-    }
-  })
 
   test("fees: both Calculate my fee links jump to the calculator", async ({ page }) => {
     await page.goto("/fees")
@@ -231,22 +176,6 @@ test.describe("in-page anchors", () => {
     await page.getByRole("main").getByRole("link", { name: "See the disclosure levels" }).click()
     await expectAnchorTarget(page, "/confidentiality#conf-levels")
     await expect(page.getByTestId("disclosure-levels")).toBeInViewport()
-  })
-})
-
-test.describe("404 page", () => {
-  test("Back to the home page returns home", async ({ page }) => {
-    await page.goto("/nothing-here")
-    await page.getByRole("link", { name: "Back to the home page" }).click()
-    await expectPath(page, "/")
-    await expect(h1(page)).toHaveText(H1_BY_PATH["/"])
-  })
-
-  test("See how it works opens the process page", async ({ page }) => {
-    await page.goto("/nothing-here")
-    await page.getByRole("main").getByRole("link", { name: "See how it works" }).click()
-    await expectPath(page, "/how-it-works")
-    await expect(h1(page)).toHaveText(H1_BY_PATH["/how-it-works"])
   })
 })
 

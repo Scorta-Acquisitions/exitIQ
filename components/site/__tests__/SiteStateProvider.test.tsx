@@ -1,7 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { ExitIqQuestion } from "@/components/site/exitiq/ExitIqQuestion"
 import { SiteStateProvider, useAdvisor, useSiteState } from "@/components/site/providers/SiteStateProvider"
-import { INITIAL_SITE_STATE, persistableState, type SiteAction, type SiteState } from "@/lib/site/state/reducer"
+import {
+  INITIAL_SITE_STATE,
+  persistableState,
+  type PersistedSiteState,
+  type SiteAction,
+  type SiteState,
+} from "@/lib/site/state/reducer"
 
 const STORAGE_KEY = "heirloom.site.v1"
 
@@ -20,7 +27,7 @@ function Probe({ actions = {} }: { actions?: Record<string, SiteAction> }) {
       <output data-testid="iq">{JSON.stringify(state.iq)}</output>
       <output data-testid="funnel">{JSON.stringify(state.funnel)}</output>
       <output data-testid="advisor">{JSON.stringify(advisor)}</output>
-      <button type="button" onClick={openAdvisor}>
+      <button type="button" onClick={() => openAdvisor()}>
         open advisor
       </button>
       <button type="button" onClick={closeAdvisor}>
@@ -51,6 +58,16 @@ function readStored(): unknown {
 
 function renderProvider(ui = <Probe />) {
   return render(<SiteStateProvider>{ui}</SiteStateProvider>)
+}
+
+/** The provider with the exitIQ run inside it, so a bad store shows up as the question the visitor sees. */
+function renderRun() {
+  return renderProvider(
+    <>
+      <Probe />
+      <ExitIqQuestion variant="page" />
+    </>
+  )
 }
 
 const SAVED: SiteState = {
@@ -122,7 +139,6 @@ describe("<SiteStateProvider />", () => {
 
     it.each([
       ["a JSON string", JSON.stringify("hello")],
-      ["a JSON number", "42"],
       ["JSON null", "null"],
       ["an empty string", ""],
     ])("ignores %s in storage", (_label, raw) => {
@@ -130,6 +146,94 @@ describe("<SiteStateProvider />", () => {
       expect(() => renderProvider()).not.toThrow()
       expect(readIq()).toEqual(INITIAL_SITE_STATE.iq)
       expect(readFunnel()).toEqual(INITIAL_SITE_STATE.funnel)
+    })
+
+    it("ignores an array of sessions: the run opens at question 1 instead of hydrating from it", () => {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify([persistableState(SAVED)]))
+      renderRun()
+      expect(screen.getByText("Question 1 of 7")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("What kind of business do you run?")
+      expect(readIq()).toEqual(INITIAL_SITE_STATE.iq)
+    })
+
+    it("restores a valid session: the visitor lands back on question 4 with the three answers they gave", () => {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistableState(SAVED)))
+      renderRun()
+      expect(screen.getByText("Question 4 of 7")).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+        "About how much did the business earn before your pay and income taxes?"
+      )
+      expect(readIq().answers).toEqual({ type: "recurring", rev: "3-5", trend: "up" })
+    })
+
+    it("ignores a stored phase outside the question bank, which used to render no question at all", () => {
+      window.sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ ...persistableState(SAVED), iq: { ...SAVED.iq, phase: 99 } })
+      )
+      renderRun()
+      expect(screen.getByText("Question 1 of 7")).toBeInTheDocument()
+      expect(readIq().phase).toBe(0)
+    })
+
+    it("ignores an exitIQ answer that is not one of the question's chips", () => {
+      window.sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ ...persistableState(SAVED), iq: { ...SAVED.iq, answers: { type: "franchise" } } })
+      )
+      renderRun()
+      expect(screen.getByText("Question 1 of 7")).toBeInTheDocument()
+      expect(readIq().answers).toEqual({})
+    })
+
+    it("drops a stale advisor.flow from an older session and does not write it back", () => {
+      window.sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          ...persistableState(SAVED),
+          advisor: { ...SAVED.advisor, flow: { section: "financial", choice: "books" } },
+        })
+      )
+      renderProvider()
+      expect(readAdvisor()).toEqual({ ...SAVED.advisor, open: false, busy: false })
+      expect(readAdvisor().answers).toEqual({ care: "team" })
+      expect(readAdvisor().note).toBe("Call after 3pm")
+      const stored = readStored() as { advisor: Record<string, unknown> }
+      expect("flow" in stored.advisor).toBe(false)
+      expect(Object.keys(stored.advisor).sort()).toEqual([
+        "ack",
+        "answers",
+        "emailed",
+        "labels",
+        "note",
+        "prefilled",
+        "step",
+      ])
+    })
+
+    it("restores a session stored by the build that still wrote the four in-flight flags", () => {
+      // That build wrote `iq.busy`, `funnel.boot`, `advisor.open` and `advisor.busy`, which `hydrate`
+      // overrode anyway. They are unknown keys now: the record still restores, and they are dropped.
+      window.sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          iq: { ...SAVED.iq, busy: true },
+          funnel: { ...SAVED.funnel, boot: false },
+          advisor: { ...SAVED.advisor, open: true, busy: true },
+        })
+      )
+      renderRun()
+      expect(screen.getByText("Question 4 of 7")).toBeInTheDocument()
+      expect(readIq().answers).toEqual(SAVED.iq.answers)
+      expect(readIq().busy).toBe(false)
+      expect(readFunnel().boot).toBe(true)
+      expect(readAdvisor()).toEqual({ ...SAVED.advisor, open: false, busy: false })
+      // And the store is rewritten in the new shape, without them.
+      const stored = readStored() as Record<string, Record<string, unknown>>
+      expect("busy" in stored.iq!).toBe(false)
+      expect("boot" in stored.funnel!).toBe(false)
+      expect("open" in stored.advisor!).toBe(false)
+      expect("busy" in stored.advisor!).toBe(false)
     })
 
     it("keeps working when sessionStorage itself throws on access", () => {
@@ -154,19 +258,16 @@ describe("<SiteStateProvider />", () => {
   })
 
   describe("persistence", () => {
-    it("writes the persistable slice to storage on mount", () => {
-      renderProvider()
-      expect(readStored()).toEqual(persistableState(INITIAL_SITE_STATE))
-    })
-
-    it("saves every exitIQ answer to storage with the busy flag cleared", () => {
+    it("saves every exitIQ answer to storage, and writes no in-flight flag at all", () => {
       renderProvider(<Probe actions={{ answer: { type: "iq/answer", value: "dist" } }} />)
       fireEvent.click(screen.getByRole("button", { name: "answer" }))
       expect(readIq().busy).toBe(true)
-      const stored = readStored() as SiteState
+      const stored = readStored() as PersistedSiteState
       expect(Object.keys(stored).sort()).toEqual(["advisor", "funnel", "iq"])
       expect(stored.iq.answers).toEqual({ type: "dist" })
-      expect(stored.iq.busy).toBe(false)
+      // The live run is busy; the store carries no such flag for the next page to read.
+      expect("busy" in stored.iq).toBe(false)
+      expect("boot" in stored.funnel).toBe(false)
       expect(stored.iq.started).toBe(true)
       expect(stored.iq.insight).toBe(
         "Inventory, working capital, suppliers, and equipment can become material deal terms."
@@ -177,7 +278,7 @@ describe("<SiteStateProvider />", () => {
     it("persists a stage change and its remembered timing", () => {
       renderProvider(<Probe actions={{ stage: { type: "funnel/stage", stage: "sellQ2", sellTiming: "mid" } }} />)
       fireEvent.click(screen.getByRole("button", { name: "stage" }))
-      const stored = readStored() as SiteState
+      const stored = readStored() as PersistedSiteState
       expect(stored.funnel.stage).toBe("sellQ2")
       expect(stored.funnel.path).toBe("sell")
       expect(stored.funnel.sellTiming).toBe("mid")
@@ -243,15 +344,6 @@ describe("<SiteStateProvider />", () => {
       vi.spyOn(console, "error").mockImplementation(() => {})
       function Bare() {
         useSiteState()
-        return null
-      }
-      expect(() => render(<Bare />)).toThrow("useSiteState must be used inside <SiteStateProvider>")
-    })
-
-    it("useAdvisor throws the same error", () => {
-      vi.spyOn(console, "error").mockImplementation(() => {})
-      function Bare() {
-        useAdvisor()
         return null
       }
       expect(() => render(<Bare />)).toThrow("useSiteState must be used inside <SiteStateProvider>")

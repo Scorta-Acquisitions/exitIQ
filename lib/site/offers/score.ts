@@ -15,6 +15,26 @@ export interface OfferRanking {
   highestHeadlineId: OfferId
 }
 
+/**
+ * The letters in the order a priority ranks them, strongest fit first; equal scores keep the letters' own
+ * order, so the ranking is stable. `rankOrder(p)[0]` is always `rankOffers(p).bestId`.
+ */
+export function rankOrder(p: Priority, offers: Offer[] = OFFERS): OfferId[] {
+  return offers
+    .map((o, i) => ({ id: o.id, i, score: offerScore(o, p) }))
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((entry) => entry.id)
+}
+
+/** Each letter's place in the ranking for a priority, 1 = strongest fit; equal scores keep the letters' order. */
+export function rankFor(p: Priority): Record<OfferId, number> {
+  const ranks = {} as Record<OfferId, number>
+  rankOrder(p).forEach((id, place) => {
+    ranks[id] = place + 1
+  })
+  return ranks
+}
+
 export function rankOffers(p: Priority, offers: Offer[] = OFFERS): OfferRanking {
   const first = offers[0]
   if (!first) throw new Error("rankOffers requires at least one offer")
@@ -35,6 +55,11 @@ export function paidLater(o: Offer): string {
 
 export function retained(o: Offer): string {
   return o.roll ? formatMillions(o.roll) : "None"
+}
+
+/** A letter's closing-risk line: the certainty band and how long the buyer asks to hold exclusivity. */
+export function closingRisk(o: Offer): string {
+  return `${certaintyLabel(o.cert)} · ${o.excl} exclusivity`
 }
 
 export function findOffer(id: OfferId | null): Offer | null {

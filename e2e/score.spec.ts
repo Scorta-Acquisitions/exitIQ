@@ -9,15 +9,20 @@ import {
   watchConsole,
 } from "./helpers"
 import { QUESTIONS } from "../lib/site/exitiq/questions"
+import { CONTACT } from "../lib/site/routes"
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
-const CAL = "https://heirloom.cal.com/suyash/m-a-advisory-meeting"
+const CAL = CONTACT.advisorCalendar
 const SENT_COPY =
   "The booking page opened in a new tab with your result attached. If it is missing, paste the copied text into the notes."
 
 const meter = (page: Page, label: string) =>
   page.getByTestId("exitiq-result").getByText(label, { exact: true }).locator("xpath=following-sibling::span")
+
+/** The filled bar under a meter's label row. */
+const meterFill = (page: Page, label: string) =>
+  page.getByTestId("exitiq-result").getByText(label, { exact: true }).locator("xpath=../following-sibling::div[1]/div")
 
 const indexed = (scope: ReturnType<Page["getByTestId"]>, index: string) =>
   scope.getByText(index, { exact: true }).locator("xpath=following-sibling::span")
@@ -80,50 +85,6 @@ test.describe("/score exitIQ run", () => {
     console.assertClean()
   })
 
-  test("the insight for the previous answer is shown on the next question", async ({ page }) => {
-    await page.goto("/score")
-    const run = page.getByTestId("exitiq-run")
-    const question = page.getByTestId("exitiq-question")
-    await expect(question.getByText("What this tells a buyer")).toBeHidden()
-    await run.getByRole("button", { name: EXITIQ_ANSWERS.type, exact: true }).click()
-    await expect(
-      question.getByRole("heading", { name: "About how much revenue did the business generate last year?" })
-    ).toBeVisible()
-    await expect(question).toContainText("Question 2 of 7")
-    await expect(question.getByText("What this tells a buyer")).toBeVisible()
-    await expect(
-      question.getByText(
-        "Buyers will test whether client relationships belong to the firm or depend on you personally."
-      )
-    ).toBeVisible()
-    await expect(run.getByRole("progressbar", { name: "Your progress" })).toHaveAttribute("aria-valuenow", "1")
-    await expect(page.getByTestId("exitiq-state")).not.toHaveText(EXITIQ_EMPTY_STATE)
-    await expect(meter(page, "Transferability")).toHaveText("47")
-  })
-
-  test("Change my last answer steps back one question with the chosen chip still pressed and the insight cleared", async ({
-    page,
-  }) => {
-    await page.goto("/score")
-    const run = page.getByTestId("exitiq-run")
-    const question = page.getByTestId("exitiq-question")
-    await run.getByRole("button", { name: EXITIQ_ANSWERS.type, exact: true }).click()
-    await expect(question).toContainText("Question 2 of 7")
-    await question.getByRole("button", { name: "Change my last answer" }).click()
-    await expect(question).toContainText("Question 1 of 7")
-    await expect(question.getByRole("button", { name: EXITIQ_ANSWERS.type, exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    )
-    await expect(question.getByRole("button", { name: "Home or field services", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    )
-    await expect(question.getByText("What this tells a buyer")).toBeHidden()
-    await expect(question.getByRole("button", { name: "Change my last answer" })).toBeHidden()
-    await expect(question.getByRole("button", { name: "Start over" })).toBeVisible()
-  })
-
   test("the result survives a reload of the page", async ({ page }) => {
     await page.goto("/score")
     await answerExitIq(page.getByTestId("exitiq-run"))
@@ -174,38 +135,19 @@ test.describe("/score exitIQ run", () => {
     await expect(question).toContainText("Question 7 of 7")
     await question.getByRole("button", { name: EXITIQ_ANSWERS.owner, exact: true }).click()
 
-    const done = page.getByTestId("exitiq-done")
-    await expect(done).toBeVisible()
+    // What the changed answer scores is pinned in exitiq-scoring.test.ts (84 / 59 / 80, Market Ready);
+    // here the served run only has to come back to a result at all.
+    await expect(page.getByTestId("exitiq-done")).toBeVisible()
     await expect(page.getByTestId("exitiq-state")).toHaveText("Market Ready")
-    await expect(meter(page, "Financeability")).toHaveText("84")
-    await expect(meter(page, "Transferability")).toHaveText("59")
-    await expect(meter(page, "Evidence quality")).toHaveText("80")
-    await expect(indexed(done, "01")).toHaveText("Client relationships may depend on you")
-    await expect(indexed(done, "02")).toHaveText("Revenue has been flat")
-    await expect(indexed(done, "03")).toHaveText("The answers are still unverified")
-    const result = page.getByTestId("exitiq-result")
-    await expect(indexed(result, "01")).toHaveText(
-      "Stop running personal expenses through the business at the start of the next accounting period."
-    )
-    await expect(indexed(result, "03")).toHaveText("Prepare monthly profit and loss statements for the last 12 months.")
-    await expect(result.getByText("04", { exact: true })).toHaveCount(0)
   })
 
-  test("Start over clears every answer and returns to question 1", async ({ page }) => {
+  test("Start over clears the run out of the session, so a reload opens on question 1", async ({ page }) => {
+    // The reset itself is ExitIqRun.test.tsx l.658; what only a browser proves is that the stored run went
+    // with it, which the reload reads back.
     await page.goto("/score")
-    const run = page.getByTestId("exitiq-run")
-    await answerExitIq(run)
+    await answerExitIq(page.getByTestId("exitiq-run"))
     await page.getByTestId("exitiq-done").getByRole("button", { name: "Start over" }).click()
-
-    const question = page.getByTestId("exitiq-question")
-    await expect(question).toContainText("Question 1 of 7")
-    await expect(question.getByRole("heading", { name: "What kind of business do you run?" })).toBeVisible()
-    await expect(question.locator("[aria-pressed='true']")).toHaveCount(0)
-    await expect(question.getByRole("button", { name: "Start over" })).toBeHidden()
-    await expect(run.getByRole("progressbar", { name: "Your progress" })).toHaveAttribute("aria-valuenow", "0")
-    await expect(page.getByTestId("exitiq-state")).toHaveText(EXITIQ_EMPTY_STATE)
-    await expect(meter(page, "Financeability")).toHaveText("–")
-    await expect(page.getByTestId("exitiq-result").getByText("Your next 90 days")).toBeHidden()
+    await expect(page.getByTestId("exitiq-question")).toContainText("Question 1 of 7")
 
     await page.reload()
     await expect(page.getByTestId("exitiq-question")).toContainText("Question 1 of 7")
@@ -224,7 +166,6 @@ test.describe("/score exitIQ run", () => {
     const download = await downloadPromise
     expect(download.suggestedFilename()).toBe("exitIQ-90-day-plan.txt")
     const content = readFileSync((await download.path())!, "utf8")
-    expect(content).toContain("Recommendation: Prepare First")
     expect(content).toBe(EXITIQ_EXPECTED.planText)
 
     await expect(result.getByText("Your plan was downloaded and copied.")).toBeVisible()
@@ -287,23 +228,67 @@ test.describe("/score exitIQ run", () => {
     await popup.close()
   })
 
-  test("the page explains what the result is and links to fees, the process, and the offer review", async ({
+  test("the card is the dark instrument: a mono caps header, the field canvas sized by WebGL, and a meter whose bar matches its score", async ({
     page,
   }) => {
     await page.goto("/score")
-    const main = page.getByRole("main")
-    await expect(main).toContainText("About 2 minutes. No name, email, or documents required.")
-    await expect(main).toContainText(
-      "exitIQ is a readiness screen based on your answers. It is not a valuation, appraisal, financing decision, or assurance that a business will sell."
-    )
-    await expect(main.getByRole("link", { name: "See fees →", exact: true })).toHaveAttribute("href", "/fees")
-    await expect(main.getByRole("link", { name: "Review my offer", exact: true })).toHaveAttribute(
-      "href",
-      "/offer-review"
-    )
-    const process = main.getByRole("link", { name: /^See how it works/ })
-    await expect(process).toHaveCount(2)
-    await expect(process.nth(0)).toContainText("The eight stages from preparation to closing.")
-    for (const i of [0, 1]) await expect(process.nth(i)).toHaveAttribute("href", "/how-it-works")
+    const run = page.getByTestId("exitiq-run")
+    const label = run.getByText("exitIQ by Heirloom", { exact: true })
+    // The legacy console's own type, as the browser computes it from the restored token block.
+    await expect(label).toHaveCSS("text-transform", "uppercase")
+    await expect(label).toHaveCSS("font-family", /^"IBM Plex Mono"/)
+    // No live dot: the wordmark is the header's first child, nothing precedes it, and the ticks follow it.
+    await expect(label.locator("xpath=preceding-sibling::*")).toHaveCount(0)
+    await expect(label.locator("xpath=..").locator(":scope > *")).toHaveCount(2)
+    await expect(label.locator("xpath=following-sibling::*[1]")).toHaveRole("progressbar")
+
+    // The field sizes its drawing buffer to the card only once a WebGL context came up; an unsized canvas is 300×150.
+    const canvas = run.locator("canvas")
+    await expect(canvas).toHaveCount(1)
+    await expect(canvas).toHaveAttribute("aria-hidden", "true")
+    const runBox = (await run.boundingBox())!
+    await expect
+      .poll(() => canvas.evaluate((c) => (c as HTMLCanvasElement).width), { message: "field buffer width" })
+      .toBe(Math.round(runBox.width - 2))
+    await expect(run.locator(":scope > *").first()).toHaveAttribute("aria-hidden", "true")
+
+    const result = page.getByTestId("exitiq-result")
+    for (const caption of ["Scores", "Recommendation"]) {
+      await expect(result.getByText(caption, { exact: true })).toHaveCSS("text-transform", "uppercase")
+    }
+    for (const m of ["Financeability", "Transferability", "Evidence quality"]) {
+      await expect(meter(page, m)).toHaveText("–")
+      await expect(meterFill(page, m)).toHaveAttribute("style", /width:\s*0%/)
+    }
+
+    // One answer in: the insight for it is read out, and every meter's bar is drawn to the number beside it.
+    await run.getByRole("button", { name: EXITIQ_ANSWERS.type, exact: true }).click()
+    await expect(page.getByTestId("exitiq-question")).toContainText("Question 2 of 7")
+    await expect(
+      page
+        .getByTestId("exitiq-question")
+        .getByText("Buyers will test whether client relationships belong to the firm or depend on you personally.")
+    ).toBeVisible()
+    for (const m of ["Financeability", "Transferability", "Evidence quality"]) {
+      const value = await meter(page, m).textContent()
+      expect(value, `${m} reads a score`).toMatch(/^\d{1,3}$/)
+      await expect(meterFill(page, m)).toHaveAttribute("style", new RegExp(`width:\\s*${value}%`))
+    }
+    await expect(meter(page, "Transferability")).toHaveText("47")
+  })
+
+  test("under reduced motion the field still draws its one frame", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto("/score")
+    const run = page.getByTestId("exitiq-run")
+    await expect(run.getByText("exitIQ by Heirloom", { exact: true })).toBeVisible()
+    const runBox = (await run.boundingBox())!
+    await expect
+      .poll(() => run.locator("canvas").evaluate((c) => (c as HTMLCanvasElement).width), { message: "field drew" })
+      .toBe(Math.round(runBox.width - 2))
+    // The run itself is untouched by the preference.
+    await run.getByRole("button", { name: EXITIQ_ANSWERS.type, exact: true }).click()
+    await expect(page.getByTestId("exitiq-question")).toContainText("Question 2 of 7")
+    await expect(meter(page, "Transferability")).toHaveText("47")
   })
 })

@@ -56,6 +56,11 @@ describe("exitIQ run", () => {
     const back = siteReducer(done, { type: "iq/back" })
     expect(back.iq.done).toBe(false)
     expect(back.iq.phase).toBe(QUESTION_COUNT - 1)
+    const second = run([{ type: "iq/answer", value: "field" }, { type: "iq/advance" }])
+    expect(second.iq.phase).toBe(1)
+    const first = siteReducer(second, { type: "iq/back" })
+    expect(first.iq.phase).toBe(0)
+    expect(first.iq.insight).toBeNull()
     expect(siteReducer(INITIAL_SITE_STATE, { type: "iq/back" })).toBe(INITIAL_SITE_STATE)
   })
 
@@ -64,6 +69,9 @@ describe("exitIQ run", () => {
     const edit = siteReducer(done, { type: "iq/edit", index: 2 })
     expect(edit.iq.phase).toBe(2)
     expect(edit.iq.done).toBe(false)
+    // The index is clamped to the seven questions, so a stale control cannot leave the run.
+    expect(siteReducer(done, { type: "iq/edit", index: -1 }).iq.phase).toBe(0)
+    expect(siteReducer(done, { type: "iq/edit", index: 99 }).iq.phase).toBe(QUESTION_COUNT - 1)
     const restart = siteReducer(done, { type: "iq/restart" })
     expect(restart.iq.answers).toEqual({})
     expect(restart.iq.phase).toBe(0)
@@ -71,7 +79,36 @@ describe("exitIQ run", () => {
   })
 })
 
+describe("exitIQ guards", () => {
+  it("marks the run started without answering anything", () => {
+    const s = siteReducer(INITIAL_SITE_STATE, { type: "iq/start" })
+    expect(s.iq.started).toBe(true)
+    expect(s.iq.phase).toBe(0)
+    expect(s.iq.answers).toEqual({})
+  })
+
+  it("ignores an answer for a phase past the last question", () => {
+    const past = siteReducer(INITIAL_SITE_STATE, {
+      type: "hydrate",
+      state: { iq: { ...INITIAL_SITE_STATE.iq, phase: QUESTION_COUNT } },
+    })
+    expect(past.iq.phase).toBe(QUESTION_COUNT)
+    expect(siteReducer(past, { type: "iq/answer", value: "field" })).toBe(past)
+  })
+
+  it("returns the state it was given for an action it does not know", () => {
+    expect(siteReducer(INITIAL_SITE_STATE, { type: "nothing/here" } as unknown as SiteAction)).toBe(INITIAL_SITE_STATE)
+  })
+})
+
 describe("hero funnel", () => {
+  it("wraps the hero tick at twelve, the number of shapes the graph draws", () => {
+    let st = INITIAL_SITE_STATE
+    for (let i = 0; i < 11; i++) st = siteReducer(st, { type: "funnel/stage", stage: "sellQ1" })
+    expect(st.funnel.tick).toBe(11)
+    expect(siteReducer(st, { type: "funnel/stage", stage: "sellQ1" }).funnel.tick).toBe(0)
+  })
+
   it("changes stage, derives the path, and remembers timing and revenue", () => {
     const s = run([
       { type: "funnel/stage", stage: "sellQ1" },
@@ -150,18 +187,95 @@ describe("advisor dialog", () => {
   })
 })
 
+describe("advisor guards", () => {
+  function opened(): SiteState {
+    return siteReducer(INITIAL_SITE_STATE, { type: "advisor/open", ctx: { onScorePage: false } })
+  }
+
+  it("closing a dialog that is already closed changes nothing", () => {
+    expect(siteReducer(INITIAL_SITE_STATE, { type: "advisor/close" })).toBe(INITIAL_SITE_STATE)
+  })
+
+  it("records an answer it has no acknowledgement line for, with nothing to say", () => {
+    const s = siteReducer(opened(), { type: "advisor/answer", id: "topic", value: "mystery" })
+    expect(s.advisor.answers.topic).toBe("mystery")
+    expect(s.advisor.ack).toBeNull()
+    expect(s.advisor.busy).toBe(true)
+  })
+
+  it("advancing with no answer waiting changes nothing", () => {
+    const s = opened()
+    expect(s.advisor.busy).toBe(false)
+    expect(siteReducer(s, { type: "advisor/advance" })).toBe(s)
+  })
+
+  it("steps back to the previous question the visitor answered, clearing the acknowledgement", () => {
+    let s = opened()
+    s = siteReducer(s, { type: "advisor/answer", id: "topic", value: "sell" })
+    s = siteReducer(s, { type: "advisor/advance" })
+    expect(s.advisor.step).toBe(1)
+    const back = siteReducer(s, { type: "advisor/back" })
+    expect(back.advisor.step).toBe(0)
+    expect(back.advisor.ack).toBeNull()
+  })
+
+  it("cannot step back from the first question, and counts no more answers than there are questions", () => {
+    expect(advisorCanGoBack(INITIAL_SITE_STATE.advisor)).toBe(false)
+    expect(advisorAnsweredCount(INITIAL_SITE_STATE.advisor)).toBe(0)
+    expect(
+      advisorAnsweredCount({
+        ...INITIAL_SITE_STATE.advisor,
+        answers: { topic: "sell", type: "field", rev: "1-2", when: "soon", care: "cash" },
+      })
+    ).toBe(5)
+  })
+})
+
 describe("persistence", () => {
+  it("stores the session without the four flags hydrate sets for itself", () => {
+    const saved = persistableState({
+      ...answerAll(),
+      advisor: { ...INITIAL_SITE_STATE.advisor, open: true, busy: true, answers: { topic: "sell" } },
+    })
+    expect(Object.keys(saved).sort()).toEqual(["advisor", "funnel", "iq"])
+    expect("busy" in saved.iq).toBe(false)
+    expect("boot" in saved.funnel).toBe(false)
+    expect("open" in saved.advisor).toBe(false)
+    expect("busy" in saved.advisor).toBe(false)
+    // Everything the visitor told us is still there.
+    expect(saved.iq.done).toBe(true)
+    expect(saved.advisor.answers.topic).toBe("sell")
+  })
+
   it("hydrates saved answers without reopening the dialog or restoring busy flags", () => {
     const saved = persistableState({
       ...answerAll(),
       advisor: { ...INITIAL_SITE_STATE.advisor, open: true, busy: true, answers: { topic: "sell" } },
     })
-    expect(saved.advisor?.open).toBe(false)
-    const s = siteReducer(INITIAL_SITE_STATE, { type: "hydrate", state: saved })
+    const s = siteReducer(INITIAL_SITE_STATE, {
+      type: "hydrate",
+      state: { ...saved, advisor: { ...saved.advisor, note: "Avoid Northgate." } },
+    })
+    expect(s.advisor.note).toBe("Avoid Northgate.")
     expect(s.iq.done).toBe(true)
     expect(s.iq.busy).toBe(false)
     expect(s.advisor.open).toBe(false)
+    expect(s.advisor.busy).toBe(false)
     expect(s.advisor.answers.topic).toBe("sell")
     expect(s.funnel.boot).toBe(true)
+  })
+
+  it("hydrates a record from the build that still stored those flags, ignoring them", () => {
+    const older = {
+      iq: { ...persistableState(answerAll()).iq, busy: true },
+      funnel: { ...persistableState(answerAll()).funnel, boot: false },
+      advisor: { ...persistableState(answerAll()).advisor, open: true, busy: true },
+    }
+    const s = siteReducer(INITIAL_SITE_STATE, { type: "hydrate", state: older })
+    expect(s.iq.busy).toBe(false)
+    expect(s.iq.done).toBe(true)
+    expect(s.funnel.boot).toBe(true)
+    expect(s.advisor.open).toBe(false)
+    expect(s.advisor.busy).toBe(false)
   })
 })

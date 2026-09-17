@@ -3,105 +3,145 @@
 
 import { useRef, useState } from "react"
 import { useSceneProgress } from "@/components/site/scenes/useSceneProgress"
-import { SealDot } from "@/components/site/ui/primitives"
+import { AmbientVideo } from "@/components/site/ui/AmbientVideo"
+import { Container, Eyebrow, Tile } from "@/components/site/ui/primitives"
 import { TextLink } from "@/components/site/ui/TextLink"
+import { cn } from "@/lib/site/cn"
+import {
+  MARKET_COPY,
+  MARKET_LETTER,
+  MARKET_LOIS,
+  MARKET_SLIP,
+  MARKET_STEPS,
+  marketNdaLine,
+} from "@/lib/site/market/data"
 import { ROUTES } from "@/lib/site/routes"
-import { activeStep, marketFrame, marketSlipIds, veilOpacity } from "@/lib/site/scroll"
+import { activeStep, filmParallax, marketFrame, marketProgress, marketSlipIds, scenePins } from "@/lib/site/scroll"
 
-const SLIP_IDS = marketSlipIds(18)
+const SLIP_IDS = marketSlipIds()
 
-const LOIS = [
-  { tag: "LETTER OF INTENT · A", amount: "$4.30M", who: "REGIONAL ACQUIRER" },
-  { tag: "LETTER OF INTENT · B", amount: "$4.55M", who: "INDIVIDUAL BUYER" },
-  {
-    tag: "LETTER OF INTENT · C",
-    amount: "$4.05M",
-    who: "INVESTMENT GROUP · COMMITTED FINANCING",
-    badge: "MOST CERTAIN",
-  },
-  { tag: "LETTER OF INTENT · D", amount: "$4.65M", who: "STRATEGIC ACQUIRER", badge: "HIGHEST HEADLINE" },
-]
+/** A sheet of paper resting on the dark scene: white surface, small radius, no shadow. Position comes from the frame. */
+const PAPER = "on-light bg-canvas rounded-sm absolute top-0 left-0 border opacity-0 will-change-transform"
+/** Outlined status pill printed on a paper sheet. */
+const PILL = "type-fine-print rounded-pill inline-flex items-center border px-2 py-0.5"
 
-const STEPS = [
-  {
-    title: "Inbound offer",
-    body: "A single buyer names the price and the terms.",
-  },
-  {
-    title: "Buyer research",
-    body: "We research acquirers, investment groups, and individuals that fit the business.",
-  },
-  {
-    title: "NDA and qualification",
-    body: "Buyers sign an NDA and show financing before seeing sensitive records.",
-  },
-  {
-    title: "Offer comparison",
-    body: "We compare the economics, buyer fit, and closing risk of each offer.",
-  },
-]
-
+/**
+ * The "private market" scene: one inbound letter arrives, anonymous teaser slips fan out and are
+ * filtered, every fourth survivor flips to its NDA face, then four letters of intent land like dealt
+ * cards. The dark tile is 255vh tall; its first child pins under the bar (`scene-pin`, `--bar-h`) while the
+ * choreography (opacity and transform from `marketFrame`) plays behind the four steps on the left. On a tall
+ * phone (a 780px panel under the bar: the `tall:` variant at 832px) the stage is confined to the bottom 44% of the panel so the paper
+ * never covers the copy above it, the slips and letters are narrower (120px and 150px) and `marketFrame`
+ * scales the fan to the band and lands the four letters as a two-by-two hand, and only the active step
+ * shows its body so the four steps always fit above the band without scrolling. A short phone cannot hold
+ * the copy and a band in one viewport, so there the scene is not pinned: the tile takes its natural
+ * height, the copy comes first in the flow and the stage follows it as a 400px band (`order-2`), with the
+ * choreography still driven by the scene's progress through the viewport. The pin therefore applies from
+ * the tablet breakpoint or on a tall phone (`tab:scene-pin tall:max-tab:scene-pin`; the custom variant
+ * is stacked with `max-tab:` because it outranks the breakpoint variants). A flowing scene measures its
+ * progress against a viewport-anchored window (`marketProgress`, `MARKET_FLOW`) rather than its own
+ * height, which changes as step bodies unfold. The root reports the mode as `data-layout`.
+ * Under everything from the tablet breakpoint, the desk film is the environment the paper rests on: a
+ * continuous loop at 60%, so daylight and leaf shadows drift across the lacquer the whole time the scene is
+ * pinned (on phones the band is too small to earn a film, so the paper plays on the flat tile). It sits in a
+ * layer that drifts 3% against the scroll (`filmParallax`), written to the DOM in the same frame as the
+ * paper, so the desk moves with the visitor as well as on its own.
+ */
 export function MarketScene() {
   const sceneRef = useRef<HTMLDivElement>(null)
-  const veilRef = useRef<HTMLDivElement>(null)
+  const filmLayerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const letterRef = useRef<HTMLDivElement>(null)
   const slipRefs = useRef<Array<HTMLDivElement | null>>([])
   const ndaRefs = useRef<Array<HTMLDivElement | null>>([])
   const loiRefs = useRef<Array<HTMLDivElement | null>>([])
   const [step, setStep] = useState(-1)
+  const [pinned, setPinned] = useState(true)
 
-  useSceneProgress(sceneRef, (p) => {
-    const stage = stageRef.current
-    if (veilRef.current) veilRef.current.style.opacity = String(veilOpacity(p))
-    if (stage) {
-      const frame = marketFrame(p, stage.offsetWidth, stage.offsetHeight, SLIP_IDS.length, LOIS.length)
-      if (letterRef.current) {
-        letterRef.current.style.opacity = String(frame.letter.opacity)
-        letterRef.current.style.transform = frame.letter.transform
+  useSceneProgress(
+    sceneRef,
+    (p, size) => {
+      const pins = scenePins(size.width, window.innerHeight)
+      setPinned((cur) => (cur === pins ? cur : pins))
+      if (filmLayerRef.current) filmLayerRef.current.style.transform = filmParallax(p)
+      const stage = stageRef.current
+      if (stage) {
+        const frame = marketFrame(p, stage.offsetWidth, stage.offsetHeight, SLIP_IDS.length, MARKET_LOIS.length)
+        if (letterRef.current) {
+          letterRef.current.style.opacity = String(frame.letter.opacity)
+          letterRef.current.style.transform = frame.letter.transform
+        }
+        frame.slips.forEach((s, i) => {
+          const el = slipRefs.current[i]
+          if (el) {
+            el.style.opacity = String(s.opacity)
+            el.style.transform = s.transform
+          }
+          const nda = ndaRefs.current[i]
+          if (nda) nda.style.opacity = String(s.ndaOpacity)
+        })
+        frame.lois.forEach((l, j) => {
+          const el = loiRefs.current[j]
+          if (el) {
+            el.style.opacity = String(l.opacity)
+            el.style.transform = l.transform
+            el.style.zIndex = String(l.zIndex ?? 1)
+          }
+        })
       }
-      frame.slips.forEach((s, i) => {
-        const el = slipRefs.current[i]
-        if (el) {
-          el.style.opacity = String(s.opacity)
-          el.style.transform = s.transform
-        }
-        const nda = ndaRefs.current[i]
-        if (nda) nda.style.opacity = String(s.ndaOpacity)
-      })
-      frame.lois.forEach((l, j) => {
-        const el = loiRefs.current[j]
-        if (el) {
-          el.style.opacity = String(l.opacity)
-          el.style.transform = l.transform
-          el.style.zIndex = String(l.zIndex ?? 1)
-        }
-      })
-    }
-    const next = activeStep(p)
-    setStep((cur) => (cur === next ? cur : next))
-  })
+      const next = activeStep(p, MARKET_STEPS)
+      setStep((cur) => (cur === next ? cur : next))
+    },
+    marketProgress
+  )
 
   return (
-    <div ref={sceneRef} className="bg-scene-paper relative h-[255vh] px-3 pt-[18px]" data-testid="market-scene">
-      <div className="aurora panel-market border-dfull/8 text-d1 sticky top-[78px] h-[calc(100vh-92px)] min-h-[420px] overflow-hidden rounded-[26px] border shadow-[inset_0_1px_0_rgba(240,248,243,.06),0_30px_70px_rgba(11,36,27,.16)]">
+    <Tile
+      as="div"
+      tone="dark"
+      padded={false}
+      ref={sceneRef}
+      className="tab:h-[255vh] tall:max-tab:h-[255vh]"
+      data-testid="market-scene"
+      data-layout={pinned ? "pinned" : "flow"}
+    >
+      {/* A flex column so the flowing short-phone layout can order the copy before the stage; the pinned layouts'
+          absolute children are out of the flow and unaffected. `relative` keeps the panel the containing block of
+          its absolute film layer when it is not pinned, so the panel's overflow clip still applies to the layer's
+          1.06 scale (otherwise it would widen the page). */}
+      <div className="tab:scene-pin tall:max-tab:scene-pin relative flex flex-col overflow-hidden px-6">
+        {/* The desk film paints first so the paper stage and the copy sit above it. Its layer carries the scroll
+            parallax (transform only, clipped by the panel); the film loops on its own inside it. */}
         <div
-          ref={veilRef}
+          ref={filmLayerRef}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(155deg,rgba(247,244,225,.14)_0%,rgba(76,226,126,.10)_55%,rgba(247,244,225,.05)_100%)] opacity-0"
-        />
-        <div ref={stageRef} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div
-            ref={letterRef}
-            className="bg-slip border-hair-2 absolute top-0 left-0 w-[200px] rounded-lg border px-[15px] py-[13px] opacity-0 shadow-[0_24px_60px_rgba(0,0,0,.5)] will-change-transform"
-          >
-            <div className="text-slip-muted mb-1.5 font-mono text-[7.5px] tracking-[1.2px]">BY MAIL · TO THE OWNER</div>
-            <div className="font-display text-ink mb-1.5 text-[15px] leading-[1.3]">
-              &quot;We are prepared to offer <strong className="font-medium">$4.1M</strong> for your business…&quot;
+          className="pointer-events-none absolute inset-0 will-change-transform"
+          data-testid="market-film-layer"
+        >
+          <AmbientVideo
+            src="/media/market-desk-live.mp4"
+            poster="/media/market-desk-live-poster.jpg"
+            className="tab:block pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-60"
+          />
+        </div>
+        {/* On a short phone the paper is a 400px band that follows the copy in the flow (order-2, bled to the panel's
+            edges); on a tall phone it is the bottom 44% of the pinned panel; from the tablet breakpoint it fills the
+            panel behind the copy. */}
+        <div
+          ref={stageRef}
+          aria-hidden="true"
+          className="tall:max-tab:absolute tall:max-tab:inset-x-0 tall:max-tab:bottom-0 tall:max-tab:mx-0 tall:max-tab:h-[44%] tab:absolute tab:inset-0 tab:mx-0 tab:h-auto pointer-events-none relative order-2 -mx-6 h-[400px] shrink-0 overflow-hidden"
+          data-testid="market-stage"
+        >
+          <div ref={letterRef} className={cn(PAPER, "border-line w-[220px] px-4 py-3.5")}>
+            <div className="type-fine-print text-fg-3">{MARKET_LETTER.from}</div>
+            <div className="type-caption text-fg mt-2">
+              {MARKET_LETTER.quoteBefore}
+              <strong>{MARKET_LETTER.amount}</strong>
+              {MARKET_LETTER.quoteAfter}
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slip-dim font-mono text-[7px] tracking-[1px]">ONE BUYER · ONE NUMBER</span>
-              <SealDot />
+            <div className="mt-3 flex items-center justify-between">
+              <span className="type-fine-print text-fg-3">{MARKET_LETTER.foot}</span>
             </div>
           </div>
           {SLIP_IDS.map((id, i) => (
@@ -110,32 +150,29 @@ export function MarketScene() {
               ref={(el) => {
                 slipRefs.current[i] = el
               }}
-              className="bg-slip-2 border-hair-2/90 absolute top-0 left-0 w-[120px] rounded-md border px-2.5 py-2 opacity-0 shadow-[0_10px_28px_rgba(0,0,0,.4)] will-change-transform"
+              className={cn(PAPER, "border-line tab:w-[150px] w-[120px] px-3 py-2.5")}
+              data-testid={`market-slip-${i}`}
             >
               <div className="relative">
                 <div>
-                  <div className="text-l2 font-mono text-[7.5px] tracking-[1px]">PROJECT RIDGELINE</div>
-                  <div className="text-slip-muted my-[3px] font-mono text-[6.5px] tracking-[.8px]">
-                    ANONYMOUS TEASER · NO NAME
-                  </div>
-                  <div className="text-filament-ink font-mono text-[7.5px] tracking-[1px]">{id}</div>
+                  <div className="type-fine-print text-fg">{MARKET_SLIP.title}</div>
+                  <div className="type-micro-legal text-fg-3 mt-1">{MARKET_SLIP.note}</div>
+                  <span className={cn(PILL, "border-accent text-accent mt-2")}>{id}</span>
                 </div>
                 <div
                   ref={(el) => {
                     ndaRefs.current[i] = el
                   }}
-                  className="border-filament-ink/60 bg-paper-tint absolute -inset-x-2.5 -inset-y-2 rounded-md border px-2.5 py-2 opacity-0"
+                  className="bg-canvas border-accent absolute -inset-x-[13px] -inset-y-[11px] rounded-sm border px-3 py-2.5 opacity-0"
                 >
-                  <div className="text-filament-ink font-mono text-[7.5px] tracking-[1px]">NDA SIGNED</div>
-                  <div className="text-slip-dim my-[3px] font-mono text-[6.5px] tracking-[.8px]">
-                    IDENTITY RELEASED · LEVEL 2
-                  </div>
-                  <div className="text-l2 font-mono text-[7.5px] tracking-[1px]">{id} ✓</div>
+                  <span className={cn(PILL, "border-accent text-accent")}>{MARKET_SLIP.ndaBadge}</span>
+                  <div className="type-micro-legal text-fg-3 mt-1.5">{MARKET_SLIP.ndaNote}</div>
+                  <div className="type-fine-print text-fg mt-1.5">{marketNdaLine(id)}</div>
                 </div>
               </div>
             </div>
           ))}
-          {LOIS.map((loi, j) => {
+          {MARKET_LOIS.map((loi, j) => {
             const committed = j === 2
             return (
               <div
@@ -143,88 +180,72 @@ export function MarketScene() {
                 ref={(el) => {
                   loiRefs.current[j] = el
                 }}
-                className={`absolute top-0 left-0 w-[170px] rounded-lg px-3.5 py-3 opacity-0 will-change-transform ${
-                  committed
-                    ? "border-filament-ink bg-paper-mint border-[1.5px] shadow-[0_18px_50px_rgba(0,0,0,.5),0_0_30px_rgba(76,226,126,.25)]"
-                    : "border-hair-2 bg-paper-bright border shadow-[0_18px_50px_rgba(0,0,0,.5)]"
-                }`}
+                className={cn(
+                  PAPER,
+                  "tab:w-[200px] w-[150px] px-4 py-3.5",
+                  committed ? "border-accent ring-accent ring-1 ring-inset" : "border-line"
+                )}
+                data-testid={`market-loi-${loi.tag.slice(-1)}`}
               >
-                <div className="mb-1 flex justify-between gap-1.5">
-                  <span className="text-slip-muted font-mono text-[7px] tracking-[1.1px]">{loi.tag}</span>
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
+                  <span className="type-fine-print text-fg-3">{loi.tag}</span>
                   {loi.badge ? (
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 font-mono text-[6.5px] tracking-[.8px] ${
-                        committed ? "bg-filament-ink text-paper-tint" : "border-hair-2 text-slip-dim border"
-                      }`}
-                    >
+                    <span className={cn(PILL, committed ? "border-accent text-accent" : "border-line text-fg-3")}>
                       {loi.badge}
                     </span>
                   ) : null}
                 </div>
-                <div className="font-display text-ink mb-1 text-[23px] leading-none">{loi.amount}</div>
-                <div className="text-l2 font-mono text-[7.5px] tracking-[.8px]">{loi.who}</div>
+                <div className="type-tagline text-fg tabular mt-2.5">{loi.amount}</div>
+                <div className="type-fine-print text-fg-3 mt-2 leading-[1.5]">{loi.who}</div>
               </div>
             )
           })}
         </div>
 
-        <div className="relative mx-auto flex h-full max-w-[1132px] flex-col px-6 py-[clamp(12px,4vh,44px)]">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-[18px] gap-y-1">
-            <span className="text-signal font-mono text-[clamp(9.5px,1.8vh,11.5px)] tracking-[1.2px] uppercase">
-              A private market for your business
-            </span>
-          </div>
-          <p className="text-d4 mt-1.5 hidden font-mono text-[10px] motion-reduce:block">
-            Use the controls below to review the same information without animation.
-          </p>
-          <div className="flex min-h-0 max-w-[470px] flex-1 flex-col justify-center gap-[clamp(3px,.9vh,16px)] py-1">
-            <div className="pt-0.5 pb-[clamp(2px,.8vh,10px)]">
-              <h2 className="font-display text-d1 mb-1.5 text-[clamp(20px,min(2.8vw,4vh),34px)] leading-[1.06] font-normal tracking-[-.6px]">
-                Several buyers compete privately.
-              </h2>
-              <p className="text-d3 text-[clamp(11px,2vh,13px)] leading-[1.5]">
-                We find and qualify several buyers for your business and run the process privately. You compare their
-                offers instead of negotiating with whoever approached you.
-              </p>
+        <Container className="tab:py-10 relative flex h-full flex-col py-6">
+          <p className="type-caption text-fg-3 hidden motion-reduce:block">{MARKET_COPY.stillNote}</p>
+          {/* On phones the copy takes only the height it needs, above the paper band; wider, it centres over the whole stage. */}
+          <div className="tab:flex-1 tab:justify-center-safe tab:gap-3 flex max-w-[470px] flex-col gap-2 py-4">
+            <div className="pb-3">
+              <Eyebrow className="mb-4">{MARKET_COPY.eyebrow}</Eyebrow>
+              <h2 className="type-display-lg text-fg">{MARKET_COPY.heading}</h2>
+              <p className="type-body text-fg-2 mt-4">{MARKET_COPY.body}</p>
             </div>
-            {STEPS.map((s, i) => {
+            {MARKET_STEPS.map((s, i) => {
               const on = step === i
               return (
                 <div
                   key={s.title}
-                  className={`ease-e1 border-l-2 py-[3px] pl-3.5 transition-[opacity,border-color] duration-[400ms] ${
-                    on
-                      ? "border-filament opacity-100"
-                      : step < 0
-                        ? "border-dhair opacity-30"
-                        : "border-dhair opacity-45"
-                  }`}
+                  className={cn(
+                    "ease-e1 border-l-2 py-1 pl-4 transition-[opacity,border-color] duration-300",
+                    on ? "border-accent opacity-100" : "border-line opacity-70"
+                  )}
                   data-testid={`market-step-${i}`}
                   data-active={on}
                 >
-                  <div className="font-display text-[clamp(13.5px,min(2.2vw,3.2vh),25px)] leading-[1.12]">
-                    <span className="text-d4 mr-[9px] font-mono text-[clamp(9.5px,1.7vh,11px)] tracking-[1px]">
-                      0{i + 1}
-                    </span>
+                  <div className="type-tagline text-fg">
+                    <span className="type-caption text-fg-3 tabular mr-2">0{i + 1}</span>
                     {s.title}
                   </div>
-                  <div className="text-d3 mt-1 text-[clamp(11px,2.2vh,13.5px)]">
+                  {/* Below the tablet breakpoint only the active step unfolds its body; the titles always stay on screen. */}
+                  <div className={cn("type-caption text-fg-2 mt-1", on ? "block" : "tab:block hidden")}>
                     {s.body}
-                    {i === STEPS.length - 1 ? (
-                      <>
-                        {" "}
-                        <TextLink href={ROUTES.howItWorks} tone="dark">
-                          See how it works →
+                    {i === MARKET_STEPS.length - 1 ? (
+                      /* Own line under the body. The 44px hit area is centred on the text, so -mt-2 keeps the 4px gap
+                         above and -mb-3 keeps the step's left rule ending where the other steps' do. */
+                      <span className="-mt-2 -mb-3 block">
+                        <TextLink href={ROUTES.howItWorks} standalone>
+                          {MARKET_COPY.link}
                         </TextLink>
-                      </>
+                      </span>
                     ) : null}
                   </div>
                 </div>
               )
             })}
           </div>
-        </div>
+        </Container>
       </div>
-    </div>
+    </Tile>
   )
 }

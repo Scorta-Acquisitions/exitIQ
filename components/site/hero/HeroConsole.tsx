@@ -1,15 +1,16 @@
+// legacy exitIQ console: restored 2026-09-11 from the first build (e35fbbe) at the user's request; see styles/site.css
 // use client: the hero console is a short interactive funnel over shared site state
 "use client"
 
 import Link from "next/link"
 import { useEffect, useRef } from "react"
-import { AdvisorCtaButton } from "@/components/site/advisor/AdvisorCtaButton"
+import { twMerge } from "tailwind-merge"
+import { AdvisorTrigger } from "@/components/site/advisor/AdvisorCtaButton"
+import { ConsoleChip, ConsolePill, consolePill } from "@/components/site/exitiq/ConsoleChrome"
 import { ExitIqQuestion } from "@/components/site/exitiq/ExitIqQuestion"
+import { useConsoleField } from "@/components/site/exitiq/useConsoleField"
 import { HeroGraph } from "@/components/site/hero/HeroGraph"
-import { useInstrumentField } from "@/components/site/hero/useInstrumentField"
 import { useSiteState } from "@/components/site/providers/SiteStateProvider"
-import { Button } from "@/components/site/ui/Button"
-import { Chip } from "@/components/site/ui/Chip"
 import { scoreExitIq } from "@/lib/site/exitiq/scoring"
 import {
   HERO_OPTIONS,
@@ -31,12 +32,17 @@ function intensityFor(stage: HeroStage, conf: number): number {
   return STAGE_INTENSITY[stage]
 }
 
+/**
+ * The home hero's console as the first build set it: a near-black instrument with a fractal field behind
+ * it, a mono header (brand, stage progress, "Start over"), the three paths in serif, the sell and offer
+ * panels, and the exitIQ run with the buyer-view graph in the right pane (hidden below 620px).
+ */
 export function HeroConsole() {
   const { state, dispatch } = useSiteState()
   const { funnel, iq } = state
   const result = scoreExitIq(iq.answers)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pulse = useInstrumentField(canvasRef, intensityFor(funnel.stage, result.conf))
+  const pulse = useConsoleField(canvasRef, intensityFor(funnel.stage, result.conf))
 
   const answeredCount = result.answered
   const lastAnswered = useRef(answeredCount)
@@ -57,7 +63,7 @@ export function HeroConsole() {
 
   return (
     <div
-      className="border-dhair bg-ground relative flex flex-1 flex-col overflow-hidden rounded-[22px] border shadow-[0_40px_90px_rgba(8,30,22,.35),inset_0_1px_0_rgba(255,255,255,.06)]"
+      className="console-legacy border-dhair bg-ground relative flex flex-1 flex-col overflow-hidden rounded-[22px] border text-[16px] leading-[1.5] shadow-[0_40px_90px_rgba(8,30,22,.35),inset_0_1px_0_rgba(255,255,255,.06)]"
       data-testid="hero-console"
     >
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 block h-full w-full" />
@@ -82,7 +88,10 @@ export function HeroConsole() {
           </div>
         </div>
 
-        <div className="grid min-h-[256px] flex-1 grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,42%)),1fr))]">
+        {/* The first build's console filled a viewport-tall hero, which gave its body 300px at 1440×900; here that body
+            is a floor from the tablet breakpoint (phones keep the 256px floor). The card sets the first build's 16px /
+            1.5 body so every em-relative measure inside matches. */}
+        <div className="tab:min-h-[300px] grid min-h-[256px] flex-1 grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,42%)),1fr))]">
           <div className="text-d1 flex flex-1 flex-col justify-center bg-[rgba(4,15,10,.25)] px-[26px] py-5">
             <div className="w-full max-w-[700px]">
               {funnel.stage === "route" ? (
@@ -136,13 +145,13 @@ export function HeroConsole() {
                   <h2 className={`${h2} mb-5`}>When are you thinking about selling?</h2>
                   <div role="group" className="flex flex-wrap gap-[9px]">
                     {SELL_TIMING_CHIPS.map(([v, l]) => (
-                      <Chip
+                      <ConsoleChip
                         key={v}
                         selected={funnel.sellTiming === v}
                         onClick={() => setStage("sellQ2", { sellTiming: v })}
                       >
                         {l}
-                      </Chip>
+                      </ConsoleChip>
                     ))}
                   </div>
                 </div>
@@ -155,13 +164,13 @@ export function HeroConsole() {
                   <p className="text-d4 mb-[18px] font-mono text-[11px]">A rough answer is enough.</p>
                   <div role="group" className="flex flex-wrap gap-[9px]">
                     {SELL_REVENUE_CHIPS.map(([v, l]) => (
-                      <Chip
+                      <ConsoleChip
                         key={v}
                         selected={funnel.sellRevenue === v}
                         onClick={() => setStage("sellDone", { sellRevenue: v })}
                       >
                         {l}
-                      </Chip>
+                      </ConsoleChip>
                     ))}
                   </div>
                 </div>
@@ -180,7 +189,10 @@ export function HeroConsole() {
                     An advisor can look at the business, describe the likely buyers, and give a view on timing.
                   </p>
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <AdvisorCtaButton variant="cta" size="md" className="h-11" />
+                    {/* twMerge, so h-11 (the 44px target) beats the md pill's 42px, as the first build's Button merged it. */}
+                    <AdvisorTrigger className={twMerge(consolePill({ variant: "cta", size: "md" }), "h-11")}>
+                      Talk to an M&amp;A advisor
+                    </AdvisorTrigger>
                     <Link href={ROUTES.howItWorks} className="border-dhair text-d2 border-b pb-0.5 text-[13.5px]">
                       See how it works
                     </Link>
@@ -240,14 +252,14 @@ export function HeroConsole() {
                       <p className="text-d2 mb-[18px] text-[13.5px] leading-[1.55]">
                         Seven questions. You get the issues a buyer would raise first and a 90-day plan.
                       </p>
-                      <Button
+                      <ConsolePill
                         variant="cta"
                         size="md"
                         className="mb-3.5 h-11"
                         onClick={() => dispatch({ type: "iq/start" })}
                       >
                         Start exitIQ
-                      </Button>
+                      </ConsolePill>
                       <p className="text-d4 font-mono text-[11.5px]">
                         About 2 minutes. No name, email, or documents required.
                       </p>
@@ -267,9 +279,9 @@ export function HeroConsole() {
                         {result.findings[0]?.b}
                       </p>
                       <div className="flex flex-wrap items-center gap-2.5">
-                        <Button variant="cta" size="md" href={ROUTES.score} className="h-11">
+                        <ConsolePill variant="cta" size="md" href={ROUTES.score} className="h-11">
                           See my findings and 90-day plan
-                        </Button>
+                        </ConsolePill>
                         <button
                           type="button"
                           onClick={() => dispatch({ type: "iq/restart" })}

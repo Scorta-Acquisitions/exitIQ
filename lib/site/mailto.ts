@@ -1,13 +1,24 @@
+import { CONTACT } from "@/lib/site/routes"
+
 /**
  * Every form on the site resolves to an email the visitor sends from their own client. These
  * helpers build the mailto link, copy the body as a fallback, and never throw in the browser.
+ *
+ * The copy is a convenience, never the delivery: a form whose clipboard write is refused still opens the
+ * mail client and still records the inquiry, and says only that the draft, not the clipboard, carries the
+ * text (`*_SENT_COPY.notCopied` here and beside each form's body builder).
  */
 
 export function mailtoHref(to: string, subject: string, body: string, maxBodyLength = 1500): string {
   return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.slice(0, maxBodyLength))}`
 }
 
-/** Best-effort clipboard write. Resolves to true when the text was copied. */
+/**
+ * Best-effort clipboard write. Resolves to true when the text was copied and false on every failure —
+ * a denied permission, a write made outside a user gesture (WebKit), or no clipboard API at all. It never
+ * rejects, so a caller's `catch` block never sees a refused clipboard: read the boolean and show the
+ * failure copy when it is false.
+ */
 export async function copyText(text: string): Promise<boolean> {
   try {
     if (typeof navigator === "undefined" || !navigator.clipboard) return false
@@ -96,6 +107,15 @@ export function offerReviewBody(f: OfferIntakeFields): string {
   body += "\n\nSent from the Heirloom Offer Review page."
   return body
 }
+
+/**
+ * The line under the offer-review confirmation. The offer is sent either way: only the sentence naming
+ * where the summary sits changes when the browser refuses the clipboard.
+ */
+export const OFFER_SENT_COPY = {
+  copied: `If your email app did not open, the summary has been copied. Paste it into a message to ${CONTACT.offers}.`,
+  notCopied: "We could not copy the summary. The draft in your email app carries it.",
+} as const
 
 export const OFFER_FORWARD_MAILTO = mailtoHref(
   "offers@heirloom.com",

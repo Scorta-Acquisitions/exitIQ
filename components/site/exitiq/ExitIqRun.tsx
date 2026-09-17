@@ -1,18 +1,20 @@
+// legacy exitIQ console: restored 2026-09-11 from the first build (e35fbbe) at the user's request; see styles/site.css
 // use client: the full exitIQ run on /score, with the live recommendation panel
 "use client"
 
 import { useEffect, useRef } from "react"
+import { ConsolePill, ConsoleTicks } from "@/components/site/exitiq/ConsoleChrome"
 import {
   ADVISOR_ERROR_COPY,
   ADVISOR_SENT_COPY,
+  PLAN_DOWNLOADED_COPY,
+  PLAN_SAVED_COPY,
   useAdvisorReview,
   useSavePlan,
 } from "@/components/site/exitiq/ExitIqActions"
 import { ExitIqQuestion } from "@/components/site/exitiq/ExitIqQuestion"
-import { useInstrumentField } from "@/components/site/hero/useInstrumentField"
+import { useConsoleField } from "@/components/site/exitiq/useConsoleField"
 import { useSiteState } from "@/components/site/providers/SiteStateProvider"
-import { Button } from "@/components/site/ui/Button"
-import { LiveDot, ProgressTicks } from "@/components/site/ui/primitives"
 import { QUESTION_COUNT, QUESTIONS } from "@/lib/site/exitiq/questions"
 import { recommendationDescription, scoreExitIq } from "@/lib/site/exitiq/scoring"
 import { padIndex } from "@/lib/site/format"
@@ -51,12 +53,20 @@ function Meter({
   )
 }
 
+/**
+ * The /score exitIQ card as the first build set it: the near-black instrument with its fractal field, the
+ * mono header with its ticks (the live dot was removed on 2026-09-11 at the user's request), the question
+ * pane, and the SCORES / RECOMMENDATION panel with its three meters, findings and the 90-day plan. The
+ * first build's radii (12px cards, 8px buttons) are
+ * spelled out because the current theme's radius scale differs; the shadow is the console's, since the
+ * card now rests on a light tile; `anchor-target` lands it under the bar like every other anchor.
+ */
 export function ExitIqRun() {
   const { state, dispatch } = useSiteState()
   const { iq } = state
   const result = scoreExitIq(iq.answers)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pulse = useInstrumentField(canvasRef, result.conf)
+  const pulse = useConsoleField(canvasRef, result.conf)
   const resultRef = useRef<HTMLDivElement>(null)
   const review = useAdvisorReview()
   const plan = useSavePlan()
@@ -83,17 +93,14 @@ export function ExitIqRun() {
   return (
     <div
       id="exitiq-run"
-      className="border-dhair relative [scroll-margin-top:90px] overflow-hidden rounded-[22px] border shadow-[0_40px_90px_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.06)]"
+      className="console-legacy border-dhair anchor-target relative overflow-hidden rounded-[22px] border text-[16px] leading-[1.5] shadow-[0_40px_90px_rgba(8,30,22,.35),inset_0_1px_0_rgba(255,255,255,.06)]"
       data-testid="exitiq-run"
     >
       <canvas ref={canvasRef} aria-hidden="true" className="bg-ground absolute inset-0 block h-full w-full" />
       <div className="relative">
         <div className="border-dhair-2 flex flex-wrap items-center justify-between gap-3 border-b bg-[rgba(4,15,10,.42)] px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <LiveDot />
-            <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">exitIQ by Heirloom</span>
-          </div>
-          <ProgressTicks
+          <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">exitIQ by Heirloom</span>
+          <ConsoleTicks
             total={QUESTION_COUNT}
             filled={result.answered}
             current={iq.done ? undefined : iq.phase}
@@ -115,7 +122,7 @@ export function ExitIqRun() {
                 </h2>
                 <div className="flex flex-col gap-3">
                   {result.findings.map((f, i) => (
-                    <div key={f.t} className="border-dhair rounded-xl border bg-[rgba(4,15,10,.42)] px-[18px] py-4">
+                    <div key={f.t} className="border-dhair rounded-[12px] border bg-[rgba(4,15,10,.42)] px-[18px] py-4">
                       <div className="mb-2 flex items-baseline gap-3">
                         <span className="text-filament font-mono text-[11px]">{padIndex(i + 1)}</span>
                         <span className="text-d1 text-[15.5px] leading-[1.4] font-semibold">{f.t}</span>
@@ -125,9 +132,14 @@ export function ExitIqRun() {
                   ))}
                 </div>
                 <div className="border-dhair-2 mt-[22px] border-t pt-[18px]">
-                  <Button variant="cta" size="xl" onClick={review.send}>
+                  <ConsolePill
+                    variant="cta"
+                    size="xl"
+                    className="max-w-full text-center whitespace-normal"
+                    onClick={review.send}
+                  >
                     Review my result with an advisor
-                  </Button>
+                  </ConsolePill>
                   <p className="text-d2 mt-3 max-w-[520px] text-[13.5px] leading-[1.6]">
                     Book a call with Suyash. Your result goes into the booking notes.
                   </p>
@@ -150,7 +162,7 @@ export function ExitIqRun() {
                       type="button"
                       onClick={() => dispatch({ type: "iq/edit", index: i })}
                       aria-label={`Change answer ${i + 1}`}
-                      className="hover-green-dark border-dhair text-d2 h-8 min-w-[34px] rounded-lg border px-[9px] font-mono text-[12px]"
+                      className="hover-green-dark border-dhair text-d2 h-8 min-w-[34px] rounded-[8px] border px-[9px] font-mono text-[12px]"
                     >
                       {i + 1}
                     </button>
@@ -219,21 +231,26 @@ export function ExitIqRun() {
                   </div>
                 ))}
                 <div className="mt-3.5 flex flex-wrap gap-2">
-                  <Button variant="pill-dark" size="sm" className="text-d1 h-[38px] text-[11.5px]" onClick={plan.save}>
+                  <ConsolePill
+                    variant="pill-dark"
+                    size="sm"
+                    className="text-d1 h-[38px] text-[11.5px]"
+                    onClick={plan.save}
+                  >
                     Save my plan
-                  </Button>
-                  <Button
+                  </ConsolePill>
+                  <ConsolePill
                     variant="pill-dark"
                     size="sm"
                     className="text-d1 h-[38px] text-[11.5px]"
                     onClick={review.send}
                   >
                     Review my result with an advisor
-                  </Button>
+                  </ConsolePill>
                 </div>
                 {plan.saved ? (
                   <p className="text-filament mt-2.5 text-[12.5px] leading-[1.55]">
-                    Your plan was downloaded and copied.
+                    {plan.copied ? PLAN_SAVED_COPY : PLAN_DOWNLOADED_COPY}
                   </p>
                 ) : null}
               </div>

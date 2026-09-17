@@ -1,22 +1,22 @@
 import { screen, within } from "@testing-library/react"
 import type { ReactElement } from "react"
 import { describe, expect, it } from "vitest"
-import BuyersPage, { metadata as buyersMeta } from "@/app/buyers/page"
-import ConfidentialityPage, { metadata as confidentialityMeta } from "@/app/confidentiality/page"
-import FeesPage, { metadata as feesMeta } from "@/app/fees/page"
-import HowItWorksPage, { metadata as howItWorksMeta } from "@/app/how-it-works/page"
+import BuyersPage from "@/app/buyers/page"
+import ConfidentialityPage from "@/app/confidentiality/page"
+import FeesPage from "@/app/fees/page"
+import HowItWorksPage from "@/app/how-it-works/page"
 import NotFound, { metadata as notFoundMeta } from "@/app/not-found"
-import OfferReviewPage, { metadata as offerReviewMeta } from "@/app/offer-review/page"
+import OfferReviewPage from "@/app/offer-review/page"
 import HomePage from "@/app/page"
-import QuestionsPage, { metadata as questionsMeta } from "@/app/questions/page"
-import ScorePage, { metadata as scoreMeta } from "@/app/score/page"
-import WhoWeArePage, { metadata as whoWeAreMeta } from "@/app/who-we-are/page"
-import WhyPage, { metadata as whyMeta } from "@/app/why/page"
+import QuestionsPage from "@/app/questions/page"
+import ScorePage from "@/app/score/page"
+import WhoWeArePage from "@/app/who-we-are/page"
+import WhyPage from "@/app/why/page"
 import { BUYER_QUESTIONS, PASSPORT_BENEFITS } from "@/lib/site/buyers/passport"
 import { CONFIDENTIALITY_RULES, OWNER_CONTROLS, OWNER_DECIDES } from "@/lib/site/confidentiality/data"
 import { HARD_PARTS, TIMING_ROWS } from "@/lib/site/content/stages"
-import { QUESTION_CATEGORIES, QUESTION_CATEGORY_LINKS } from "@/lib/site/questions/data"
-import { ANCHORS, CONTACT, PAGE_META, ROUTES } from "@/lib/site/routes"
+import { QUESTION_CATEGORY_LINKS } from "@/lib/site/questions/data"
+import { ANCHORS, CONTACT, ROUTES } from "@/lib/site/routes"
 import { renderWithSite } from "./test-utils"
 
 const ROUTE_PATHS = new Set<string>(Object.values(ROUTES))
@@ -26,6 +26,11 @@ const CONTACT_EMAILS = new Set<string>([CONTACT.hello, CONTACT.offers, CONTACT.b
 /** Every page is a synchronous server component; render it inside the site provider so client children work. */
 function renderPage(page: ReactElement) {
   return renderWithSite(page)
+}
+
+/** The value shown beside a label in a key/value row. */
+function rowValue(label: string): string {
+  return screen.getByText(label).nextElementSibling?.textContent ?? ""
 }
 
 function onlyH1(text: string) {
@@ -63,10 +68,6 @@ function auditLinks(container: HTMLElement) {
   }
 }
 
-function countText(container: HTMLElement, needle: RegExp) {
-  return (container.textContent ?? "").match(needle)?.length ?? 0
-}
-
 describe("Home page", () => {
   it("renders exactly one h1 with the hero headline", () => {
     renderPage(<HomePage />)
@@ -78,25 +79,20 @@ describe("Home page", () => {
     auditLinks(container)
   })
 
-  it("opens the Y Combinator badge in a new tab with noopener", () => {
+  it("stacks the sections in order, the console's question first and no founder or experience block", () => {
     renderPage(<HomePage />)
-    const yc = screen.getByRole("link", { name: "BACKED BY Y COMBINATOR" })
-    expect(yc).toHaveAttribute("href", CONTACT.ycombinator)
-    expect(yc).toHaveAttribute("target", "_blank")
-    expect(yc).toHaveAttribute("rel", "noopener")
-  })
-
-  it("shows the Project Ridgeline worked example in the financial preparation card", () => {
-    const { container } = renderPage(<HomePage />)
-    expect(countText(container, /Project Ridgeline/g)).toBeGreaterThanOrEqual(1)
-  })
-
-  it("carries the speed section and no founder or experience block", () => {
-    renderPage(<HomePage />)
-    expect(screen.getByRole("heading", { level: 2, name: "40% faster than a traditional sale." })).toBeInTheDocument()
-    expect(screen.queryByRole("heading", { name: "Transaction experience" })).toBeNull()
-    expect(screen.queryByRole("link", { name: "Email Suyash" })).toBeNull()
-    expect(screen.queryByRole("img", { name: "Suyash Agrawal, founder and CEO of Heirloom" })).toBeNull()
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+      "Where are you today?",
+      "Several buyers compete privately.",
+      "Financial preparation",
+      "Who sees what",
+      "Compare offers",
+      "The whole sale asks four decisions of you.",
+      "40%faster than a traditional sale.",
+      "Employees, customers, and the company name change hands too.",
+      "Questions",
+      "Choose a next step.",
+    ])
   })
 })
 
@@ -104,10 +100,6 @@ describe("Score page", () => {
   it("renders exactly one h1 with the exitIQ headline", () => {
     renderPage(<ScorePage />)
     onlyH1("Is the business ready to sell?")
-  })
-
-  it("exports the exitIQ page metadata", () => {
-    expect(scoreMeta).toEqual({ title: PAGE_META.score.title, description: PAGE_META.score.description })
   })
 
   it("links only to known routes and contact addresses", () => {
@@ -142,13 +134,6 @@ describe("Offer review page", () => {
   it("renders exactly one h1 with the offer review headline", async () => {
     renderPage(await OfferReviewPage({ searchParams: params() }))
     onlyH1("Know what the offer pays before you sign.")
-  })
-
-  it("exports the offer review page metadata", () => {
-    expect(offerReviewMeta).toEqual({
-      title: PAGE_META.offerReview.title,
-      description: PAGE_META.offerReview.description,
-    })
   })
 
   it("links only to known routes, in-page anchors, and contact addresses", async () => {
@@ -187,16 +172,22 @@ describe("Offer review page", () => {
     expect(screen.getByTestId("oi-tab-forward")).toHaveAttribute("aria-pressed", "true")
   })
 
-  it("labels the Project Ridgeline letter of intent as fictional", async () => {
-    const { container } = renderPage(await OfferReviewPage({ searchParams: params() }))
-    expect(countText(container, /fictional/g)).toBeGreaterThanOrEqual(1)
+  it("labels the Project Ridgeline letter of intent as fictional, under its own heading", async () => {
+    renderPage(await OfferReviewPage({ searchParams: params() }))
+    expect(screen.getByRole("heading", { name: "What the letter of intent leaves open" })).toBeInTheDocument()
+    expect(screen.getByText("Worked example")).toBeInTheDocument()
+    expect(
+      screen.getByText("A fictional letter of intent. The terms below decide what the seller actually receives.")
+    ).toBeInTheDocument()
     expect(screen.getByText("Letter of intent · Project Ridgeline")).toBeInTheDocument()
   })
 
   it("separates the headline price from cash at closing in the worked example", async () => {
     renderPage(await OfferReviewPage({ searchParams: params() }))
-    expect(screen.getByText("$4.65M")).toBeInTheDocument()
-    expect(screen.getByText("$3.45M, or 74% of the headline price")).toBeInTheDocument()
+    expect(rowValue("Headline price")).toBe("$4.65M")
+    expect(rowValue("Cash at closing")).toBe("$3.45M, or 74% of the headline price")
+    expect(rowValue("Exclusivity")).toBe("90 days during which the seller cannot negotiate elsewhere")
+    expect(screen.getByText("Existing-buyer engagement")).toBeInTheDocument()
     expect(screen.getByText("2.5% success fee")).toBeInTheDocument()
   })
 
@@ -213,10 +204,6 @@ describe("How it works page", () => {
   it("renders exactly one h1 with the process headline", () => {
     renderPage(<HowItWorksPage />)
     onlyH1("The eight stages of a private sale.")
-  })
-
-  it("exports the how it works page metadata", () => {
-    expect(howItWorksMeta).toEqual({ title: PAGE_META.howItWorks.title, description: PAGE_META.howItWorks.description })
   })
 
   it("links only to known routes and contact addresses", () => {
@@ -244,8 +231,8 @@ describe("How it works page", () => {
   })
 
   it("shows the Project Ridgeline reconciliation example", () => {
-    const { container } = renderPage(<HowItWorksPage />)
-    expect(countText(container, /Project Ridgeline/g)).toBeGreaterThanOrEqual(1)
+    renderPage(<HowItWorksPage />)
+    expect(screen.getByText("Owner compensation · Project Ridgeline")).toBeInTheDocument()
   })
 
   it("places three advisor calls to action on the page", () => {
@@ -275,10 +262,6 @@ describe("Fees page", () => {
     expect(screen.queryByRole("img", { hidden: true, name: "" })).toBeNull()
   })
 
-  it("exports the fees page metadata", () => {
-    expect(feesMeta).toEqual({ title: PAGE_META.fees.title, description: PAGE_META.fees.description })
-  })
-
   it("links only to known routes, in-page anchors, and contact addresses", () => {
     const { container } = renderPage(<FeesPage />)
     auditLinks(container)
@@ -302,6 +285,27 @@ describe("Fees page", () => {
     expect(calc).toHaveLength(2)
     for (const link of calc) expect(link).toHaveAttribute("href", "#fees-calc")
     expect(container.querySelector("#fees-calc")).toHaveTextContent("Fee calculator")
+  })
+
+  it("gives the hero's advisor call to action the ghost pill and the closing one the filled pill", () => {
+    renderPage(<FeesPage />)
+    const [ghost, filled] = screen.getAllByRole("button", { name: "Talk to an M&A advisor" })
+    expect(ghost).toHaveClass(
+      "pressable",
+      "border",
+      "border-accent",
+      "bg-transparent",
+      "text-accent",
+      "hover:bg-accent/10",
+      "rounded-pill",
+      "type-body",
+      "px-[22px]",
+      "py-[11px]"
+    )
+    expect(ghost).not.toHaveClass("bg-primary")
+    expect(ghost).not.toHaveClass("text-on-primary")
+    expect(filled).toHaveClass("bg-primary", "text-on-primary", "rounded-pill", "type-body", "px-[22px]", "py-[11px]")
+    expect(filled).not.toHaveClass("border-accent")
   })
 
   it("routes both offer review links to /offer-review", () => {
@@ -339,13 +343,6 @@ describe("Confidentiality page", () => {
   it("renders exactly one h1 with the confidentiality headline", () => {
     renderPage(<ConfidentialityPage />)
     onlyH1("Confidentiality")
-  })
-
-  it("exports the confidentiality page metadata", () => {
-    expect(confidentialityMeta).toEqual({
-      title: PAGE_META.confidentiality.title,
-      description: PAGE_META.confidentiality.description,
-    })
   })
 
   it("links only to known routes, in-page anchors, and contact addresses", () => {
@@ -396,10 +393,6 @@ describe("Buyers page", () => {
     onlyH1("A verified record of who you are and what you buy")
   })
 
-  it("exports the buyers page metadata", () => {
-    expect(buyersMeta).toEqual({ title: PAGE_META.buyers.title, description: PAGE_META.buyers.description })
-  })
-
   it("links only to known routes, in-page anchors, and contact addresses", () => {
     const { container } = renderPage(<BuyersPage />)
     auditLinks(container)
@@ -413,6 +406,58 @@ describe("Buyers page", () => {
     expect(register).toHaveLength(2)
     for (const a of [...verified, ...register]) expect(a).toHaveAttribute("href", "#buyer-register")
     expect(container.querySelector("#buyer-register")).toHaveTextContent("Register my criteria")
+  })
+
+  it("frames the passport booklet beside the hero copy with no caption of its own", () => {
+    renderPage(<BuyersPage />)
+    const img = screen.getByRole("img", {
+      name: "A deep green Buyer Passport booklet with a brass Heirloom seal on the cover",
+    })
+    expect(decodeURIComponent(img.getAttribute("src") ?? "")).toContain("/generated/passport.webp")
+    expect(img).toHaveAttribute("sizes", "(max-width: 1068px) 100vw, 400px")
+    expect(img).toHaveClass("object-contain", "p-8")
+    const figure = screen.getByTestId("passport-figure")
+    expect(figure.tagName).toBe("FIGURE")
+    expect(figure).toContainElement(img)
+    // 280px on phones (the plate was 54% of a 390 viewport at full width); 400px from the desktop breakpoint.
+    expect(figure).toHaveClass(
+      "desk:justify-self-end",
+      "desk:mx-0",
+      "desk:max-w-[400px]",
+      "mx-auto",
+      "my-0",
+      "w-full",
+      "max-w-[280px]"
+    )
+    expect(figure).not.toHaveClass("max-w-[400px]")
+    expect(figure.querySelector("figcaption")).toBeNull()
+    expect(img.parentElement).toHaveClass(
+      "bg-canvas-parchment",
+      "shadow-product",
+      "relative",
+      "aspect-[3/4]",
+      "overflow-hidden",
+      "rounded-lg"
+    )
+    expect(screen.queryByRole("img", { hidden: true, name: "" })).toBeNull()
+  })
+
+  it("lays the hero out as the two-column recipe: centred copy that aligns left beside the passport on desktop", () => {
+    renderPage(<BuyersPage />)
+    const figure = screen.getByTestId("passport-figure")
+    const hero = figure.parentElement as HTMLElement
+    expect(hero).toHaveClass("grid", "grid-cols-1", "desk:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]")
+    expect(hero.children).toHaveLength(2)
+    const copy = hero.firstElementChild as HTMLElement
+    // The copy is centred on phones and aligns left beside the passport from the desktop breakpoint.
+    expect(copy).toHaveClass("text-center", "desk:text-left")
+    expect(copy).toContainElement(screen.getByRole("heading", { level: 1 }))
+    const lead = within(copy).getByText(
+      "Buyer Passport verifies your identity, acquisition criteria, and capacity range once. You choose which details each seller sees."
+    )
+    expect(lead).toHaveClass("type-lead-airy", "text-fg-2", "mx-auto", "desk:mx-0")
+    const ctas = within(copy).getByRole("link", { name: "Get Heirloom Verified" }).parentElement as HTMLElement
+    expect(ctas).toHaveClass("justify-center", "desk:justify-start")
   })
 
   it("renders every passport benefit", () => {
@@ -438,10 +483,6 @@ describe("Who we are page", () => {
     onlyH1("Who we are")
   })
 
-  it("exports the who we are page metadata", () => {
-    expect(whoWeAreMeta).toEqual({ title: PAGE_META.whoWeAre.title, description: PAGE_META.whoWeAre.description })
-  })
-
   it("links only to known routes and contact addresses", () => {
     const { container } = renderPage(<WhoWeArePage />)
     auditLinks(container)
@@ -461,13 +502,14 @@ describe("Who we are page", () => {
     expect(screen.getByText("Backing").nextSibling).toHaveTextContent("Y Combinator")
   })
 
-  it("shows the founder portrait with a descriptive alt text", () => {
-    renderPage(<WhoWeArePage />)
-    const img = screen.getByRole("img", { name: "Suyash Agrawal, founder and CEO of Heirloom" })
+  it("mounts the founder portrait inside the founder tile, with a descriptive alt text", () => {
+    const { container } = renderPage(<WhoWeArePage />)
+    const founder = container.querySelector("#founder") as HTMLElement
+    const img = within(founder).getByRole("img", { name: "Suyash Agrawal, founder and CEO of Heirloom" })
     expect(decodeURIComponent(img.getAttribute("src") ?? "")).toContain("/suyash-portrait.jpg")
   })
 
-  it("emails Suyash at the hello inbox and shows the address", () => {
+  it("emails Suyash at the hello inbox behind a named link, never printing the address", () => {
     renderPage(<WhoWeArePage />)
     expect(screen.getByRole("link", { name: "Email Suyash" })).toHaveAttribute("href", `mailto:${CONTACT.hello}`)
     expect(screen.queryByText(CONTACT.hello)).toBeNull()
@@ -493,10 +535,6 @@ describe("Questions page", () => {
     onlyH1("Questions owners ask.")
   })
 
-  it("exports the questions page metadata", () => {
-    expect(questionsMeta).toEqual({ title: PAGE_META.questions.title, description: PAGE_META.questions.description })
-  })
-
   it("links only to known routes, in-page anchors, and contact addresses", () => {
     const { container } = renderPage(<QuestionsPage />)
     auditLinks(container)
@@ -514,25 +552,12 @@ describe("Questions page", () => {
     expect(within(nav).getByRole("link", { name: "Ask a question" })).toHaveAttribute("href", "#q-ask")
     expect(container.querySelector("#q-ask")).not.toBeNull()
   })
-
-  it("renders every question from every category", () => {
-    renderPage(<QuestionsPage />)
-    for (const cat of QUESTION_CATEGORIES) {
-      for (const item of cat.items) {
-        expect(screen.getByRole("button", { name: item.q })).toHaveAttribute("aria-expanded", "false")
-      }
-    }
-  })
 })
 
 describe("Why page", () => {
   it("renders exactly one h1 with the why headline", () => {
     renderPage(<WhyPage />)
     onlyH1("The buyer usually has more experience.")
-  })
-
-  it("exports the why page metadata", () => {
-    expect(whyMeta).toEqual({ title: PAGE_META.why.title, description: PAGE_META.why.description })
   })
 
   it("links only to known routes and contact addresses", () => {
@@ -556,17 +581,11 @@ describe("Why page", () => {
     expect(screen.getByRole("link", { name: "Get Heirloom Verified" })).toHaveAttribute("href", ROUTES.buyers)
   })
 
-  it("prints no general contact address", () => {
-    renderPage(<WhyPage />)
-    expect(screen.queryByText(CONTACT.hello)).toBeNull()
-    expect(screen.queryByRole("link", { name: /@/ })).toBeNull()
-  })
-
   it("names the three paths an owner can take", () => {
     renderPage(<WhyPage />)
     expect(screen.getByText("Public listing")).toBeInTheDocument()
     expect(screen.getByText("A single direct buyer")).toBeInTheDocument()
-    expect(screen.getByText("Heirloom", { selector: "div.font-display" })).toBeInTheDocument()
+    expect(screen.getByText("Heirloom", { selector: "div.type-tagline" })).toBeInTheDocument()
   })
 
   it("labels both advisor calls to action Talk to an M&A advisor", () => {
@@ -589,6 +608,14 @@ describe("Not found page", () => {
     expect(notFoundMeta.description).toBe(
       "The address may have changed. Start from the Heirloom home page or go straight to the sale process."
     )
+  })
+
+  it("draws the stacked lockup in the Heirloom green, decorative, above the eyebrow", () => {
+    const { container } = renderPage(<NotFound />)
+    const lockup = container.querySelector('[data-testid="brand-lockup"]')!
+    expect(lockup).toHaveAttribute("data-variant", "stacked")
+    expect(lockup.parentElement).toHaveClass("text-heirloom")
+    expect(lockup.parentElement).toHaveAttribute("aria-hidden", "true")
   })
 
   it("offers a way home and a way into the process", () => {

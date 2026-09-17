@@ -16,6 +16,10 @@ vi.mock("@/lib/site/inquiry", () => ({ submitInquiry: (p: unknown) => submitInqu
 const OFFER_ASK =
   "Please explain what I would receive, what is missing, and which terms deserve attention before I respond."
 const FOOTER = "\n\nSent from the Heirloom Offer Review page."
+const SENT_FALLBACK =
+  "If your email app did not open, the summary has been copied. Paste it into a message to offers@heirloom.com."
+/** What the same line says when the browser refused the clipboard: the offer went, the draft carries it. */
+const SENT_NOT_COPIED = "We could not copy the summary. The draft in your email app carries it."
 
 async function send() {
   fireEvent.click(screen.getByTestId("oi-send"))
@@ -43,33 +47,27 @@ describe("<OfferIntake />", () => {
     expect(screen.getByLabelText("Price or range discussed")).toBeInTheDocument()
   })
 
-  it("sends a pasted offer: copies, records, and opens the mail client", async () => {
-    render(<OfferIntake />)
-    fireEvent.click(screen.getByTestId("oi-tab-paste"))
-    fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "LOI: $4.65M" } })
-    fireEvent.click(screen.getByTestId("oi-send"))
-    expect(screen.getByText("Preparing your message...")).toBeInTheDocument()
-    await act(async () => {
-      vi.advanceTimersByTime(500)
-    })
-    expect(copyText).toHaveBeenCalledWith(expect.stringContaining("LOI: $4.65M"))
-    expect(submitInquiry).toHaveBeenCalledWith(expect.objectContaining({ kind: "offer_review" }))
-    expect(openMail).toHaveBeenCalledWith(expect.stringMatching(/^mailto:offers@heirloom\.com/))
-    expect(screen.getByTestId("oi-sent")).toBeInTheDocument()
-  })
-
-  it("includes verbal fields and the reply email in the body", async () => {
+  it("sends the exact verbal body, with the reply email on its own line and in the record", async () => {
     render(<OfferIntake initialMode="verbal" />)
     fireEvent.change(screen.getByLabelText("Price or range discussed"), { target: { value: "$4.5M" } })
     fireEvent.change(screen.getByLabelText("Email for your review"), { target: { value: "me@x.com" } })
-    fireEvent.click(screen.getByTestId("oi-send"))
-    await act(async () => {
-      vi.advanceTimersByTime(500)
+    await send()
+    const body =
+      "I received a verbal offer with these terms:\n" +
+      "Headline price: $4.5M\n" +
+      "Cash at close and later payments: \n" +
+      "Financing status: \n" +
+      "What the buyer requested next: \n\n" +
+      OFFER_ASK +
+      "\n\nEmail for your review: me@x.com" +
+      FOOTER
+    expect(copyText).toHaveBeenCalledWith(body)
+    expect(submitInquiry).toHaveBeenCalledWith({
+      kind: "offer_review",
+      body,
+      email: "me@x.com",
+      source: "offer-review",
     })
-    const body = copyText.mock.calls[0]?.[0] as string
-    expect(body).toContain("Headline price: $4.5M")
-    expect(body).toContain("Email for your review: me@x.com")
-    expect(submitInquiry).toHaveBeenCalledWith(expect.objectContaining({ email: "me@x.com" }))
   })
 
   it("keeps exactly one intake tab pressed and swaps the form when a tab is chosen", () => {
@@ -116,6 +114,27 @@ describe("<OfferIntake />", () => {
     expect(screen.getByText("No file chosen yet.")).toBeInTheDocument()
   })
 
+  it("insets the mode chips 16px on phones and 24px from the tablet breakpoint", () => {
+    render(<OfferIntake />)
+    const row = screen.getByRole("group", { name: "Choose how to share your offer" })
+    expect(row).toHaveClass("px-4", "tab:px-6")
+    expect(row).not.toHaveClass("px-6")
+    expect(row.children).toHaveLength(3)
+    expect(row).toContainElement(screen.getByTestId("oi-tab-forward"))
+  })
+
+  it("forward mode: keeps the review note beside the attach button in one action row, as the other modes do", () => {
+    const note = "A person reviews it. You usually hear back the same business day."
+    const { unmount } = render(<OfferIntake />)
+    const attach = screen.getByRole("link", { name: "Open an email to attach the offer" })
+    const forwardNote = screen.getByText(note)
+    expect(forwardNote).toHaveClass("type-caption", "text-fg-3")
+    expect(forwardNote.previousElementSibling).toBe(attach)
+    unmount()
+    render(<OfferIntake initialMode="paste" />)
+    expect(screen.getByText(note).previousElementSibling).toBe(screen.getByTestId("oi-send"))
+  })
+
   it("forward mode: links the attach button and the inline address to offers@heirloom.com and has no send button", () => {
     render(<OfferIntake />)
     expect(screen.getByRole("link", { name: "Open an email to attach the offer" })).toHaveAttribute(
@@ -151,15 +170,18 @@ describe("<OfferIntake />", () => {
     expect(screen.queryByText("Preparing your message...")).toBeNull()
   })
 
-  it("does not send before the preparation delay has elapsed", () => {
+  it("writes to the clipboard inside the click and sends nothing before the preparation delay", () => {
     render(<OfferIntake initialMode="paste" />)
     fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
     fireEvent.click(screen.getByTestId("oi-send"))
+    // The write belongs to the click's own task: WebKit refuses one made from the 420ms timer.
+    expect(copyText).toHaveBeenCalledTimes(1)
     act(() => {
       vi.advanceTimersByTime(419)
     })
-    expect(copyText).not.toHaveBeenCalled()
     expect(openMail).not.toHaveBeenCalled()
+    expect(submitInquiry).not.toHaveBeenCalled()
+    expect(screen.queryByTestId("oi-sent")).toBeNull()
   })
 
   it("sends the exact pasted body and mailto link", async () => {
@@ -176,11 +198,7 @@ describe("<OfferIntake />", () => {
     expect(
       screen.getByText("Your offer has been sent for review. We will reply to the email you provided.")
     ).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "If your email app did not open, the summary has been copied. Paste it into a message to offers@heirloom.com."
-      )
-    ).toBeInTheDocument()
+    expect(screen.getByText(SENT_FALLBACK)).toBeInTheDocument()
   })
 
   it("omits the paid-later, concern, and email lines from a verbal body when those fields are empty", async () => {
@@ -203,9 +221,6 @@ describe("<OfferIntake />", () => {
       OFFER_ASK +
       FOOTER
     expect(copyText).toHaveBeenCalledWith(body)
-    expect(body).not.toContain("Paid later")
-    expect(body).not.toContain("Other concerns")
-    expect(body).not.toContain("Email for your review")
     expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free offer review", body))
   })
 
@@ -222,22 +237,55 @@ describe("<OfferIntake />", () => {
     expect(body).toContain("What the buyer requested next: \nOther concerns: 90 days exclusivity\n\n")
   })
 
-  it("shows the offers@ fallback and sends nothing when the message cannot be copied", async () => {
-    copyText.mockRejectedValueOnce(new Error("clipboard unavailable"))
+  it("sends anyway when the browser refuses the clipboard, naming the draft as what carries the summary", async () => {
+    // The reachable failure: copyText resolves false (a denied permission, or a write WebKit rejects).
+    // The copy is a convenience — the mail draft and the logged inquiry are the delivery — so nothing stops.
+    copyText.mockResolvedValueOnce(false)
+    render(<OfferIntake initialMode="paste" />)
+    fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
+    await send()
+    const body = "I received the following terms for my business:\n\nTerms\n\n" + OFFER_ASK + FOOTER
+    expect(submitInquiry).toHaveBeenCalledWith({ kind: "offer_review", body, email: "", source: "offer-review" })
+    expect(openMail).toHaveBeenCalledWith(mailtoHref("offers@heirloom.com", "Free offer review", body))
+    expect(screen.getByTestId("oi-sent")).toBeInTheDocument()
+    expect(
+      screen.getByText("Your offer has been sent for review. We will reply to the email you provided.")
+    ).toBeInTheDocument()
+    expect(screen.getByText(SENT_NOT_COPIED)).toBeInTheDocument()
+    expect(screen.queryByText(SENT_FALLBACK)).toBeNull()
+    expect(screen.queryByText(/We could not prepare the message/)).toBeNull()
+    expect(screen.getByTestId("oi-send")).not.toBeDisabled()
+  })
+
+  it("names the clipboard again once a later send is copied", async () => {
+    copyText.mockResolvedValueOnce(false)
+    render(<OfferIntake initialMode="paste" />)
+    fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
+    await send()
+    expect(screen.getByText(SENT_NOT_COPIED)).toBeInTheDocument()
+    await send()
+    expect(screen.getByText(SENT_FALLBACK)).toBeInTheDocument()
+    expect(screen.queryByText(SENT_NOT_COPIED)).toBeNull()
+  })
+
+  it("keeps the offers@ fallback when the handoff itself throws", async () => {
+    submitInquiry.mockImplementationOnce(() => {
+      throw new Error("beacon unavailable")
+    })
     render(<OfferIntake initialMode="paste" />)
     fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
     await send()
     expect(
       screen.getByText("We could not prepare the message. Email offers@heirloom.com directly.")
     ).toBeInTheDocument()
-    expect(openMail).not.toHaveBeenCalled()
-    expect(submitInquiry).not.toHaveBeenCalled()
     expect(screen.queryByTestId("oi-sent")).toBeNull()
-    expect(screen.getByTestId("oi-send")).not.toBeDisabled()
+    expect(openMail).not.toHaveBeenCalled()
   })
 
   it("clears the error when the visitor switches tabs", async () => {
-    copyText.mockRejectedValueOnce(new Error("clipboard unavailable"))
+    submitInquiry.mockImplementationOnce(() => {
+      throw new Error("beacon unavailable")
+    })
     render(<OfferIntake initialMode="paste" />)
     fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
     await send()
@@ -262,5 +310,74 @@ describe("<OfferIntake />", () => {
     fireEvent.click(screen.getByTestId("oi-tab-verbal"))
     fireEvent.click(screen.getByTestId("oi-tab-paste"))
     expect(screen.getByLabelText("Paste the offer or buyer email")).toHaveValue("Kept")
+  })
+
+  it("is the #offer-intake anchor target that the page's Review my offer links jump to", () => {
+    render(<OfferIntake />)
+    const intake = screen.getByTestId("offer-intake")
+    expect(intake).toHaveAttribute("id", "offer-intake")
+    expect(intake).toHaveClass("anchor-target")
+  })
+
+  it("carries the honeypot hidden from people: no layout, no tab stop, out of the accessibility tree", () => {
+    render(<OfferIntake initialMode="paste" />)
+    const pot = screen.getByTestId("honeypot")
+    expect(pot).toHaveAttribute("name", "website")
+    expect(pot).toHaveAttribute("tabindex", "-1")
+    expect(pot).toHaveAttribute("autocomplete", "off")
+    expect(pot).toHaveAttribute("aria-hidden", "true")
+    expect(pot).toHaveValue("")
+    // `sr-only` is absolutely positioned, so the field takes no space in the form's flow.
+    expect(pot.closest("label")).toHaveAttribute("aria-hidden", "true")
+    expect(pot.closest("span")).toHaveClass("sr-only")
+  })
+
+  it("leaves the honeypot out of a visitor's record and sends it when a script fills it", async () => {
+    render(<OfferIntake initialMode="paste" />)
+    fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
+    await send()
+    const body = "I received the following terms for my business:\n\nTerms\n\n" + OFFER_ASK + FOOTER
+    expect(submitInquiry).toHaveBeenCalledWith({ kind: "offer_review", body, email: "", source: "offer-review" })
+    fireEvent.change(screen.getByTestId("honeypot"), { target: { value: "http://spam.example" } })
+    await send()
+    expect(submitInquiry).toHaveBeenLastCalledWith({
+      kind: "offer_review",
+      body,
+      email: "",
+      source: "offer-review",
+      website: "http://spam.example",
+    })
+  })
+
+  it("keeps the file input off-screen but reachable through its label", () => {
+    render(<OfferIntake />)
+    const input = screen.getByLabelText("Upload the offer, buyer email, or letter of intent")
+    expect(input).toHaveAttribute("id", "oi-file")
+    expect(input).toHaveClass("sr-only")
+  })
+
+  it("announces preparing, failure, and success politely in the caption, error, and accent tones", async () => {
+    // The failure the send still has: the handoff itself throwing. A refused clipboard is not one.
+    submitInquiry.mockImplementationOnce(() => {
+      throw new Error("beacon unavailable")
+    })
+    render(<OfferIntake initialMode="paste" />)
+    fireEvent.change(screen.getByLabelText("Paste the offer or buyer email"), { target: { value: "Terms" } })
+    fireEvent.click(screen.getByTestId("oi-send"))
+    const preparing = screen.getByText("Preparing your message...")
+    expect(preparing).toHaveAttribute("aria-live", "polite")
+    expect(preparing).toHaveClass("type-caption", "text-fg-3")
+    await act(async () => {
+      vi.advanceTimersByTime(420)
+    })
+    const failure = screen.getByText("We could not prepare the message. Email offers@heirloom.com directly.")
+    expect(failure).toHaveAttribute("aria-live", "polite")
+    expect(failure).toHaveClass("type-caption", "text-error")
+    await send()
+    expect(screen.queryByText(/We could not prepare the message/)).toBeNull()
+    expect(screen.getByTestId("oi-sent")).toHaveAttribute("aria-live", "polite")
+    expect(
+      screen.getByText("Your offer has been sent for review. We will reply to the email you provided.")
+    ).toHaveClass("type-caption", "text-accent")
   })
 })

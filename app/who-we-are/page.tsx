@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { AdvisorCtaButton } from "@/components/site/advisor/AdvisorCtaButton"
-import { Container, Eyebrow } from "@/components/site/ui/primitives"
+import { Button } from "@/components/site/ui/Button"
+import { Container, Eyebrow, Tile } from "@/components/site/ui/primitives"
 import { TextLink } from "@/components/site/ui/TextLink"
 import { FounderPortrait } from "@/components/site/who-we-are/FounderPortrait"
 import { CONTACT, PAGE_META, ROUTES } from "@/lib/site/routes"
@@ -55,106 +56,109 @@ const CHANGES: Array<{ title: string; body: string }> = [
 export default function WhoWeArePage() {
   return (
     <>
-      <section className="bg-paper px-6 pt-[clamp(48px,6vw,80px)] pb-[clamp(56px,7vw,84px)]">
-        <Container className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,42%)),1fr))] items-start gap-11">
-          <div>
-            <Eyebrow className="mb-[18px]">Sell-side M&amp;A advisory</Eyebrow>
-            <h1 className="font-display mb-[22px] text-[clamp(32px,4.8vw,56px)] leading-[1.05] font-normal tracking-[-1.2px]">
-              Who we are
-            </h1>
-            <p className="text-l2 mb-5 text-[16.5px] leading-[1.6]">
-              Heirloom represents owners of established private businesses and manages the sale from preparation through
-              closing.
-            </p>
-            <div className="border-hair mb-5 border-t">
-              {FACTS.map(([k, v]) => (
-                <div
-                  key={k}
-                  className="border-hair flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b py-[11px]"
-                >
-                  <span className="text-l4 font-mono text-[11.5px] tracking-[.8px] uppercase">{k}</span>
-                  <span className="text-ink text-[14px]">{v}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-              <AdvisorCtaButton />
-              <TextLink href={ROUTES.howItWorks} className="text-[14px]">
-                See how it works →
-              </TextLink>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3.5">
-            <FounderPortrait radius={14} />
-            <div>
-              <Eyebrow className="mb-1.5">Founder and CEO</Eyebrow>
-              <h2 className="font-display mb-3 text-[26px] leading-[1.1] font-normal">Suyash Agrawal</h2>
-              <p className="text-l2 mb-2.5 text-[14.5px] leading-[1.62]">
-                Suyash leads Heirloom’s early seller engagements personally. Before Heirloom, he founded and sold a
-                company, built software at Atlassian, and acquired and operated small businesses through micro-PE.
-              </p>
-              <p className="text-l2 mb-3.5 text-[14.5px] leading-[1.62]">
-                As a buyer, he evaluated earnings, challenged owner adjustments, structured offers, worked with lenders,
-                and ran diligence.
-              </p>
-              <TextLink href={`mailto:${CONTACT.hello}`} className="text-[14px]">
-                Email Suyash
-              </TextLink>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="bg-paper px-6 pb-[clamp(56px,7vw,84px)]">
-        <Container className="border-hair-2 border-t pt-[34px]">
-          <h2 className="font-display mb-2.5 text-[clamp(26px,3.4vw,38px)] leading-[1.12] font-normal tracking-[-.7px]">
-            Who does the work
-          </h2>
-          <p className="text-l2 mb-[22px] max-w-[720px] text-[15px] leading-[1.62]">
-            Your lead advisor owns the outcome, with engineers and outside specialists behind the engagement.
+      {/* Hero: the firm alone. Centered on phones like every other page hero; left-aligned from the desktop breakpoint. */}
+      <Tile tone="light">
+        <Container className="desk:text-left text-center">
+          <Eyebrow className="mb-4">Sell-side M&amp;A advisory</Eyebrow>
+          <h1 className="type-hero text-fg">Who we are</h1>
+          <p className="type-lead-airy text-fg-2 desk:mx-0 mx-auto mt-5 max-w-[692px]">
+            Heirloom represents owners of established private businesses and manages the sale from preparation through
+            closing.
           </p>
-          <div className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[26px]">
-            {BENCH.map((b) => (
-              <div key={b.title}>
-                <div className="text-l3 mb-2 font-mono text-[11.5px]">{b.title}</div>
-                <p className="text-l2 text-[14px] leading-[1.6]">{b.body}</p>
+          {/* The facts stay left-aligned as a record. */}
+          <dl className="border-line mt-8 max-w-[692px] border-t text-left">
+            {FACTS.map(([k, v]) => (
+              <div
+                key={k}
+                className="border-line lphone:grid-cols-[minmax(0,180px)_minmax(0,1fr)] grid items-baseline gap-x-6 gap-y-1 border-b py-3"
+              >
+                <dt className="type-caption text-fg-3">{k}</dt>
+                <dd className="type-body text-fg m-0">{v}</dd>
               </div>
             ))}
-          </div>
-          <p className="text-l3 mb-[38px] font-mono text-[11.5px]">
-            You can use your existing professionals, or Heirloom can recommend one.
-          </p>
-          <h2 className="font-display mb-5 text-[clamp(24px,3vw,32px)] leading-[1.14] font-normal">
-            What buy-side experience changes
-          </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[22px]">
-            {CHANGES.map((c) => (
-              <div key={c.title}>
-                <div className="mb-[5px] text-[15px] font-semibold">{c.title}</div>
-                <p className="text-l2 text-[13.5px] leading-[1.6]">{c.body}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <section className="border-hair bg-paper-2 border-t px-6 py-[clamp(48px,6vw,72px)]">
-        <Container className="max-w-[760px]">
-          <h2 className="font-display mb-4 text-[clamp(26px,3.4vw,38px)] leading-[1.12] font-normal tracking-[-.7px]">
-            Where Heirloom fits
-          </h2>
-          <p className="text-l2 mb-[26px] text-[16.5px] leading-[1.68]">
-            Large investment banks rarely take businesses in this size range, and many local brokers rely on public
-            listings.
-          </p>
-          <div className="mb-3.5 flex flex-wrap items-center gap-x-5 gap-y-3">
+          </dl>
+          <div className="desk:justify-start mt-8 flex flex-wrap justify-center gap-3">
             <AdvisorCtaButton />
-            <TextLink href={ROUTES.howItWorks} className="text-[14px]">
+            <Button href={ROUTES.howItWorks} variant="secondary">
               See how it works →
+            </Button>
+          </div>
+        </Container>
+      </Tile>
+
+      {/* The founder: portrait beside the bio from the desktop breakpoint, stacked below it. */}
+      <Tile tone="parchment" id="founder" className="anchor-target">
+        <Container className="desk:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] grid items-center gap-x-12 gap-y-8">
+          <div className="desk:max-w-none max-w-[440px]">
+            <FounderPortrait />
+          </div>
+          <div>
+            <Eyebrow>Founder and CEO</Eyebrow>
+            <h2 className="type-display-md text-fg mt-2">Suyash Agrawal</h2>
+            <p className="type-body text-fg-2 mt-4">
+              Suyash leads Heirloom’s early seller engagements personally. Before Heirloom, he founded and sold a
+              company, built software at Atlassian, and acquired and operated small businesses through micro-PE.
+            </p>
+            <p className="type-body text-fg-2 mt-3">
+              As a buyer, he evaluated earnings, challenged owner adjustments, structured offers, worked with lenders,
+              and ran diligence.
+            </p>
+            <TextLink href={`mailto:${CONTACT.hello}`} standalone className="mt-3">
+              Email Suyash
             </TextLink>
           </div>
         </Container>
-      </section>
+      </Tile>
+
+      <Tile tone="light" id="the-work" className="anchor-target">
+        <Container>
+          <h2 className="type-display-lg text-fg">Who does the work</h2>
+          <p className="type-body text-fg-2 mt-4 max-w-[692px]">
+            Your lead advisor owns the outcome, with engineers and outside specialists behind the engagement.
+          </p>
+          <div className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-x-8 gap-y-8">
+            {BENCH.map((b) => (
+              <div key={b.title} className="border-line border-t pt-4">
+                <div className="type-body-strong text-fg">{b.title}</div>
+                <p className="type-body text-fg-2 mt-2">{b.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="type-caption text-fg-3 mt-8">
+            You can use your existing professionals, or Heirloom can recommend one.
+          </p>
+
+          <h2 className="type-display-md text-fg mt-20">What buy-side experience changes</h2>
+          {/* Stacked record rows, mirroring the hero facts, so five titles never fight for one row. */}
+          <div className="border-line mt-8 border-t">
+            {CHANGES.map((c) => (
+              <div
+                key={c.title}
+                className="border-line lphone:grid-cols-[minmax(0,260px)_minmax(0,1fr)] grid items-baseline gap-x-8 gap-y-1 border-b py-4"
+              >
+                <div className="type-body-strong text-fg">{c.title}</div>
+                <p className="type-body text-fg-2 m-0">{c.body}</p>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </Tile>
+
+      <Tile tone="dark">
+        <Container>
+          <h2 className="type-display-lg text-fg">Where Heirloom fits</h2>
+          <p className="type-body text-fg-2 mt-4 max-w-[692px]">
+            Large investment banks rarely take businesses in this size range, and many local brokers rely on public
+            listings.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <AdvisorCtaButton />
+            <Button href={ROUTES.howItWorks} variant="secondary">
+              See how it works →
+            </Button>
+          </div>
+        </Container>
+      </Tile>
     </>
   )
 }

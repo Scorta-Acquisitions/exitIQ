@@ -4,7 +4,6 @@ import { ADVISOR_ERROR_COPY, ADVISOR_SENT_COPY } from "@/components/site/exitiq/
 import { ReviewWithAdvisorButton, ReviewWithAdvisorCard } from "@/components/site/exitiq/ReviewWithAdvisor"
 import { QUESTIONS } from "@/lib/site/exitiq/questions"
 import { advisorReviewBody, type ExitIqAnswers } from "@/lib/site/exitiq/scoring"
-import { CONTACT } from "@/lib/site/routes"
 import { INITIAL_SITE_STATE, type SiteState } from "@/lib/site/state/reducer"
 import { renderWithSeededSite, renderWithSite } from "./test-utils"
 
@@ -37,8 +36,6 @@ const FINISHED: SiteState = {
   ...INITIAL_SITE_STATE,
   iq: { ...INITIAL_SITE_STATE.iq, phase: QUESTIONS.length - 1, answers: ANSWERS, done: true, started: true },
 }
-const BODY = advisorReviewBody(ANSWERS)
-const BOOKING_URL = `${CONTACT.advisorCalendar}?notes=${encodeURIComponent(BODY.slice(0, 700))}`
 
 describe("ReviewWithAdvisor", () => {
   beforeEach(() => {
@@ -49,16 +46,17 @@ describe("ReviewWithAdvisor", () => {
   afterEach(() => vi.restoreAllMocks())
 
   describe("<ReviewWithAdvisorCard />", () => {
-    it("is a real button that reacts to hover as a whole, with the title and the booking blurb", () => {
+    it("is a real button whose accent title marks the whole card as a control at rest, with the booking blurb", () => {
       renderWithSite(<ReviewWithAdvisorCard />)
       const card = screen.getByRole("button", { name: /Review it with an advisor/ })
-      expect(card.tagName).toBe("BUTTON")
       expect(card).toHaveAttribute("type", "button")
-      expect(card).toHaveClass("hover-green")
       const title = screen.getByText("Review it with an advisor")
-      expect(title.className).not.toMatch(/\btext-(ink|l\d|d\d)\b/)
+      expect(title).toHaveClass("type-tagline", "text-accent")
       expect(card).toContainElement(title)
-      expect(card).toHaveTextContent("Book a call with Suyash. Your result goes into the booking notes.")
+      expect(screen.getByText("Book a call with Suyash. Your result goes into the booking notes.")).toHaveClass(
+        "type-body",
+        "text-fg-2"
+      )
     })
 
     it("copies the result, beacons the review, and opens the booking page with the result as notes", async () => {
@@ -66,28 +64,37 @@ describe("ReviewWithAdvisor", () => {
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
       })
-      expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
       expect(mocks.copyText).toHaveBeenCalledTimes(1)
-      expect(mocks.copyText).toHaveBeenCalledWith(BODY)
-      expect(BODY).toContain("Recommendation: Prepare First")
-      expect(mocks.submitInquiry).toHaveBeenCalledWith({ kind: "exitiq_review", body: BODY, source: "score" })
-      expect(mocks.openInNewTab).toHaveBeenCalledWith(BOOKING_URL)
+      const body = mocks.copyText.mock.calls[0]![0]
+      expect(body.startsWith("exitIQ result review\nRecommendation: Prepare First\n")).toBe(true)
+      // The beacon carries the same text the clipboard was given.
+      expect(mocks.submitInquiry).toHaveBeenCalledWith({ kind: "exitiq_review", body, source: "score" })
+      expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
+      const url = mocks.openInNewTab.mock.calls[0]![0]
+      const prefix = "https://heirloom.cal.com/suyash/m-a-advisory-meeting?notes="
+      expect(url.slice(0, prefix.length)).toBe(prefix)
+      // A finished result runs to 846 characters; the booking notes carry its first 700.
+      const notes = decodeURIComponent(url.slice(prefix.length))
+      expect(notes).toHaveLength(700)
+      expect(notes).toBe(body.slice(0, 700))
     })
 
-    it("sends a body that marks every question 'Skipped' when nothing has been answered", async () => {
+    it("sends the unanswered body when the visitor has answered nothing", async () => {
       renderWithSite(<ReviewWithAdvisorCard />)
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
       })
       expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
       const body = mocks.copyText.mock.calls[0]![0]
+      expect(
+        body.startsWith("exitIQ result review\nRecommendation: Answer seven questions to see your result.\n")
+      ).toBe(true)
       expect(body).toBe(advisorReviewBody({}))
-      expect(body).toContain("Recommendation: Answer seven questions to see your result.")
-      expect(body.match(/Skipped/g)).toHaveLength(QUESTIONS.length)
     })
 
-    it("does not beacon or open a tab when the clipboard write fails", async () => {
-      mocks.copyText.mockRejectedValueOnce(new Error("denied"))
+    it("does not beacon or open a tab when the browser refuses the clipboard", async () => {
+      // The reachable failure: copyText resolves false and never rejects.
+      mocks.copyText.mockResolvedValueOnce(false)
       renderWithSeededSite(<ReviewWithAdvisorCard />, FINISHED)
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: /Review it with an advisor/ }))
@@ -101,9 +108,8 @@ describe("ReviewWithAdvisor", () => {
   describe("<ReviewWithAdvisorButton />", () => {
     it("renders the call to action with its explanatory line and no status copy", () => {
       renderWithSite(<ReviewWithAdvisorButton />)
-      const button = screen.getByRole("button", { name: "Review my result with an advisor" })
-      expect(button.tagName).toBe("BUTTON")
-      expect(screen.getByText("Your result goes into the booking notes.")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Review my result with an advisor" }).tagName).toBe("BUTTON")
+      expect(screen.getByText("Your result goes into the booking notes.")).toHaveClass("type-caption", "text-fg-3")
       expect(screen.queryByText(ADVISOR_SENT_COPY)).toBeNull()
       expect(screen.queryByText(ADVISOR_ERROR_COPY)).toBeNull()
     })
@@ -113,21 +119,21 @@ describe("ReviewWithAdvisor", () => {
       fireEvent.click(screen.getByRole("button", { name: "Review my result with an advisor" }))
       const sent = await screen.findByText(ADVISOR_SENT_COPY)
       expect(sent).toHaveAttribute("aria-live", "polite")
+      expect(sent).toHaveClass("type-caption", "text-accent")
       expect(ADVISOR_SENT_COPY).toBe(
         "The booking page opened in a new tab with your result attached. If it is missing, paste the copied text into the notes."
       )
-      expect(mocks.copyText).toHaveBeenCalledWith(BODY)
-      expect(mocks.submitInquiry).toHaveBeenCalledWith({ kind: "exitiq_review", body: BODY, source: "score" })
-      expect(mocks.openInNewTab).toHaveBeenCalledWith(BOOKING_URL)
+      expect(mocks.openInNewTab).toHaveBeenCalledTimes(1)
       expect(screen.queryByText(ADVISOR_ERROR_COPY)).toBeNull()
     })
 
-    it("shows the error copy with the hello@ address when the clipboard write fails, and nothing else happens", async () => {
-      mocks.copyText.mockRejectedValueOnce(new Error("denied"))
+    it("shows the error copy with the hello@ address when the browser refuses the clipboard, and nothing else happens", async () => {
+      mocks.copyText.mockResolvedValueOnce(false)
       renderWithSeededSite(<ReviewWithAdvisorButton />, FINISHED)
       fireEvent.click(screen.getByRole("button", { name: "Review my result with an advisor" }))
       const error = await screen.findByText(ADVISOR_ERROR_COPY)
       expect(error).toHaveAttribute("aria-live", "polite")
+      expect(error).toHaveClass("type-caption", "text-error")
       expect(error).toHaveTextContent("Email suyash@heirloomadvisory.ai")
       expect(screen.queryByText(ADVISOR_SENT_COPY)).toBeNull()
       expect(mocks.submitInquiry).not.toHaveBeenCalled()
@@ -135,7 +141,7 @@ describe("ReviewWithAdvisor", () => {
     })
 
     it("clears the error copy once a retry succeeds", async () => {
-      mocks.copyText.mockRejectedValueOnce(new Error("denied"))
+      mocks.copyText.mockResolvedValueOnce(false)
       renderWithSeededSite(<ReviewWithAdvisorButton />, FINISHED)
       const button = screen.getByRole("button", { name: "Review my result with an advisor" })
       fireEvent.click(button)

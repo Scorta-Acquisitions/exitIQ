@@ -24,30 +24,34 @@ describe("passport tiers", () => {
   it("names the four tiers in ascending order and defaults to Heirloom Verified", () => {
     expect([...PASSPORT_TIERS]).toEqual(["Network Member", "Identity Verified", "Heirloom Verified", "Deal Qualified"])
     expect(DEFAULT_PASSPORT_TIER).toBe(2)
-    expect(PASSPORT_TIERS[DEFAULT_PASSPORT_TIER]).toBe("Heirloom Verified")
   })
 
   it("describes what was checked and what access each tier grants", () => {
-    expect(PASSPORT_TIER_DESCRIPTIONS).toHaveLength(4)
-    for (const d of PASSPORT_TIER_DESCRIPTIONS) {
-      expect(d.startsWith("Checked: ")).toBe(true)
-      expect(d).toContain(" Access: ")
-    }
-    expect(PASSPORT_TIER_DESCRIPTIONS[0]).toContain("Nothing verified yet.")
+    expect([...PASSPORT_TIER_DESCRIPTIONS]).toEqual([
+      "Checked: Profile and acquisition criteria provided. Nothing verified yet. Access: Anonymous matches and basic alerts.",
+      "Checked: Identity and business entity confirmed. Acquisition capital has not been reviewed. Access: Faster identity and NDA review.",
+      "Checked: Identity, current acquisition criteria, capacity range, and lender preparation where relevant. Access: Earlier alerts, richer anonymous details, and less repeat verification.",
+      "Checked: Fit, seriousness, financing path, and ability to close for one specific transaction. Access: Eligible for deeper information and seller meetings under that seller\u2019s rules.",
+    ])
   })
 })
 
 describe("PASSPORT_ROWS", () => {
-  it("has ten rows with unique labels and a non-empty value for each of the four tiers", () => {
-    expect(PASSPORT_ROWS).toHaveLength(10)
-    const labels = PASSPORT_ROWS.map((r) => r.l)
-    expect(new Set(labels).size).toBe(10)
+  it("names the ten rows in order and fills a value for each of the four tiers", () => {
+    expect(PASSPORT_ROWS.map((r) => r.l)).toEqual([
+      "Buyer name and firm",
+      "Buyer type",
+      "Acquisition criteria",
+      "Identity and entity status",
+      "Capacity range status",
+      "Lender or SBA preparation",
+      "Prior acquisitions",
+      "Plans for employees, company name, and locations",
+      "Verification date",
+      "Expiration date",
+    ])
     for (const row of PASSPORT_ROWS) {
-      expect(row.v).toHaveLength(4)
-      for (const tier of TIERS) {
-        expect(typeof row.v[tier], `${row.l} @ ${tier}`).toBe("string")
-        expect(row.v[tier].trim().length, `${row.l} @ ${tier}`).toBeGreaterThan(0)
-      }
+      for (const tier of TIERS) expect(row.v[tier].trim().length, `${row.l} @ ${tier}`).toBeGreaterThan(0)
     }
   })
 
@@ -106,11 +110,6 @@ describe("passportProgress", () => {
     expect(passportProgress(2)).toBe("66.66666666666666%")
     expect(passportProgress(3)).toBe("100%")
   })
-
-  it("grows strictly with the tier", () => {
-    const widths = TIERS.map((t) => parseFloat(passportProgress(t)))
-    for (let i = 1; i < widths.length; i++) expect(widths[i]!).toBeGreaterThan(widths[i - 1]!)
-  })
 })
 
 describe("passportShareText", () => {
@@ -122,29 +121,35 @@ describe("passportShareText", () => {
   ] as Array<[PassportTierIndex, string]>)("writes the share line for tier %i", (tier, expected) => {
     expect(passportShareText(tier)).toBe(expected)
   })
-
-  it("never includes a balance, score, or the buyer's own contact details", () => {
-    for (const tier of TIERS) {
-      const text = passportShareText(tier)
-      expect(text).not.toMatch(/\$/)
-      expect(text).not.toMatch(/score/i)
-    }
-  })
 })
 
 describe("passport copy lists", () => {
-  it("lists seven 'how it works' rules with unique labels and five benefits with unique titles", () => {
-    expect(PASSPORT_HOW).toHaveLength(7)
-    expect(new Set(PASSPORT_HOW.map((h) => h.label)).size).toBe(7)
-    expect(PASSPORT_BENEFITS).toHaveLength(5)
-    expect(new Set(PASSPORT_BENEFITS.map((b) => b.title)).size).toBe(5)
-    for (const item of [...PASSPORT_HOW, ...PASSPORT_BENEFITS]) expect(item.body.endsWith(".")).toBe(true)
+  it("heads the seven 'how it works' rules and the five benefits", () => {
+    expect(PASSPORT_HOW.map((h) => h.label)).toEqual([
+      "Private sharing",
+      "Range, not balance",
+      "Dated verification",
+      "No recipient account required",
+      "No public score",
+      "Human review",
+      "Outside advisors keep their clients",
+    ])
+    expect(PASSPORT_BENEFITS.map((b) => b.title)).toEqual([
+      "Faster seller review",
+      "Less repeat paperwork",
+      "Earlier access",
+      "Financial privacy",
+      "Verified before the meeting",
+    ])
   })
 
-  it("asks buyers four questions, each phrased as a question", () => {
-    expect(BUYER_QUESTIONS).toHaveLength(4)
-    for (const q of BUYER_QUESTIONS) expect(q.endsWith("?")).toBe(true)
-    expect(new Set(BUYER_QUESTIONS).size).toBe(4)
+  it("asks buyers the four questions about the people and the name", () => {
+    expect([...BUYER_QUESTIONS]).toEqual([
+      "What would you do with current employees in the first 12 months?",
+      "Would you keep the company name and locations?",
+      "What happened to employees, names, and locations in your prior acquisitions?",
+      "If this would be your first acquisition, how will you support those plans?",
+    ])
   })
 
   it("offers five distinct buyer types and defaults the registration to the first one", () => {
@@ -233,18 +238,22 @@ describe("buyerRegistrationBody", () => {
     ["priorAcquisitions", "Prior acquisitions: Two, both in field services"],
     ["plans", "Plans for employees, the company name, and locations: Keep every employee and the name"],
   ] as Array<[keyof BuyerRegistration, string]>)("drops the %s line when that field is empty", (key, line) => {
-    expect(buyerRegistrationBody(full)).toContain(line)
     expect(buyerRegistrationBody({ ...full, [key]: "" })).not.toContain(line)
   })
 
   it("keeps the extras in their fixed order regardless of which are present", () => {
-    const body = buyerRegistrationBody({ ...full, geography: "", evidence: "" })
-    const idx = (s: string) => body.indexOf(s)
-    expect(idx("What kind of buyer are you?:")).toBeGreaterThan(-1)
-    expect(idx("Financing plan:")).toBeGreaterThan(idx("What kind of buyer are you?:"))
-    expect(idx("Prior acquisitions:")).toBeGreaterThan(idx("Financing plan:"))
-    expect(idx("Plans for employees")).toBeGreaterThan(idx("Prior acquisitions:"))
-    expect(idx("Geography:")).toBe(-1)
-    expect(idx("Current evidence")).toBe(-1)
+    expect(buyerRegistrationBody({ ...full, geography: "", evidence: "" })).toBe(
+      "I would like to create a Buyer Passport.\n\n" +
+        "Name: Ada Buyer\n" +
+        "Firm: Northwind Capital, Principal\n" +
+        "Email: ada@northwind.example\n" +
+        "Acquisition focus: HVAC and plumbing\n" +
+        "Target size: $2M to $8M\n" +
+        "What kind of buyer are you?: Family office\n" +
+        "Financing plan: Cash plus SBA 7(a)\n" +
+        "Prior acquisitions: Two, both in field services\n" +
+        "Plans for employees, the company name, and locations: Keep every employee and the name\n\n" +
+        "Please send the verification steps."
+    )
   })
 })

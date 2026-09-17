@@ -1,31 +1,82 @@
-// use client: priority and selected-offer state
+// use client: priority, selection, and preview state; the re-order and the figure's lean write transforms to the DOM
 "use client"
 
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { Chip } from "@/components/site/ui/Chip"
-import { Container } from "@/components/site/ui/primitives"
-import { formatMillions } from "@/lib/site/format"
-import { type OfferId, OFFERS, PRIORITIES, type Priority, PRIORITY_WHY } from "@/lib/site/offers/data"
-import { certaintyLabel, findOffer, paidLater, rankOffers, retained } from "@/lib/site/offers/score"
+import { useFlipRows } from "@/components/site/motion/useFlipRows"
+import { usePointerParallax } from "@/components/site/motion/usePointerParallax"
+import { Chip, CHIP_IDLE, CHIP_SELECTED } from "@/components/site/ui/Chip"
+import { Card, CARD_CLASS, CARD_PADDING, Container, Eyebrow, KeyValueRow, Tile } from "@/components/site/ui/primitives"
+import { cn } from "@/lib/site/cn"
+import { formatMillions, padIndex } from "@/lib/site/format"
+import {
+  letterTitle,
+  OFFER_COPY,
+  type OfferId,
+  OFFERS,
+  PRIORITIES,
+  type Priority,
+  PRIORITY_WHY,
+} from "@/lib/site/offers/data"
+import {
+  certaintyLabel,
+  closingRisk,
+  findOffer,
+  paidLater,
+  rankFor,
+  rankOffers,
+  retained,
+} from "@/lib/site/offers/score"
 
 const OFFER_BUSY_MS = 340
 
-function Term({ label, value, className }: { label: string; value: string; className?: string }) {
+/**
+ * The border a card wears while a hovered or focused priority would make it the strongest fit: the idle
+ * hover tone, drawn as an inset ring so nothing shifts. Never drawn over the accent ring of the current fit.
+ */
+const PREVIEW_RING = "bg-surface-2 ring-1 ring-inset ring-fg-2"
+
+/** One line of an offer card: the key/value row over a hairline, a step tighter than the record default. */
+const OFFER_LINE = "border-line gap-2.5 border-t py-2"
+
+/** One term of the detail panel: label over value, over a hairline. `className` sets the value's type. */
+function Term({ label, value, className = "type-body text-fg" }: { label: string; value: string; className?: string }) {
   return (
-    <div className="border-dhair-2 border-t py-1.5">
-      <span className="text-d4 mb-[3px] block font-mono text-[10.5px] tracking-[.5px]">{label}</span>
-      <span className={className ?? "text-d1 text-[13.5px]"}>{value}</span>
+    <div className="border-line border-t py-2">
+      <span className="type-caption text-fg-3 mb-0.5 block">{label}</span>
+      <span className={cn("block", className)}>{value}</span>
     </div>
   )
 }
 
+/**
+ * Four letters of intent for Project Ridgeline on a parchment tile. Choosing a priority re-ranks them and the
+ * cards travel to their new places (FLIP, in CSS order, so the DOM and tab order stay A to D): the strongest
+ * fit takes the selected-chip border, the highest headline price a neutral badge, and each card wears its rank.
+ * Hovering or focusing a priority previews which card it would lift. Pressing a card reads its full terms into
+ * the panel below.
+ */
 export function OfferComparison() {
   const [priority, setPriority] = useState<Priority>("certainty")
+  const [hovered, setHovered] = useState<Priority | null>(null)
+  const [focused, setFocused] = useState<Priority | null>(null)
   const [selected, setSelected] = useState<OfferId | null>(null)
   const [busy, setBusy] = useState(false)
   const timer = useRef<number | undefined>(undefined)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const figureRef = useRef<HTMLElement>(null)
+  const figureLayerRef = useRef<HTMLDivElement>(null)
+
+  const snapshot = useFlipRows(gridRef, priority)
+  usePointerParallax(figureRef, figureLayerRef, { max: 6 })
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  const choose = (p: Priority) => {
+    if (p === priority) return
+    snapshot()
+    setPriority(p)
+  }
 
   const pick = (id: OfferId) => {
     if (selected === id) {
@@ -39,46 +90,62 @@ export function OfferComparison() {
   }
 
   const { bestId, highestHeadlineId } = rankOffers(priority)
+  const ranks = rankFor(priority)
+  const preview = hovered ?? focused
+  const previewId = preview ? rankOffers(preview).bestId : null
   const sel = findOffer(selected)
 
   return (
-    <section className="bg-scene-paper-offers px-3 py-[clamp(40px,5vw,64px)]" data-testid="offer-comparison">
-      <Container className="aurora panel-offers border-dfull/8 text-d1 max-w-[1156px] overflow-hidden rounded-[26px] border px-[clamp(16px,3vw,38px)] py-[clamp(26px,4vw,46px)] shadow-[inset_0_1px_0_rgba(240,248,243,.06),0_30px_70px_rgba(11,36,27,.16)]">
-        <div className="mb-5 max-w-[760px]">
-          <h2 className="font-display text-d1 mb-2.5 text-[clamp(26px,3.4vw,40px)] leading-[1.06] font-normal tracking-[-.8px]">
-            Compare offers
-          </h2>
-          <p className="text-d3 text-[14.5px] leading-[1.6]">
-            The highest price is not always the best offer. We rank offers on what you receive, when, and how likely the
-            deal is to close.
-          </p>
+    <Tile tone="parchment" data-testid="offer-comparison">
+      <Container>
+        <div className="desk:grid-cols-[minmax(0,1fr)_280px] grid grid-cols-1 items-center gap-x-12 gap-y-8">
+          <div className="max-w-[692px]">
+            <h2 className="type-display-lg text-fg">{OFFER_COPY.heading}</h2>
+            <p className="type-body text-fg-2 mt-4">{OFFER_COPY.lead}</p>
+          </div>
+          {/* The four letters as objects, beside the header from the desktop breakpoint; phones lose nothing. The deep-green plate (the SealFilm frame tone) keeps the cream and brass legible on parchment. The envelopes lean a few pixels toward the pointer. */}
+          <figure ref={figureRef} className="desk:block m-0 hidden" data-testid="offers-figure">
+            <div className="bg-tile-1 shadow-product relative aspect-[3/2] overflow-hidden rounded-lg">
+              <div ref={figureLayerRef} className="absolute inset-0" data-testid="offers-figure-layer">
+                <Image
+                  src="/generated/envelopes.webp"
+                  alt={OFFER_COPY.figureAlt}
+                  fill
+                  sizes="280px"
+                  className="object-contain p-5"
+                />
+              </div>
+            </div>
+          </figure>
         </div>
-        <div
-          role="group"
-          aria-label="Choose your most important deal priority"
-          className="mb-2.5 flex flex-wrap items-center gap-2"
-        >
-          <span className="text-d3 mr-1 font-mono text-[11.5px] tracking-[.6px]">What matters most to you?</span>
+        <div role="group" aria-label={OFFER_COPY.priorityGroup} className="mt-8 flex flex-wrap items-center gap-2">
+          <span className="type-caption text-fg-2 basis-full">{OFFER_COPY.priorityPrompt}</span>
           {PRIORITIES.map((p) => (
             <Chip
               key={p.v}
               selected={priority === p.v}
-              onClick={() => setPriority(p.v)}
-              className={priority === p.v ? "font-normal" : "border-dhair text-dfull/72 bg-transparent font-normal"}
+              onClick={() => choose(p.v)}
+              onMouseEnter={() => setHovered(p.v)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setFocused(p.v)}
+              onBlur={() => setFocused(null)}
             >
               {p.l}
             </Chip>
           ))}
         </div>
-        <p className="text-d4 mb-[18px] max-w-[640px] font-mono text-[11px] leading-[1.6]">{PRIORITY_WHY[priority]}</p>
+        <p className="type-caption text-fg-3 mt-3 max-w-[692px]">{PRIORITY_WHY[priority]}</p>
         <div
+          ref={gridRef}
           role="group"
-          aria-label="Compare cash, terms, conditions, and closing risk"
-          className="mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(225px,1fr))] gap-3"
+          aria-label={OFFER_COPY.cardsGroup}
+          className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-6"
         >
           {OFFERS.map((o) => {
             const best = o.id === bestId
             const isSel = selected === o.id
+            const previewed = o.id === previewId
+            const rank = ranks[o.id]
             return (
               <div
                 key={o.id}
@@ -92,45 +159,73 @@ export function OfferComparison() {
                     pick(o.id)
                   }
                 }}
-                className={`ease-e1 cursor-pointer rounded-[14px] border p-4 transition-[border-color,background,box-shadow] duration-300 ${
-                  best
-                    ? "border-filament/50 bg-filament/[7%] shadow-[0_0_40px_rgba(76,226,126,.13)]"
-                    : isSel
-                      ? "border-dfull/40 bg-[rgba(4,15,10,.4)]"
-                      : "border-dhair bg-[rgba(4,15,10,.4)]"
-                }`}
+                className={cn(
+                  CARD_CLASS,
+                  CARD_PADDING,
+                  "pressable cursor-pointer",
+                  best ? CHIP_SELECTED : isSel ? "border-fg" : CHIP_IDLE,
+                  previewed && !best && PREVIEW_RING
+                )}
+                style={{ order: rank }}
                 data-testid={`offer-card-${o.id}`}
                 data-best={best}
+                data-preview={previewed}
+                data-rank={rank}
               >
-                <div className="mb-2.5 flex min-h-[22px] flex-wrap gap-[5px]">
-                  {best ? (
-                    <span className="bg-filament text-ground-deep rounded-full px-[9px] py-1 font-mono text-[9.5px] tracking-[.8px] uppercase">
-                      Strongest fit
-                    </span>
-                  ) : null}
-                  {o.id === highestHeadlineId ? (
-                    <span className="border-dhair text-d3 rounded-full border px-[9px] py-[3px] font-mono text-[9.5px] tracking-[.8px] uppercase">
-                      Highest headline price
-                    </span>
-                  ) : null}
+                <div className="mb-3 flex min-h-14 items-start justify-between gap-x-3">
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    {best ? (
+                      <Eyebrow
+                        key={`best-${o.id}`}
+                        as="span"
+                        tone="accent"
+                        className="border-accent rounded-pill animate-row-in border px-3 py-1 motion-reduce:animate-none"
+                      >
+                        {OFFER_COPY.bestBadge}
+                      </Eyebrow>
+                    ) : null}
+                    {o.id === highestHeadlineId ? (
+                      <Eyebrow
+                        key={`head-${o.id}`}
+                        as="span"
+                        className="border-line rounded-pill animate-row-in border px-3 py-1 motion-reduce:animate-none"
+                      >
+                        {OFFER_COPY.headlineBadge}
+                      </Eyebrow>
+                    ) : null}
+                  </div>
+                  <span
+                    key={rank}
+                    aria-hidden="true"
+                    className="type-caption text-fg-3 tabular animate-row-in shrink-0 py-1 motion-reduce:animate-none"
+                    data-testid={`offer-rank-${o.id}`}
+                  >
+                    {padIndex(rank)}
+                  </span>
                 </div>
-                <div className="text-d1 text-[14.5px] font-semibold">{o.who}</div>
-                <div className="text-d4 mt-[3px] mb-3 font-mono text-[10.5px] tracking-[.4px]">{o.sub}</div>
-                <div className="border-dhair-2 flex items-baseline justify-between gap-2.5 border-t py-1.5">
-                  <span className="text-d4 font-mono text-[10.5px] tracking-[.5px]">Headline price</span>
-                  <span className="font-display text-d1 text-[21px]">{formatMillions(o.head)}</span>
-                </div>
-                <div className="border-dhair-2 flex items-baseline justify-between gap-2.5 border-t py-1.5">
-                  <span className="text-d4 font-mono text-[10.5px] tracking-[.5px]">Cash at closing</span>
-                  <span className="text-filament font-mono text-[13.5px]">{formatMillions(o.cash)}</span>
-                </div>
-                <div className="border-dhair-2 flex items-baseline justify-between gap-2.5 border-t pt-1.5 pb-2">
-                  <span className="text-d4 font-mono text-[10.5px] tracking-[.5px]">Closing risk</span>
-                  <span className="text-d2 font-mono text-[12px]">{certaintyLabel(o.cert)}</span>
-                </div>
-                <div className="bg-dfull/10 h-[3px] overflow-hidden rounded-full">
+                {/* Two title lines are reserved so the figure rows line up across the four cards. */}
+                <div className="type-tagline text-fg min-h-[50px]">{o.who}</div>
+                <div className="type-caption text-fg-3 mt-1 mb-4">{o.sub}</div>
+                <KeyValueRow
+                  label={OFFER_COPY.terms.head}
+                  className={OFFER_LINE}
+                  valueClassName="type-body text-fg tabular"
+                >
+                  {formatMillions(o.head)}
+                </KeyValueRow>
+                <KeyValueRow
+                  label={OFFER_COPY.terms.cash}
+                  className={OFFER_LINE}
+                  valueClassName="type-body-strong text-fg tabular"
+                >
+                  {formatMillions(o.cash)}
+                </KeyValueRow>
+                <KeyValueRow label={OFFER_COPY.terms.risk} className={OFFER_LINE} valueClassName="type-body text-fg-2">
+                  {certaintyLabel(o.cert)}
+                </KeyValueRow>
+                <div className="rounded-pill bg-fg/15 mt-1 h-[3px]">
                   <div
-                    className="bg-signal ease-e1 h-[3px] rounded-full shadow-[0_0_8px_rgba(143,224,178,.45)] transition-[width] duration-700"
+                    className="rounded-pill bg-accent ease-e1 h-full transition-[width] duration-300"
                     style={{ width: `${Math.round(o.cert * 100)}%` }}
                   />
                 </div>
@@ -138,43 +233,39 @@ export function OfferComparison() {
             )
           })}
         </div>
-        {!sel && !busy ? (
-          <p className="border-dhair text-d4 mb-3.5 rounded-[11px] border border-dashed px-4 py-[13px] font-mono text-[11.5px]">
-            Choose an offer.
-          </p>
-        ) : null}
+        {!sel && !busy ? <p className="type-caption text-fg-3 mt-6">{OFFER_COPY.choose}</p> : null}
         {busy ? (
-          <p
-            aria-live="polite"
-            className="border-dhair text-signal mb-3.5 rounded-[11px] border border-dashed px-4 py-[13px] font-mono text-[11.5px]"
-          >
-            Reading the offer terms...
+          <p aria-live="polite" className="type-caption text-fg-3 mt-6">
+            {OFFER_COPY.reading}
           </p>
         ) : null}
         {sel && !busy ? (
-          <div
-            className="border-dhair mb-3.5 rounded-[14px] border bg-[rgba(4,15,10,.45)] px-[18px] py-4"
-            data-testid="offer-detail"
-          >
-            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
-              <span className="text-d1 text-[14.5px] font-semibold">
-                Letter of intent {sel.id} · {sel.who}
-              </span>
-              <span className="text-d4 font-mono text-[10.5px]">{sel.sub}</span>
+          <Card key={sel.id} className="animate-stage-in mt-6 motion-reduce:animate-none" data-testid="offer-detail">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
+              <span className="type-tagline text-fg">{letterTitle(sel)}</span>
+              <span className="type-caption text-fg-3">{sel.sub}</span>
             </div>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-[22px] gap-y-2">
-              <Term label="Headline price" value={formatMillions(sel.head)} />
-              <Term label="Cash at closing" value={formatMillions(sel.cash)} className="text-filament text-[13.5px]" />
-              <Term label="Money paid later" value={paidLater(sel)} />
-              <Term label="Retained ownership" value={retained(sel)} />
-              <Term label="Buyer financing" value={sel.fin} />
-              <Term label="Time you stay" value={sel.trans} />
-              <Term label="Team and company name" value={sel.staffNote} className="text-d1 text-[13px] leading-[1.5]" />
-              <Term label="Closing risk" value={`${certaintyLabel(sel.cert)} · ${sel.excl} exclusivity`} />
+            <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-6 gap-y-2">
+              <Term
+                label={OFFER_COPY.terms.head}
+                value={formatMillions(sel.head)}
+                className="type-body text-fg tabular"
+              />
+              <Term
+                label={OFFER_COPY.terms.cash}
+                value={formatMillions(sel.cash)}
+                className="type-body-strong text-fg tabular"
+              />
+              <Term label={OFFER_COPY.terms.later} value={paidLater(sel)} className="type-body text-fg tabular" />
+              <Term label={OFFER_COPY.terms.retained} value={retained(sel)} className="type-body text-fg tabular" />
+              <Term label={OFFER_COPY.terms.financing} value={sel.fin} />
+              <Term label={OFFER_COPY.terms.stay} value={sel.trans} />
+              <Term label={OFFER_COPY.terms.team} value={sel.staffNote} className="type-caption text-fg-2" />
+              <Term label={OFFER_COPY.terms.risk} value={closingRisk(sel)} />
             </div>
-          </div>
+          </Card>
         ) : null}
       </Container>
-    </section>
+    </Tile>
   )
 }

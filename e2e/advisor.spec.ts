@@ -1,16 +1,10 @@
 import { expect, type Locator, test } from "@playwright/test"
-import {
-  advisorDialog,
-  answerExitIq,
-  briefingRow,
-  openAdvisorFromHeader,
-  watchConsole,
-  waitForInquiry,
-} from "./helpers"
+import { answerExitIq, briefingRow, openAdvisorFromHeader, waitForInquiry, watchConsole } from "./helpers"
+import { CONTACT } from "../lib/site/routes"
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
-const CAL = "https://heirloom.cal.com/suyash/m-a-advisory-meeting"
+const CAL = CONTACT.advisorCalendar
 const DIALOG_NAME = "Talk to an M&A advisor"
 
 const STEPS = [
@@ -165,44 +159,6 @@ test.describe("advisor dialog", () => {
     )
   })
 
-  test("Change my last answer returns to the previous question with its chip pressed and the acknowledgement gone", async ({
-    page,
-  }) => {
-    await page.goto("/why")
-    const dialog = await openAdvisorFromHeader(page)
-    await dialog.getByRole("button", { name: "Selling the business", exact: true }).click()
-    await expect(dialog.getByRole("heading", { name: "What kind of business is it?" })).toBeVisible()
-    await dialog.getByRole("button", { name: "Home or field services", exact: true }).click()
-    await expect(dialog.getByRole("heading", { name: "About how much revenue last year?" })).toBeVisible()
-    await expect(dialog.getByText("QUESTION 3 OF 5", { exact: true })).toBeVisible()
-
-    await dialog.getByRole("button", { name: "Change my last answer" }).click()
-    await expect(dialog.getByText("QUESTION 2 OF 5", { exact: true })).toBeVisible()
-    await expect(dialog.getByRole("heading", { name: "What kind of business is it?" })).toBeVisible()
-    await expect(dialog.getByRole("button", { name: "Home or field services", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    )
-    await expect(dialog.getByRole("button", { name: "Another type of business", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "false"
-    )
-    await expect(dialog.getByText("On the call")).toBeHidden()
-    await expect(briefingRow(dialog, "Business")).toHaveText("Home or field services")
-    await expect(progress(dialog)).toHaveAttribute("aria-valuenow", "2")
-
-    await dialog.getByRole("button", { name: "Change my last answer" }).click()
-    await expect(dialog.getByText("QUESTION 1 OF 5", { exact: true })).toBeVisible()
-    await expect(dialog.getByRole("button", { name: "Change my last answer" })).toBeHidden()
-
-    await dialog.getByRole("button", { name: "Skip the questions, just book" }).click()
-    await expect(dialog.getByText("BRIEFING READY", { exact: true })).toBeVisible()
-    await dialog.getByRole("button", { name: "Change my last answer" }).click()
-    await expect(dialog.getByText("OPTIONAL NOTE", { exact: true })).toBeVisible()
-    await dialog.getByRole("button", { name: "Nothing to add" }).click()
-    await expect(dialog.getByText("BRIEFING READY", { exact: true })).toBeVisible()
-  })
-
   test("Start over clears the briefing but keeps the dialog open", async ({ page }) => {
     await page.goto("/confidentiality")
     const dialog = await openAdvisorFromHeader(page)
@@ -311,12 +267,17 @@ test.describe("advisor dialog", () => {
     await expect(dialog).toBeHidden()
 
     await openAdvisorFromHeader(page)
-    // Radix wires its "pointer down outside" listener in a 0 ms timer after the dialog mounts. Take one timer
-    // turn (an event-loop ordering barrier, not a duration) so the overlay click is heard, not treated as the
-    // click that opened the dialog.
-    await page.evaluate(() => new Promise<void>((resolve) => setTimeout(resolve, 0)))
-    await page.mouse.click(8, 400)
-    await expect(dialog).toBeHidden()
-    await expect(advisorDialog(page)).toBeHidden()
+    // Radix arms its "pointer down outside" listener in a timer after the dialog mounts, so the first click on
+    // the overlay can land before it is listening. Clicking until the dialog is gone waits on the state, not on
+    // a timer turn; a dialog that ignored its overlay would keep it visible until the poll gave up.
+    await expect
+      .poll(
+        async () => {
+          await page.mouse.click(8, 400)
+          return dialog.isHidden()
+        },
+        { message: "a click on the overlay closes the dialog" }
+      )
+      .toBe(true)
   })
 })

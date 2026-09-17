@@ -1,0 +1,517 @@
+total 102 Counter({'minor': 65, 'major': 34, 'blocker': 3})
+
+############################## BLOCKER
+
+(1) [Home page (app/page.tsx and its eleven t] home / phone — MarketScene pinned panel — the letter-of-intent cards and teaser slips over the four steps ("02 Buyer research", "03 NDA and qualification", "04 Offer comparison")
+  WHAT: On 390 the paper props are centred at cx=0.5·width, cy=0.68·height of the whole panel (lib/site/scroll.ts marketFrame narrow branch), which is exactly where the step list sits. In home-phone.png (y≈2200–2350) three white LOI cards cover the titles and bodies of steps 02–04; the inline elements carry style.zIndex 3–5 so they paint above the copy. The slip fan (radius up to ~350px from cx=195) sweeps the headline and paragraph too. Light text under
+  RULE: Scroll scenes keep the choreography but the copy must stay legible; nothing decorative may compete with the content; dark tiles legible.
+  FIX : components/site/scenes/MarketScene.tsx:97 — confine the stage to a band below the copy on phones: className="pointer-events-none absolute inset-x-0 bottom-0 h-[44%] overflow-hidden tab:inset-0 tab:h-auto" (marketFrame already scales to stage.offsetWidth/Height, so the props stay inside the band). MarketScene.tsx:166 — keep the text column above it: className="flex min-h-0 max-h-[56%] max-w-[470px] flex-1 flex-col justify-start gap-3 overflow-y-auto py-4 tab:max-h-none tab:justify-center-safe".
+
+(2) [Pages how-it-works and fees, desktop (12] fees / both — The last light tile: 'Other costs' → 'Common fee questions' → 'Ask about your fee' (app/fees/page.tsx:193–224)
+  WHAT: Three separately headed sections (three h2s, two row lists and a CTA block) sit inside one Tile tone="light", separated only by mt-20. Measured on the desktop capture the white run is ~1,600px (y≈2,870→4,460); on the phone capture ~2,300px. No tone change, no divider, three headlines in one tile.
+  RULE: Tiles alternate light/parchment/dark and the colour change is the divider; one headline, one lead, one action row per tile.
+  FIX : Split into three tiles: <Tile tone="light"> for Other costs (h2 id="other-costs" keeps anchor-target), <Tile tone="parchment"> for Common fee questions (h2 id="fee-questions"), <Tile tone="light"> for Ask about your fee — each with <Container><div className="max-w-[692px]">. Remove the mt-20 from the h2s at :204 and :211. The sequence then ends light → parchment footer.
+
+(3) [Pages how-it-works and fees, desktop (12] how-it-works / both — Timing / Track record tile (app/how-it-works/page.tsx:60–103) and its junction with the footer
+  WHAT: The parchment tile holds two headed sections ('What sets the timeline' and 'Millions in enterprise value already transacted.', joined by mt-16) and is immediately followed by the footer, which is also parchment (SiteFooter: bg-canvas-parchment). The page therefore closes with ~1,500px of parchment (desktop y≈5,900→7,390) broken only by the footer's hairline.
+  RULE: No two adjacent tiles of the same tone; one headline per tile; the page should read as one system from hero to footer.
+  FIX : Close the <Tile tone="parchment" id="timing"> after the fine print at :84 and open <Tile tone="light"><Container><div className="max-w-[692px]"> for the Track record block (:87–101); drop the mt-16 on that div. Sequence becomes light → dark → parchment → light → parchment → light → parchment footer.
+
+############################## MAJOR
+
+(1) [Pages who-we-are, questions, why, nothin] who-we-are / both — Hero tile: the two-column grid holding the firm copy (left) and the founder portrait + bio (right)
+  WHAT: One tile carries two headlines (h1 "Who we are" at 56px and h2 "Suyash Agrawal" at 34px) and two action rows (primary pill + "See how it works →" on the left, "Email Suyash" on the right). At 1280 the left column ends at the CTA (~y=760) while the right column runs to ~y=1030 and the tile to ~y=1125, so ~285px of empty canvas sits under the primary CTA. On phone the tile is ~1600px tall and the primary CTA lands mid-tile, between the facts table 
+  RULE: Clear hierarchy per tile: one headline, one lead, one action row; aligned edges; no orphaned elements.
+  FIX : app/who-we-are/page.tsx: split the hero. Tile 1 stays <Tile tone="light"> with <Container> (default) holding Eyebrow / h1 / lead (add max-w-[692px] to the lead) / the facts <dl> (add max-w-[692px]) / the action row. Add a new <Tile tone="parchment" id="founder" className="anchor-target"> with <Container className="desk:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] grid items-center gap-x-12 gap-y-8">: <FounderPortrait /> in the first cell; Eyebrow (drop mt-6) / h2 type-display-md / the two paragraphs / Email link in the second. Remove id="founder", anchor-target and desk:max-w-none max-w-[440px] from the old inner div. Change the "Who does the work
+
+(2) [Pages who-we-are, questions, why, nothin] who-we-are / desktop — "What buy-side experience changes" grid in the parchment tile
+  WHAT: desk:grid-cols-5 forces five (980 − 4×24)/5 ≈ 177px columns. Four of the five 17px/600 titles wrap to two lines ("Stronger buyer / qualification", "Clearer offer / comparison", "More disciplined / diligence", "A stronger negotiating / position") while "Better preparation" stays on one, so body copy starts ~21px higher in column 1 than in columns 2–5; the measure is cramped and the baselines ragged.
+  RULE: Aligned edges and consistent gutters; no cramped or orphaned elements; grids should not leave uneven rows.
+  FIX : app/who-we-are/page.tsx (CHANGES block, ~line 122): drop the column grid and render stacked record rows that mirror the hero facts <dl>: wrapper className="border-line mt-8 border-t"; each item className="border-line lphone:grid-cols-[minmax(0,260px)_minmax(0,1fr)] grid items-baseline gap-x-8 gap-y-1 border-b py-4"; title <div className="type-body-strong text-fg">; body <p className="type-body text-fg-2 m-0">. Remove desk:grid-cols-5 and the auto-fit template.
+
+(3) [Pages who-we-are, questions, why, nothin] questions / both — QuestionsAccordion category headings (Fees, Confidentiality, Fit and readiness, Sale process, Buyers, About Heirloom)
+  WHAT: Each category h2 is type-caption-strong text-accent (14px green) sitting on a border-fg border-t 1px ink rule, while the questions beneath it are type-tagline (21px): the heading is 7px smaller than its children and the hierarchy reads upside down. Six non-interactive accent labels run down the page, and the ink rule is the only non-hairline divider in scope — the old "eyebrow + rule" look.
+  RULE: Type ladder: section heads are type-display-md, captions are for labels/hints; accent only on interactive/selected elements; hairlines are border-line; nothing 
+  FIX : components/site/questions/QuestionsAccordion.tsx line 18: h2 className="anchor-target type-display-md text-fg" (remove type-caption-strong text-accent border-fg border-t pt-4); wrap the category's Disclosure list in <div className="border-line mt-6 border-t"> so the first row gets a top hairline; change the between-category spacer from mt-14 to mt-20 (matches the fees page sub-section rhythm). Keep questionClassName="type-tagline" (matches the home QuestionsTeaser).
+
+(4) [Pages who-we-are, questions, why, nothin] questions / desktop — "Ask a question" Card at the bottom of the parchment tile
+  WHAT: The Card spans the full 980px container but its field column is max-w-[560px], so ~372px (38%) of the card interior is empty white to the right of the textarea, input and button, while the heading and intro paragraph run the full width above them.
+  RULE: Aligned edges; no orphaned or cramped elements; content locks at 980 (default) or 692 (prose/forms).
+  FIX : app/questions/page.tsx: render the form in its own tile — <Tile tone="light"><Container size="text"><AskForm /></Container></Tile> after the accordion tile. components/site/questions/AskForm.tsx: Card className="anchor-target" (drop mt-16) and the field wrapper className="mt-6 flex flex-col gap-4" (drop max-w-[560px]) so the fields fill the 692px card.
+
+(5) [Pages who-we-are, questions, why, nothin] why / both — Final parchment tile: "Millions in enterprise value already transacted." followed by the Owners / Existing offer / Buyers card grid
+  WHAT: One tile carries the headline, lead, caption, an action row (primary pill + "Who we are"), and then, 56px lower, a three-card grid of unrelated next steps each with its own link — five actions and no heading for the cards. The cards read as a continuation of the track-record claim and the tile has no single focal action.
+  RULE: Clear hierarchy per tile: one headline, one lead, one action row; no orphaned elements.
+  FIX : app/why/page.tsx: move the NEXT_STEPS grid out of the "Millions" tile into a new closing <Tile tone="dark"><Container><div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-6">{NEXT_STEPS.map(… <Card> …)}</div></Container></Tile> (plain <Card> on dark: surface becomes tile-2, hairline translucent, no shadow). Remove mt-14 from the grid. Sequence becomes dark → light → parchment → light → parchment → dark → footer.
+
+(6) [Pages /score and /offer-review at 1280 (] score / both — exitIQ instrument, right pane, the Recommendation value (data-testid="exitiq-state") before any answer is given
+  WHAT: The empty-state sentence "Answer seven questions to see your result." is set in type-display-md (34px desktop / 28px phone), the same size and weight as the question h2 in the left pane. At the fold the card shows two 34px headlines side by side, and the placeholder is the longer of the two (2 lines desktop, 3 lines phone), so it out-shouts the actual question.
+  RULE: One headline per tile; display-md is for section heads and real values, not placeholder copy. Secondary text genuinely secondary.
+  FIX : components/site/exitiq/ExitIqRun.tsx: on the div with data-testid="exitiq-state" replace `type-display-md text-fg mt-1.5` with `cn(noAnswers ? "type-lead-airy text-fg-2" : "type-display-md text-fg", "mt-1.5")` (noAnswers is already computed in the component). Real states (Market Ready, Prepare First, …) keep display-md.
+
+(7) [Pages /score and /offer-review at 1280 (] score / both — Next steps tile, the three-card grid: "See how it works" (Link card) and "Review it with an advisor" (button card) next to the static "Keep the plan" card
+  WHAT: Two of the three cards are whole-card controls but render identically to the non-interactive card: title text-fg, no link, no accent; the accent only appears on hover, which phones never show. Nothing tells the reader that two cards are tappable and one is not.
+  RULE: One accent colour for every interactive element; the card-grid recipe ends in an accent TextLink. Cards consistent.
+  FIX : app/score/page.tsx: on the Link card change the title span to `type-tagline text-accent block` and remove `hover:text-accent` from the Link className (keep `pressable`). components/site/exitiq/ReviewWithAdvisor.tsx ReviewWithAdvisorCard: title span → `type-tagline text-accent block`, drop `hover:text-accent` from the button className. "Keep the plan" stays text-fg so the difference is legible.
+
+(8) [Pages /score and /offer-review at 1280 (] offer-review / both — Worked example (dark tile), left card "Letter of intent · Project Ridgeline", the three paragraphs
+  WHAT: The card body is set in type-lead-airy (24px/300 desktop, 21px phone), larger than the tile's own lead (type-body 17px) and equal to the page hero's lead, and six phrases are wrapped in Highlight (text-accent font-semibold). Three sentences carry six green bold runs at 24px: on desktop the card is the brightest, largest text object in the tile and on phone it runs ~600px tall. The eye goes to the example, not to the headline.
+  RULE: type-lead-airy is for hero and editorial lead paragraphs only; accent only on interactive/selected elements and the occasional emphasised figure — no accent wal
+  FIX : app/offer-review/page.tsx: card body div `type-lead-airy text-fg-2 flex flex-col gap-5 p-6` → `type-body text-fg-2 flex flex-col gap-4 p-6`. Change Highlight to `<span className="text-fg font-semibold">` and wrap only the figure `$4,650,000` in `<span className="text-accent font-semibold tabular">` (the one emphasised figure).
+
+(9) [Pages /score and /offer-review at 1280 (] offer-review / both — Worked example, right card "The terms, separated", the eight Term rows
+  WHAT: Term uses KeyValueRow, which is `flex flex-wrap justify-between`, so rows lay out two different ways depending on string length: on desktop Headline price, Cash at closing, Earnout, Buyer financing and Transition put the value right-aligned on the label line while Seller note, Exclusivity and Working capital wrap the value under the label, left-aligned; on phone every row stacks except Headline price. The table has no consistent value edge and re
+  RULE: Aligned edges and consistent gutters; row-list recipe (one layout per row type).
+  FIX : app/offer-review/page.tsx Term(): `className="border-line flex-col items-start gap-y-1 border-b py-3 last:border-b-0"` so every row is label-over-value (alternatively a fixed `grid grid-cols-[132px_1fr] gap-x-4`), and drop `tabular` from valueClassName for sentence values (keep it via the d1/filament classes on the two figures).
+
+(10) [Pages /score and /offer-review at 1280 (] offer-review / both — Worked example, right card, the Exclusivity / Transition / Working capital rows (tone="signal") and the Term label styling
+  WHAT: Labels are forced to text-fg-2 while the three "signal" values are text-fg-3, so on those rows the label is brighter than its value — the content a seller most needs is the dimmest text in the card (fg-3 on tile-2 ≈ 5.0:1, legible but visibly receded, as seen on desktop where "Exclusivity" outranks "90 days during which…"). The card runs four value tones (strong / plain / accent / dim) in eight rows.
+  RULE: Secondary text genuinely secondary; row-list recipe is label type-caption text-fg-3, value text-fg. Accent reserved for the one emphasised figure.
+  FIX : app/offer-review/page.tsx: remove `labelClassName="text-fg-2"` from Term (default fg-3), set `signal: "type-caption text-fg"` (same as d2), keep `d1` strong for Headline price and `filament` accent for Cash at closing only.
+
+(11) [Pages /confidentiality and /buyers, desk] buyers / desktop — "What it does" tile, the five-benefit grid
+  WHAT: At 980px the auto-fit grid (minmax 220px) resolves to 4 columns, so the 5th benefit "Verified before the meeting" sits alone at the left of a second row under three empty cells (screenshot y≈900–1000).
+  RULE: Taste: card/feature grids must not leave a lone item; aligned edges and consistent gutters.
+  FIX : app/buyers/page.tsx line 44: change the grid to `grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-6 gap-y-10` so the row breaks 3 + 2 at 980px (each column ≈310px) and still stacks to one column on phones.
+
+(12) [Pages /confidentiality and /buyers, desk] buyers / both — PassportTiers, nested "Buyer Passport card" rows (data-testid passport-tiers, left pane)
+  WHAT: The value span has no flex basis, so rows alternate between two layouts inside one card: short values sit beside the label ("Buyer name and firm · Shown", "Buyer type", "Acquisition criteria"), long values drop under the label left-aligned ("Capacity range status", "Lender or SBA preparation", "Prior acquisitions"). On phone the opposite: nine rows stack, only "Shown" sits beside its label at the far right. CompanyRecord on the sibling page uses 
+  RULE: Row list / record recipe: label on the left, value in its own column; aligned edges inside cards.
+  FIX : components/site/buyers/PassportTiers.tsx lines 101–102: `labelClassName="flex-[0_1_150px]"` and add `flex-[2_1_190px] min-w-0` to both valueClassName strings (`"type-body text-fg-3 flex-[2_1_190px] min-w-0"` / `"type-body text-fg flex-[2_1_190px] min-w-0"`), matching CompanyRecord.tsx lines 45–47 so every row is two-column on desktop and stacked on phone.
+
+(13) [Pages /confidentiality and /buyers, desk] buyers / both — Dark tile #passport-tiers (the whole tile) and the tier readout inside the card
+  WHAT: The tile begins directly with the card; its only heading-weight text is the 14px accent Eyebrow "Heirloom Verified" (the tier readout) and the 14px "Verification levels" header label. There is no display-rung element anywhere in an 1,100px-tall dark tile. On the sibling page the same pattern gets an Eyebrow + display-lg h2 + lead above the card and a display-md readout (`perm-who`) inside it.
+  RULE: Taste: clear hierarchy per tile (one headline); the page should feel like one system from hero to footer. Instrument idiom elsewhere (HeroConsole, ExitIqRun, Pr
+  FIX : Copy is frozen, so fix the rung: components/site/buyers/PassportTiers.tsx lines 84–86 replace `<Eyebrow tone="accent" data-testid="passport-tier-name">{PASSPORT_TIERS[tier]}</Eyebrow>` with `<p className="type-display-md text-fg" data-testid="passport-tier-name">{PASSPORT_TIERS[tier]}</p>` and change the description on line 87 to `type-body text-fg-2 mt-3`; keep "Verification levels" as the card-header Eyebrow.
+
+(14) [Pages /confidentiality and /buyers, desk] buyers / both — BuyerRegisterForm, the consent checkbox row "I confirm that this information is accurate and may be verified."
+  WHAT: The label is `flex items-start` around a 16px checkbox and a 20px caption line, so the whole tappable row is 20px tall on desktop and ~40px on phone (two wrapped lines); the checkbox itself is 16px.
+  RULE: Hard rule 7: touch targets ≥ 44px.
+  FIX : components/site/buyers/BuyerRegisterForm.tsx line 112: `className="type-caption text-fg-2 flex min-h-11 items-center gap-3"`; line 115: drop `mt-0.5` from the checkbox (`className="accent-accent h-4 w-4 flex-none"`).
+
+(15) [Pages /confidentiality and /buyers, desk] confidentiality / both — "Your exclusions and limits" tile, right column "Controls you keep once outreach begins"
+  WHAT: Six static `<span>`s styled as pills (`type-caption text-fg-2 rounded-pill border-line px-3 py-1.5`) read as buttons but do nothing; they match neither the badge recipe (caption-strong, fg-3, py-1) nor the Chip (44px). On desktop the pill cluster is ~130px tall beside a 300px hairline list, leaving the right column mostly empty.
+  RULE: Pills are for actions and every interactive element takes the accent, so inert text must not wear the action shape; badges are the outlined recipe; columns shou
+  FIX : app/confidentiality/page.tsx lines 85–91: render OWNER_CONTROLS with the same row recipe as the left column: `<div className="border-line mt-4 border-t">{OWNER_CONTROLS.map((t) => <div key={t} className="border-line type-body text-fg border-b py-3">{t}</div>)}</div>`.
+
+(16) [Cross-page consistency across all 11 pag] score, offer-review, how-it-works, fees, confidentiality, buyers, who-we-are, questions, why (every page with a sub-nav) / desktop — Right edge of the chrome: the header's 'Talk to an M&A advisor' nav pill (y≈22) directly above the sub-nav pill (y≈70), same x, same size, same green.
+  WHAT: Two primary pills sit stacked 48px apart on every subpage fold. On score, how-it-works, confidentiality, who-we-are and why they are the same action with two different labels ('Talk to an M&A advisor' / 'Talk to an advisor'); on offer-review, fees, buyers and questions two different primaries compete. Home and 404 (no sub-nav) show the intended single pill.
+  RULE: One action row per band / clear hierarchy; in the gallery grammar the global nav carries no pill and the page sub-nav owns the page's action.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/layout/SiteHeader.tsx: import { SUBNAV, type RoutePath } from '@/lib/site/routes', compute `const hasSubnav = Boolean(SUBNAV[pathname as RoutePath])`, and render the `<AdvisorCtaButton size="nav" className="nav:inline-flex hidden">` only when `!hasSubnav` (home, 404); keep the mobile menu CTA. Update components/site/__tests__/SiteHeader.test.tsx line ~101-104 to assert the header CTA on '/' and its absence on a SUBNAV route.
+
+(17) [Cross-page consistency across all 11 pag] score, offer-review, how-it-works, fees, confidentiality, buyers, who-we-are, questions, why / phone — Sub-nav call-to-action pill (data-testid="subnav-cta"), the only CTA visible in the chrome on phones.
+  WHAT: The pill is `size="nav"` → `h-[26px]`, so the page's persistent action has a 26px tap height on every subpage (the header burger beside it is 44px). It is the one control every phone visitor is expected to tap and it is the smallest target on the site.
+  RULE: Touch targets ≥ 44px (brief §1 rule 7); components consistent across pages.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/layout/SubNav.tsx lines 43-51: add `className="h-11 px-4 tab:h-[26px] tab:px-[11px]"` to both the `<Button size="nav" …>` and the `<AdvisorCtaButton size="nav" …>` (tailwind-merge lets the utility override the compound-variant height below `tab`). Add the class assertion to components/site/__tests__/SubNav.test.tsx line ~52.
+
+(18) [Cross-page consistency across all 11 pag] home / both — The hero instrument console (data-testid="hero-console") under the hero text.
+  WHAT: HomeHero wraps HeroConsole in `Container size="wide"` (1440), so at 1280 the console spans 1232px, 24px from each edge, while the identical instrument on /score (ExitIqRun) sits in the default 980 Container. The same dark product appears at two widths, and the console is the only band on the home page that abandons the 980 lock used by the hero text, TermsStrip and every section below.
+  RULE: Content locks at 980px; `wide` only when needed; the two dark instrument cards are one component family.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/hero/HomeHero.tsx line 40: change `<Container size="wide" className="desk:mt-16 mt-12">` to `<Container className="mt-14">` (default 980, same offset as app/score/page.tsx line 30). The pane grid `minmax(min(100%,max(280px,42%)),1fr)` still yields two panes at 980.
+
+(19) [Cross-page consistency across all 11 pag] home vs score / desktop — Header rows of the two instrument cards: HeroConsole header (home) vs ExitIqRun header (/score).
+  WHAT: Console header measures 72-75px tall (py-3.5 plus a `min-h-11` right cluster), shows a plain 'Heirloom' eyebrow with no LiveDot, and uses a compact secondary pill for 'Start over'. Run header measures 46-48px, shows LiveDot + eyebrow + ProgressTicks, and uses a TextButton for the same 'Start over' action. Side by side the two cards do not read as one product.
+  RULE: Instrument-card recipe: header row `border-b border-line-soft px-6 py-3.5`; the dark instrument cards must be consistent with each other.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/hero/HeroConsole.tsx lines 74-86: wrap the eyebrow as `<div className="flex items-center gap-2.5"><LiveDot /><Eyebrow as="span">Heirloom</Eyebrow></div>` (import LiveDot from primitives), change the right cluster to `className="flex items-center gap-4"` (drop `min-h-11`), and replace `<Button variant="secondary" size="compact" onClick={() => setStage("route")}>Start over</Button>` with `<TextButton onClick={() => setStage("route")}>Start over</TextButton>` (import from '@/components/site/ui/TextButton'), matching ExitIqRun.tsx line 154.
+
+(20) [Cross-page consistency across all 11 pag] confidentiality / both — Hero: the h1 'Confidentiality' has no Eyebrow above it.
+  WHAT: 8 of the 9 centered heroes open with an eyebrow; here the h1 starts at y≈185 (vs ≈220 on every other subpage) and the hero reads as a different template. On phone the h1 sits at y≈160 vs ≈190 elsewhere.
+  RULE: Page-hero recipe (every subpage): Eyebrow mb-4 → type-hero.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/confidentiality/page.tsx, hero `<Container size="text" className="text-center">`: insert `<Eyebrow className="mb-4">…</Eyebrow>` above the h1 (import Eyebrow is already there). The string is a copy decision; an existing approved string is the nav note for this page in lib/site/routes.ts NAV_GROUPS ('Who sees what, and when').
+
+(21) [Cross-page consistency across all 11 pag] questions / both — Hero: 'Questions owners ask.' and the pill row beneath it.
+  WHAT: No eyebrow, no lead, no caption; the action row is seven `size="compact"` (14px) pills with the one primary ('Ask a question') dropped into the wrap after six secondary anchors, so it lands wherever the wrap ends (row 2, second position on desktop; alone on row 4 on phone). Every other hero has a single 17px `md` action row with the primary first.
+  RULE: Page-hero recipe; one action row per tile with clear hierarchy; buttons consistent across pages.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/questions/page.tsx lines 17-27: keep the `<nav>` of six `variant="secondary" size="compact"` category pills, and move the primary out of it into its own row: `<div className="mt-6 flex justify-center"><Button href="#q-ask">Ask a question</Button></div>` (md size, matching every other hero primary). An eyebrow/lead would complete the recipe but needs a string from the copy owner (PAGE_META.questions.description already exists in lib/site/routes.ts).
+
+(22) [Cross-page consistency across all 11 pag] offer-review / both — Last tile ('Have it reviewed before you sign exclusivity.') meeting the footer.
+  WHAT: Final tile is parchment and the footer is parchment; only the footer's 1px hairline separates two same-tone bands (visible in offer-review-desktop.png at y≈3300).
+  RULE: No two adjacent tiles of the same tone; the colour change is the divider, not a border.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/offer-review/page.tsx, the closing `<Tile tone="parchment">` after the existing-buyer tile → `<Tile tone="dark">` (previous tile is light, so light → dark → parchment footer alternates; Button/TextLink resolve on dark automatically).
+
+(23) [Cross-page consistency across all 11 pag] how-it-works / both — Last tile (Timing + Track record) meeting the footer.
+  WHAT: Parchment tile directly above the parchment footer (how-it-works-desktop.png y≈6300-6900), separated only by the footer hairline.
+  RULE: No two adjacent tiles of the same tone; the colour change is the divider.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/how-it-works/page.tsx: `<Tile tone="parchment" id="timing" className="anchor-target">` → `tone="dark"` (sequence becomes light hero → dark scene → parchment BusinessBrain → light trouble → dark timing → parchment footer).
+
+(24) [Cross-page consistency across all 11 pag] questions / both — The single parchment tile (accordion + Ask form) meeting the footer.
+  WHAT: Parchment tile ends on the AskForm card and meets the parchment footer with only a hairline between (questions-desktop.png y≈3000).
+  RULE: No two adjacent tiles of the same tone.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/questions/page.tsx lines 30-35: keep `<Tile tone="parchment"><Container><QuestionsAccordion /></Container></Tile>` and add `<Tile tone="light"><Container><AskForm /></Container></Tile>`; in /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/questions/AskForm.tsx line 45 drop `mt-16` from the Card (its `id="q-ask"` and `anchor-target` stay).
+
+(25) [Cross-page consistency across all 11 pag] why / both — Last tile ('Millions in enterprise value already transacted.' + next-step cards) meeting the footer.
+  WHAT: Parchment tile directly above the parchment footer (why-desktop.png y≈2780), hairline only.
+  RULE: No two adjacent tiles of the same tone.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/why/page.tsx, final `<Tile tone="parchment">` → `<Tile tone="dark">`; the page then opens and closes dark, and the three `<Card>`s inside pick up the tile-2 surface automatically.
+
+(26) [Home page (app/page.tsx and its eleven t] home / desktop — Left content edge of MarketScene ("A private market for your business", "Several buyers compete privately."), PrivacyScene ("Who sees what") and TransactionCarries ("Beyond the price", "Employees, customers…")
+  WHAT: These three tiles use padded={false} and put px-6 on the 980px Container instead of on the tile, so at 1280 their copy starts at x=174 while every other tile's copy starts at x=150 ("Financial preparation", "Compare offers", "Speed" all at 150). The 24px jog is visible at each dark/light boundary (e.g. "Speed" eyebrow x=150 directly above "Beyond the price" x=174).
+  RULE: Aligned edges and consistent gutters; content locks at 980px; the tile owns the 24px gutter.
+  FIX : Move the gutter off the Container onto the wrapper so the 980 lock is measured on content: components/site/scenes/MarketScene.tsx:96 → <div className="scene-pin overflow-hidden px-6"> and :161 drop px-6 from the Container; components/site/scenes/PrivacyScene.tsx:32 → <div className="scene-pin overflow-hidden px-6"> and :33 drop px-6; components/site/home/TransactionCarries.tsx:13 → className="flex min-h-[420px] items-end overflow-hidden px-6" and :19 → <Container className="tile relative">.
+
+(27) [Home page (app/page.tsx and its eleven t] home / phone — PrivacyScene — the Company record card under the L-level block
+  WHAT: On 390×844 the left block (h2, paragraph, L5 + stage name, trigger caption, five pills on three lines, link, footnote) is ~510px tall, leaving ~306px of the pinned panel for the 7-row record (header 44px + rows ~62px ≈ 480px needed). home-phone.png y≈5980–6285 shows the card cut off after "Adjusted earnings"; the remaining rows are only reachable via a nested overflow-y-auto scroll inside a sticky panel, which the page scroll never reaches.
+  RULE: Scroll-scene panels must fit the viewport on phones; nothing cramped or clipped.
+  FIX : components/site/scenes/PrivacyScene.tsx:23-26,74 — the scene already measures itself: add const [narrow, setNarrow] = useState(false) and in the useSceneProgress callback setNarrow(size.width < 736); render <CompanyRecord level={level} fieldCount={narrow ? 5 : 7} size={narrow ? "sm" : "md"} /> (5 sm rows ≈ 315px). Also tighten the phone gaps at :40 (mt-8 → mt-6) and :47 (mt-5 → mt-4).
+
+(28) [Home page (app/page.tsx and its eleven t] home / both — HomeHero — the "BACKED BY Y COMBINATOR" pearl badge between the lead paragraph and the CTA pair
+  WHAT: The control measures 40px tall (desktop y 475→515, phone y 407→447): type-caption 20px + py-2 + 3px borders, below the 44px touch minimum. It also inserts a second action row between the lead and the CTA pair, so the hero stack reads eyebrow → h1 → lead → badge → buttons instead of the recipe's headline → lead → one action row → fine print, and its 3px pale border box is the only element in the hero that reads as a floating panel.
+  RULE: Touch targets ≥ 44px; page-hero recipe (h1, lead, action row, then fine print); one action row per tile.
+  FIX : components/site/hero/HomeHero.tsx:27-32 — move the block below the CTA row (:33-38) into the fine-print slot: <div className="mt-5 flex justify-center"> and give the button the target height: <Button variant="pearl" … className="gap-2 min-h-11">. Change :33 mt-8 stays on the CTA row.
+
+(29) [Home page (app/page.tsx and its eleven t] home / both — HeroConsole right pane — HeroGraph SVG labels ("MATCHED", "NDA SIGNED", "FINALISTS", "YOUR BUSINESS", "OFFER", "$4.8M HEADLINE PRICE", "$3.6M CASH AT CLOSING") and the filled module pills
+  WHAT: Every label is set with inline SVG styles outside the ladder: 11.5px/600 with letterSpacing 1.2px (rings), 11px/600 +1px (nodes), 11px +0.8px (evidence), 10px +0.9px (modules), 9.5px +1px (price caption), 11px +0.6px (cash line), and 26px/600 for the price. Tracked uppercase micro-labels are the old design's eyebrow grammar; the module chips are filled dark pills (rect rx=12 fill=tile-3 at .85). The source guard cannot see these because they are 
+  RULE: Type is set only through the ladder (12 fine-print, 10 micro-legal, 21 tagline, 28 lead); no tracking; badges are outlined, never filled; nothing that still loo
+  FIX : components/site/hero/HeroGraph.tsx:47,79,118,166 → style={{ font: `400 12px ${TEXT}`, letterSpacing: "-0.12px" }}; :148,157 → font `400 10px ${TEXT}`, letterSpacing "-0.08px"; :155 price → font `600 21px ${DISPLAY}`; :188 → 12px/-0.12px; :133-143 module pill → fill="none" stroke={m.hs} (outlined), drop fillOpacity.
+
+(30) [Home page (app/page.tsx and its eleven t] home / phone — Standalone text links: "Buyers: Get Heirloom Verified" (hero), "See how it works →" (SellerWorkload), "See how it works →" / "See fees →" (Speed), "Why Heirloom exists" (TransactionCarries), "See all questions" (Questions)
+  WHAT: Each is a bare inline TextLink whose hit area is its line box — ~20px for the caption link, ~25px for the body links — while PrivacyScene wraps the same component in inline-flex min-h-11 items-center. The page therefore has two link treatments and five sub-44px targets.
+  RULE: Touch targets ≥ 44px; components consistent across the page.
+  FIX : Apply the PrivacyScene pattern: components/site/hero/HomeHero.tsx:43, components/site/home/SellerWorkload.tsx:72, components/site/home/SpeedSection.tsx:61-62, components/site/home/TransactionCarries.tsx:25, components/site/home/QuestionsTeaser.tsx:35 → <TextLink … className="inline-flex min-h-11 items-center"> and shift the wrapper margins by 12px (e.g. mt-6 → mt-3 -mb-3) so the visual rhythm does not change.
+
+(31) [Home page (app/page.tsx and its eleven t] home / both — MarketScene — the three inactive steps (01–03 when 04 is active) and their body captions
+  WHAT: Inactive steps are drawn at opacity-50. The 14px body (text-fg-2 = #b4c6ba) at 50% over tile-1 (#0b241b) resolves to ≈#5f756a, a contrast of 3.3:1 — below 4.5:1 for 14px text. Only one step is legible at a time, and the dimmed bodies are the copy that explains the choreography.
+  RULE: Dark tiles legible (contrast); secondary text genuinely secondary but readable.
+  FIX : components/site/scenes/MarketScene.tsx:179-181 — change the inactive state from opacity-50 to opacity-70 (resolves to ≈#82958b, 5.1:1); keep the border-line/border-accent swap as the active cue.
+
+(32) [Pages how-it-works and fees, desktop (12] fees / both — Fee calculator tile: h2 'Fee calculator' vs the price figure and the total (app/fees/page.tsx:144; components/site/fees/FeeCalculator.tsx:109, :173)
+  WHAT: The tile headline is type-display-md (34px) while the '$2,400,000' figure inside the card is type-display-lg (40px) and 'Total Heirloom fee' is type-display-md (34px). The largest type in the tile is a control readout, not the headline; the total ties the headline. On how-it-works the equivalent tile headlines ('Financial preparation', 'When a sale runs into trouble') are display-lg, so fees is also inconsistent with the sibling page.
+  RULE: Type ladder: type-display-lg is for tile headlines, type-display-md for section heads; clear hierarchy per tile.
+  FIX : app/fees/page.tsx:144 h2 → className="anchor-target type-display-lg text-fg" (do the same for the 'Other costs' :196 and 'Common fee questions' :204 h2s once they sit in their own tiles). FeeCalculator.tsx:109 → className="type-display-md tabular text-fg mt-1"; :173 → className="type-lead tabular text-fg". Update components/site/__tests__/FeeCalculator.test.tsx:197–198, which pin the current classes.
+
+(33) [Pages how-it-works and fees, desktop (12] fees / phone — Hero figures row: 5% / $5,000 / 2.5% (app/fees/page.tsx:90)
+  WHAT: grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] with gap-x-8 yields two columns at 342px content width, so '2.5%' and its four-line note sit alone on a second row beside an empty cell (phone fold, y≈520–640).
+  RULE: Card/stat grids must not leave a lone orphan; aligned edges and consistent gutters.
+  FIX : app/fees/page.tsx:90 → grid-cols-[repeat(auto-fit,minmax(min(100%,170px),1fr))]. At 170px the row is one column up to ~372px content (390 and 320 phones stack cleanly) and three columns from 574px, which still fits the 610px left column at desk (3×170+64=574).
+
+(34) [Pages how-it-works and fees, desktop (12] fees / both — Path cards 'Full private sale' / 'I already have the buyer' (components/site/fees/FeeCalculator.tsx:73–77)
+  WHAT: Only the selected card renders the accent eyebrow ('Full private sale selected'), so the two option cards are unequal (≈100px vs ≈78px on desktop) and everything below — the slider block — jumps ~22px each time the visitor toggles.
+  RULE: Selection must not shift layout (the Chip selected state is 'drawn as border + inset ring so the layout does not shift'); aligned edges.
+  FIX : Always render the eyebrow slot and let it be empty when idle: <Eyebrow as="span" tone="accent" className="mb-1 min-h-[18px]">{on ? selectedLabel : ""}</Eyebrow>. The idle label text is never in the DOM, so FeeCalculator.test.tsx:181 (queryByText(...).toBeNull()) and the e2e toBeVisible checks still hold.
+
+############################## MINOR
+
+(1) [Pages who-we-are, questions, why, nothin] why / both — Tile headlines: "Seller representation through closing", "What Heirloom is building", "Millions in enterprise value already transacted."
+  WHAT: Three of the four content tiles set their headline in type-display-md (34px, text face) while the first content tile ("How private businesses sell today") and both who-we-are tiles use type-display-lg (40px, display face). Equal-rank tiles carry two different headline sizes on one page.
+  RULE: Type ladder: type-display-lg for tile headlines, type-display-md for section heads within a tile.
+  FIX : app/why/page.tsx lines 134, 155 and 174: change the h2 className from type-display-md to type-display-lg (the Eyebrow above "Seller representation…" stays).
+
+(2) [Pages who-we-are, questions, why, nothin] questions / desktop — Hero: the category pill nav under the h1
+  WHAT: Seven compact pills (~836px total) inside the 692px text container wrap 5 + 2; the second row ("About Heirloom" + the primary "Ask a question") is a two-pill orphan centered under the first, with the page's main CTA trailing at its end.
+  RULE: No orphaned elements; one clear action row per tile.
+  FIX : app/questions/page.tsx: give the hero <Container size="default" className="text-center"> (the h1 is short enough to stay balanced) so all seven pills sit on one line at ≥1069px; below that width they wrap as they do today.
+
+(3) [Pages who-we-are, questions, why, nothin] questions, why / both — Last tile of each page against the parchment footer
+  WHAT: Questions ends on a parchment tile (accordion + form) and why ends on a parchment tile ("Millions…"), both immediately followed by the parchment footer; the footer's border-t hairline becomes the only border between tiles on either page.
+  RULE: No two adjacent tiles of the same tone; the colour change is the divider, not a border.
+  FIX : Covered by the fixes above: app/questions/page.tsx puts AskForm in a <Tile tone="light"> after the accordion; app/why/page.tsx closes with the NEXT_STEPS <Tile tone="dark">. If those are declined, set the why "Millions" tile to tone="dark" and split the questions form into a light tile anyway.
+
+(4) [Pages who-we-are, questions, why, nothin] who-we-are, why / phone — Standalone TextLinks in action rows: who-we-are "See how it works →" (×2) and "Email Suyash"; why "See how it works →", "See fees →", "See who can access what", "Who we are"
+  WHAT: These are actions, not inline prose links, and render at ~25px line height. In the why links row gap-y-3 gives a 37px pitch when the third link wraps to its own line (visible at 390).
+  RULE: Touch targets ≥ 44px.
+  FIX : Add className="inline-flex min-h-11 items-center" to each action-row <TextLink> in app/who-we-are/page.tsx (lines 81, 142; Email Suyash: "mt-3 inline-flex min-h-11 items-center" replacing mt-5 inline-block) and app/why/page.tsx (lines 148–150, 186); on the why links row keep flex-wrap and add items-center.
+
+(5) [Pages who-we-are, questions, why, nothin] who-we-are, why / both — Bodies of the border-t list items (who-we-are BENCH and CHANGES; why NOW and LEADS) versus the footnote and the cards around them
+  WHAT: List-item bodies are type-caption text-fg-2 (14px), the same size as the footnote "You can use your existing professionals…" (type-caption text-fg-3) 32px beneath them, so content and footnote differ by colour only. On why, the same 14px bodies sit between tiles whose Card bodies are type-body (17px), so equal-rank descriptions change size from tile to tile.
+  RULE: Secondary text genuinely secondary; components consistent within a page (card-grid recipe body is type-body text-fg-2).
+  FIX : app/who-we-are/page.tsx lines 113 and 126, app/why/page.tsx lines 143 and 166: change <p className="type-caption text-fg-2 mt-2"> to <p className="type-body text-fg-2 mt-2">. (The home SpeedSection uses the same caption pattern; align it in the same pass if the site-wide decision is body.)
+
+(6) [Pages /score and /offer-review at 1280 (] score / both — Page hero lead paragraph under "Is the business ready to sell?"
+  WHAT: The lead breaks at the hyphen in "90-day": desktop renders "…findings and a 90-" / "day plan." and phone "…and a 90-" / "day plan." — a hyphen-split orphan last line on both viewports.
+  RULE: No orphaned or cramped elements.
+  FIX : app/score/page.tsx: hero lead `<p className="type-lead-airy text-fg-2 mt-5 text-balance">` (balances the three lines; no copy change).
+
+(7) [Pages /score and /offer-review at 1280 (] offer-review / phone — Send the offer tile, intake card header row (the three mode chips)
+  WHAT: At 390 the chips fall onto three rows (~170px header) because the usable width is 342 − 48 (px-6) = 294px and "Upload or forward it" (~156px) + gap 8 + "Paste the terms" (~132px) = 296px is 2px too wide, so each pill sits alone.
+  RULE: Phones: wrapping of pills; generous air without waste.
+  FIX : components/site/offer-review/OfferIntake.tsx: header row `border-line-soft flex flex-wrap gap-2 border-b px-6 py-4` → `border-line-soft flex flex-wrap gap-2 border-b px-4 py-4 tab:px-6` (chips carry their own 16px inset, so the row still aligns visually); re-check with the Reesha metrics.
+
+(8) [Pages /score and /offer-review at 1280 (] offer-review / both — Intake card, forward mode: primary button "Open an email to attach the offer" and the note beneath it
+  WHAT: In forward mode the note "A person reviews it…" is a <p> under the button (mt-3), while in paste and verbal modes the identical note sits beside the send button in a flex row. Switching tabs changes where the same element lives.
+  RULE: Components consistent; one action row.
+  FIX : components/site/offer-review/OfferIntake.tsx forward branch: replace the `<div className="mt-4"><Button href={OFFER_FORWARD_MAILTO}>…</Button></div>` + `<p className={`${hintClass} mt-3`}>{REVIEW_NOTE}</p>` with `<div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2.5"><Button href={OFFER_FORWARD_MAILTO}>Open an email to attach the offer</Button><span className={hintClass}>{REVIEW_NOTE}</span></div>`.
+
+(9) [Pages /score and /offer-review at 1280 (] offer-review / desktop — Existing buyer tile, the two-column grid
+  WHAT: The grid is `items-center`, so the left column (eyebrow top ≈ y476 in the tile) is vertically centered against the right column's table (top rule ≈ y437); the two columns share neither a top edge (≈39px offset) nor a bottom edge, which reads as drift rather than intent.
+  RULE: Aligned edges and consistent gutters.
+  FIX : app/offer-review/page.tsx: `grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] items-start gap-x-16 gap-y-10`.
+
+(10) [Pages /score and /offer-review at 1280 (] offer-review / both — Existing buyer tile, the "Review my offer" action under the fee rows
+  WHAT: "Review my offer" is a primary pill in the hero and the closing tile and a nav pill in the sub-nav, but here it is a bare 17px TextLink; the same action appears at three weights on one page.
+  RULE: Pills for actions; buttons/pills consistent across the page.
+  FIX : app/offer-review/page.tsx: replace `<TextLink href="#offer-intake" className="mt-5 inline-block">Review my offer</TextLink>` with `<Button variant="secondary" href="#offer-intake" className="mt-5">Review my offer</Button>` (Button is already imported).
+
+(11) [Pages /score and /offer-review at 1280 (] offer-review / both — Tile headlines down the page
+  WHAT: Headline sizes alternate without a primary/secondary logic: "Send the offer" (the page's action) is display-md, "What the letter of intent leaves open" (an illustration) is display-lg, "What happens…" and "If you hire…" are md, the close is lg. The intake tile carries the smaller head while the example carries the larger one.
+  RULE: type-display-lg for tile headlines, type-display-md for secondary sections; clear hierarchy per tile.
+  FIX : app/offer-review/page.tsx: `<h2 className="type-display-lg text-fg">Send the offer</h2>`.
+
+(12) [Pages /score and /offer-review at 1280 (] offer-review / both — "What happens after you send it" step indices 01–04; also the exitIQ findings and 90-day plan numerals on /score (from source)
+  WHAT: Non-interactive step numbers are set in text-accent. Four green numerals in a row (and up to seven in the exitIQ plan) spend the accent on decoration.
+  RULE: Accent only on interactive/selected elements and the occasional emphasised figure.
+  FIX : app/offer-review/page.tsx AFTER_STEPS map: `type-caption text-fg-3 tabular`. components/site/exitiq/ExitIqRun.tsx: the two `tabular type-caption text-accent` numeral spans (findings list and plan rows) → `tabular type-caption text-fg-3`.
+
+(13) [Pages /score and /offer-review at 1280 (] offer-review / both — "What happens after you send it" step descriptions
+  WHAT: Step bodies are type-caption (14px) while every other card/step body on these two pages (Next steps cards, Existing buyer rows) is type-body 17px; the descriptions read as fine print under 17px titles.
+  RULE: Card-grid recipe: body type-body text-fg-2; consistent components.
+  FIX : app/offer-review/page.tsx AFTER_STEPS map: `<p className="type-body text-fg-2 mt-2">{s.body}</p>`.
+
+(14) [Pages /score and /offer-review at 1280 (] offer-review / both — Worked example, left card wrapper
+  WHAT: The LOI card is forced white on the dark tile (`on-light bg-canvas`), making it the brightest object on the page — a floating white panel that competes with the display-lg headline above it and with the plain dark card beside it.
+  RULE: Cards inside dark tiles are plain Card (surface = tile-2, translucent hairline); the only bright objects on dark tiles are imagery with shadow-product.
+  FIX : app/offer-review/page.tsx: `<Card padded={false}>` (drop `className="on-light bg-canvas"`). If the "paper" reading is wanted it should be a next/image figure with `rounded-lg overflow-hidden shadow-product`, not a card.
+
+(15) [Pages /score and /offer-review at 1280 (] score / both — exitIQ instrument, finished state, the findings cards (from source; not in screenshots)
+  WHAT: Each finding is `<Card className="p-5">`, i.e. 20px padding — neither the 24px card recipe nor the sanctioned 16px compact size.
+  RULE: Cards are surface + hairline + 18px radius + 24px padding; nested callouts use padded="compact" (16px).
+  FIX : components/site/exitiq/ExitIqRun.tsx: `<Card key={f.t} padded="compact">`.
+
+(16) [Pages /score and /offer-review at 1280 (] score / both — exitIQ instrument: "Change my last answer" and "Start over" TextButtons (ExitIqQuestion and the done state in ExitIqRun)
+  WHAT: These are 14px text buttons with no vertical padding, so the tap area is ~20px tall inside a touch-first instrument (the neighbouring chips and "Change answer" pills are 44px).
+  RULE: 44px touch targets.
+  FIX : components/site/exitiq/ExitIqQuestion.tsx and ExitIqRun.tsx: give each TextButton `className="inline-block py-3 -my-3"` (44px hit area without shifting the row); the ExitIqRun "Start over" already has `mt-5` — make it `mt-5 inline-block py-3 -my-3`.
+
+(17) [Pages /score and /offer-review at 1280 (] score / both — exitIQ question insight callout "What this tells a buyer" (appears after each answer; from source)
+  WHAT: The callout stacks two accent treatments on a non-interactive note: a 2px accent left rule (`border-accent border-l-2`) and an accent Eyebrow.
+  RULE: Accent only on interactive/selected elements; no decorative element competes with the content.
+  FIX : components/site/exitiq/ExitIqQuestion.tsx: callout wrapper `border-line border-l-2 py-2 pl-4` (keep the Eyebrow tone="accent", which the vocabulary allows for a label above content).
+
+(18) [Pages /confidentiality and /buyers, desk] confidentiality / both — "Rules" tile, the eight row titles (h3)
+  WHAT: Row titles are `type-tagline` (21px display face) inside a hairline row list, so on desktop titles wrap to 2–3 lines ("No contact with employees, customers, or suppliers without your approval") at a heavier rung than the tile's own lead. The fees page RowList uses body-strong for the same device.
+  RULE: Type ladder recipes: list-item titles `type-body-strong`; `type-tagline` is for card titles and sub-heads.
+  FIX : app/confidentiality/page.tsx line 107: `<h3 className="type-body-strong text-fg">{r.title}</h3>` (grid columns on line 104 stay as they are).
+
+(19) [Pages /confidentiality and /buyers, desk] confidentiality / both — DisclosureLevels, the segmented stop row (data-testid perm-stop-*)
+  WHAT: Stops carry no `border`, so `CHIP_SELECTED`'s `border-accent-focus` is inert and the selected stop shows only a 1px inset ring (visible in the zoom at "1 · Anonymous overview"). The tray-of-rounded-sm-cells shape is also a third option-control idiom next to Chip pills and the buyers rounded-lg cells.
+  RULE: Chip recipe: selected = 2px accent drawn as border + inset ring; option pills are `Chip`s; components consistent across pages.
+  FIX : components/site/confidentiality/DisclosureLevels.tsx line 68: add `border border-transparent` to the base class (`"pressable type-caption min-w-0 rounded-sm border border-transparent px-2 py-3 text-center"`) so the selected state renders 2px; or replace the tray with `<Chip selected={on} className="flex-1 justify-center">` cells in a `flex flex-wrap gap-2`.
+
+(20) [Pages /confidentiality and /buyers, desk] confidentiality / both — DisclosureLevels left pane, "What they see:" and "What moves access:" paragraphs
+  WHAT: Both explanatory paragraphs are `type-caption` (14px) while the record values beneath them are 17px body, and the identical slot in PassportTiers (tier description) is `type-body text-fg-2`.
+  RULE: Contextual tokens: secondary paragraph = `type-body text-fg-2`; caption is for labels and hints. Same slot, same rung across pages.
+  FIX : components/site/confidentiality/DisclosureLevels.tsx line 101: `className="type-body text-fg-2 mt-4"`; line 104: `className="type-body text-fg-2 mt-2"`.
+
+(21) [Pages /confidentiality and /buyers, desk] confidentiality / both — DisclosureLevels, the "Applying the selected access rules..." status line under the slider
+  WHAT: The `<p>` is mounted only while busy, so both panes and the company record jump ~30px down and back on every stop click (320ms).
+  RULE: Motion: state transitions ≤300ms with ease-e1 and no layout jumps in an instrument.
+  FIX : components/site/confidentiality/DisclosureLevels.tsx lines 89–93: always render `<p aria-live="polite" className="type-caption text-fg-3 mt-2 min-h-5">{busy ? "Applying the selected access rules..." : ""}</p>` so the space is reserved.
+
+(22) [Pages /confidentiality and /buyers, desk] buyers / both — PassportTiers tier selector cells (data-testid passport-tier-*)
+  WHAT: Cells are `rounded-lg border` at 44px tall, so they render as near-pills with visibly flattened 18px corners, not the system's pill Chips, and a different shape from the confidentiality tray.
+  RULE: `Chip` is the option control (pill, hairline, 2px accent when selected); buttons/pills consistent across pages.
+  FIX : components/site/buyers/PassportTiers.tsx line 26: `const TIER_BUTTON = "pressable type-caption min-w-[132px] flex-1 justify-center rounded-pill border px-4 py-3 text-center"` (or render `<Chip selected={on} className="flex-1 justify-center">{t}</Chip>` and drop TIER_ON/TIER_OFF).
+
+(23) [Pages /confidentiality and /buyers, desk] buyers / both — PassportTiers, nested "Buyer Passport card · details shared in this view" card
+  WHAT: This nested record card uses `bg-surface-2` (a darker inset) and a plain `type-caption text-fg-3` header, while CompanyRecord (same role, sibling page) is a plain Card on the surface with an `Eyebrow as="span"` header. Two nested record cards, two treatments.
+  RULE: Cards inside dark tiles are plain `<Card>`; card header rows carry an Eyebrow; consistent cards across pages.
+  FIX : components/site/buyers/PassportTiers.tsx line 89: `<Card padded={false} className="mt-6 overflow-hidden">` (remove `bg-surface-2`); line 91: `<Eyebrow as="span">Buyer Passport card · details shared in this view</Eyebrow>`.
+
+(24) [Pages /confidentiality and /buyers, desk] buyers / desktop — "Before a seller shares a name" tile, the "Questions buyers answer" card
+  WHAT: The card is capped at `max-w-[820px]` inside the 980px container with nothing beside it, so its right edge stops 160px short of the h2's measure and of every other tile's content edge (card ends x≈970, container x=1130).
+  RULE: Taste: aligned edges and consistent gutters; content locks at 980.
+  FIX : app/buyers/page.tsx line 67: `<Card padded={false} className="mt-10 overflow-hidden">` (drop `max-w-[820px]`).
+
+(25) [Pages /confidentiality and /buyers, desk] buyers / both — "Questions buyers answer" card, the 01–04 index numerals
+  WHAT: Static index numerals are `text-accent` although nothing in the card is interactive or selected; the identical device in the confidentiality Rules list is `text-fg-3`.
+  RULE: Colour: accent only on interactive/selected elements and the occasional emphasised figure; consistent across pages.
+  FIX : app/buyers/page.tsx line 74: `className="type-caption text-fg-3 tabular w-6 flex-none"`.
+
+(26) [Pages /confidentiality and /buyers, desk] buyers / desktop — PassportTiers, right pane "How Buyer Passport works" below the last row
+  WHAT: The left pane (description + 10-row card + three action pills) runs ~330px taller than the right pane, leaving an empty dark region beside the action row (y≈3350–3680), with the vertical hairline running through it.
+  RULE: Taste: no orphaned empty regions; one action row per card.
+  FIX : components/site/buyers/PassportTiers.tsx: move the `mt-5 flex flex-wrap gap-2` action row and the `shared` message (lines 111–141) out of the left pane into a card footer after the two-pane grid (after line 160): `<div className="border-line-soft flex flex-wrap items-center gap-2 border-t px-6 py-4">…</div>`, which shortens the left pane and gives the card a single action row.
+
+(27) [Pages /confidentiality and /buyers, desk] buyers / both — PassportTiers, the "Loading the selected verification level..." status line
+  WHAT: The `<p className="w-full">` is inserted into the tier-button wrap only while busy, so the meter, both panes and everything below jump ~22px on every tier click (320ms).
+  RULE: Motion: state transitions ≤300ms with ease-e1 and no layout jumps in an instrument.
+  FIX : components/site/buyers/PassportTiers.tsx lines 68–72: always render `<p aria-live="polite" className="type-caption text-fg-3 min-h-5 w-full">{busy ? "Loading the selected verification level..." : ""}</p>`.
+
+(28) [Cross-page consistency across all 11 pag] home vs score / both — The caption line under each instrument card.
+  WHAT: Under the console: `type-caption mt-4 text-right` TextLink ('Buyers: Get Heirloom Verified') floating at the far right edge of a 1232px box. Under the run: `type-caption text-fg-3 mt-6 max-w-[692px]` left-aligned disclaimer. Same slot, different alignment and gap.
+  RULE: Aligned edges and consistent gutters; secondary text genuinely secondary, no orphaned elements.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/hero/HomeHero.tsx line 42: `<p className="type-caption mt-6">` (drop `text-right`), so the buyer line sits where the run's disclaimer sits.
+
+(29) [Cross-page consistency across all 11 pag] home / desktop — Top of the hero tile (eyebrow 'Technology-enabled sell-side M&A…').
+  WHAT: `<Tile tone="light" className="desk:pt-16 pt-12">` gives 64px above the eyebrow; every other hero uses the tile's 80px (measured 66px below the nav on home vs 83-90px on the subpages).
+  RULE: 80px vertical tile padding (48 on phones); one rhythm from hero to footer.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/hero/HomeHero.tsx line 17: `<Tile tone="light">` (remove `desk:pt-16 pt-12`); the fold is recovered by the tighter `mt-14` console offset from the width fix.
+
+(30) [Cross-page consistency across all 11 pag] home / both — The 'BACKED BY Y COMBINATOR' pearl badge between the lead paragraph and the CTA pair.
+  WHAT: Home is the only hero with an element between lead and actions, and `variant="pearl"` (`bg-surface-pearl border-[3px] border-divider-soft rounded-md`) renders as a raised, filled panel with a thick pale rim, the one 'floating rounded panel' left in any hero.
+  RULE: Page-hero recipe (eyebrow → h1 → lead → actions → fine print); badges are outlined pills, never filled; no floating panels.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/hero/HomeHero.tsx lines 27-32: move the badge `div` below the action row into the fine-print slot (`className="mt-5 flex justify-center"`) and render the link with the neutral badge classes instead of `variant="pearl"`: `<a href={CONTACT.ycombinator} target="_blank" rel="noopener" className="type-caption-strong text-fg-3 border-line rounded-pill inline-flex items-center gap-2 border px-3 py-1 hover:text-accent">`. Copy unchanged.
+
+(31) [Cross-page consistency across all 11 pag] why / both — Hero CTA pair: 'See how it works' (primary) + 'Talk to an M&A advisor' (secondary).
+  WHAT: On the other eight subpages the hero primary is the same action as the sub-nav pill; on why the sub-nav pill is 'Talk to an advisor' but the hero makes the advisor the secondary and 'See how it works' the primary, so the page presents two different primaries within one viewport.
+  RULE: CTA pairs use the same variants everywhere; one primary per page.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/why/page.tsx hero action row (lines ~124-128): `<AdvisorCtaButton />` first, then `<Button href={ROUTES.howItWorks} variant="secondary">See how it works</Button>`.
+
+(32) [Cross-page consistency across all 11 pag] who-we-are / both — Hero action row under the facts list: primary pill + 'See how it works →' TextLink.
+  WHAT: The only hero whose second action is a TextLink instead of the secondary ghost pill (compare how-it-works, confidentiality, buyers, fees, why, 404, home). The same primary+TextLink row recurs in four closing tiles (who-we-are dark close, why 'Millions', offer-review close, score close), a second pattern competing with the pair.
+  RULE: 'Primary pill + secondary ghost pill side by side is the CTA pair.'
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/who-we-are/page.tsx lines 80-83: replace `<TextLink href={ROUTES.howItWorks}>See how it works →</TextLink>` with `<Button href={ROUTES.howItWorks} variant="secondary">See how it works →</Button>` and set the wrapper to `mt-8 flex flex-wrap gap-3` (string kept byte-for-byte; if the arrow inside a pill is unwanted that is a copy-owner call). Apply the same swap at line 141 (dark close) for parity.
+
+(33) [Cross-page consistency across all 11 pag] fees, who-we-are / phone — Hero text block (eyebrow, h1, lead, action row) at x=24.
+  WHAT: Both image heroes collapse to a single column on phones and stay left-aligned, while the nine other phone heroes are centered. The photograph that justifies the two-column layout on desktop has dropped below the fold, so alignment is the only visible difference and it reads as a second template.
+  RULE: Heroes share one alignment; the page should feel like one system.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/fees/page.tsx line 79 text column: `className="text-center desk:text-left"`, lead `max-w-[560px] mx-auto desk:mx-0`, action row (line 101) `mt-10 flex flex-wrap gap-3 justify-center desk:justify-start`; /Users/suyashagrawal/Documents/GitHub/exitIQ/app/who-we-are/page.tsx line 62 column `className="text-center desk:text-left"`, action row (line 79) add `justify-center desk:justify-start` (the `<dl>` stays left as a record).
+
+(34) [Cross-page consistency across all 11 pag] fees / phone — Hero headline-figure grid (5% / $5,000 / 2.5%).
+  WHAT: `grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))]` yields two columns at 342px, so '2.5%' is orphaned alone on the second row under '5%'.
+  RULE: Card/stat grids never leave a lone item; aligned edges.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/app/fees/page.tsx line 86: `className="mt-10 grid grid-cols-1 tab:grid-cols-3 gap-x-8 gap-y-6"` (stack on phones, three across from 736px).
+
+(35) [Cross-page consistency across all 11 pag] all pages / both — Footer top row: `<AdvisorCtaButton variant="utility" />`.
+  WHAT: The advisor action is a green pill in the header, sub-nav, every hero and every close, but a black 8px-radius rectangle in the footer; it is also 34px tall (py-2 + 18px line), under the 44px phone target.
+  RULE: Pills for actions; buttons consistent across pages; 44px touch targets.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/components/site/layout/SiteFooter.tsx line 26: `<AdvisorCtaButton />` (primary md pill, 47px tall). Update components/site/__tests__/SiteFooter.test.tsx if it pins the utility classes.
+
+(36) [Cross-page consistency across all 11 pag] why, who-we-are, how-it-works (dark tiles with a primary pill) / both — Primary pills on dark tiles, most visibly the Why hero pair.
+  WHAT: `primary` keeps `bg-primary` #0f7a45 on `bg-tile-1` #0b241b (≈3.0:1 fill contrast) while the secondary beside it borrows the on-dark accent #4ce27e (≈9.7:1), so on dark tiles the ghost pill visibly outweighs the filled one and the pair's hierarchy inverts relative to light tiles.
+  RULE: Dark tiles legible; one accent that resolves per surface; CTA pair hierarchy consistent everywhere.
+  FIX : /Users/suyashagrawal/Documents/GitHub/exitIQ/styles/site.css `.on-dark` block (line 183): add `--color-primary: var(--color-primary-on-dark); --color-primary-focus: var(--color-primary-on-dark); --color-on-primary: var(--color-tile-1);` so `bg-primary`/`text-on-primary` resolve per surface exactly as `accent` already does (Button.tsx's 'no dark variants' claim then holds). Foundation file: needs the owner and a matching pin in lib/site/__tests__/site-css.test.ts.
+
+(37) [Home page (app/page.tsx and its eleven t] home / desktop — MarketScene — the eyebrow "A private market for your business" at the top of the pinned panel
+  WHAT: The eyebrow sits at the panel's top padding (y≈607) while the h2 it introduces is vertically centred 120px lower (y≈727); the label floats alone in the top-left with nothing attached to it.
+  RULE: Eyebrow is the 14px caption directly above a heading (mb-4); no orphaned elements.
+  FIX : components/site/scenes/MarketScene.tsx:162-168 — move <Eyebrow className="mb-4">A private market for your business</Eyebrow> inside the centred column directly above the h2 (inside the div at :167); leave only the motion-reduce note at the top.
+
+(38) [Home page (app/page.tsx and its eleven t] home / desktop — MarketScene step 04 body — the inline "See how it works →" link
+  WHAT: The link is appended inline to the caption body and breaks mid-phrase: "…closing risk of each offer. See" / "how it works →" (crop y≈1801+285).
+  RULE: No orphaned elements; one clear action per block.
+  FIX : components/site/scenes/MarketScene.tsx:191-197 — render the link on its own line: replace the {" "} fragment with <span className="mt-1 block"><TextLink href={ROUTES.howItWorks}>See how it works →</TextLink></span>.
+
+(39) [Home page (app/page.tsx and its eleven t] home / desktop — HeroConsole — header row ("Heirloom") vs. the left pane content ("Where are you today?", "01")
+  WHAT: Header uses px-6 (label at x=49) while the pane uses desk:px-10 (heading and row numbers at x=65): a 16px jog inside one card.
+  RULE: Aligned edges inside cards; instrument-card recipe uses one horizontal padding.
+  FIX : components/site/hero/HeroConsole.tsx:74 — className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-6 desk:px-10 py-3.5".
+
+(40) [Home page (app/page.tsx and its eleven t] home / desktop — HeroConsole route stage — the three option rows and their subtitles ("A full private sale." etc.)
+  WHAT: The subtitle is display:hidden unless the row is hovered/focused, so hovering row 02 collapses row 01 (77→53px) and expands row 02: the list reflows by ~24px under the cursor on every hover.
+  RULE: Hover may change text colour or a row background only; rows never move.
+  FIX : components/site/hero/HeroConsole.tsx:116 — keep the subtitle in flow: className={`${NOTE} mt-1 block`} always (colour already text-fg-3), or if the reveal is wanted, toggle opacity instead of display: className={`${NOTE} mt-1 block transition-opacity duration-200 ${hot ? "opacity-100" : "opacity-0"}`}.
+
+(41) [Home page (app/page.tsx and its eleven t] home / desktop — HomeHero tile — top padding above the eyebrow
+  WHAT: Tile carries desk:pt-16 pt-12, so the first tile has 64px above its content (eyebrow at y=108 under the 44px header) while every other tile uses 80px.
+  RULE: Tiles have 80px vertical padding (48 on phones); the page should feel like one system from hero to footer.
+  FIX : components/site/hero/HomeHero.tsx:17 — <Tile tone="light"> (drop className="desk:pt-16 pt-12"); if the fold matters, tighten the console's mt-16 to mt-12 instead.
+
+(42) [Home page (app/page.tsx and its eleven t] home / desktop — TermsStrip parchment band
+  WHAT: padded={false} className="px-6 py-12" gives 48px vertical padding at 1280 (band 246px tall, content 1266–1410) where the neighbouring light and dark tiles use 80px.
+  RULE: Tiles have 80px vertical padding (48 on phones).
+  FIX : components/site/home/TermsStrip.tsx:24 — <Tile tone="parchment"> with the default padding (remove padded={false} and className="px-6 py-12").
+
+(43) [Home page (app/page.tsx and its eleven t] home / desktop — TermsStrip — the "Experience" statement "Millions in enterprise value transacted through Heirloom."
+  WHAT: Five auto-fit columns at 980 are 170px wide; at type-tagline (21px) this statement wraps to five lines with two single-word lines ("through" / "Heirloom.") beside one-line neighbours ("Sellers only."), so the band's bottom edge is ragged by ~100px.
+  RULE: No orphaned or cramped elements; consistent rhythm across a row.
+  FIX : components/site/home/TermsStrip.tsx:35 — set the statement in type-body-strong (17/600) under the caption label: <span className="type-body-strong block">; alternatively :25 <Container size="wide" …> so the band matches the wide console above it and columns grow to ~220px.
+
+(44) [Home page (app/page.tsx and its eleven t] home / desktop — OfferComparison — the priority row "What matters most to you?" + four chips
+  WHAT: The label is an inline flex item, so the chips start at x=330 and the fourth chip ("Protect employees and the company name") wraps alone onto a second line at x=150, under the label rather than under the other chips.
+  RULE: Form label recipe (label block above the control); aligned edges; no orphaned elements.
+  FIX : components/site/home/OfferComparison.tsx:69 — <span className="type-caption text-fg-2 basis-full">What matters most to you?</span> so the four chips form one aligned wrapping row from x=150 (keep the span inside the role=group so its aria-label context stays).
+
+(45) [Home page (app/page.tsx and its eleven t] home / desktop — OfferComparison — the four offer cards' Headline price / Cash at closing / Closing risk rows
+  WHAT: Titles wrap to two lines in cards A–C ("Regional consolidator") but one line in D ("Strategic buyer"), so D's figure rows start 25px higher (y≈340 vs 365) and the four hairline rows do not line up across the grid.
+  RULE: Aligned edges across a card grid.
+  FIX : components/site/home/OfferComparison.tsx:114 — reserve two title lines: <div className="type-tagline text-fg min-h-[50px]">{o.who}</div>.
+
+(46) [Home page (app/page.tsx and its eleven t] home / both — OfferComparison — the "Choose an offer." / "Reading the offer terms..." placeholder cards
+  WHAT: A 70px-tall Card with border-dashed holding one 14px caption. Dashed strokes are not in the vocabulary (cards are a 1px solid hairline) and the empty dashed box reads as a form-builder placeholder.
+  RULE: Card = surface + 1px hairline + 18px radius; nothing decorative that competes with content.
+  FIX : components/site/home/OfferComparison.tsx:140,145 — drop the Card and render <p className="type-caption text-fg-3 mt-6">Choose an offer.</p> (and the aria-live paragraph likewise); if a container is wanted, use <Card className="mt-6"> with the solid hairline.
+
+(47) [Home page (app/page.tsx and its eleven t] home / both — FinancialPrep record — the "Advisor review" and "Used in" rows
+  WHAT: The reconciled figure "$214,000, including documented family payroll" is type-caption (14px) while the three figures above it are type-body (17px), so the card's key figure is its smallest type; "Used in" is a right-aligned two-line caption whose ragged left edge floats mid-card.
+  RULE: Type hierarchy per block (emphasised figure ≥ its comparators); row list recipe: label caption, value body tabular.
+  FIX : components/site/home/FinancialPrep.tsx:44 — valueClassName="type-body text-fg tabular flex-[1_1_220px] text-right"; :48 — valueClassName="type-caption text-fg-2 basis-full" so the value sits left-aligned under its label.
+
+(48) [Home page (app/page.tsx and its eleven t] home / both — FinancialPrep — the filled "See how it works" primary pill
+  WHAT: This is the only mid-page section that uses a filled primary pill for a navigational link; the same destination is a TextLink in SellerWorkload, Speed and MarketScene, so one label has three treatments and a second primary CTA competes with the hero's advisor button.
+  RULE: Buttons/links consistent across the page; primary pill is the CTA (with its ghost pair), text links are in-tile actions.
+  FIX : components/site/home/FinancialPrep.tsx:21-23 — <div className="mt-6"><TextLink href={ROUTES.howItWorks} className="inline-flex min-h-11 items-center">See how it works</TextLink></div> (string unchanged).
+
+(49) [Home page (app/page.tsx and its eleven t] home / desktop — SellerWorkload record — the Owner pane
+  WHAT: Four rows end at y≈300 of the card while the Heirloom pane runs to y≈470, so the lower-left quarter of the 447px card (≈190px) is blank.
+  RULE: Generous air, but no orphaned or unfinished regions.
+  FIX : components/site/home/SellerWorkload.tsx:42 — className="border-line tab:border-r tab:border-b-0 flex flex-col justify-center border-b p-6" so the four decisions centre against the longer list.
+
+(50) [Home page (app/page.tsx and its eleven t] home / desktop — SpeedSection — the headline column ("Speed", "40%", "faster than a traditional sale.")
+  WHAT: The two-column grid is items-end, so the headline block is pushed to the bottom: "Speed" starts at y≈827 while the comparison bars start at y≈705, leaving ~120px of empty tile above the section's headline where the eye lands first.
+  RULE: Clear hierarchy per tile: one headline that leads; aligned top edges.
+  FIX : components/site/home/SpeedSection.tsx:16 — replace items-end with items-start.
+
+(51) [Home page (app/page.tsx and its eleven t] home / both — SpeedSection — the five numbered steps
+  WHAT: Phone: minmax(min(100%,150px),1fr) yields two 163px columns → 2+2+1, step 05 orphaned alone at bottom-left. Both: titles are type-tagline (21px) in 163–176px columns, so "Run financing and diligence together" and "Escalate decisions quickly" wrap to three lines and bodies start at uneven heights.
+  RULE: List-item titles are type-body-strong; card grids must not leave a lone item; no cramped elements.
+  FIX : components/site/home/SpeedSection.tsx:68 — grid-cols-[repeat(auto-fit,minmax(min(100%,170px),1fr))] (1 column at 342px, still 5 at 980: floor(1004/194)=5); :73 — <span className="type-body-strong text-fg mt-2 block">.
+
+(52) [Home page (app/page.tsx and its eleven t] home / desktop — QuestionsTeaser — the two-column disclosure list
+  WHAT: Five questions in a 2-column grid give 3 rows left, 2 right; the right column ends one hairline early and "See all questions" hangs under the left column only. Questions are forced to type-tagline (21px) via questionClassName.
+  RULE: Grids must not leave a lone item; list-item titles are type-body-strong.
+  FIX : components/site/home/QuestionsTeaser.tsx:21 — className="border-line mt-8 max-w-[692px] border-t" (single reading column, as the questions page); :28 — remove questionClassName="type-tagline" so Disclosure's default type-body-strong applies.
+
+(53) [Home page (app/page.tsx and its eleven t] home / both — CloseSection — the four next-step cards' body lines
+  WHAT: Card bodies are type-caption text-fg-2 (14px); the card-grid recipe sets body copy at type-body (17px). The result is a 21px title over 14px text with nothing at the page's body size, and the cards read smaller than the offer cards above them.
+  RULE: Card grid recipe: title type-tagline, body type-body text-fg-2 mt-2.
+  FIX : components/site/home/CloseSection.tsx:40 — <span className="type-body text-fg-2 mt-2 block">{body}</span>.
+
+(54) [Home page (app/page.tsx and its eleven t] home / both — HeroConsole offer stage — the three OfferPathRow links ("Forward or attach the offer", "Paste the terms", "Tell us what was said")
+  WHAT: Each row is its own rounded-lg (18px) fully bordered box with px-4 py-3 stacked with gap-2 — three floating rounded panels inside the console, the old design's row style (not visible in the captured route stage; verified in source).
+  RULE: Row list recipe: flex justify-between border-b border-line py-3, no radius; hover:bg-line-soft.
+  FIX : components/site/hero/HeroConsole.tsx:37 — className="border-line hover:bg-line-soft ease-e1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b py-3 transition-colors duration-200" and :196 wrap the list in <div className="border-line mb-4 flex flex-col border-t">.
+
+(55) [Home page (app/page.tsx and its eleven t] home / both — All 14px text-fg-3 captions on light and parchment tiles (eyebrows, PRIORITY_WHY line, "Choose an offer.", record labels)
+  WHAT: text-fg-3 resolves to #6e7c72: 4.4:1 on white and 4.0:1 on parchment (#f4f5ee), under the 4.5:1 minimum for 14px text. On dark tiles the equivalent (#8a9b92) measures 5.6:1 and passes. Foundation token, so out of the page files' reach.
+  RULE: Secondary text genuinely secondary but legible; captions are body text for contrast purposes.
+  FIX : Foundation request for styles/site.css — darken --color-ink-muted-48 (and the light --color-fg-3) to ≈#5f6d63 (5.4:1 on white, 4.9:1 on parchment); no component change.
+
+(56) [Pages how-it-works and fees, desktop (12] how-it-works / both — 'YOU RECEIVE' slip inside the stage panel (components/site/scenes/StagesScene.tsx:143–152)
+  WHAT: A bespoke div with on-light bg-canvas … p-5: 20px padding is off the card scale, and a solid white slab is the brightest object in the dark tile (desktop fold, x 713–1053, y 668–785), pulling the eye from the stage title. The <div className="flex items-center justify-between"> at :145 wraps a single child.
+  RULE: Cards are surface + 1px hairline + 18px radius + 24px padding (16 for nested callouts); cards inside dark tiles are plain <Card> (tile-2 surface, translucent ha
+  FIX : Replace :144 with <Card className="…"> or className="bg-surface border-line rounded-lg border p-6" (drop on-light bg-canvas); if the white inversion is kept deliberately (offer-review uses the same pattern), change p-5 → p-6 at minimum. Remove the lone-child wrapper at :145 and render the Eyebrow directly. StagesScene.test.tsx:108–112 pins on-light, bg-canvas and p-5 and must be updated.
+
+(57) [Pages how-it-works and fees, desktop (12] how-it-works / desktop — 'YOU RECEIVE' slip position in the stage grid (components/site/scenes/StagesScene.tsx:143)
+  WHAT: w-[min(100%,340px)] justify-self-center centres the 340px card inside a 446px column, so its right edge lands at x≈1053 while the counter '01 / 08', the tally pills and the 'Talk to an M&A advisor' link all align to the container edge at x=1106 — a 53px inset that nothing else shares.
+  RULE: Aligned edges and consistent gutters.
+  FIX : StagesScene.tsx:143 → className="w-[min(100%,340px)] justify-self-center tab:justify-self-end".
+
+(58) [Pages how-it-works and fees, desktop (12] fees / both — 'Total Heirloom fee' row in the breakdown pane (components/site/fees/FeeCalculator.tsx:171)
+  WHAT: border-fg border-b-2 draws a 2px near-black rule under the total; it is the heaviest line on either page and the only non-hairline divider in the system.
+  RULE: Dividers are 1px hairlines (border-line, softer border-line-soft); no chrome that competes with content.
+  FIX : FeeCalculator.tsx:171 → className="border-line flex items-baseline justify-between gap-4 border-b pt-5 pb-3". The total is already distinguished by its type size.
+
+(59) [Pages how-it-works and fees, desktop (12] fees / both — Row labels in the breakdown pane ('Engagement commitment', 'Success fee rate', …) (components/site/fees/FeeCalculator.tsx:49)
+  WHAT: labelClassName forces type-body text-fg-2 (17px) on the KeyValueRow label, while the two other records on these pages — the Ridgeline 'Updated in' rows and the timing rows — use the recipe label type-caption text-fg-3 (14px). The override also stacks type-body on top of the primitive's type-caption (tailwind-merge does not dedupe custom type-* utilities), so the rendered size depends on stylesheet order.
+  RULE: Row list / record: label type-caption text-fg-3, value type-body text-fg tabular; components consistent across pages.
+  FIX : FeeCalculator.tsx:49 → labelClassName="flex-[1_1_190px]" (keep the primitive's caption label; muted rows are already fg-3 by default).
+
+(60) [Pages how-it-works and fees, desktop (12] how-it-works / phone — Project Ridgeline card header and panes (components/site/how-it-works/BusinessBrain.tsx:46, :61, :95)
+  WHAT: lphone:px-6 px-4 / lphone:p-6 p-4 drop the card to 16px padding below 641px, while the fee calculator card keeps p-6 at the same 390px width (its 292px content column proves it fits). The two record cards therefore have different insets on phones.
+  RULE: Card padding is 24px; 16px is for nested callouts only. Cards consistent across pages.
+  FIX : BusinessBrain.tsx:46 → className="border-line-soft flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4"; :61 and :95 → className="bg-surface p-6".
+
+(61) [Pages how-it-works and fees, desktop (12] how-it-works, fees / phone — Text-button actions 'Reset example' (components/site/how-it-works/BusinessBrain.tsx:88) and 'Reset calculator' (components/site/fees/FeeCalculator.tsx:160)
+  WHAT: Both are 14px TextButtons with a ~20px line box and no padding, so the tappable area is roughly 20px tall — below the target on the one page where the visitor is manipulating controls.
+  RULE: Touch targets ≥ 44px.
+  FIX : BusinessBrain.tsx:88 → className="inline-flex min-h-11 items-center" (the 12px above/below replaces mt-3); FeeCalculator.tsx:160 → className="mt-2 inline-flex min-h-11 items-center" (mt-5 minus the added half-height). Same composition StagesScene already uses for its footer link.
+
+(62) [Pages how-it-works and fees, desktop (12] how-it-works / desktop — 'IN YOUR HANDS' artifact tally, undelivered pills (components/site/scenes/StagesScene.tsx:170)
+  WHAT: opacity-[.22] renders #f0f8f2 text at 22% over tile-1 (#0b241b), roughly 1.9:1 — the labels 'Sale plan', 'Financials', … are illegible until each stage completes (desktop crop y≈1,270–1,340).
+  RULE: Dark tiles legible (contrast); secondary text genuinely secondary but still readable.
+  FIX : StagesScene.tsx:170 → opacity-50 (≈4.8:1, passes AA for 14px) for the got=false state; check StagesScene.test.tsx for a pinned opacity value.
+
+(63) [Pages how-it-works and fees, desktop (12] how-it-works / both — 'When a sale runs into trouble' tile: gap between the h2 and the card grid (app/how-it-works/page.tsx:49)
+  WHAT: mt-12 (48px) between headline and grid, whereas the same h2→content relationship on fees uses mt-8 (32px) three times (:147, :199, :207). The two pages set the headline-to-content gap differently.
+  RULE: Spacing consistency between sections.
+  FIX : app/how-it-works/page.tsx:49 → className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-6".
+
+(64) [Pages how-it-works and fees, desktop (12] how-it-works / phone — Timing rows 'Buyer process', 'Diligence and financing', 'Closing' (app/how-it-works/page.tsx:72–79)
+  WHAT: At 342px the KeyValueRow wraps so the value drops to a second line, right-aligned, on three of the four rows while 'Preparation' stays on one line — the ledger reads staggered (phone crop y≈7,270–7,520).
+  RULE: Aligned edges; no cramped or ragged rows.
+  FIX : app/how-it-works/page.tsx:75–76 → className="border-line border-b py-3 flex-col items-start lphone:flex-row lphone:items-baseline" and valueClassName="type-body text-fg lphone:flex-[1_1_240px] lphone:text-right" so phones stack label over value and larger viewports keep the two-column row.
+
+(65) [Pages how-it-works and fees, desktop (12] fees / both — Hero figures '5%' and '2.5%' (app/fees/page.tsx:91, :99 — brand prop)
+  WHAT: Two of the three non-interactive figures are set in the accent, directly above the accent primary pill and accent-outlined secondary pill; with the sub-nav pill that is five green elements in the first viewport, and the figures read as links.
+  RULE: Accent only on interactive/selected elements and the occasional emphasised figure; no accent walls.
+  FIX : Keep brand on the headline '5%' only: remove the brand prop from the '2.5%' BigNumber at :99 (or from both) so the CTA pair is the accent in that tile.

@@ -1,55 +1,181 @@
-import { Button } from "@/components/site/ui/Button"
-import { Container, KeyValueRow } from "@/components/site/ui/primitives"
-import { ROUTES } from "@/lib/site/routes"
+// use client: the demo clock, the hover preview and the idle band
+"use client"
 
-export function FinancialPrep() {
+import { useRef, useState } from "react"
+import { demoStagger, ROW_IN } from "@/components/site/demo/classes"
+import { DemoFrame } from "@/components/site/demo/DemoFrame"
+import { DemoSection } from "@/components/site/demo/DemoSection"
+import { LedgerLine } from "@/components/site/home/financial/LedgerLine"
+import { useCountUp } from "@/components/site/motion/useCountUp"
+import { useDemoClock } from "@/components/site/motion/useDemoClock"
+import { useIdleTick } from "@/components/site/motion/useIdleTick"
+import { KeyValueRow } from "@/components/site/ui/primitives"
+import { cn } from "@/lib/site/cn"
+import { DEMO_IDLE_MS } from "@/lib/site/demo/clock"
+import {
+  FIGURE_LABELS,
+  FINANCIAL_LINK_LABEL,
+  FINANCIAL_SUBJECT,
+  FINANCIAL_WORDS,
+  type LedgerLineId,
+  RIDGELINE_BASE,
+} from "@/lib/site/financial/data"
+import { FINANCIAL_SCRIPT, ledgerAt, money } from "@/lib/site/financial/demo"
+import { ANCHORS } from "@/lib/site/routes"
+
+/** The interface material behind the screen: smoked glass on green lacquer, at 35% from the tablet up. */
+const FILM = {
+  src: "/media/ledger-glass.mp4",
+  poster: "/media/ledger-glass-poster.jpg",
+  opacityClass: "opacity-35",
+}
+
+/** The line whose alternative the demo can preview: the add-back that rests on the payroll register. */
+const PREVIEW_LINE: LedgerLineId = "ownerComp"
+
+/**
+ * The adjusted-earnings figure. It counts up once, the first time it is seen, while it still reads the
+ * figure before any line is settled; every figure after that arrives where it stands (the counter's ref
+ * lets go of it, so a changed figure never counts).
+ */
+function FootFigure({ figure, text }: { figure: number; text: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useCountUp(ref, RIDGELINE_BASE, { format: money })
   return (
-    <section className="border-hair bg-paper border-b px-6 py-[clamp(40px,5vw,64px)]">
-      <Container className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,42%)),1fr))] items-center gap-9">
-        <div>
-          <h2 className="font-display mb-3.5 text-[clamp(28px,3.6vw,42px)] leading-[1.06] font-normal tracking-[-.9px]">
-            Financial preparation
-          </h2>
-          <p className="text-l2 mb-[22px] max-w-[520px] text-[15.5px] leading-[1.62]">
-            Before any buyer sees the business, we reconcile the books, tax returns, and payroll. Buyers, lenders, and
-            diligence all get the same figures.
-          </p>
-          <Button href={ROUTES.howItWorks} size="md" className="h-11">
-            See how it works
-          </Button>
-        </div>
-        <div className="border-hair-2 bg-card overflow-hidden rounded-2xl border shadow-[0_24px_60px_rgba(12,54,38,.08)]">
-          <div className="border-hair flex flex-wrap items-baseline justify-between gap-x-3.5 gap-y-1 border-b px-[18px] py-3">
-            <span className="text-l3 font-mono text-[11px] tracking-[1px] uppercase">Project Ridgeline</span>
-            <span className="text-l4 font-mono text-[10px] tracking-[.5px]">Owner compensation</span>
-          </div>
-          <div className="px-[18px] pt-1.5 pb-3">
-            <KeyValueRow label="Owner explanation" className="border-hair border-b">
-              <span className="tabular text-ink font-mono text-[13.5px]">$214,000</span>
-            </KeyValueRow>
-            <KeyValueRow label="QuickBooks" className="border-hair border-b">
-              <span className="tabular text-ink font-mono text-[13.5px]">$186,400</span>
-            </KeyValueRow>
-            <KeyValueRow label="Tax return" className="border-hair border-b">
-              <span className="tabular text-ink font-mono text-[13.5px]">$186,400</span>
-            </KeyValueRow>
+    <span
+      key={text}
+      ref={figure === RIDGELINE_BASE ? ref : null}
+      data-testid="fin-foot"
+      className={cn("type-lead text-fg tabular", ROW_IN)}
+    >
+      {text}
+    </span>
+  )
+}
+
+/**
+ * Financial preparation: a few words beside the software's screen, and the screen plays itself. Project
+ * Ridgeline's four lines arrive as they came in, open; one at a time a record is attached, the line's
+ * status becomes a word a buyer's accountant can test, its meter fills, and the adjusted-earnings figure
+ * moves to what that record supports. At the last beat the four places the figure is used light up, and
+ * the screen names the figure the family payroll would leave without its register behind it.
+ *
+ * Everything on the screen is `ledgerAt(beat)`; the clock (`useDemoClock`) owns the section's one
+ * requestAnimationFrame, pauses under the pointer or focus, steps with the arrow keys, holds its end state
+ * and plays again. Resting on a line bands it; resting on the family payroll line, once its record is
+ * attached, previews the one alternative the data holds: $817,400 with the add-back left in costs.
+ */
+export function FinancialPrep() {
+  const screenRef = useRef<HTMLDivElement>(null)
+  const { beat, cycle, state, announce, rootProps } = useDemoClock(screenRef, FINANCIAL_SCRIPT)
+  const [hovered, setHovered] = useState<LedgerLineId | null>(null)
+  // The beat the finished demo rests on walks a band down the four lines, changing no text.
+  const idle = useIdleTick(screenRef, DEMO_IDLE_MS, state === "ended")
+
+  const view = ledgerAt(beat, hovered === PREVIEW_LINE)
+  const previewing = view.lines.some((l) => l.id === PREVIEW_LINE && l.status === "removed")
+  const current = view.lines.find((l) => l.current)?.id ?? null
+  const idleLine = view.lines[idle % view.lines.length]?.id ?? null
+  const banded = hovered ?? (state === "ended" ? idleLine : current)
+
+  return (
+    <DemoSection
+      id="financial-preparation"
+      tone="light"
+      heading={FINANCIAL_WORDS.heading}
+      sentence={FINANCIAL_WORDS.sentence}
+      link={{ href: ANCHORS.financialPreparation, label: FINANCIAL_LINK_LABEL }}
+      testid="fin-section"
+    >
+      <div
+        ref={screenRef}
+        {...rootProps}
+        data-testid="fin-demo"
+        data-foot={view.foot.figure}
+        data-preview={previewing ? PREVIEW_LINE : undefined}
+        className="rounded-lg"
+      >
+        <DemoFrame subject={FINANCIAL_SUBJECT} film={FILM} testid="fin-frame">
+          {view.lines.map((line, i) => (
+            <LedgerLine
+              key={line.id}
+              line={line}
+              index={i}
+              cycle={cycle}
+              banded={banded === line.id}
+              onHover={setHovered}
+            />
+          ))}
+
+          {/* The foot rests on an opaque band, so the figure and its caption never read over the film. */}
+          <div className="bg-tile-1">
             <KeyValueRow
-              label="Advisor review"
-              labelClassName="text-filament-ink"
-              className="bg-filament/8 -mx-2 my-[3px] rounded-lg px-2"
+              label={FIGURE_LABELS.earnings}
+              className="tab:pt-4 px-6 pt-3 pb-0"
+              labelClassName="type-caption text-fg-2"
             >
-              <span className="text-ink flex-[1_1_220px] text-right text-[13px] leading-[1.5]">
-                $214,000, including documented family payroll
+              <FootFigure figure={view.foot.figure} text={view.foot.figureText} />
+            </KeyValueRow>
+            {/* Both captions hold their lines from the first beat (two under the tablet breakpoint, where the
+                copy wraps), so the screen never changes height as the demo plays or comes round again. */}
+            <div className="tab:pb-3 px-6 pt-1.5 pb-2">
+              <p
+                key={view.foot.caption}
+                data-testid="fin-foot-caption"
+                className={cn("type-fine-print text-fg-3 max-tab:min-h-6 min-h-3", ROW_IN)}
+              >
+                {view.foot.caption}
+              </p>
+              <p
+                key={view.foot.alt ?? "no-alt"}
+                data-testid="fin-foot-alt"
+                className={cn("type-fine-print text-fg-3 max-tab:min-h-6 mt-1.5 min-h-3", view.foot.alt && ROW_IN)}
+              >
+                {view.foot.alt}
+              </p>
+            </div>
+            <KeyValueRow
+              label={FIGURE_LABELS.valuation}
+              className="border-line-soft tab:py-2.5 border-t px-6 py-2"
+              labelClassName="type-caption text-fg-2"
+            >
+              <span
+                key={view.foot.range}
+                data-testid="fin-range"
+                className={cn("type-caption text-fg tabular", ROW_IN)}
+              >
+                {view.foot.range}
               </span>
             </KeyValueRow>
-            <KeyValueRow label="Used in">
-              <span className="text-l2 flex-[1_1_220px] text-right text-[13px] leading-[1.5]">
-                Valuation, buyer materials, lender package, and diligence answers
+            {/* Under the tablet breakpoint the four destinations step aside: the screen fits one phone. */}
+            <KeyValueRow
+              label={FIGURE_LABELS.usedIn}
+              className="border-line tab:flex tab:py-2.5 hidden border-t px-6 py-2"
+              labelClassName="type-caption text-fg-2"
+            >
+              <span data-testid="fin-used" className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                {view.usedIn.map((item, i) => (
+                  <span
+                    key={item.label}
+                    data-lit={item.lit}
+                    className={cn(
+                      "type-fine-print ease-e1 transition-colors duration-300 motion-reduce:transition-none",
+                      item.lit ? "text-fg" : "text-fg-3"
+                    )}
+                    style={{ transitionDelay: `${demoStagger(cycle, i)}ms` }}
+                  >
+                    {item.label}
+                  </span>
+                ))}
               </span>
             </KeyValueRow>
           </div>
-        </div>
-      </Container>
-    </section>
+        </DemoFrame>
+        {/* The one live region: a keyboard step says where the demo landed; the play itself says nothing. */}
+        <span className="sr-only" aria-live="polite">
+          {announce}
+        </span>
+      </div>
+    </DemoSection>
   )
 }

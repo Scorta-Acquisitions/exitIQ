@@ -1,8 +1,9 @@
 import Image from "next/image"
 
-export function FounderPortrait({ radius = 18 }: { radius?: number }) {
+/** The founder photograph: an 18px-radius frame with the product shadow, the one shadow the system allows. */
+export function FounderPortrait() {
   return (
-    <div className="bg-paper-2 relative aspect-[4/5] w-full overflow-hidden" style={{ borderRadius: radius }}>
+    <div className="bg-surface-2 shadow-product relative aspect-[4/5] w-full overflow-hidden rounded-lg">
       <Image
         src="/suyash-portrait.jpg"
         alt="Suyash Agrawal, founder and CEO of Heirloom"

@@ -68,10 +68,20 @@ export interface HeroGeometry {
   offerOpacity: number
 }
 
-const FILAMENT = "#4CE27E"
-const NODE = "#EAF4EC"
-const DIM_FILL = "rgba(240,248,243,.14)"
-const DIM_STROKE = "rgba(240,248,243,.55)"
+/**
+ * Colours are CSS expressions over the design-system tokens, so the SVG picks them up from the dark
+ * console it sits in and the geometry stays free of raw colour values.
+ */
+const ACCENT = "var(--color-primary-on-dark)"
+const NODE = "var(--color-on-dark)"
+/** Light ink at `percent` of its strength over the dark surface. */
+export function dimOnDark(percent: number): string {
+  return `color-mix(in srgb, var(--color-on-dark) ${percent}%, transparent)`
+}
+const DIM_FILL = dimOnDark(14)
+const DIM_STROKE = dimOnDark(55)
+/** Resting labels sit at the stroke's 55%, as the first build drew them over its darker fractal field. */
+const DIM_TEXT = DIM_STROKE
 
 const ANGLES = [-75, -58, -42, -27, -13, 0, 13, 27, 42, 58, 70, -68]
 /** Per-node sell config: [radius, opacity, label, tier]. Tier: 0 faded · 1 matched · 2 NDA · 3 reviewed · 4 finalist · 5 offer. */
@@ -163,11 +173,11 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
       y: p.y.toFixed(1),
       o,
       r: live ? 6 : adv ? 5 : 4,
-      f: live ? FILAMENT : adv ? NODE : DIM_FILL,
-      s: live ? FILAMENT : DIM_STROKE,
+      f: live ? ACCENT : adv ? NODE : DIM_FILL,
+      s: live ? ACCENT : DIM_STROKE,
       gr: live ? 11 : 0,
       go: live ? 0.7 : 0,
-      tc: live ? FILAMENT : DIM_STROKE,
+      tc: live ? ACCENT : DIM_TEXT,
       l,
       tip: TIPS[i] as string,
       tier,
@@ -180,7 +190,7 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
     const y = +n.y
     const dx = HERO_CX - x
     const dy = HERO_CY - y
-    const len = Math.hypot(dx, dy) || 1
+    const len = Math.hypot(dx, dy)
     const ex = x + dx * (1 - 66 / len)
     const ey = y + dy * (1 - 66 / len)
     return `M${x} ${y} L${ex.toFixed(1)} ${ey.toFixed(1)}`
@@ -195,7 +205,7 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
     let o = 0
     if (path === "sell" && !boot) o = live ? 0.55 : 0.22
     if (path === "offer" && i === 6) o = 0.6
-    return { d: edgePath(i), c: live ? FILAMENT : NODE, o }
+    return { d: edgePath(i), c: live ? ACCENT : NODE, o }
   })
 
   const ringO = boot ? 0 : 1
@@ -227,11 +237,11 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
       x: p.x.toFixed(1),
       y: p.y.toFixed(1),
       o: path === "ready" ? 1 : 0,
-      f: ok ? FILAMENT : "rgba(240,248,243,.15)",
+      f: ok ? ACCENT : dimOnDark(15),
       go: path === "ready" && tick % EVIDENCE.length === vi ? 0.8 : 0,
       tx: east ? 14 : west ? -14 : 0,
       ta: east ? "start" : west ? "end" : "middle",
-      tc: ok ? FILAMENT : DIM_STROKE,
+      tc: ok ? ACCENT : DIM_TEXT,
       l,
     }
   })
@@ -241,7 +251,7 @@ export function heroGeometry(path: HeroPath, tick = 0, boot = false): HeroGeomet
     y: my.toFixed(1),
     o: path === "offer" ? 1 : 0,
     l,
-    hs: path === "offer" && tick % MODULES.length === i ? FILAMENT : "rgba(240,248,243,.25)",
+    hs: path === "offer" && tick % MODULES.length === i ? ACCENT : dimOnDark(25),
   }))
 
   return { nodes, edges, rings, evidence, modules, offerOpacity: path === "offer" ? 1 : 0 }

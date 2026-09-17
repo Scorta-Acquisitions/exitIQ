@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { EB_Garamond, Inter, JetBrains_Mono } from "next/font/google"
-import "styles/tailwind.css"
+import "legacy/styles/tailwind.css"
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],

@@ -1,15 +1,16 @@
+// legacy exitIQ console: restored 2026-09-11 from the first build (e35fbbe) at the user's request; see styles/site.css
 // use client: answers dispatch into shared site state
 "use client"
 
+import { ConsoleChip, ConsoleTicks } from "@/components/site/exitiq/ConsoleChrome"
 import { useSiteState } from "@/components/site/providers/SiteStateProvider"
-import { Chip } from "@/components/site/ui/Chip"
-import { ProgressTicks } from "@/components/site/ui/primitives"
 import { QUESTION_COUNT, QUESTIONS } from "@/lib/site/exitiq/questions"
 import { scoreExitIq } from "@/lib/site/exitiq/scoring"
 
 /**
- * One exitIQ question with its answer chips, the post-answer insight, and back/restart controls.
- * `variant="hero"` is the compact version inside the home console; `"page"` is the full /score run.
+ * One exitIQ question with its answer chips, the post-answer insight, and back/restart controls, as the
+ * first build set it: mono uppercase labels, the serif question, dark chips. `variant="hero"` is the
+ * compact version inside the home console; `"page"` is the full /score run.
  */
 export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
   const { state, dispatch } = useSiteState()
@@ -19,7 +20,7 @@ export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
   const result = scoreExitIq(iq.answers)
   const qNum = iq.phase + 1
   const hero = variant === "hero"
-  const calculating = iq.busy && iq.phase + 1 >= QUESTION_COUNT && !iq.done
+  const calculating = iq.busy && iq.phase + 1 >= QUESTION_COUNT
 
   return (
     <div data-testid="exitiq-question">
@@ -28,7 +29,7 @@ export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
           <span className="text-filament font-mono text-[11.5px] tracking-[1.1px] uppercase">
             exitIQ · Question {qNum} of {QUESTION_COUNT}
           </span>
-          <ProgressTicks total={QUESTION_COUNT} filled={result.answered} current={iq.phase} label="Your progress" />
+          <ConsoleTicks total={QUESTION_COUNT} filled={result.answered} current={iq.phase} label="Your progress" />
         </div>
       ) : (
         <div className="eyebrow text-signal mb-3.5">
@@ -51,7 +52,7 @@ export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
         className={`flex flex-wrap ${hero ? "mb-3.5 gap-2" : "mb-5 gap-[9px]"}`}
       >
         {q.chips.map((c) => (
-          <Chip
+          <ConsoleChip
             key={c.v}
             size="lg"
             selected={iq.answers[q.id] === c.v}
@@ -59,7 +60,7 @@ export function ExitIqQuestion({ variant }: { variant: "hero" | "page" }) {
             onClick={() => dispatch({ type: "iq/answer", value: c.v })}
           >
             {c.l}
-          </Chip>
+          </ConsoleChip>
         ))}
       </div>
       {iq.insight ? (

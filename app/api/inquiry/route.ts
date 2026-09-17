@@ -9,7 +9,8 @@ import { CONTACT } from "@/lib/site/routes"
  * POST /api/inquiry — records a site inquiry (offer review, question, buyer registration, advisor
  * briefing, exitIQ review). Validates the body, logs a redacted structured event, and when Resend is
  * configured forwards the text to the team inbox after the response is sent. Without a Resend key the
- * route still accepts the request so the page behaves identically in every environment.
+ * route still accepts the request so the page behaves identically in every environment. A submission
+ * carrying the forms' honeypot field is answered exactly as a real one and forwarded nowhere.
  */
 
 const MAX_BODY_BYTES = 32 * 1024
@@ -17,6 +18,11 @@ const MAX_BODY_BYTES = 32 * 1024
 const INBOX: Record<string, string> = {
   offer_review: CONTACT.offers,
   buyer_passport: CONTACT.buyers,
+}
+
+/** The one accepted response, so a honeypot submission is answered exactly as a real one is. */
+function accepted() {
+  return Response.json({ accepted: true, forwarded: Boolean(env.RESEND_API_KEY) }, { status: 202 })
 }
 
 export async function POST(req: Request) {
@@ -37,7 +43,14 @@ export async function POST(req: Request) {
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 })
   }
 
-  const { kind, email, body, source } = parsed.data
+  const { kind, email, body, source, website } = parsed.data
+  // The honeypot: only a script fills a field people cannot see or reach. The answer is the one a real
+  // submission gets, so the sender learns nothing, and neither the inbox nor the received log sees it.
+  if (website) {
+    logger.info("site.inquiry.honeypot", { kind, source: source ?? "unknown", bodyLength: body.length })
+    return accepted()
+  }
+
   logger.info("site.inquiry.received", {
     kind,
     source: source ?? "unknown",
@@ -69,5 +82,5 @@ export async function POST(req: Request) {
     })
   }
 
-  return Response.json({ accepted: true, forwarded: Boolean(env.RESEND_API_KEY) }, { status: 202 })
+  return accepted()
 }

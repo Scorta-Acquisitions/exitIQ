@@ -1,4 +1,25 @@
-/** The eight-stage sale roadmap shown on How it works. */
+/**
+ * The How it works page's copy: the eight-stage sale roadmap and the words the scene sets around the
+ * stages, the reconciliation example under it, the four hard parts, and the timing rows.
+ */
+
+import { FINANCIAL_TITLE } from "@/lib/site/financial/data"
+
+/** The roadmap scene's own words: its eyebrow, its column labels, the scroll hint, and the still note. */
+export const STAGES_SCENE_COPY = {
+  eyebrow: "The eight stages",
+  /**
+   * Shown only under reduced motion. The scene renders no controls, so the note says only what is true:
+   * this is the same information as a still (the clause that promised controls was cut, 2026-09-17).
+   */
+  stillNote: "The same information, shown without animation.",
+  /** The prefix on the line of what Heirloom does; the trailing space sets it off from the sentence. */
+  heirloom: "HEIRLOOM · ",
+  you: "YOU",
+  receive: "YOU RECEIVE",
+  tally: "IN YOUR HANDS",
+  hint: "Scroll to move through the stages.",
+} as const
 
 export interface SaleStage {
   label: string
@@ -104,3 +125,61 @@ export const TIMING_ROWS: Array<[string, string]> = [
   ["Diligence and financing", "Run in parallel where practical"],
   ["Closing", "One shared list of conditions and owners"],
 ]
+
+/** One of the four records that disagree, as the reconciliation prints it. */
+export interface ReconciliationRecord {
+  name: string
+  note: string
+  value: string
+}
+
+/** A row of what the resolved figure updates: what it reads while the advisor is still reviewing, and after. */
+export interface ReconciliationRow {
+  label: string
+  open: string
+  resolved: string
+}
+
+/**
+ * The reconciliation example on How it works (`BusinessBrain`), which prints the same Project Ridgeline
+ * owner-compensation figures the home page's financial demo plays: $186,400 of officer compensation on the
+ * return against $214,000 on the payroll register, the $27,600 of family payroll between them, and the
+ * adjusted earnings that move from $817,400 to $845,000 once the advisor records the resolution.
+ * `lib/site/__tests__/content-stages.test.ts` pins every string and checks the figures against
+ * `lib/site/financial/data.ts`.
+ */
+export const RECONCILIATION = {
+  heading: FINANCIAL_TITLE,
+  intro:
+    "The books, payroll, tax return, and your own explanation often disagree. Your advisor records the resolution and the evidence for it, and every buyer document, lender package, and diligence answer uses that figure.",
+  subject: "Owner compensation · Project Ridgeline",
+  statusOpen: "Advisor review required",
+  statusResolved: "Resolved by the advisor",
+  recordsTitle: "The records disagree",
+  records: [
+    { name: "Books", note: "QuickBooks · officer compensation", value: "$186,400" },
+    { name: "Payroll", note: "Payroll register, including a family member with no recorded hours", value: "$214,000" },
+    { name: "Tax return", note: "Filed return, provided by the accountant", value: "$186,400" },
+    { name: "Owner explanation", note: "Working conversation, March", value: "$214,000" },
+  ] as ReconciliationRecord[],
+  resolveLabel: "Show the resolution →",
+  resolutionTitle: "Resolution, recorded with support",
+  resolution: "$214,000, including $27,600 of documented family payroll with no recorded hours.",
+  resolutionSupport: "Support: Payroll register and tax return attached",
+  resetLabel: "Reset example",
+  updatedTitle: "Updated in",
+  rows: [
+    { label: "Owner compensation adjustment", open: "On hold", resolved: "$27,600, documented" },
+    { label: "Adjusted earnings", open: "$817,400", resolved: "$845,000" },
+    { label: "Valuation", open: "$2.86M – $3.38M", resolved: "$2.96M – $3.49M" },
+    { label: "Buyer materials", open: "On hold", resolved: "Updated" },
+    { label: "Lender package", open: "On hold", resolved: "Updated" },
+    { label: "Diligence answers", open: "On hold", resolved: "Updated" },
+  ] as ReconciliationRow[],
+  buyerQuestion: "Buyer question: Why is owner compensation adjusted to $214,000?",
+  /** What the buyer answer reads before the advisor has resolved the figure; the page sets it in italics. */
+  answerPending: "Advisor review required.",
+  answer:
+    "The tax return reports $186,400 of officer compensation. Payroll records show another $27,600 paid to a family member with no recorded hours. Both amounts are included in the adjustment, with the payroll lines attached for review.",
+  answerSupport: "Support: payroll register and tax return attached",
+} as const

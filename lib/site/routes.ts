@@ -86,13 +86,13 @@ export const PAGE_META: Record<RouteKey, PageMeta> = {
   },
 }
 
-export interface NavLink {
+interface NavLink {
   href: string
   label: string
   note: string
 }
 
-export interface NavGroup {
+interface NavGroup {
   label: string
   minWidth: number
   links: NavLink[]
@@ -135,13 +135,17 @@ export const NAV_GROUPS: NavGroup[] = [
 /** Anchors on pages that other pages deep-link to. Keep in sync with the `id` on the target element. */
 export const ANCHORS = {
   buyerRegister: `${ROUTES.buyers}#buyer-register`,
+  /** The reconciliation on the how-it-works page: where the home page's financial demo sends a reader. */
+  financialPreparation: `${ROUTES.howItWorks}#financial-preparation`,
+  /** The eight-stage roadmap on the how-it-works page: where the home page's decisions demo sends a reader. */
+  saleStages: `${ROUTES.howItWorks}#stages`,
 } as const
 
 /**
  * Flat list for the mobile menu. Each destination appears once: "Sell my business" is the owner-facing
  * name for the how-it-works page, so the page is not listed a second time under its own title.
  */
-export const MOBILE_NAV_LINKS: Array<{ href: string; label: string; muted?: boolean }> = [
+export const MOBILE_NAV_LINKS: Array<{ href: string; label: string }> = [
   { href: ROUTES.howItWorks, label: "Sell my business" },
   { href: ROUTES.offerReview, label: "Review my offer" },
   { href: ROUTES.score, label: "Check sale readiness" },
@@ -150,7 +154,7 @@ export const MOBILE_NAV_LINKS: Array<{ href: string; label: string; muted?: bool
   { href: ROUTES.whoWeAre, label: "Who we are" },
   { href: ROUTES.questions, label: "Questions" },
   { href: ROUTES.why, label: "Why Heirloom" },
-  { href: ROUTES.buyers, label: "For buyers", muted: true },
+  { href: ROUTES.buyers, label: "For buyers" },
 ]
 
 export const FOOTER_GROUPS: Array<{ label: string; links: Array<{ href: string; label: string }> }> = [
@@ -180,6 +184,110 @@ export const FOOTER_GROUPS: Array<{ label: string; links: Array<{ href: string; 
     ],
   },
 ]
+
+export interface SubNavLink {
+  /** An in-page anchor (`#id`) on the page this context belongs to. */
+  href: `#${string}`
+  label: string
+}
+
+interface SubNavCta {
+  label: string
+  /** In-page anchor. When omitted the call to action opens the advisor dialog. */
+  href?: `#${string}`
+}
+
+export interface SubNav {
+  /** Page name the bar's scrubber reads. */
+  title: string
+  links: SubNavLink[]
+  cta: SubNavCta
+}
+
+const ADVISOR_CTA: SubNavCta = { label: "Talk to an advisor" }
+
+/**
+ * The page context the one sticky bar reads on every page except the home page: the page name for its
+ * scrubber, the sections for the scrubber's menu and the phone menu, and the one call to action its page
+ * pill carries. Every `href` here must match an `id` on the page that carries `anchor-target` (checked by
+ * `lib/site/__tests__/site-data.test.ts`, `SiteBar.test.tsx` and the e2e link crawl).
+ */
+export const SUBNAV: Partial<Record<RoutePath, SubNav>> = {
+  [ROUTES.score]: {
+    title: "exitIQ",
+    links: [
+      { href: "#exitiq-run", label: "Readiness check" },
+      { href: "#next-steps", label: "Next steps" },
+    ],
+    cta: ADVISOR_CTA,
+  },
+  [ROUTES.offerReview]: {
+    title: "Offer review",
+    links: [
+      { href: "#worked-example", label: "Worked example" },
+      { href: "#after-you-send", label: "After you send" },
+      { href: "#existing-buyer", label: "Existing buyer" },
+    ],
+    cta: { label: "Review my offer", href: "#offer-intake" },
+  },
+  [ROUTES.howItWorks]: {
+    title: "How it works",
+    links: [
+      { href: "#stages", label: "The eight stages" },
+      { href: "#financial-preparation", label: "Financial preparation" },
+      { href: "#timing", label: "Timing" },
+    ],
+    cta: ADVISOR_CTA,
+  },
+  [ROUTES.fees]: {
+    title: "Fees",
+    links: [
+      { href: "#fees-calc", label: "Calculator" },
+      { href: "#other-costs", label: "Other costs" },
+      { href: "#fee-questions", label: "Questions" },
+    ],
+    cta: { label: "Calculate my fee", href: "#fees-calc" },
+  },
+  [ROUTES.confidentiality]: {
+    title: "Confidentiality",
+    links: [
+      { href: "#conf-levels", label: "Disclosure levels" },
+      { href: "#exclusions", label: "Exclusions and limits" },
+      { href: "#rules", label: "Rules" },
+    ],
+    cta: ADVISOR_CTA,
+  },
+  [ROUTES.buyers]: {
+    title: "Buyer Passport",
+    links: [
+      { href: "#passport-tiers", label: "Verification levels" },
+      { href: "#buyer-register", label: "Register" },
+    ],
+    cta: { label: "Get Heirloom Verified", href: "#buyer-register" },
+  },
+  [ROUTES.whoWeAre]: {
+    title: "Who we are",
+    links: [
+      { href: "#founder", label: "Founder" },
+      { href: "#the-work", label: "Who does the work" },
+    ],
+    cta: ADVISOR_CTA,
+  },
+  [ROUTES.questions]: {
+    title: "Questions",
+    links: [],
+    cta: { label: "Ask a question", href: "#q-ask" },
+  },
+  [ROUTES.why]: {
+    title: "Why Heirloom",
+    links: [
+      { href: "#today", label: "How businesses sell today" },
+      { href: "#what-we-do", label: "What we do now" },
+      { href: "#building", label: "What we are building" },
+    ],
+    cta: ADVISOR_CTA,
+  },
+}
 
 /** Ordered list of every public page, used by the sitemap and the e2e smoke suite. */
 export const ALL_ROUTES: RoutePath[] = Object.values(ROUTES)

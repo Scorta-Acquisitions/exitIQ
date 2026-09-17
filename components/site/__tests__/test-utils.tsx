@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 /** The sessionStorage key the provider persists to (kept in sync with SiteStateProvider). */
-export const SITE_STORAGE_KEY = "heirloom.site.v1"
+const SITE_STORAGE_KEY = "heirloom.site.v1"
 
 function Providers({ children }: { children: ReactNode }) {
   return <SiteStateProvider>{children}</SiteStateProvider>
@@ -31,5 +31,3 @@ export function renderWithSeededSite(ui: ReactElement, seed: SiteState, options?
   window.sessionStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(persistableState(seed)))
   return render(ui, { wrapper: Providers, ...options })
 }
-
-export * from "@testing-library/react"

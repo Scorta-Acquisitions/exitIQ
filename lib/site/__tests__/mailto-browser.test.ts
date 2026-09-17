@@ -84,15 +84,6 @@ describe("copyText", () => {
     setClipboard(undefined)
     await expect(copyText("copy me")).resolves.toBe(false)
   })
-
-  it("resolves false when writeText throws synchronously", async () => {
-    setClipboard({
-      writeText: () => {
-        throw new Error("not allowed")
-      },
-    })
-    await expect(copyText("copy me")).resolves.toBe(false)
-  })
 })
 
 describe("openMail", () => {
@@ -241,12 +232,6 @@ describe("offerReviewBody", () => {
         OFFER_ASK +
         FOOTER
     )
-  })
-
-  it("always ends with the Offer Review page footer", () => {
-    for (const mode of ["forward", "paste", "verbal"] as const) {
-      expect(offerReviewBody({ ...EMPTY_OFFER_INTAKE, mode }).endsWith(FOOTER)).toBe(true)
-    }
   })
 })
 

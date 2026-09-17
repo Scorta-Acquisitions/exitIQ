@@ -1,33 +1,36 @@
 import { AmbientVideo } from "@/components/site/ui/AmbientVideo"
+import { Container, Eyebrow, Tile } from "@/components/site/ui/primitives"
 import { TextLink } from "@/components/site/ui/TextLink"
 import { ROUTES } from "@/lib/site/routes"
 
+/**
+ * The video tile: the archive footage sits at 30% behind the copy on the darkest tile tone, and the
+ * eyebrow steps up to the second text tone, which is what keeps every line legible over the film's lit
+ * shelves. No veil, no gradient. The copy is bottom-anchored in a reading
+ * column so the film has room above it.
+ */
 export function TransactionCarries() {
   return (
-    <section className="bg-paper px-3 py-[clamp(18px,2.5vw,32px)]">
-      <div className="border-dfull/8 bg-ground text-d1 relative mx-auto flex min-h-[320px] max-w-[1156px] items-end overflow-hidden rounded-[26px] border">
-        <AmbientVideo
-          src="/media/archive-hall.mp4"
-          ariaLabel="Private business records prepared for a confidential ownership transfer."
-          className="absolute inset-0 h-full w-full object-cover opacity-50"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,26,19,.1)_0%,rgba(8,26,19,.82)_82%)]"
-        />
-        <div className="relative max-w-[720px] px-[clamp(20px,4vw,48px)] py-[clamp(28px,5vw,56px)]">
-          <div className="text-signal mb-3.5 font-mono text-[11.5px] tracking-[1.2px] uppercase">Beyond the price</div>
-          <h2 className="font-display text-d1 mb-3 text-[clamp(28px,3.8vw,44px)] leading-[1.06] font-normal tracking-[-.9px]">
-            Employees, customers, and the company name change hands too.
-          </h2>
-          <p className="text-d2 mb-[18px] text-[15px] leading-[1.62]">
-            We weigh them in buyer selection and negotiation, alongside price.
-          </p>
-          <TextLink href={ROUTES.why} tone="dark" className="text-[14px]">
-            Why Heirloom exists
-          </TextLink>
+    <Tile tone="dark-3" padded={false} className="flex min-h-[420px] items-end overflow-hidden px-6">
+      <AmbientVideo
+        src="/media/archive-hall.mp4"
+        poster="/media/archive-hall-poster.jpg"
+        ariaLabel="Private business records prepared for a confidential ownership transfer."
+        className="absolute inset-0 h-full w-full object-cover opacity-30"
+      />
+      <Container className="tile relative">
+        <div className="max-w-[692px]">
+          <Eyebrow className="text-fg-2 mb-4">Beyond the price</Eyebrow>
+          <h2 className="type-display-lg text-fg">Employees, customers, and the company name change hands too.</h2>
+          <p className="type-body text-fg mt-4">We weigh them in buyer selection and negotiation, alongside price.</p>
+          {/* 44px touch target: mt-3 plus the centred 44px box puts the text where mt-6 did; -mb-3 keeps the tile padding. */}
+          <div className="mt-3 -mb-3">
+            <TextLink href={ROUTES.why} standalone>
+              Why Heirloom exists
+            </TextLink>
+          </div>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Tile>
   )
 }

@@ -4,6 +4,7 @@
 import { usePathname } from "next/navigation"
 import { createContext, type Dispatch, type ReactNode, useCallback, useContext, useEffect, useReducer } from "react"
 import { ROUTES } from "@/lib/site/routes"
+import { parsePersistedState, type PersistedState } from "@/lib/site/state/persisted"
 import {
   INITIAL_SITE_STATE,
   persistableState,
@@ -26,13 +27,12 @@ interface SiteContextValue {
 
 const SiteContext = createContext<SiteContextValue | null>(null)
 
-function readPersisted(): Partial<SiteState> | null {
+/** The stored record, or null when nothing is stored, the JSON is unparsable, or it fails the schema. */
+function readPersisted(): PersistedState | null {
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    const parsed: unknown = JSON.parse(raw)
-    if (!parsed || typeof parsed !== "object") return null
-    return parsed as Partial<SiteState>
+    return parsePersistedState(JSON.parse(raw))
   } catch {
     return null
   }

@@ -40,10 +40,8 @@ if (typeof window !== "undefined") {
     }
     Object.defineProperty(window, "ResizeObserver", { value: RO, writable: true })
   }
-  if (!window.HTMLCanvasElement.prototype.getContext) {
-    window.HTMLCanvasElement.prototype.getContext = () => null
-  }
-  if (!window.HTMLElement.prototype.scrollIntoView) {
-    window.HTMLElement.prototype.scrollIntoView = () => {}
-  }
+  // jsdom's getContext exists but only logs "not implemented"; a null stand-in keeps the run quiet and
+  // lets the instrument field take its no-WebGL path. Tests that need a fake GL replace it themselves.
+  window.HTMLCanvasElement.prototype.getContext = (() =>
+    null) as unknown as typeof HTMLCanvasElement.prototype.getContext
 }

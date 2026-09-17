@@ -1,9 +1,10 @@
+import { CONTACT } from "@/lib/site/routes"
+
 /** Questions page content and the five-question teaser on the home page. */
 
 export interface QuestionItem {
   q: string
   a: string
-  a2?: string
 }
 
 export interface QuestionCategory {
@@ -186,3 +187,12 @@ export const HOME_TEASER: QuestionItem[] = [
 export function askQuestionBody(question: string, email: string): string {
   return `Question: ${question}\n\nReply to: ${email}`
 }
+
+/**
+ * The line under the ask-a-question confirmation. The question is sent either way: only the sentence
+ * naming where the text sits changes when the browser refuses the clipboard.
+ */
+export const ASK_SENT_COPY = {
+  copied: `If your email app did not open, paste the copied question into a message to ${CONTACT.hello}.`,
+  notCopied: "We could not copy the question. The draft in your email app carries it.",
+} as const

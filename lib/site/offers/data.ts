@@ -1,6 +1,6 @@
 /**
- * The four fictional letters of intent for Project Ridgeline used by the offer-comparison demo.
- * Amounts are in millions of dollars.
+ * The four fictional letters of intent for Project Ridgeline used by the offer-comparison demo, and
+ * every word the section shows around them. Amounts are in millions of dollars.
  */
 
 export type OfferId = "A" | "B" | "C" | "D"
@@ -99,6 +99,36 @@ export const PRIORITIES: Array<{ v: Priority; l: string }> = [
   { v: "upside", l: "Keep future upside" },
   { v: "team", l: "Protect employees and the company name" },
 ]
+
+/** The words the offer comparison sets around the four cards: its header, its two group labels, and its badges. */
+export const OFFER_COPY = {
+  heading: "Compare offers",
+  lead: "The highest price is not always the best offer. We rank offers on what you receive, when, and how likely the deal is to close.",
+  figureAlt: "Four sealed cream envelopes with brass clasps",
+  priorityGroup: "Choose your most important deal priority",
+  priorityPrompt: "What matters most to you?",
+  cardsGroup: "Compare cash, terms, conditions, and closing risk",
+  bestBadge: "Strongest fit",
+  headlineBadge: "Highest headline price",
+  choose: "Choose an offer.",
+  reading: "Reading the offer terms...",
+  /** The label of every figure a card and the detail panel print, in the order the panel reads them. */
+  terms: {
+    head: "Headline price",
+    cash: "Cash at closing",
+    later: "Money paid later",
+    retained: "Retained ownership",
+    financing: "Buyer financing",
+    stay: "Time you stay",
+    team: "Team and company name",
+    risk: "Closing risk",
+  },
+} as const
+
+/** The heading over one letter's full terms: "Letter of intent A · Regional consolidator". */
+export function letterTitle(o: Offer): string {
+  return `Letter of intent ${o.id} · ${o.who}`
+}
 
 export const PRIORITY_WHY: Record<Priority, string> = {
   cash: "Ranks the cash you receive at closing first, then discounts money paid later for timing and risk.",

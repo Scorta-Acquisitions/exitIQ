@@ -104,7 +104,7 @@ export const ADVISOR_ACK: Record<string, string> = {
   "care:certainty": "We will talk financing, conditions, and what makes deals fail late.",
 }
 
-export const ADVISOR_AGENDA: Record<string, string[]> = {
+export const ADVISOR_AGENDA = {
   sell: [
     "The likely buyer market for your business",
     "What preparation happens before any outreach",
@@ -126,7 +126,7 @@ export const ADVISOR_AGENDA: Record<string, string[]> = {
     "How outreach works without naming the business",
   ],
   else: ["Your question, answered directly", "The parts of a sale process it touches", "Practical next steps, if any"],
-}
+} satisfies Record<string, string[]>
 
 export const ADVISOR_CARE: Record<string, string> = {
   price: "How buyer competition moves the final price",

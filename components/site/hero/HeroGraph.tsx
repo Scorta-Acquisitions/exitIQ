@@ -1,13 +1,15 @@
+// legacy exitIQ console: restored 2026-09-11 from the first build (e35fbbe) at the user's request; see styles/site.css
 import type { HeroPath } from "@/lib/site/hero/funnel"
 import { HERO_CX, HERO_CY, heroGeometry } from "@/lib/site/hero/geometry"
 
-const MONO = "'IBM Plex Mono', var(--font-plex-mono), monospace"
-const DISPLAY = "'Newsreader', var(--font-newsreader), serif"
-const ease = "cubic-bezier(.2,.7,.2,1)"
+const MONO = "var(--font-mono)"
+const DISPLAY = "var(--font-display)"
+const ease = "var(--ease-e1)"
 
 /**
- * The live map of a private transaction forming around one protected business. Pure SVG; every
- * position and opacity comes from `heroGeometry`, and CSS transitions carry the motion between states.
+ * The live map of a private transaction forming around one protected business, as the first build drew
+ * it: mono caps labels, the sealed centre, dashed rings. Pure SVG; every position and opacity comes from
+ * `heroGeometry` (whose colours are now token expressions), and CSS transitions carry the motion between states.
  */
 export function HeroGraph({ path, tick, boot }: { path: HeroPath; tick: number; boot: boolean }) {
   const g = heroGeometry(path, tick, boot)

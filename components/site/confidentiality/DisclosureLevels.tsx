@@ -3,10 +3,20 @@
 
 import { useEffect, useRef, useState } from "react"
 import { CompanyRecord } from "@/components/site/confidentiality/CompanyRecord"
+import { Button } from "@/components/site/ui/Button"
+import { CHIP_SELECTED } from "@/components/site/ui/Chip"
+import { Card, Eyebrow } from "@/components/site/ui/primitives"
+import { cn } from "@/lib/site/cn"
 import { ACCESS_LOG, MAX_PERMISSION_LEVEL, PERMISSION_LEVELS } from "@/lib/site/confidentiality/data"
 
 const BUSY_MS = 320
 
+/**
+ * The disclosure instrument: one card with a control header (level readout, step buttons, the
+ * segmented stop row, and a range slider), then two panes divided by a hairline: who the viewer is
+ * with the company record as they see it, and the access history. Lives on the dark tile of the
+ * Confidentiality page, so every colour resolves through the on-dark tokens.
+ */
 export function DisclosureLevels() {
   const [level, setLevel] = useState(1)
   const [busy, setBusy] = useState(false)
@@ -25,38 +35,26 @@ export function DisclosureLevels() {
   const perm = PERMISSION_LEVELS[level] ?? PERMISSION_LEVELS[1]!
 
   return (
-    <div
-      id="conf-levels"
-      className="border-dhair [scroll-margin-top:90px] overflow-hidden rounded-[18px] border bg-[rgba(3,12,8,.5)]"
-      data-testid="disclosure-levels"
-    >
-      <div className="border-dhair-2 border-b px-[22px] py-[18px]">
-        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3.5">
-          <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">Change viewer</span>
-          <span className="inline-flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5">
-            <span className="text-d4 font-mono text-[11px]" data-testid="perm-level">
+    <Card padded={false} id="conf-levels" className="anchor-target overflow-hidden" data-testid="disclosure-levels">
+      <div className="border-line-soft border-b px-6 py-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <Eyebrow as="span">Change viewer</Eyebrow>
+          <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="type-caption text-fg-3 tabular" data-testid="perm-level">
               View level {level} of 5
             </span>
-            <button
-              type="button"
-              onClick={() => choose(level + 1)}
-              className="hover-green-dark border-signal/40 text-signal rounded-full border px-[11px] py-1 font-mono text-[11px]"
-            >
+            <Button variant="secondary" size="compact" onClick={() => choose(level + 1)}>
               Move to next level
-            </button>
-            <button
-              type="button"
-              onClick={() => choose(1)}
-              className="hover-green-dark border-dhair text-d3 rounded-full border px-[11px] py-1 font-mono text-[11px]"
-            >
+            </Button>
+            <Button variant="secondary" size="compact" onClick={() => choose(1)}>
               Return to anonymous view
-            </button>
+            </Button>
           </span>
         </div>
         <div
           role="group"
           aria-label="Choose what this buyer can see"
-          className="bg-dfull/[4%] flex flex-wrap gap-1 rounded-[10px] p-1"
+          className="bg-surface-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,100px),1fr))] gap-1 rounded-lg p-1"
         >
           {PERMISSION_LEVELS.map((p, i) => {
             const on = i === level
@@ -66,9 +64,11 @@ export function DisclosureLevels() {
                 type="button"
                 aria-pressed={on}
                 onClick={() => choose(i, true)}
-                className={`ease-e1 min-w-0 flex-1 rounded-[7px] border px-1 py-[7px] text-center font-mono text-[11px] tracking-[.5px] uppercase transition-all duration-200 ${
-                  on ? "border-filament/50 bg-filament/12 text-filament" : "text-dfull/42 border-transparent"
-                }`}
+                className={cn(
+                  // A transparent hairline keeps the cell size fixed and lets the selected stop draw the chip recipe's 2px accent.
+                  "pressable type-caption min-w-0 rounded-sm border border-transparent px-2 py-3 text-center",
+                  on ? cn("bg-surface text-accent", CHIP_SELECTED) : "text-fg-3 hover:text-fg"
+                )}
                 data-testid={`perm-stop-${i}`}
               >
                 {i} · {p.t}
@@ -84,57 +84,53 @@ export function DisclosureLevels() {
           value={level}
           onChange={(e) => choose(parseInt(e.target.value, 10))}
           aria-label="Choose what this buyer can see"
-          className="range-dark mt-3 h-[22px] w-full cursor-pointer"
+          className="mt-4 h-[22px] w-full cursor-pointer"
         />
-        {busy ? (
-          <p aria-live="polite" className="text-d4 mt-2 font-mono text-[10.5px]">
-            Applying the selected access rules...
-          </p>
-        ) : null}
+        {/* Always mounted so the panes below do not jump while the rules apply. */}
+        <p aria-live="polite" className="type-caption text-fg-3 mt-2 min-h-5">
+          {busy ? "Applying the selected access rules..." : ""}
+        </p>
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,310px),1fr))]">
-        <div className="border-dhair-2 border-r px-[22px] py-6">
-          <div className="text-signal mb-1 font-mono text-[11.5px] tracking-[1px] uppercase">Who this is</div>
-          <div className="font-display text-d1 mb-1.5 text-[27px] leading-[1.15]" data-testid="perm-who">
+      <div className="bg-line-soft grid grid-cols-[repeat(auto-fit,minmax(min(100%,310px),1fr))] gap-px">
+        <div className="bg-surface px-6 py-6">
+          <Eyebrow tone="accent">Who this is</Eyebrow>
+          <div className="type-display-md text-fg mt-2" data-testid="perm-who">
             {perm.who}
           </div>
-          <p className="text-d3 mb-2 text-[13.5px] leading-[1.6]">
-            <strong className="text-d2 font-medium">What they see:</strong> {perm.see}
+          <p className="type-body text-fg-2 mt-4">
+            <strong className="text-fg">What they see:</strong> {perm.see}
           </p>
-          <p className="text-d3 mb-[22px] text-[13.5px] leading-[1.6]">
-            <strong className="text-d2 font-medium">What moves access:</strong> {perm.trig}
+          <p className="type-body text-fg-2 mt-2">
+            <strong className="text-fg">What moves access:</strong> {perm.trig}
           </p>
-          <CompanyRecord level={level} title="Company record · Project Ridgeline" />
-        </div>
-        <div className="px-[22px] py-6">
-          <div className="mb-3.5 flex items-center gap-[9px]">
-            <span className="bg-signal h-1.5 w-1.5 rounded-full" />
-            <span className="text-d2 font-mono text-[11.5px] tracking-[1px] uppercase">Access history</span>
+          <div className="mt-6">
+            <CompanyRecord level={level} title="Company record · Project Ridgeline" />
           </div>
-          <h3 className="font-display text-d1 mb-2 text-[22px] leading-[1.15] font-normal">Who opened what</h3>
-          <p className="text-d3 mb-2 text-[13.5px] leading-[1.6]">
-            Each entry shows the person, file, time, and access decision.
-          </p>
-          <div role="group" aria-label="Buyer access history">
+        </div>
+        <div className="bg-surface px-6 py-6">
+          <Eyebrow as="span">Access history</Eyebrow>
+          <h3 className="type-tagline text-fg mt-4">Who opened what</h3>
+          <p className="type-caption text-fg-2 mt-2">Each entry shows the person, file, time, and access decision.</p>
+          <div role="group" aria-label="Buyer access history" className="mt-4">
             {ACCESS_LOG.map((e) => (
               <div
                 key={`${e.t}-${e.act}`}
-                className="border-dhair-2 flex flex-wrap items-start gap-x-3 gap-y-1 border-b py-2.5"
+                className="border-line-soft flex flex-wrap items-start gap-x-4 gap-y-1 border-b py-3 last:border-b-0"
               >
-                <span className="text-d4 flex-[0_0_106px] pt-0.5 font-mono text-[11px]">{e.t}</span>
-                <div className="min-w-0 flex-[1_1_190px]">
-                  <div className="text-d1 text-[13.5px] leading-[1.45]">{e.act}</div>
-                  <div className="text-d3 mt-[3px] font-mono text-[11px]">
+                <span className="type-caption text-fg-3 tabular flex-[0_0_148px] pt-0.5">{e.t}</span>
+                <div className="min-w-0 flex-[1_1_180px]">
+                  <div className="type-body text-fg">{e.act}</div>
+                  <div className="type-caption text-fg-3 mt-0.5">
                     {e.who}, {e.org}
                     {e.note ? ` · ${e.note}` : ""}
                   </div>
                 </div>
-                <span className="text-signal flex-[0_0_30px] pt-0.5 text-right font-mono text-[11px]">L{e.lvl}</span>
+                <span className="type-caption text-accent tabular flex-none pt-0.5 text-right">L{e.lvl}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

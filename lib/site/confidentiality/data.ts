@@ -298,3 +298,78 @@ export const OWNER_CONTROLS = [
   "Extend access",
   "Download access history",
 ]
+
+/* ------------------------------------------------------------------------------------------------
+ * The home demo ("Who sees what")
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Project Ridgeline worked-example figures (fictional): the home demo. The record never varies by buyer
+ * type; what varies is the event in front of it — an owner's exclusion, then the NDA, qualification and
+ * the owner's selection — and which organisation from ACCESS_LOG is looking at it.
+ */
+export const PRIVACY_TITLE = "Who sees what"
+
+/** The name of the level below the five home stages: what a business nobody has been told about shows. */
+export const LEVEL_ZERO_NAME = "Nothing public"
+
+/** A buyer the outreach has not reached yet, on the buyer list. */
+export const NOT_CONTACTED = "Not yet contacted"
+
+/** The viewer at L1, where no stand-in stops: the overview goes to anyone the owner's rules allow. */
+export const MATCHING_BUYER = "a buyer who matches your rules"
+
+/** What closes an excluded buyer's caption: the exclusion ran before the first message. */
+export const NEVER_CONTACTED = "never contacted"
+
+/** The organisation ACCESS_LOG gives Heirloom's own actions, whose lines name no buyer. */
+export const ADVISOR_ORG = "Advisor action"
+
+/** The reserved line of an access history that has not recorded that view yet: the log keeps its rows. */
+export const LOG_PENDING = "No entry yet"
+
+/** The caption above the four buyers, and the one above the log lines under the record. */
+export const BUYER_LIST_LABEL = "Who is looking"
+export const ACCESS_LOG_LABEL = "Access history"
+
+/** The four organisations of the access log that the demo follows, keyed by the kind of buyer each is. */
+export type StandInKey = "competitor" | "strategic" | "individual" | "pe"
+
+export interface StandIn {
+  org: string
+  /** The disclosure level this buyer reached at Ridgeline, and the level a preview of it shows. */
+  furthestLevel: number
+  /** Index into ACCESS_LOG: the entry's organisation or action names the stand-in (asserted by a test). */
+  logIndex: number
+}
+
+/** Reach order: the competitor stopped before outreach, then the NDA, qualification and final diligence. */
+export const STAND_IN_ORDER: StandInKey[] = ["competitor", "strategic", "individual", "pe"]
+
+export const STAND_INS: Record<StandInKey, StandIn> = {
+  competitor: { org: "Northgate HVAC", furthestLevel: 0, logIndex: 5 },
+  strategic: { org: "Meridian Trades Group", furthestLevel: 2, logIndex: 4 },
+  individual: { org: "Bellhaven Search", furthestLevel: 3, logIndex: 2 },
+  pe: { org: "Cadence Facility Partners", furthestLevel: 4, logIndex: 0 },
+}
+
+/** Where the record leaves the buyer log: the clause the closing level's log sentence and the buyer list's closing line both read. */
+export const CLOSING_LOG_CLAUSE = "Closing documents move outside the buyer log"
+
+/** The home record is the first seven fields of RECORD_FIELDS; phones show the first four rows of it. */
+export const HOME_RECORD_FIELD_COUNT = 7
+
+/**
+ * The level at which each of the seven home rows first counts as visible, in RECORD_FIELDS order: a row opens when
+ * it shows the fact it is for at the resolution the level allows. The broad region and the revenue range are the
+ * overview's two disclosures (L1); the name and the owner come with the NDA (L2); the adjustment schedule with
+ * qualification (L3); the customer's name for a finalist (L4); the employees' names in the full register (L5). So
+ * the count climbs 0, 2, 4, 5, 6, 7 across the levels.
+ */
+export const HOME_FIELD_OPEN_AT: number[] = [2, 1, 1, 3, 4, 5, 2]
+
+export const FIGURE_LABELS = {
+  visible: (n: number, of: number) => `Visible ${n} of ${of}`,
+  viewingAs: (org: string) => `Viewing as ${org}`,
+  recordTitle: "Company record",
+}

@@ -18,9 +18,22 @@ import {
 
 const BLANK: PrefillContext = { stage: "route", onScorePage: false, iqAnswers: {}, sellTiming: null, sellRevenue: null }
 
-describe("advisor question bank", () => {
-  it("acknowledges every chip", () => {
-    for (const q of ADVISOR_QUESTIONS) for (const [v] of q.chips) expect(ADVISOR_ACK[`${q.id}:${v}`]).toBeTruthy()
+describe("the acknowledgement table", () => {
+  const keys = ADVISOR_QUESTIONS.flatMap((q) => q.chips.map(([v]) => `${q.id}:${v}`))
+
+  it("answers all 24 chips of the five questions, and holds a line for nothing else", () => {
+    expect(keys).toHaveLength(24)
+    expect(Object.keys(ADVISOR_ACK)).toHaveLength(24)
+    expect([...Object.keys(ADVISOR_ACK)].sort()).toEqual([...keys].sort())
+  })
+
+  it("says something in a full sentence for every one of them", () => {
+    for (const k of keys) {
+      const line = ADVISOR_ACK[k]
+      expect(typeof line, k).toBe("string")
+      expect(line!.length, k).toBeGreaterThan(20)
+      expect(line!.endsWith("."), k).toBe(true)
+    }
   })
 })
 
@@ -151,10 +164,26 @@ describe("briefing", () => {
     expect(callAgenda({ topic: "unknown" })[0]).toBe("The likely buyer market for your business")
   })
 
-  it("attaches the briefing to the booking link", () => {
+  it("attaches the briefing to the booking link and cuts a long note at 700 characters", () => {
     const url = bookingUrl(state)
     expect(url).toContain("heirloom.cal.com")
     expect(decodeURIComponent(url)).toContain("Revenue: $3M to $10M")
+    const long = new URL(bookingUrl({ ...state, note: "x".repeat(900) }))
+    expect(long.searchParams.get("notes")).toHaveLength(700)
+  })
+
+  it("carries the five questions and the note, and ends at the note", () => {
+    const rows = briefingRows(state)
+    expect(rows.map((r) => r.label)).toEqual([
+      "Conversation",
+      "Business",
+      "Revenue",
+      "Target timing",
+      "Matters most",
+      "Advisor note",
+    ])
+    expect(briefingText(state).endsWith("Note for the advisor: Avoid Northgate.")).toBe(true)
+    expect(briefingText({ ...state, note: "" }).endsWith("Matters most: Employees and the company name")).toBe(true)
   })
 
   it("reports progress against the questions actually asked", () => {

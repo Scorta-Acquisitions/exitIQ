@@ -1,6 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test"
+import { beatsPlayedInOrder } from "../lib/site/demo/clock"
 import { type QuestionId, QUESTIONS } from "../lib/site/exitiq/questions"
 import { PAGE_META, type PageMeta, type RoutePath, ROUTES } from "../lib/site/routes"
+import { BAR_H, type FlowWindow } from "../lib/site/scroll"
 
 /* ------------------------------------------------------------------------------------------------
  * Viewports
@@ -14,7 +16,7 @@ export const NARROW_PHONE = { width: 320, height: 640 }
  * Route facts
  * ---------------------------------------------------------------------------------------------- */
 
-export const META_BY_PATH = Object.fromEntries(
+const META_BY_PATH = Object.fromEntries(
   (Object.keys(ROUTES) as Array<keyof typeof ROUTES>).map((k) => [ROUTES[k], PAGE_META[k]])
 ) as Record<RoutePath, PageMeta>
 
@@ -39,7 +41,7 @@ export function h1For(path: string): string {
   return h1
 }
 
-export function escapeRegExp(s: string): string {
+function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
@@ -74,7 +76,9 @@ export function watchConsole(page: Page) {
   page.on("console", (msg) => {
     if (msg.type() === "error") errors.push(msg.text())
   })
-  const isOptionalMedia = (url: string) => /\/media\/[^/]+\.mp4/.test(url)
+  // The films, their posters, and the generated objects and textures are
+  // optional: the site renders without them.
+  const isOptionalMedia = (url: string) => /\/media\/[^/]+\.(mp4|jpg)|\/generated\//.test(url)
   return {
     errors,
     assertClean() {
@@ -95,9 +99,10 @@ export function watchConsole(page: Page) {
  * ---------------------------------------------------------------------------------------------- */
 
 /**
- * The page rendered: 200, metadata, h1, the header chrome for the layout, and the footer. Ends by
- * opening and closing the advisor dialog from the header, which proves the page hydrated (a
- * server-rendered button does nothing until React attaches its handler).
+ * The page rendered: 200, metadata, h1, the bar's chrome for the layout (the primary navigation from the
+ * nav breakpoint, the menu button below it), and the footer. Ends by opening and closing the advisor dialog
+ * from the bar (`openAdvisorFromHeader`), which proves the page hydrated (a server-rendered button does
+ * nothing until React attaches its handler).
  */
 export async function expectRouteRenders(page: Page, path: RoutePath, layout: "desktop" | "mobile") {
   const response = await page.goto(path)
@@ -116,7 +121,7 @@ export async function expectRouteRenders(page: Page, path: RoutePath, layout: "d
   }
   await expect(page.getByRole("contentinfo")).toContainText("Heirloom works for sellers only.")
 
-  await page.getByRole("banner").getByTestId("open-advisor").click()
+  await openAdvisorFromHeader(page, layout)
   const dialog = page.getByRole("dialog", { name: "Talk to an M&A advisor" })
   await expect(dialog).toBeVisible()
   await page.keyboard.press("Escape")
@@ -136,69 +141,151 @@ export async function expectNoHorizontalScroll(page: Page, label: string) {
   ).toBeLessThanOrEqual(widths.viewport)
 }
 
+/** Where `anchor-target` puts an anchor: `scroll-margin-top: calc(var(--bar-h) + 16px)`. */
+const ANCHOR_LANDING = BAR_H + 16
+
 /**
- * The element `hash` points at exists once, the URL carries the hash, and the element has been
- * scrolled to the top band of the viewport (0..200px, which covers the sticky header offset).
+ * The element `hash` points at exists once and has landed exactly where `anchor-target` puts it:
+ * `ANCHOR_LANDING` px from the viewport's top, ±1px for the browser's rounding. The one exception is an
+ * anchor the document cannot scroll that far (a section at the very bottom): once the scroll is at its
+ * maximum the only fact left is that the target sits under the bar rather than behind it.
  */
-export async function expectAnchorTarget(page: Page, href: string) {
-  const hash = href.slice(href.indexOf("#"))
-  await expectPath(page, href)
+export async function expectAnchorLanding(page: Page, hash: string) {
   await expect(page.locator(hash)).toHaveCount(1)
-  const top = () => page.evaluate((sel) => document.querySelector(sel)?.getBoundingClientRect().top ?? Number.NaN, hash)
+  const measure = () =>
+    page.evaluate((sel) => {
+      const el = document.querySelector(sel)
+      const doc = document.documentElement
+      return {
+        top: el ? Math.round(el.getBoundingClientRect().top) : Number.NaN,
+        atBottom: window.scrollY >= doc.scrollHeight - window.innerHeight - 1,
+      }
+    }, hash)
+  const landed = async () => {
+    const { top, atBottom } = await measure()
+    if (atBottom) return top >= BAR_H ? "landed" : `top ${top}, page fully scrolled (wanted ≥ ${BAR_H})`
+    return Math.abs(top - ANCHOR_LANDING) <= 1 ? "landed" : `top ${top} (wanted ${ANCHOR_LANDING} ±1)`
+  }
   await expect
-    .poll(top, { message: `${hash} should scroll into the top band of the viewport` })
-    .toBeLessThanOrEqual(200)
-  expect(await top(), `${hash} top`).toBeGreaterThanOrEqual(0)
+    .poll(landed, { message: `${hash} should land ${ANCHOR_LANDING}px down: the bar plus anchor-target's 16px` })
+    .toBe("landed")
+}
+
+/** `expectAnchorLanding` for a full href: the URL carries the hash too. */
+export async function expectAnchorTarget(page: Page, href: string) {
+  await expectPath(page, href)
+  await expectAnchorLanding(page, href.slice(href.indexOf("#")))
 }
 
 /* ------------------------------------------------------------------------------------------------
  * Scroll scenes
  * ---------------------------------------------------------------------------------------------- */
 
-/** Scene progress as `lib/site/scroll.ts#sceneProgress` computes it, measured in the page. */
-function measureSceneProgress(page: Page, testId: string) {
-  return page.evaluate((id) => {
-    const el = document.querySelector(`[data-testid="${id}"]`)
-    if (!el) throw new Error(`scene ${id} not found`)
-    const rect = el.getBoundingClientRect()
-    const vh = window.innerHeight || 1
-    if (rect.height <= vh) return 0
-    return Math.max(0, Math.min(1, -rect.top / (rect.height - vh)))
-  }, testId)
+/** Resolves once every webfont the page uses has loaded, so measurements see the final layout. */
+export async function waitForFonts(page: Page) {
+  await page.evaluate(() => document.fonts.ready.then(() => undefined))
+}
+
+/**
+ * The scene's progress as the components measure it (`lib/site/scroll.ts#sceneProgress` with the bar): against
+ * the pinned panel's travel under the bar (the panel is the viewport minus `BAR_H`, and progress starts when
+ * the scene's top reaches the bar's bottom edge), or, given `flow` (a scene that flows on a short phone),
+ * against the viewport-anchored window (`flowProgress`). The bar height is the constant the math uses, not a
+ * value read from the page, so the test and the components agree by construction.
+ */
+function measureSceneProgress(page: Page, testId: string, flow?: FlowWindow) {
+  return page.evaluate(
+    ([id, w, bar]) => {
+      const el = document.querySelector(`[data-testid="${id}"]`)
+      if (!el) throw new Error(`scene ${id} not found`)
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      if (w) return Math.max(0, Math.min(1, (vh * w.start - rect.top) / (vh * w.travel)))
+      const panel = vh - bar
+      if (rect.height <= panel) return 0
+      return Math.max(0, Math.min(1, (bar - rect.top) / (rect.height - panel)))
+    },
+    [testId, flow ?? null, BAR_H] as const
+  )
 }
 
 /**
  * Scroll the window so that `fraction` (0..1) of a tall scene has been scrolled through, then wait
  * until the measured progress is within 0.02 of the request.
  */
-export async function scrollScene(page: Page, testId: string, fraction: number) {
+export async function scrollScene(page: Page, testId: string, fraction: number, flow?: FlowWindow) {
+  // The scroll target is computed from the page's layout, so the webfont must be in place first: a swap after
+  // the target is computed reflows the copy above the scene and moves it.
+  await waitForFonts(page)
   await page.evaluate(
-    ([id, f]) => {
+    ([id, f, w, bar]) => {
       const el = document.querySelector(`[data-testid="${id}"]`) as HTMLElement | null
       if (!el) throw new Error(`scene ${id} not found`)
       const rect = el.getBoundingClientRect()
       const top = rect.top + window.scrollY
-      const travel = rect.height - window.innerHeight
-      window.scrollTo({ top: top + travel * Number(f), behavior: "instant" })
+      const vh = window.innerHeight
+      // A pinned scene's travel starts a bar's height above its top (where the bar's edge meets it) and runs
+      // its height less the panel; a flowing scene's window is anchored to the viewport.
+      const target = w
+        ? top - vh * w.start + Number(f) * vh * w.travel
+        : top - bar + (rect.height - (vh - bar)) * Number(f)
+      window.scrollTo({ top: target, behavior: "instant" })
     },
-    [testId, String(fraction)] as const
+    [testId, String(fraction), flow ?? null, BAR_H] as const
   )
+  // A scroll position is a whole pixel, so the reached progress can sit a hair past the tolerance.
   await expect
-    .poll(async () => Math.abs((await measureSceneProgress(page, testId)) - fraction), {
+    .poll(async () => Math.abs((await measureSceneProgress(page, testId, flow)) - fraction), {
       message: `scene ${testId} should reach progress ${fraction} (±0.02)`,
     })
-    .toBeLessThanOrEqual(0.02)
+    .toBeLessThanOrEqual(0.0201)
 }
 
-/** Assert the scene's sticky panel is pinned just below the header while the scene is in progress. */
+/**
+ * Assert the scene's sticky panel is pinned exactly under the bar (`BAR_H`, ±1px) while the scene is in
+ * progress: one offset on every route, since the sticky bar's condensed height is the one constant
+ * `scene-pin` reads (`--bar-h`).
+ */
 export async function expectPinned(page: Page, testId: string) {
   const top = await page.evaluate((id) => {
     const panel = document.querySelector(`[data-testid="${id}"] > *`) as HTMLElement | null
     return panel ? Math.round(panel.getBoundingClientRect().top) : Number.NaN
   }, testId)
-  expect(top, `${testId} panel top`).toBeGreaterThanOrEqual(70)
-  expect(top, `${testId} panel top`).toBeLessThanOrEqual(90)
+  expect(top, `${testId} panel top`).toBeGreaterThanOrEqual(BAR_H - 1)
+  expect(top, `${testId} panel top`).toBeLessThanOrEqual(BAR_H + 1)
 }
+
+/**
+ * The scroll-scrubbed film inside `scope` has loaded its source and shows the frame at `seconds`
+ * (within a third of a second: seeks land on the nearest decodable frame). Waits for metadata first.
+ */
+export async function expectFilmAt(video: Locator, seconds: number) {
+  await expect(video).toHaveAttribute("src", /\/media\/[a-z-]+\.mp4$/)
+  await expect
+    .poll(() => video.evaluate((v) => (v as HTMLVideoElement).readyState), { message: "film metadata" })
+    .toBeGreaterThanOrEqual(1)
+  // Scrubbed films converge on their target through a damped loop and land on the nearest decodable frame, so
+  // the poll itself waits for the film to settle within a third of a second of the mark.
+  await expect
+    .poll(() => video.evaluate((v, s) => Math.abs((v as HTMLVideoElement).currentTime - s), seconds), {
+      message: `film should settle at ${seconds}s (±0.34s)`,
+      timeout: 10_000,
+    })
+    .toBeLessThanOrEqual(0.34)
+}
+
+/** A film that must never load: no `src`, only its poster, whatever the scroll position. */
+export async function expectFilmHeld(video: Locator, poster: string) {
+  await expect(video).toHaveAttribute("poster", poster)
+  await expect(video).not.toHaveAttribute("src")
+  expect(await video.evaluate((v) => (v as HTMLVideoElement).currentTime)).toBe(0)
+}
+
+/**
+ * Scene progress in the middle of stage 5 of 8 (index 4). Stage boundaries sit at multiples of 1/8, so a
+ * test that aims at exactly 0.5 lands on the stage-3/4 boundary and rounding decides which stage shows.
+ */
+export const STAGE_4_MID = 0.56
 
 /* ------------------------------------------------------------------------------------------------
  * exitIQ
@@ -286,8 +373,26 @@ export function advisorDialog(page: Page): Locator {
   return page.getByTestId("advisor-dialog")
 }
 
-export async function openAdvisorFromHeader(page: Page): Promise<Locator> {
-  await page.getByRole("banner").getByTestId("open-advisor").click()
+/**
+ * Open the advisor dialog from the bar, the way a visitor at this layout can. Desktop: the bar's visible
+ * advisor control (the home pill, or the advisor pill beside the scrubber on the five advisor-CTA pages, in
+ * both states), or, when the page's own pill is an anchor, the advisor entry in the scrubber's menu, revealed
+ * by focusing its trigger. Mobile: the menu button, then the menu's advisor entry.
+ */
+export async function openAdvisorFromHeader(page: Page, layout: "desktop" | "mobile" = "desktop"): Promise<Locator> {
+  const header = page.getByRole("banner")
+  if (layout === "desktop") {
+    const visible = header.locator('[data-testid="open-advisor"]:visible, button[data-testid="bar-cta"]:visible')
+    if ((await visible.count()) > 0) {
+      await visible.first().click()
+    } else {
+      await page.getByTestId("bar-scrubber").focus()
+      await header.getByTestId("open-advisor").click()
+    }
+  } else {
+    await page.getByTestId("nav-burger").click()
+    await page.locator("#mobile-nav").getByTestId("open-advisor").click()
+  }
   const dialog = advisorDialog(page)
   await expect(dialog).toBeVisible()
   return dialog
@@ -305,4 +410,97 @@ export function briefingRow(dialog: Locator, label: string): Locator {
 /** Resolves with the next POST to /api/inquiry. Call before the click that triggers it. */
 export function waitForInquiry(page: Page) {
   return page.waitForRequest((req) => req.url().endsWith("/api/inquiry") && req.method() === "POST")
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Demos
+ * ---------------------------------------------------------------------------------------------- */
+
+/** How long a demo may take to reach a beat: one whole play plus its hold, and the replay after it. */
+const DEMO_TIMEOUT = 30_000
+
+/** The beats each recorded demo has written, kept on the page by `recordDemoBeats`. */
+interface DemoBeatLog {
+  __demoBeats?: Record<string, string[]>
+}
+
+/**
+ * The URL a demo page is opened at. Without `still` the demos play; `demoUrl("/", "still")` freezes every
+ * demo on its own still, and `demoUrl("/", "fin:note")` freezes one demo on one beat and leaves the rest
+ * playing.
+ */
+export function demoUrl(path: string, still?: string): string {
+  if (!still) return path
+  const [base = "", hash] = path.split("#")
+  const url = `${base}${base.includes("?") ? "&" : "?"}demo=${still}`
+  return hash ? `${url}#${hash}` : url
+}
+
+/** Start recording the beats the demo writes, so one that passes between two polls is still seen, in order. */
+async function recordDemoBeats(page: Page, testid: string) {
+  await page.evaluate((id) => {
+    const store = window as unknown as DemoBeatLog
+    store.__demoBeats ??= {}
+    if (store.__demoBeats[id]) return
+    const el = document.querySelector(`[data-testid="${id}"]`)
+    if (!el) throw new Error(`demo ${id} not found`)
+    const seen: string[] = []
+    const push = () => {
+      const beat = el.getAttribute("data-beat") ?? ""
+      if (beat && seen[seen.length - 1] !== beat) seen.push(beat)
+    }
+    push()
+    new MutationObserver(push).observe(el, { attributes: true, attributeFilter: ["data-beat"] })
+    store.__demoBeats[id] = seen
+  }, testid)
+}
+
+/**
+ * The demo plays itself: scrolled into view it runs `beatIds` in order with nothing touching it, and comes to
+ * rest on its end state. The demo replays after its hold, so a beat missed on the first play is recorded on
+ * the next one and the assertion is never a race.
+ */
+export async function expectAutoplay(page: Page, testid: string, beatIds: string[]) {
+  const root = page.getByTestId(testid)
+  await root.scrollIntoViewIfNeeded()
+  await recordDemoBeats(page, testid)
+  await expect
+    .poll(
+      async () => {
+        const seen = await page.evaluate((id) => (window as unknown as DemoBeatLog).__demoBeats?.[id] ?? [], testid)
+        return beatsPlayedInOrder(seen, beatIds)
+      },
+      { message: `${testid} should play ${beatIds.join(" → ")}`, timeout: DEMO_TIMEOUT }
+    )
+    .toEqual(beatIds)
+  await expect
+    .poll(() => root.getAttribute("data-demo-state"), {
+      message: `${testid} should rest on its end state`,
+      timeout: DEMO_TIMEOUT,
+    })
+    .toBe("ended")
+}
+
+/** The demo never stops: after its hold it plays again from the first beat, one cycle further on. */
+export async function expectReplay(page: Page, testid: string, firstBeat: string) {
+  const root = page.getByTestId(testid)
+  await expect
+    .poll(() => root.getAttribute("data-cycle"), { message: `${testid} should replay`, timeout: DEMO_TIMEOUT })
+    .toBe("1")
+  await expect(root).toHaveAttribute("data-beat", firstBeat)
+}
+
+/**
+ * Step the demo to one beat with the keyboard: focus its root, press Home to go back to the first beat, then
+ * ArrowRight until it reads `beatId`. Stepping pauses the demo, so the beat holds for whatever the test asserts.
+ */
+export async function stepDemo(page: Page, testid: string, beatId: string, maxBeats = 12) {
+  const root = page.getByTestId(testid)
+  await root.focus()
+  await root.press("Home")
+  for (let step = 0; step < maxBeats; step++) {
+    if ((await root.getAttribute("data-beat")) === beatId) break
+    await root.press("ArrowRight")
+  }
+  await expect(root, `${testid} should step to ${beatId}`).toHaveAttribute("data-beat", beatId)
 }

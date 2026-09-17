@@ -1,8 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { BuyerRegisterForm } from "@/components/site/buyers/BuyerRegisterForm"
-import { BUYER_TYPES } from "@/lib/site/buyers/passport"
-import { mailtoHref } from "@/lib/site/mailto"
 
 const openMail = vi.fn()
 const copyText = vi.fn()
@@ -27,34 +25,6 @@ describe("<BuyerRegisterForm />", () => {
     openMail.mockReset()
     copyText.mockReset().mockResolvedValue(true)
     submitInquiry.mockClear()
-  })
-
-  it("copies, records, opens the mail client, and confirms", async () => {
-    render(<BuyerRegisterForm />)
-    fill()
-    await act(async () => {
-      fireEvent.submit(screen.getByTestId("buyer-register-form"))
-    })
-    expect(copyText).toHaveBeenCalledWith(expect.stringContaining("Test Buyer"))
-    expect(submitInquiry).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: "buyer_passport", email: "buyer@example.com" })
-    )
-    expect(openMail).toHaveBeenCalledWith(expect.stringContaining("mailto:buyers@heirloom.com"))
-    expect(screen.getByTestId("buyer-register-sent")).toBeInTheDocument()
-    expect(screen.queryByTestId("buyer-register-error")).toBeNull()
-  })
-
-  it("shows an error with the fallback address when the message cannot be prepared", async () => {
-    copyText.mockRejectedValue(new Error("clipboard unavailable"))
-    render(<BuyerRegisterForm />)
-    fill()
-    await act(async () => {
-      fireEvent.submit(screen.getByTestId("buyer-register-form"))
-    })
-    expect(screen.getByTestId("buyer-register-error")).toHaveTextContent("buyers@heirloom.com")
-    expect(screen.queryByTestId("buyer-register-sent")).toBeNull()
-    expect(openMail).not.toHaveBeenCalled()
-    expect(screen.getByTestId("buyer-register-submit")).not.toBeDisabled()
   })
 
   it("requires the name, email, and confirmation before the form is valid", () => {
@@ -93,21 +63,10 @@ describe("<BuyerRegisterForm />", () => {
     expect(openMail).not.toHaveBeenCalled()
   })
 
-  it("sends once the required fields are filled and submitted through the browser", async () => {
-    render(<BuyerRegisterForm />)
-    fill()
-    await act(async () => {
-      form().requestSubmit()
-    })
-    expect(copyText).toHaveBeenCalledTimes(1)
-    expect(openMail).toHaveBeenCalledTimes(1)
-  })
-
   it("lists the five buyer types in order and defaults to the first", () => {
     render(<BuyerRegisterForm />)
     const select = screen.getByLabelText("What kind of buyer are you?") as HTMLSelectElement
     const options = within(select).getAllByRole("option")
-    expect(options.map((o) => o.textContent)).toEqual(BUYER_TYPES)
     expect(options.map((o) => o.textContent)).toEqual([
       "Individual buyer or searcher",
       "Independent sponsor",
@@ -160,10 +119,9 @@ describe("<BuyerRegisterForm />", () => {
       email: "ada@northwind.example",
       source: "buyers",
     })
-    expect(openMail).toHaveBeenCalledWith(mailtoHref("buyers@heirloom.com", "Buyer Passport registration", body, 1600))
-    expect(openMail.mock.calls[0]?.[0]).toMatch(
-      /^mailto:buyers@heirloom\.com\?subject=Buyer%20Passport%20registration&body=/
-    )
+    const href = openMail.mock.calls[0]![0] as string
+    expect(href.startsWith("mailto:buyers@heirloom.com?subject=Buyer%20Passport%20registration&body=")).toBe(true)
+    expect(new URLSearchParams(href.slice(href.indexOf("?") + 1)).get("body")).toBe(body)
   })
 
   it("labels a buyer without a firm as independent and omits the empty optional lines", async () => {
@@ -229,21 +187,105 @@ describe("<BuyerRegisterForm />", () => {
     ).toBeInTheDocument()
   })
 
-  it("shows the exact error copy and clears it on the next successful attempt", async () => {
-    copyText.mockRejectedValueOnce(new Error("clipboard unavailable"))
+  it("announces each state politely, tones the error, and clears the confirmation when a retry fails", async () => {
+    let resolveCopy: (v: boolean) => void = () => {}
+    copyText.mockImplementation(() => new Promise<boolean>((r) => (resolveCopy = r)))
     render(<BuyerRegisterForm />)
     fill()
     await act(async () => {
       form().requestSubmit()
     })
-    expect(screen.getByTestId("buyer-register-error")).toHaveTextContent(
-      "We could not prepare the registration. Email buyers@heirloom.com directly and we will help."
-    )
+    expect(screen.getByText("Preparing your registration...")).toHaveAttribute("aria-live", "polite")
+    await act(async () => {
+      resolveCopy(true)
+    })
+    expect(screen.getByTestId("buyer-register-sent")).toHaveAttribute("aria-live", "polite")
+
+    // A throw drives the defensive catch; a refused clipboard resolves false (the test above).
+    copyText.mockRejectedValueOnce(new Error("clipboard unavailable"))
     await act(async () => {
       form().requestSubmit()
     })
-    expect(screen.queryByTestId("buyer-register-error")).toBeNull()
-    expect(screen.getByTestId("buyer-register-sent")).toBeInTheDocument()
+    const error = screen.getByTestId("buyer-register-error")
+    expect(error).toHaveClass("text-error")
+    expect(error).toHaveAttribute("aria-live", "polite")
+    expect(screen.queryByTestId("buyer-register-sent")).toBeNull()
+  })
+
+  it("submits with the keyboard and gives the consent row the 44px touch target", () => {
+    render(<BuyerRegisterForm />)
+    const evidence = screen.getByLabelText("Current evidence of funds or lender support")
+    expect(evidence.tagName).toBe("TEXTAREA")
+    // The consent row is a 44px touch target with the 16px box centred on it.
+    expect(screen.getByLabelText(/I confirm that this information/).closest("label")).toHaveClass("min-h-11")
+    expect(screen.getByTestId("buyer-register-submit")).toHaveAttribute("type", "submit")
+  })
+
+  it("registers anyway when the browser refuses the clipboard, naming the draft as what carries the text", async () => {
+    // The reachable failure: copyText resolves false and never rejects. The copy is a convenience — the
+    // mail draft and the logged inquiry are the delivery — so the registration goes either way.
+    copyText.mockResolvedValueOnce(false)
+    render(<BuyerRegisterForm />)
+    fill()
+    await act(async () => {
+      form().requestSubmit()
+    })
+    expect(submitInquiry).toHaveBeenCalledTimes(1)
     expect(openMail).toHaveBeenCalledTimes(1)
+    const sent = screen.getByTestId("buyer-register-sent")
+    expect(
+      within(sent).getByText("Your email app opened with the registration filled in. Send it to begin.")
+    ).toBeInTheDocument()
+    expect(
+      within(sent).getByText("We could not copy the registration. The draft in your email app carries it.")
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId("buyer-register-error")).toBeNull()
+    expect(screen.getByTestId("buyer-register-submit")).not.toBeDisabled()
+
+    // A later submission whose copy lands names the clipboard again.
+    await act(async () => {
+      form().requestSubmit()
+    })
+    expect(
+      within(screen.getByTestId("buyer-register-sent")).getByText(
+        "Your email app opened with the registration filled in. Send it to begin. The text has also been copied."
+      )
+    ).toBeInTheDocument()
+    expect(screen.queryByText("We could not copy the registration. The draft in your email app carries it.")).toBeNull()
+    expect(openMail).toHaveBeenCalledTimes(2)
+  })
+
+  it("carries the honeypot hidden from people and sends it only when a script fills it", async () => {
+    render(<BuyerRegisterForm />)
+    const pot = screen.getByTestId("honeypot")
+    expect(pot).toHaveAttribute("name", "website")
+    expect(pot).toHaveAttribute("tabindex", "-1")
+    expect(pot).toHaveAttribute("autocomplete", "off")
+    expect(pot).toHaveAttribute("aria-hidden", "true")
+    expect(pot).not.toBeRequired()
+    expect(pot.closest("label")).toHaveAttribute("aria-hidden", "true")
+    // `sr-only` is absolutely positioned, so the field takes no space in the form's flow.
+    expect(pot.closest("span")).toHaveClass("sr-only")
+    fill()
+    await act(async () => {
+      form().requestSubmit()
+    })
+    expect(submitInquiry).toHaveBeenLastCalledWith({
+      kind: "buyer_passport",
+      body: expect.stringContaining("Name: Test Buyer"),
+      email: "buyer@example.com",
+      source: "buyers",
+    })
+    fireEvent.change(pot, { target: { value: "http://spam.example" } })
+    await act(async () => {
+      form().requestSubmit()
+    })
+    expect(submitInquiry).toHaveBeenLastCalledWith({
+      kind: "buyer_passport",
+      body: expect.stringContaining("Name: Test Buyer"),
+      email: "buyer@example.com",
+      source: "buyers",
+      website: "http://spam.example",
+    })
   })
 })

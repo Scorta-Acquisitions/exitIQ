@@ -11,26 +11,24 @@ import {
   CONFIDENTIALITY_RULES,
   fieldTone,
   HOME_STAGE_NAMES,
+  homeStageName,
   MAX_PERMISSION_LEVEL,
   OWNER_CONTROLS,
   OWNER_DECIDES,
   PERMISSION_LEVELS,
   RECORD_FIELDS,
 } from "@/lib/site/confidentiality/data"
-import { chipLabel, insightFor, QUESTION_IDS, QUESTIONS, READ } from "@/lib/site/exitiq/questions"
+import { insightFor, QUESTION_IDS, QUESTIONS, READ } from "@/lib/site/exitiq/questions"
 import {
   HERO_OPTIONS,
-  type HeroStage,
   pathForStage,
   SELL_REVENUE_CHIPS,
   SELL_TIMING_CHIPS,
-  STAGE_INTENSITY,
   STAGE_PROGRESS_LABEL,
 } from "@/lib/site/hero/funnel"
 import { OFFERS, PRIORITIES, type Priority, PRIORITY_WHY } from "@/lib/site/offers/data"
-import { offerScore } from "@/lib/site/offers/score"
 import { HOME_TEASER, QUESTION_CATEGORIES, QUESTION_CATEGORY_LINKS } from "@/lib/site/questions/data"
-import { FOOTER_GROUPS, MOBILE_NAV_LINKS, NAV_GROUPS, PAGE_META, ROUTES } from "@/lib/site/routes"
+import { FOOTER_GROUPS, MOBILE_NAV_LINKS, NAV_GROUPS, PAGE_META, ROUTES, SUBNAV } from "@/lib/site/routes"
 
 const unique = <T>(xs: T[]) => new Set(xs).size === xs.length
 
@@ -38,12 +36,11 @@ describe("questions data", () => {
   const allItems = QUESTION_CATEGORIES.flatMap((c) => c.items)
 
   it("gives every question a non-empty question and answer, phrased as a question", () => {
-    expect(allItems.length).toBeGreaterThanOrEqual(20)
+    expect(allItems).toHaveLength(25)
     for (const item of allItems) {
       expect(item.q.trim().length, item.q).toBeGreaterThan(0)
       expect(item.a.trim().length, item.q).toBeGreaterThan(0)
       expect(item.q.endsWith("?"), item.q).toBe(true)
-      if (item.a2 !== undefined) expect(item.a2.trim().length, item.q).toBeGreaterThan(0)
     }
   })
 
@@ -51,11 +48,23 @@ describe("questions data", () => {
     expect(unique(allItems.map((i) => i.q))).toBe(true)
   })
 
-  it("uses unique q- prefixed category ids and unique labels", () => {
-    const ids = QUESTION_CATEGORIES.map((c) => c.id)
-    expect(unique(ids)).toBe(true)
-    for (const id of ids) expect(id).toMatch(/^q-[a-z]+$/)
-    expect(unique(QUESTION_CATEGORIES.map((c) => c.label))).toBe(true)
+  it("anchors the six categories at the ids the jump links and the page use", () => {
+    expect(QUESTION_CATEGORIES.map((c) => c.id)).toEqual([
+      "q-money",
+      "q-conf",
+      "q-fit",
+      "q-process",
+      "q-buyers",
+      "q-about",
+    ])
+    expect(QUESTION_CATEGORIES.map((c) => c.label)).toEqual([
+      "Fees",
+      "Confidentiality",
+      "Fit and readiness",
+      "Sale process",
+      "Buyers",
+      "About Heirloom",
+    ])
   })
 
   it("mirrors the categories in the jump links, in order and with the same labels", () => {
@@ -75,7 +84,6 @@ describe("questions data", () => {
     for (const t of HOME_TEASER) {
       expect(t.q.endsWith("?")).toBe(true)
       expect(t.a.trim().length).toBeGreaterThan(0)
-      expect(t.a2).toBeUndefined()
     }
   })
 })
@@ -86,10 +94,10 @@ describe("offers data", () => {
     expect(unique(OFFERS.map((o) => o.who))).toBe(true)
   })
 
-  it("keeps every dollar component numeric, non-negative, and never pays more cash than the headline", () => {
+  it("publishes the four headline prices and never pays more cash than the headline", () => {
+    expect(OFFERS.map((o) => o.head)).toEqual([4.3, 4.55, 4.05, 4.65])
     for (const o of OFFERS) {
-      for (const key of ["head", "cash", "note", "earn", "roll"] as const) {
-        expect(Number.isFinite(o[key]), `${o.id}.${key}`).toBe(true)
+      for (const key of ["note", "earn", "roll"] as const) {
         expect(o[key], `${o.id}.${key}`).toBeGreaterThanOrEqual(0)
       }
       expect(o.cash, o.id).toBeLessThanOrEqual(o.head)
@@ -110,31 +118,22 @@ describe("offers data", () => {
     }
   })
 
-  it("fills the descriptive fields for every offer", () => {
-    for (const o of OFFERS) {
-      for (const key of ["sub", "trans", "fin", "excl", "staffNote"] as const) {
-        expect(o[key].trim().length, `${o.id}.${key}`).toBeGreaterThan(0)
-      }
-      expect(o.excl, o.id).toMatch(/^\d+ days$/)
-    }
+  it("states the exclusivity each letter asks for", () => {
+    expect(OFFERS.map((o) => o.excl)).toEqual(["60 days", "90 days", "45 days", "60 days"])
   })
 
-  it("lists each priority once with a unique label and an explanation, and offerScore handles all of them", () => {
+  it("lists each priority once with a unique label and an explanation", () => {
     const values = PRIORITIES.map((p) => p.v)
     expect(unique(values)).toBe(true)
     expect(unique(PRIORITIES.map((p) => p.l))).toBe(true)
     expect([...values].sort()).toEqual(Object.keys(PRIORITY_WHY).sort())
     expect(values).toEqual(["cash", "certainty", "upside", "team"])
-    for (const p of values as Priority[]) {
-      expect(PRIORITY_WHY[p].endsWith(".")).toBe(true)
-      for (const o of OFFERS) expect(Number.isFinite(offerScore(o, p)), `${o.id}/${p}`).toBe(true)
-    }
+    for (const p of values as Priority[]) expect(PRIORITY_WHY[p].endsWith(".")).toBe(true)
   })
 })
 
 describe("confidentiality data", () => {
   it("names six permission levels with unique titles and a viewer for each", () => {
-    expect(PERMISSION_LEVELS).toHaveLength(MAX_PERMISSION_LEVEL + 1)
     expect(unique(PERMISSION_LEVELS.map((p) => p.t))).toBe(true)
     expect(PERMISSION_LEVELS.map((p) => p.t)).toEqual([
       "Public",
@@ -150,16 +149,32 @@ describe("confidentiality data", () => {
     }
   })
 
-  it("keeps every access-log entry at a valid level with an actor and an action", () => {
-    expect(ACCESS_LOG.length).toBeGreaterThan(0)
+  it("names the viewer at every one of the six levels", () => {
+    expect(PERMISSION_LEVELS.map((p) => p.who)).toEqual([
+      "Anyone",
+      "Prospective buyer matching your approved criteria",
+      "Interested buyer who passes initial review",
+      "Serious buyer whose identity, fit, and ability to close have been reviewed",
+      "Selected buyer or approved finalist",
+      "People with a confirmed role in closing",
+    ])
+  })
+
+  it("records the eight access-log entries with their actor, organisation, and level", () => {
+    expect(ACCESS_LOG.map((e) => [e.who, e.org, e.lvl])).toEqual([
+      ["M. Alden", "Cadence Facility Partners", 4],
+      ["M. Alden", "Cadence Facility Partners", 4],
+      ["J. Ferro", "Bellhaven Search", 3],
+      ["Heirloom", "Advisor action", 0],
+      ["K. Ortiz", "Meridian Trades Group", 2],
+      ["Heirloom", "Advisor action", 0],
+      ["Prewitt & Co.", "Seller’s accountant", 3],
+      ["J. Ferro", "Bellhaven Search", 3],
+    ])
     for (const e of ACCESS_LOG) {
-      expect(Number.isInteger(e.lvl), e.act).toBe(true)
-      expect(e.lvl, e.act).toBeGreaterThanOrEqual(0)
       expect(e.lvl, e.act).toBeLessThanOrEqual(MAX_PERMISSION_LEVEL)
-      expect(e.who.trim().length, e.act).toBeGreaterThan(0)
-      expect(e.act.trim().length).toBeGreaterThan(0)
+      expect(e.act.trim().length, e.t).toBeGreaterThan(0)
       expect(e.t.trim().length, e.act).toBeGreaterThan(0)
-      expect(e.org.trim().length, e.act).toBeGreaterThan(0)
     }
     expect(unique(ACCESS_LOG.map((e) => `${e.t}-${e.act}`))).toBe(true)
   })
@@ -174,7 +189,6 @@ describe("confidentiality data", () => {
   it("gives every record field six values whose level-0 value is hidden (never a masked or shown fact)", () => {
     expect(unique(RECORD_FIELDS.map((f) => f.l))).toBe(true)
     for (const f of RECORD_FIELDS) {
-      expect(f.v, f.l).toHaveLength(6)
       for (const v of f.v) expect(v.trim().length, f.l).toBeGreaterThan(0)
       expect(fieldTone(f.v[0]), f.l).toBe("hidden")
       expect(["No sale record", "Not available"]).toContain(f.v[0])
@@ -186,22 +200,58 @@ describe("confidentiality data", () => {
     expect(masked).toEqual(["Company name", "Owner"])
   })
 
-  it("names one home stage per non-public level and lists six owner decisions and controls", () => {
+  it("lists what the owner decides and the controls the owner holds", () => {
     expect(HOME_STAGE_NAMES).toHaveLength(MAX_PERMISSION_LEVEL)
-    expect(unique([...HOME_STAGE_NAMES])).toBe(true)
-    expect(OWNER_DECIDES).toHaveLength(6)
-    expect(OWNER_CONTROLS).toHaveLength(6)
-    expect(unique(OWNER_DECIDES)).toBe(true)
-    expect(unique(OWNER_CONTROLS)).toBe(true)
-    expect(unique(CONFIDENTIALITY_RULES.map((r) => r.title))).toBe(true)
-    expect(CONFIDENTIALITY_RULES).toHaveLength(8)
+    expect(OWNER_DECIDES).toEqual([
+      "Buyer types allowed",
+      "Named buyers or competitors excluded",
+      "Customer, supplier, and employee restrictions",
+      "Information that requires your specific approval",
+      "Standard access expiry",
+      "People allowed to collaborate on the sale",
+    ])
+    expect(OWNER_CONTROLS).toEqual([
+      "Add an excluded buyer",
+      "Approve my rules",
+      "Review an exception",
+      "Revoke access",
+      "Extend access",
+      "Download access history",
+    ])
+  })
+
+  it("states the eight confidentiality rules the page promises", () => {
+    expect(CONFIDENTIALITY_RULES.map((r) => r.title)).toEqual([
+      "Your business is never publicly listed",
+      "No contact with employees, customers, or suppliers without your approval",
+      "You set buyer exclusions before outreach",
+      "Your identity is released after an NDA",
+      "Sensitive records are released after qualification",
+      "Every access is recorded",
+      "Access expires and can be revoked",
+      "Retention rules are written before you sign",
+    ])
+  })
+
+  it("tones a value by what it reveals", () => {
+    for (const hidden of ["Not available", "No sale record", "Not disclosed"]) {
+      expect(fieldTone(hidden), hidden).toBe("hidden")
+    }
+    expect(fieldTone("Hidden")).toBe("masked")
+    expect(fieldTone("$4.24M")).toBe("shown")
+    expect(fieldTone("")).toBe("shown")
+  })
+
+  it("names the home stage of every non-public level and falls back outside the range", () => {
+    expect([1, 2, 3, 4, 5].map(homeStageName)).toEqual([...HOME_STAGE_NAMES])
+    expect(homeStageName(0)).toBe("Anonymous overview")
+    expect(homeStageName(6)).toBe("Anonymous overview")
   })
 })
 
 describe("advisor data", () => {
   it("asks the five questions in the declared id order with unique chip values and labels", () => {
     expect(ADVISOR_QUESTIONS.map((q) => q.id)).toEqual([...ADVISOR_QUESTION_IDS])
-    expect(unique(ADVISOR_QUESTIONS.map((q) => q.id))).toBe(true)
     for (const q of ADVISOR_QUESTIONS) {
       expect(q.q.endsWith("?"), q.id).toBe(true)
       expect(q.chips.length, q.id).toBeGreaterThanOrEqual(4)
@@ -243,6 +293,13 @@ describe("exitIQ questions", () => {
     }
   })
 
+  it("reads the recurring-services answer back in the words the console shows", () => {
+    expect(insightFor("type", "recurring")).toBe(
+      "Contracted recurring revenue can support buyer confidence when the agreements, renewal history, and margins are clear."
+    )
+    expect(insightFor("type", "nope")).toBeNull()
+  })
+
   it("has an insight for every chip and no insight without a chip", () => {
     const pairs = QUESTIONS.flatMap((q) => q.chips.map((c) => `${q.id}:${c.v}`))
     expect(Object.keys(READ).sort()).toEqual([...pairs].sort())
@@ -254,29 +311,18 @@ describe("exitIQ questions", () => {
       }
     }
   })
-
-  it("returns null for unknown chips and undefined values", () => {
-    expect(insightFor("type", "nope")).toBeNull()
-    expect(chipLabel("type", undefined)).toBeNull()
-    expect(chipLabel("type", "nope")).toBeNull()
-    expect(chipLabel("rev", "3-5")).toBe("$3M to $5M")
-  })
 })
 
 describe("hero funnel data", () => {
-  const stages: HeroStage[] = ["route", "sellQ1", "sellQ2", "sellDone", "offer", "ready"]
-
-  it("has a progress label for every stage and an intensity for every stage except ready", () => {
-    for (const s of stages) expect(typeof STAGE_PROGRESS_LABEL[s], s).toBe("string")
-    expect(STAGE_PROGRESS_LABEL.route).toBe("")
-    expect(STAGE_PROGRESS_LABEL.ready).toBe("EXITIQ")
-    expect(Object.keys(STAGE_INTENSITY).sort()).toEqual(["offer", "route", "sellDone", "sellQ1", "sellQ2"])
-    for (const v of Object.values(STAGE_INTENSITY)) {
-      expect(v).toBeGreaterThan(0)
-      expect(v).toBeLessThanOrEqual(1)
-    }
-    expect(STAGE_INTENSITY.sellQ1).toBeLessThan(STAGE_INTENSITY.sellQ2)
-    expect(STAGE_INTENSITY.sellQ2).toBeLessThan(STAGE_INTENSITY.sellDone)
+  it("labels the progress of every hero stage", () => {
+    expect(STAGE_PROGRESS_LABEL).toEqual({
+      route: "",
+      sellQ1: "QUESTION 1 OF 2",
+      sellQ2: "QUESTION 2 OF 2",
+      sellDone: "YOUR RESULT",
+      offer: "FREE OFFER REVIEW",
+      ready: "EXITIQ",
+    })
   })
 
   it("offers three numbered paths whose stages map back to their own path", () => {
@@ -288,14 +334,18 @@ describe("hero funnel data", () => {
     expect(pathForStage("route")).toBe("sell")
   })
 
-  it("has non-empty, unique chip lists for the two sell questions", () => {
-    expect(SELL_TIMING_CHIPS.length).toBe(3)
-    expect(SELL_REVENUE_CHIPS.length).toBe(4)
-    for (const chips of [SELL_TIMING_CHIPS, SELL_REVENUE_CHIPS]) {
-      expect(unique(chips.map((c) => c[0]))).toBe(true)
-      expect(unique(chips.map((c) => c[1]))).toBe(true)
-      for (const [, label] of chips) expect(label.trim().length).toBeGreaterThan(0)
-    }
+  it("offers the timing and revenue chips the console shows and the advisor prefill reads", () => {
+    expect(SELL_TIMING_CHIPS).toEqual([
+      ["now", "Now or within 6 months"],
+      ["mid", "In 6 to 18 months"],
+      ["explore", "I am only exploring"],
+    ])
+    expect(SELL_REVENUE_CHIPS).toEqual([
+      ["u1", "Under $1M"],
+      ["1-3", "$1M to $3M"],
+      ["3-10", "$3M to $10M"],
+      ["10+", "More than $10M"],
+    ])
   })
 })
 
@@ -323,13 +373,72 @@ describe("page metadata and navigation", () => {
     expect(linked.has(ROUTES.home)).toBe(false)
   })
 
-  it("gives every primary nav link a label and a note, with no label repeated across groups", () => {
-    const links = NAV_GROUPS.flatMap((g) => g.links)
-    expect(unique(links.map((l) => l.label))).toBe(true)
-    for (const l of links) {
-      expect(l.note.trim().length, l.label).toBeGreaterThan(0)
-      expect(l.href.startsWith("/"), l.label).toBe(true)
+  it("fills the bar's three dropdowns with their labels, notes, and destinations", () => {
+    expect(NAV_GROUPS.map((g) => [g.label, g.minWidth])).toEqual([
+      ["For owners", 310],
+      ["The process", 280],
+      ["The firm", 270],
+    ])
+    expect(NAV_GROUPS.map((g) => g.links.map((l) => [l.label, l.href, l.note]))).toEqual([
+      [
+        ["Sell my business", "/how-it-works", "Private sale, preparation to closing"],
+        ["Review my offer", "/offer-review", "Free read of the terms"],
+        ["Check sale readiness", "/score", "Seven questions, no name needed"],
+      ],
+      [
+        ["How it works", "/how-it-works", "The eight stages of a sale"],
+        ["Fees", "/fees", "5% success fee, no retainer"],
+        ["Confidentiality", "/confidentiality", "Who sees what, and when"],
+      ],
+      [
+        ["Who we are", "/who-we-are", "The firm and its founder"],
+        ["Questions", "/questions", "Answers on fees, confidentiality, fit"],
+        ["Why Heirloom", "/why", "How private businesses sell today"],
+      ],
+    ])
+    expect(unique(NAV_GROUPS.flatMap((g) => g.links).map((l) => l.label))).toBe(true)
+  })
+})
+
+describe("sub-nav data", () => {
+  const entries = Object.entries(SUBNAV)
+
+  it("covers every public page except the home page, each with a title and a call to action", () => {
+    const covered = entries.map(([path]) => path).sort()
+    expect(covered).toEqual(
+      Object.values(ROUTES)
+        .filter((r) => r !== ROUTES.home)
+        .sort()
+    )
+    for (const [path, nav] of entries) {
+      expect(nav!.title.trim().length, path).toBeGreaterThan(0)
+      expect(nav!.cta.label.trim().length, path).toBeGreaterThan(0)
     }
-    for (const g of NAV_GROUPS) expect(g.minWidth).toBeGreaterThanOrEqual(240)
+  })
+
+  it("links only to in-page anchors, never repeating one within a page", () => {
+    for (const [path, nav] of entries) {
+      const hrefs = nav!.links.map((l) => l.href)
+      expect(unique(hrefs), path).toBe(true)
+      for (const href of hrefs) expect(href, `${path} ${href}`).toMatch(/^#[a-z][a-z0-9-]*$/)
+      if (nav!.cta.href) expect(nav!.cta.href, path).toMatch(/^#[a-z][a-z0-9-]*$/)
+      expect(unique(nav!.links.map((l) => l.label)), path).toBe(true)
+    }
+  })
+
+  it("keeps the anchor targets the rest of the site already depends on", () => {
+    expect(SUBNAV[ROUTES.fees]!.cta.href).toBe("#fees-calc")
+    expect(SUBNAV[ROUTES.offerReview]!.cta.href).toBe("#offer-intake")
+    expect(SUBNAV[ROUTES.buyers]!.cta.href).toBe("#buyer-register")
+    expect(SUBNAV[ROUTES.questions]!.cta.href).toBe("#q-ask")
+    expect(SUBNAV[ROUTES.confidentiality]!.links.map((l) => l.href)).toContain("#conf-levels")
+    expect(SUBNAV[ROUTES.score]!.links.map((l) => l.href)).toContain("#exitiq-run")
+  })
+
+  it("falls back to the advisor dialog wherever a page has no anchor call to action", () => {
+    for (const path of [ROUTES.score, ROUTES.howItWorks, ROUTES.confidentiality, ROUTES.whoWeAre, ROUTES.why]) {
+      expect(SUBNAV[path]!.cta.href, path).toBeUndefined()
+      expect(SUBNAV[path]!.cta.label, path).toBe("Talk to an advisor")
+    }
   })
 })

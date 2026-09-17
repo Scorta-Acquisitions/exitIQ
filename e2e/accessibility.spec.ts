@@ -1,8 +1,11 @@
 import { expect, type Page, test } from "@playwright/test"
-import { NARROW_PHONE, PHONE } from "./helpers"
+import { demoUrl, PHONE } from "./helpers"
 import { ALL_ROUTES } from "../lib/site/routes"
+import { BAR_H } from "../lib/site/scroll"
 
-const PAGES = [...ALL_ROUTES, "/offer-review?mode=paste", "/offer-review?mode=verbal", "/nothing-here"]
+const PAGES = [...ALL_ROUTES, "/nothing-here"]
+/** The two intake modes render different fields, so the label sweep runs on them; nothing else about them differs. */
+const FORM_PAGES = [...PAGES, "/offer-review?mode=paste", "/offer-review?mode=verbal"]
 
 /** Presses Tab until `until` is focused (or `max` presses), returning a short description of each stop. */
 async function tabSequence(page: Page, until: string, max = 30): Promise<string[]> {
@@ -52,21 +55,24 @@ test.describe("landmarks and text alternatives", () => {
 
     test(`${path}: every link and button has an accessible name`, async ({ page }) => {
       await page.goto(path)
-      const offenders = await page.evaluate(() =>
-        Array.from(document.querySelectorAll<HTMLElement>("a[href], button"))
-          .filter((el) => {
-            const text = el.textContent?.trim() ?? ""
-            const alt = Array.from(el.querySelectorAll("img"))
-              .map((img) => img.getAttribute("alt")?.trim() ?? "")
-              .join("")
-            const name = text || el.getAttribute("aria-label")?.trim() || el.getAttribute("title")?.trim() || alt
-            return !name
-          })
-          .map((el) => el.outerHTML.slice(0, 160))
-      )
-      expect(offenders).toEqual([])
+      // Counted through Playwright's own accessible-name resolution (what `getByRole({ name })` matches on), so a
+      // control named by `aria-labelledby` counts and text hidden from the accessibility tree does not.
+      for (const role of ["link", "button"] as const) {
+        const all = page.getByRole(role)
+        const total = await all.count()
+        expect(total, `${path} should have ${role}s to name`).toBeGreaterThan(0)
+        const named = await page.getByRole(role, { name: /\S/ }).count()
+        if (named !== total) {
+          const markup = await all.evaluateAll((els) => els.map((el) => el.outerHTML.slice(0, 160)))
+          expect(named, `${path}: a ${role} has no accessible name, among:\n${markup.join("\n")}`).toBe(total)
+        }
+        expect(named, `${path}: every ${role} has an accessible name`).toBe(total)
+      }
     })
+  }
 
+  // Each intake mode renders its own fields, so the label sweep runs on the two `?mode=` variants too.
+  for (const path of FORM_PAGES) {
     test(`${path}: every form control has a label`, async ({ page }) => {
       await page.goto(path)
       const offenders = await page.evaluate(() =>
@@ -94,7 +100,7 @@ test.describe("landmarks and text alternatives", () => {
     await expect(rate).toHaveAttribute("aria-label", "Traditional comparison rate")
     await expect(page.locator("label[for='fees-rate']")).toHaveText("Traditional comparison rate")
     await expect(page.getByRole("spinbutton", { name: "Traditional comparison rate" })).toHaveAttribute("min", "1")
-    await expect(page.getByRole("spinbutton", { name: "Traditional comparison rate" })).toHaveAttribute("max", "15")
+    await expect(page.getByRole("spinbutton", { name: "Traditional comparison rate" })).toHaveAttribute("max", "25")
   })
 
   test("question disclosures expose their expanded state and control a region", async ({ page }) => {
@@ -117,12 +123,13 @@ test.describe("landmarks and text alternatives", () => {
 })
 
 test.describe("focus order", () => {
-  test("desktop: Tab visits the wordmark, each nav group and its links, For buyers, then the advisor button", async ({
+  test("desktop: Tab visits the skip link, the brand, each nav group and its links, For buyers, then the advisor pill (home carries it in the bar)", async ({
     page,
   }) => {
     await page.goto("/")
     const stops = await tabSequence(page, "Talk to an M&A advisor")
     expect(stops).toEqual([
+      "Skip to content",
       "Heirloom home",
       "For owners",
       "Sell my business",
@@ -142,34 +149,122 @@ test.describe("focus order", () => {
     await expect(page.getByRole("banner").getByTestId("open-advisor")).toBeFocused()
   })
 
-  test.describe("phone", () => {
-    test.use({ viewport: PHONE })
-    test("Tab visits the wordmark, the advisor button, then the menu button, and Enter opens the menu", async ({
-      page,
-    }) => {
-      await page.goto("/")
-      const stops = await tabSequence(page, "Open navigation menu")
-      expect(stops).toEqual(["Heirloom home", "Talk to an M&A advisor", "Open navigation menu"])
-      await page.keyboard.press("Enter")
-      await expect(page.getByTestId("nav-burger")).toHaveAttribute("aria-expanded", "true")
-      await page.keyboard.press("Tab")
-      await expect(page.locator("#mobile-nav").getByRole("link", { name: "Sell my business" })).toBeFocused()
-    })
+  test("each home demo is one named tab stop, and the arrows step it without moving focus", async ({ page }) => {
+    await page.goto(demoUrl("/", "still"))
+    const DEMOS: Array<[testid: string, name: string, firstBeat: string]> = [
+      ["fin-demo", "Financial preparation, a worked example that plays itself", "arrived"],
+      ["priv-demo", "Who sees what, a worked example that plays itself", "rules"],
+      ["dec-demo", "The four decisions, a worked example that plays itself", "goals"],
+    ]
+    for (const [testid, name, firstBeat] of DEMOS) {
+      const demo = page.getByRole("group", { name })
+      await expect(demo).toHaveAttribute("data-testid", testid)
+      await expect(demo).toHaveAttribute("tabindex", "0")
+      await demo.focus()
+      await expect(demo).toBeFocused()
+      await demo.press("Home")
+      await expect(demo).toHaveAttribute("data-beat", firstBeat)
+      await expect(demo).toBeFocused()
+      // The step is spoken in the demo's own live region, and the demo has exactly one.
+      await expect(demo.locator("[aria-live='polite']")).toHaveCount(1)
+    }
   })
 
-  test.describe("narrow phone", () => {
-    test.use({ viewport: NARROW_PHONE })
-    test("Tab visits the wordmark then the menu button", async ({ page }) => {
-      await page.goto("/")
-      const stops = await tabSequence(page, "Open navigation menu")
-      expect(stops).toEqual(["Heirloom home", "Open navigation menu"])
-    })
+  test("the skip link is the first stop, shows under the bar while focused, and hands the page over to main", async ({
+    page,
+  }) => {
+    await page.goto("/fees")
+    const skip = page.getByRole("banner").getByRole("link", { name: "Skip to content" })
+    await page.keyboard.press("Tab")
+    await expect(skip).toBeFocused()
+    const box = (await skip.boundingBox())!
+    expect(box.height, "a 44px control while focused").toBe(44)
+    expect(box.y, "sits under the 52px bar with a 12px gap").toBe(BAR_H + 12)
+    expect(box.x, "starts at the gutter").toBe(24)
+    await page.keyboard.press("Enter")
+    await expect(page).toHaveURL(/#main$/)
+    await page.keyboard.press("Tab")
+    expect(
+      await page.evaluate(() => document.activeElement?.closest("main") !== null),
+      "the next stop is inside main"
+    ).toBe(true)
   })
+
+  test("desktop, a page with context at landing: after For buyers come the scrubber (reading the title), its sections, the advisor entry, then the page pill", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto("/fees")
+    await expect(page.getByRole("banner")).toHaveAttribute("data-state", "landing")
+    const scrubber = page.getByTestId("bar-scrubber")
+    await expect(scrubber).toBeVisible()
+    await expect(scrubber).toHaveText("Fees")
+    const stops = await tabSequence(page, "Calculate my fee")
+    expect(stops).toEqual([
+      "Skip to content",
+      "Heirloom home",
+      "For owners",
+      "Sell my business",
+      "Review my offer",
+      "Check sale readiness",
+      "The process",
+      "How it works",
+      "Fees",
+      "Confidentiality",
+      "The firm",
+      "Who we are",
+      "Questions",
+      "Why Heirloom",
+      "For buyers",
+      "Fees",
+      "Calculator",
+      "Other costs",
+      "Questions",
+      "Talk to an advisor",
+      "Calculate my fee",
+    ])
+    await expect(page.getByRole("banner").locator('[data-testid="bar-cta"]:visible')).toBeFocused()
+    await expect(page.getByRole("banner")).toHaveAttribute("data-state", "landing")
+  })
+
+  {
+    // 320 is the same tab order at a narrower width (mobile.spec measures what changes there: the mark, the pill).
+    test.describe("phone", () => {
+      test.use({ viewport: PHONE })
+      test("Tab visits the skip link, the brand, then the menu button, and Enter opens the menu onto its first link", async ({
+        page,
+      }) => {
+        await page.goto("/")
+        const stops = await tabSequence(page, "Open navigation menu")
+        expect(stops).toEqual(["Skip to content", "Heirloom home", "Open navigation menu"])
+        await page.keyboard.press("Enter")
+        await expect(page.getByTestId("nav-burger")).toHaveAttribute("aria-expanded", "true")
+        await page.keyboard.press("Tab")
+        await expect(page.locator("#mobile-nav").getByRole("link", { name: "Sell my business" })).toBeFocused()
+        await page.keyboard.press("Shift+Tab")
+        await page.keyboard.press("Shift+Tab")
+        await expect(page.getByRole("banner").getByRole("link", { name: "Heirloom home" })).toBeFocused()
+      })
+
+      test("on a page with context the page pill sits between the brand and the menu button", async ({ page }) => {
+        await page.goto("/buyers")
+        const stops = await tabSequence(page, "Open navigation menu")
+        expect(stops).toEqual(["Skip to content", "Heirloom home", "Get Heirloom Verified", "Open navigation menu"])
+        await page.goto("/why")
+        expect(await tabSequence(page, "Open navigation menu")).toEqual([
+          "Skip to content",
+          "Heirloom home",
+          "Talk to an advisor",
+          "Open navigation menu",
+        ])
+      })
+    })
+  }
 })
 
 test.describe("advisor dialog", () => {
   test("focus is trapped inside the dialog while it is open", async ({ page }) => {
-    await page.goto("/fees")
+    await page.goto("/")
     const trigger = page.getByRole("banner").getByTestId("open-advisor")
     await trigger.click()
     const dialog = page.getByRole("dialog", { name: "Talk to an M&A advisor" })
@@ -195,7 +290,7 @@ test.describe("advisor dialog", () => {
   })
 
   test("focus returns to the button that opened the dialog when it closes", async ({ page }) => {
-    await page.goto("/fees")
+    await page.goto("/")
     const trigger = page.getByRole("banner").getByTestId("open-advisor")
     await trigger.click()
     const dialog = page.getByRole("dialog", { name: "Talk to an M&A advisor" })
@@ -206,7 +301,7 @@ test.describe("advisor dialog", () => {
   })
 
   test("the dialog is labelled and its controls carry roles and names", async ({ page }) => {
-    await page.goto("/fees")
+    await page.goto("/")
     await page.getByRole("banner").getByTestId("open-advisor").click()
     const dialog = page.getByRole("dialog", { name: "Talk to an M&A advisor" })
     await expect(dialog).toBeVisible()

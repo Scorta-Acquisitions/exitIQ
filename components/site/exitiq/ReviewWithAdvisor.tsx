@@ -3,40 +3,40 @@
 
 import { ADVISOR_ERROR_COPY, ADVISOR_SENT_COPY, useAdvisorReview } from "@/components/site/exitiq/ExitIqActions"
 import { Button } from "@/components/site/ui/Button"
+import { CARD_CLASS, CARD_PADDING } from "@/components/site/ui/primitives"
+import { cn } from "@/lib/site/cn"
 
+/**
+ * The third card in the /score next-steps grid: a whole-card button in the Card recipe (surface,
+ * hairline, 18px radius, 24px padding). The title carries the accent so the card reads as a control next
+ * to the static "Keep the plan" card without relying on hover; the blurb stays muted.
+ */
 export function ReviewWithAdvisorCard() {
   const { send } = useAdvisorReview()
   return (
-    <button
-      type="button"
-      onClick={send}
-      className="hover-green border-hair block w-full border-b border-l py-[22px] pl-[26px] text-left"
-    >
-      <div className="font-display mb-2 text-[22px] leading-[1.18]">Review it with an advisor</div>
-      <p className="text-l2 text-[14px] leading-[1.62]">
-        Book a call with Suyash. Your result goes into the booking notes.
-      </p>
+    <button type="button" onClick={send} className={cn(CARD_CLASS, CARD_PADDING, "pressable block w-full text-left")}>
+      <span className="type-tagline text-accent block">Review it with an advisor</span>
+      <p className="type-body text-fg-2 mt-2">Book a call with Suyash. Your result goes into the booking notes.</p>
     </button>
   )
 }
 
+/** The primary review button with its note, plus the success and error lines that follow a click. */
 export function ReviewWithAdvisorButton() {
   const { sent, error, send } = useAdvisorReview()
   return (
     <>
-      <div className="mb-[18px] flex flex-wrap items-center gap-x-[18px] gap-y-3">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
         <Button onClick={send}>Review my result with an advisor</Button>
-        <span className="text-l3 max-w-[420px] font-mono text-[11.5px] leading-[1.6]">
-          Your result goes into the booking notes.
-        </span>
+        <span className="type-caption text-fg-3 max-w-[420px]">Your result goes into the booking notes.</span>
       </div>
       {sent ? (
-        <p aria-live="polite" className="text-filament-ink -mt-2 mb-4 text-[13px] leading-[1.6]">
+        <p aria-live="polite" className="type-caption text-accent mt-3">
           {ADVISOR_SENT_COPY}
         </p>
       ) : null}
       {error ? (
-        <p aria-live="polite" className="text-error -mt-2 mb-4 text-[13px] leading-[1.6]">
+        <p aria-live="polite" className="type-caption text-error mt-3">
           {ADVISOR_ERROR_COPY}
         </p>
       ) : null}

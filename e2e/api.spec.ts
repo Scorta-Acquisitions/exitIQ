@@ -41,26 +41,20 @@ test.describe("POST /api/inquiry", () => {
     expect(json.issues.map((i: { path: string[] }) => i.path)).toEqual([["body"]])
   })
 
-  test("rejects form-encoded and plain-text bodies as invalid JSON instead of crashing", async ({ request }) => {
-    const form = await request.post("/api/inquiry", {
-      data: "kind=question&body=hello",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-    })
-    expect(form.status()).toBe(400)
-    expect(await form.json()).toEqual({ error: "invalid_json" })
-
-    const text = await request.post("/api/inquiry", {
-      data: "hello",
-      headers: { "content-type": "text/plain" },
-    })
-    expect(text.status()).toBe(400)
-    expect(await text.json()).toEqual({ error: "invalid_json" })
-  })
-
-  test("rejects malformed JSON sent with a JSON content type", async ({ request }) => {
-    const res = await request.post("/api/inquiry", { data: Buffer.from("{not json"), headers: JSON_HEADERS })
-    expect(res.status()).toBe(400)
-    expect(await res.json()).toEqual({ error: "invalid_json" })
+  test("rejects form-encoded, plain-text and malformed JSON bodies as invalid JSON instead of crashing", async ({
+    request,
+  }) => {
+    // The route reads the body, never the content type, so all three land in the same `req.json()` catch.
+    const bodies: Array<[name: string, data: string | Buffer, headers: Record<string, string>]> = [
+      ["form-encoded", "kind=question&body=hello", { "content-type": "application/x-www-form-urlencoded" }],
+      ["plain text", "hello", { "content-type": "text/plain" }],
+      ["malformed JSON", Buffer.from("{not json"), JSON_HEADERS],
+    ]
+    for (const [name, data, headers] of bodies) {
+      const res = await request.post("/api/inquiry", { data, headers })
+      expect(res.status(), name).toBe(400)
+      expect(await res.json(), name).toEqual({ error: "invalid_json" })
+    }
   })
 
   test("rejects an unknown kind, a blank body, an invalid email, and an over-long source", async ({ request }) => {
@@ -125,7 +119,7 @@ test("the sitemap lists exactly the ten public routes, weekly for home and month
   }
 })
 
-test("robots.txt allows the site, disallows /api/, and points at the sitemap", async ({ request }) => {
+test("robots.txt allows the site, disallows /api/, and points at the sitemap's own origin", async ({ request }) => {
   const res = await request.get("/robots.txt")
   expect(res.status()).toBe(200)
   const lines = (await res.text())
@@ -133,6 +127,10 @@ test("robots.txt allows the site, disallows /api/, and points at the sitemap", a
     .map((l) => l.trim())
     .filter(Boolean)
   expect(lines.slice(0, 3)).toEqual(["User-Agent: *", "Allow: /", "Disallow: /api/"])
-  expect(lines[3]).toMatch(/^Sitemap: https?:\/\/[^/]+\/sitemap\.xml$/)
   expect(lines).toHaveLength(4)
+  // The two documents are built from the same origin: if one fell back to the request's and the other kept
+  // `NEXT_PUBLIC_SITE_URL`, the sitemap robots points at would not be the one the site serves.
+  const sitemapXml = await (await request.get("/sitemap.xml")).text()
+  const firstLoc = /<loc>([^<]+)<\/loc>/.exec(sitemapXml)![1]!
+  expect(lines[3]).toBe(`Sitemap: ${new URL(firstLoc).origin}/sitemap.xml`)
 })

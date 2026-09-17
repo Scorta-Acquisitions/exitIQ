@@ -1,4 +1,4 @@
-import { chipLabel, QUESTIONS } from "@/lib/site/exitiq/questions"
+import { chipLabel } from "@/lib/site/exitiq/questions"
 import type { ExitIqAnswers } from "@/lib/site/exitiq/scoring"
 import type { HeroStage, SellRevenue, SellTiming } from "@/lib/site/hero/funnel"
 import { CONTACT } from "@/lib/site/routes"
@@ -62,6 +62,7 @@ export function prefillFromSite(ctx: PrefillContext): Prefill {
     labels[k] = l
   }
   const iq = ctx.iqAnswers
+
   if (ctx.stage === "offer") set("topic", "offer", "An offer or buyer I already have")
   else if (ctx.stage === "ready" || (ctx.onScorePage && Object.keys(iq).length))
     set("topic", "value", "Value and timing")
@@ -140,14 +141,17 @@ export function openAdvisor(state: AdvisorState, ctx: PrefillContext): AdvisorSt
   return { ...state, open: true, emailed: false, answers: merged, labels, prefilled, step, ack }
 }
 
-export function answerLabel(state: Pick<AdvisorState, "answers" | "labels">, qid: AdvisorQuestionId): string | null {
+function answerLabel(state: Pick<AdvisorState, "answers" | "labels">, qid: AdvisorQuestionId): string | null {
   const q = ADVISOR_QUESTIONS.find((x) => x.id === qid)
   const chip = q?.chips.find((x) => x[0] === state.answers[qid])
   if (chip) return chip[1]
   return state.labels[qid] ?? null
 }
 
-export function briefingText(state: Pick<AdvisorState, "answers" | "labels" | "note">): string {
+/** The briefing that reads from the advisor state: the answers, their carried labels, and the note. */
+type Briefable = Pick<AdvisorState, "answers" | "labels" | "note">
+
+export function briefingText(state: Briefable): string {
   const L = (qid: AdvisorQuestionId) => answerLabel(state, qid) ?? "Not answered"
   let t =
     "Advisor call briefing\nConversation: " +
@@ -169,8 +173,9 @@ export interface BriefRow {
   value: string | null
 }
 
-export function briefingRows(state: Pick<AdvisorState, "answers" | "labels" | "note">): BriefRow[] {
-  return [
+/** One row per question in question order, then the note. */
+export function briefingRows(state: Briefable): BriefRow[] {
+  const rows: BriefRow[] = [
     { label: "Conversation", value: answerLabel(state, "topic") },
     { label: "Business", value: answerLabel(state, "type") },
     { label: "Revenue", value: answerLabel(state, "rev") },
@@ -178,18 +183,28 @@ export function briefingRows(state: Pick<AdvisorState, "answers" | "labels" | "n
     { label: "Matters most", value: answerLabel(state, "care") },
     { label: "Advisor note", value: state.note ? "Attached" : null },
   ]
+  return rows
 }
 
 export function callAgenda(answers: AdvisorAnswers): string[] {
-  const topic = answers.topic && ADVISOR_AGENDA[answers.topic] ? answers.topic : "sell"
-  let g = (ADVISOR_AGENDA[topic] ?? []).slice(0, 3)
+  const asked = answers.topic as keyof typeof ADVISOR_AGENDA | undefined
+  let g = (asked && ADVISOR_AGENDA[asked] ? ADVISOR_AGENDA[asked] : ADVISOR_AGENDA.sell).slice(0, 3)
   if (answers.care && ADVISOR_CARE[answers.care]) g = g.slice(0, 2).concat([ADVISOR_CARE[answers.care] as string])
   return g
 }
 
-export function bookingUrl(state: Pick<AdvisorState, "answers" | "labels" | "note">): string {
+export function bookingUrl(state: Briefable): string {
   return `${CONTACT.advisorCalendar}?notes=${encodeURIComponent(briefingText(state).slice(0, 700))}`
 }
+
+/**
+ * What the dialog says once the visitor sends the briefing by email. The mail client opens either way:
+ * when the browser refuses the clipboard the line names the draft rather than a copy that does not exist.
+ */
+export const ADVISOR_EMAILED_COPY = {
+  copied: `Your email app opened with the briefing. If it did not, the text is copied. Paste it into a message to ${CONTACT.hello}.`,
+  notCopied: "Your email app opened with the briefing. We could not copy the text, so the draft carries it.",
+} as const
 
 /** Progress copy for the dialog header and the "question x of y" line (prefilled questions are not counted). */
 export function progressLabel(state: Pick<AdvisorState, "step" | "prefilled">): {
@@ -212,6 +227,3 @@ export function progressLabel(state: Pick<AdvisorState, "step" | "prefilled">): 
         : "BRIEFING READY"
   return { progress, position, total }
 }
-
-/** Re-export so callers do not need to know which exitIQ question labels are used for prefill. */
-export const EXITIQ_QUESTIONS = QUESTIONS

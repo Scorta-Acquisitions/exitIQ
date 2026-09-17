@@ -1,37 +1,48 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import Link from "next/link"
 import type { ComponentPropsWithoutRef, ReactNode } from "react"
-import { twMerge } from "tailwind-merge"
+import { cn } from "@/lib/site/cn"
 
 /**
- * Pill button used for every call to action. Renders a Next `Link` for internal hrefs, a plain
- * anchor for mailto/hash/external hrefs, and a `<button>` otherwise.
+ * The design system's button grammar. Renders a Next `Link` for internal hrefs, a plain anchor for
+ * mailto/hash/external hrefs, and a `<button>` otherwise.
+ *
+ * - `primary`   the pill call to action: accent fill, white text, 17px body type (11 × 22 padding)
+ * - `secondary` the ghost pill that sits beside a primary: accent text and 1px accent border
+ * - `pearl`     the pearl capsule for card-level secondary actions (11px radius, 14px caption text)
+ * - `icon`      a 44px circular control floating over imagery
+ *
+ * `size="nav"` shrinks a primary or secondary pill for the 44px and 52px navigation bars; `size="compact"`
+ * is the 14px card-level pill that still meets the 44px touch target, and shrinks `icon` to 32px for close
+ * controls inside chrome. The accent resolves per surface (deep green on light tiles, bright green on
+ * dark ones), so no dark variants.
+ * Pressing any button scales it to 95%; hover never changes a filled button's text colour.
  */
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full transition-[box-shadow,border-color,color] duration-200 ease-e1 disabled:cursor-not-allowed disabled:opacity-60",
+  "pressable inline-flex items-center justify-center whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60",
   {
     variants: {
       variant: {
-        // Filled buttons keep their text colour on hover (hover:text-* outranks the global a:hover) and lift instead.
-        brand: "bg-brand font-medium text-cta hover:text-cta hover:shadow-[0_10px_26px_rgba(12,54,38,.3)]",
-        cta: "bg-cta font-semibold text-ground hover:text-ground hover:shadow-[0_10px_26px_rgba(4,15,10,.35)]",
-        outline: "hover-green border border-hair-2 bg-card/50 text-ink",
-        "outline-plain": "hover-green border border-hair-2 text-ink",
-        "outline-dark": "hover-green-dark border border-dhair text-d1 hover:border-filament/50",
-        "pill-dark": "hover-green-dark border border-dhair font-mono text-[11px] text-d2 hover:border-filament/50",
-        "pill-light": "hover-green border border-hair-2 bg-card/50 font-mono text-[12px] tracking-[.4px] text-ink",
+        primary: "bg-primary text-on-primary hover:bg-primary-focus hover:text-on-primary rounded-pill",
+        secondary: "border-accent text-accent hover:bg-accent/10 rounded-pill border bg-transparent",
+        pearl:
+          "bg-surface-pearl text-ink-muted-80 border-divider-soft hover:text-ink type-caption rounded-md border-[3px] px-[14px] py-2",
+        icon: "bg-chip-translucent/64 text-ink hover:text-ink h-11 w-11 rounded-full p-0",
       },
       size: {
-        xs: "h-8 px-3 text-[11.5px]",
-        sm: "h-[38px] px-4 text-[13.5px]",
-        md: "h-[42px] px-5 text-[14px]",
-        lg: "h-[46px] px-[22px] text-[15px]",
-        xl: "h-12 px-6 text-[15px]",
-        pill: "px-[13px] py-[7px]",
+        md: "",
+        compact: "",
+        nav: "",
       },
     },
-    defaultVariants: { variant: "brand", size: "lg" },
+    compoundVariants: [
+      { variant: ["primary", "secondary"], size: "md", class: "type-body px-[22px] py-[11px]" },
+      { variant: ["primary", "secondary"], size: "compact", class: "type-caption px-4 py-3" },
+      { variant: ["primary", "secondary"], size: "nav", class: "type-nav-link h-[26px] px-[11px]" },
+      { variant: "icon", size: "compact", class: "h-8 w-8" },
+    ],
+    defaultVariants: { variant: "primary", size: "md" },
   }
 )
 
@@ -53,7 +64,7 @@ function isInternal(href: string) {
 
 export function Button(props: ButtonProps) {
   const { variant, size, className, children } = props
-  const classes = twMerge(buttonVariants({ variant, size }), className)
+  const classes = cn(buttonVariants({ variant, size }), className)
   if (props.href !== undefined) {
     const { href, variant: _v, size: _s, className: _c, children: _ch, ...rest } = props
     if (isInternal(href)) {
@@ -76,5 +87,3 @@ export function Button(props: ButtonProps) {
     </button>
   )
 }
-
-export { buttonVariants }

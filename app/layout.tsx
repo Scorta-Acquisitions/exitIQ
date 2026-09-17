@@ -1,36 +1,21 @@
 import type { Metadata } from "next"
-import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google"
 import type { ReactNode } from "react"
+import { preload } from "react-dom"
 import { AdvisorDialog } from "@/components/site/advisor/AdvisorDialog"
+import { SiteBar } from "@/components/site/layout/SiteBar"
 import { SiteFooter } from "@/components/site/layout/SiteFooter"
-import { SiteHeader } from "@/components/site/layout/SiteHeader"
 import { SiteStateProvider } from "@/components/site/providers/SiteStateProvider"
 import { env } from "@/env.mjs"
 import { PAGE_META, SITE_NAME } from "@/lib/site/routes"
 import "@/styles/site.css"
 
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  weight: "variable",
-  style: ["normal", "italic"],
-  axes: ["opsz"],
-  variable: "--font-newsreader",
-  display: "swap",
-})
-
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-sans",
-  display: "swap",
-})
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-mono",
-  display: "swap",
-})
+/*
+ * Type: the site is set in Newsreader (display) and IBM Plex Sans (text), the faces it launched with, plus a third
+ * face for one word, Mona Sans for the bar's wordmark; all self-hosted from public/fonts and declared in
+ * styles/fonts.css (see the README there). The four latin files the first paint needs (the serif, the sans, the
+ * wordmark's Mona Sans and the console's mono) are preloaded here. Nothing depends on next/font or on Google's
+ * servers.
+ */
 
 /**
  * Share card for iMessage, Slack, LinkedIn, and X. Rendered from the brand mark and wordmark
@@ -55,12 +40,33 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Three of the four: the serif for the headings, the regular sans for copy, and the wordmark's face (Mona Sans,
+  // on every route in the bar through styles/site.css `type-brand`); the console's mono follows below.
+  preload("/fonts/newsreader/Newsreader-latin.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" })
+  preload("/fonts/ibm-plex-sans/IBMPlexSans-400-latin.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  })
+  preload("/fonts/mona-sans/MonaSans-variable-latin.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  })
+  // The restored exitIQ console's mono labels sit above the fold on / and /score.
+  preload("/fonts/ibm-plex-mono/IBMPlexMono-400-latin.woff2", {
+    as: "font",
+    type: "font/woff2",
+    crossOrigin: "anonymous",
+  })
   return (
-    <html lang="en" className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <body className="bg-paper text-ink flex min-h-screen flex-col">
+    <html lang="en">
+      <body className="bg-canvas text-fg flex min-h-screen flex-col">
         <SiteStateProvider>
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <SiteBar />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
           <SiteFooter />
           <AdvisorDialog />
         </SiteStateProvider>

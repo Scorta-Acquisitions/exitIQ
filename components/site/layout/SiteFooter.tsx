@@ -1,40 +1,54 @@
 import Link from "next/link"
 import { AdvisorCtaButton } from "@/components/site/advisor/AdvisorCtaButton"
-import { Wordmark } from "@/components/site/layout/SiteHeader"
+import { BrandLockup } from "@/components/site/brand/BrandLockup"
 import { FOOTER_GROUPS, ROUTES, SITE_NAME } from "@/lib/site/routes"
 
+/**
+ * Parchment footer: the one deliberately dense area of the site. Link columns run in the relaxed
+ * 17px / 2.41 dense-link style under 14px column headings; the legal row is 12px fine print. A top
+ * hairline separates it from a page whose last tile is also parchment.
+ */
 export function SiteFooter() {
   const year = new Date().getFullYear()
   return (
-    <footer className="panel-foot text-d2 relative overflow-hidden px-6 pt-[34px] pb-6">
-      <div className="mx-auto max-w-[1180px]">
-        <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-4 pb-[22px]">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-[18px] gap-y-3">
-            <Link href={ROUTES.home} aria-label={`${SITE_NAME} home`} className="group inline-flex">
-              <Wordmark tone="dark" size={24} />
+    <footer className="on-light bg-canvas-parchment text-ink-muted-80 border-line border-t px-6 py-16">
+      <div className="mx-auto max-w-[980px]">
+        <div className="border-line flex flex-wrap items-start justify-between gap-x-10 gap-y-6 border-b pb-8">
+          <div className="max-w-[540px]">
+            <Link href={ROUTES.home} aria-label={`${SITE_NAME} home`} className="text-heirloom inline-flex">
+              <span className="sr-only">{SITE_NAME}</span>
+              <BrandLockup markHeight={24} />
             </Link>
-            <p className="text-d3 max-w-[540px] text-[12.5px] leading-[1.55]">
+            <p className="type-caption text-ink-muted-80 mt-3">
               Heirloom is a sell-side M&amp;A firm for owners of established private businesses. We run the sale from
               preparation through closing.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
-            <AdvisorCtaButton variant="cta" size="sm" />
-          </div>
+          <AdvisorCtaButton />
         </div>
-        <nav aria-label="Footer" className="border-dhair-2 flex flex-wrap gap-x-11 gap-y-1 border-y py-2.5">
+        <nav
+          aria-label="Footer"
+          className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-6 gap-y-6 py-8"
+        >
           {FOOTER_GROUPS.map((group) => (
-            <span key={group.label} className="inline-flex flex-wrap items-baseline gap-x-3.5">
-              <span className="text-d4 font-mono text-[10.5px] tracking-[1px] uppercase">{group.label}</span>
-              {group.links.map((link) => (
-                <Link key={link.label} href={link.href} className="text-d2 inline-block py-1.5 text-[13px]">
-                  {link.label}
-                </Link>
-              ))}
-            </span>
+            <div key={group.label}>
+              <span className="type-caption-strong text-ink block pb-2">{group.label}</span>
+              <ul className="m-0 list-none p-0">
+                {group.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="type-dense-link text-ink-muted-80 hover:text-ink block transition-colors duration-200"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </nav>
-        <div className="text-d4 flex flex-col gap-1 pt-3.5 font-mono text-[10.5px] leading-[1.65]">
+        <div className="border-line type-fine-print text-ink-muted-48 flex flex-col gap-2.5 border-t pt-6 leading-[1.5]">
           <span>
             Heirloom works for sellers only. We do not buy the businesses we represent, and buyers pay us no fee on
             them.

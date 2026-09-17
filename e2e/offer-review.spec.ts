@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test"
 import { waitForInquiry, watchConsole } from "./helpers"
 
+/* The forms below confirm a copy only when the clipboard write lands, so the context is granted the
+   clipboard the way score.spec and advisor.spec grant it. */
+test.use({ permissions: ["clipboard-read", "clipboard-write"] })
+
 const OFFER_ASK =
   "Please explain what I would receive, what is missing, and which terms deserve attention before I respond."
 const SIGN_OFF = "\n\nSent from the Heirloom Offer Review page."
@@ -48,7 +52,6 @@ test.describe("/offer-review intake", () => {
     )
     const attach = intake.getByRole("link", { name: "Open an email to attach the offer" })
     await expect(attach).toHaveAttribute("href", FORWARD_MAILTO)
-    expect((await attach.getAttribute("href"))!.startsWith("mailto:offers@heirloom.com")).toBe(true)
     await expect(intake.getByTestId("oi-send")).toBeHidden()
     await expect(intake).toContainText("A person reviews it. You usually hear back the same business day.")
     console.assertClean()
@@ -68,14 +71,6 @@ test.describe("/offer-review intake", () => {
       "href",
       FORWARD_MAILTO
     )
-  })
-
-  test("setting the hidden file input directly also names the file", async ({ page }) => {
-    await page.goto("/offer-review")
-    await page
-      .locator("#oi-file")
-      .setInputFiles({ name: "offer.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 stub") })
-    await expect(page.getByTestId("offer-intake").getByText("Selected: offer.pdf", { exact: false })).toBeVisible()
   })
 
   test("verbal mode sends all seven fields in the inquiry body and shows the sent confirmation", async ({ page }) => {
@@ -101,8 +96,6 @@ test.describe("/offer-review intake", () => {
       email: "owner@example.com",
       source: "offer-review",
     })
-    expect(payload.body).toContain("Headline price:")
-    expect(payload.body).toContain("Email for your review:")
 
     const sent = intake.getByTestId("oi-sent")
     await expect(sent).toBeVisible()
@@ -112,38 +105,6 @@ test.describe("/offer-review intake", () => {
     )
     await expect(send).toBeEnabled()
     await expect(intake.getByText("Preparing your message...")).toBeHidden()
-  })
-
-  test("verbal mode leaves out the optional later-payment and concern lines when they are blank", async ({ page }) => {
-    await page.goto("/offer-review?mode=verbal")
-    const intake = page.getByTestId("offer-intake")
-    await intake.getByLabel("Price or range discussed").fill("$2M")
-    await intake.getByLabel("How much would be paid at closing?").fill("All of it")
-    await intake.getByLabel("Does the buyer already have financing?").fill("Cash")
-    await intake.getByLabel("What does the buyer want you to sign or do next?").fill("A letter of intent")
-    const inquiry = waitForInquiry(page)
-    await intake.getByTestId("oi-send").click()
-    expect((await inquiry).postDataJSON()).toEqual({
-      kind: "offer_review",
-      body:
-        "I received a verbal offer with these terms:\nHeadline price: $2M\nCash at close and later payments: All of it" +
-        `\nFinancing status: Cash\nWhat the buyer requested next: A letter of intent\n\n${OFFER_ASK}${SIGN_OFF}`,
-      email: "",
-      source: "offer-review",
-    })
-    await expect(intake.getByTestId("oi-sent")).toBeVisible()
-  })
-
-  test("?mode=verbal opens the verbal tab and an unknown mode falls back to forward", async ({ page }) => {
-    await page.goto("/offer-review?mode=verbal")
-    await expect(page.getByTestId("oi-tab-verbal")).toHaveAttribute("aria-pressed", "true")
-    await expect(page.getByTestId("oi-tab-forward")).toHaveAttribute("aria-pressed", "false")
-    await expect(page.getByLabel("Price or range discussed")).toBeVisible()
-    await expect(page.getByLabel("Paste the offer or buyer email")).toBeHidden()
-
-    await page.goto("/offer-review?mode=bogus")
-    await expect(page.getByTestId("oi-tab-forward")).toHaveAttribute("aria-pressed", "true")
-    await expect(page.getByText("No file chosen yet.")).toBeVisible()
   })
 
   test("switching tabs after sending clears the confirmation and keeps the typed terms", async ({ page }) => {
@@ -163,31 +124,5 @@ test.describe("/offer-review intake", () => {
     await page.getByTestId("oi-tab-paste").click()
     await expect(intake.getByTestId("oi-sent")).toBeHidden()
     await expect(intake.getByLabel("Paste the offer or buyer email")).toHaveValue(terms)
-  })
-
-  test("the worked example is labelled fictional and separates the headline from the terms", async ({ page }) => {
-    await page.goto("/offer-review")
-    const main = page.getByRole("main")
-    await expect(main.getByText("Worked example", { exact: true })).toBeVisible()
-    await expect(main.getByRole("heading", { name: "What the letter of intent leaves open" })).toBeVisible()
-    await expect(
-      main.getByText("A fictional letter of intent. The terms below decide what the seller actually receives.")
-    ).toBeVisible()
-    await expect(main.getByText("Letter of intent · Project Ridgeline")).toBeVisible()
-    await expect(main.getByText("Headline price", { exact: true }).locator("xpath=following-sibling::span")).toHaveText(
-      "$4.65M"
-    )
-    await expect(
-      main.getByText("Cash at closing", { exact: true }).locator("xpath=following-sibling::span")
-    ).toHaveText("$3.45M, or 74% of the headline price")
-    await expect(main.getByText("Exclusivity", { exact: true }).locator("xpath=following-sibling::span")).toHaveText(
-      "90 days during which the seller cannot negotiate elsewhere"
-    )
-    await expect(main).toContainText("Existing-buyer engagement")
-    await expect(main.getByText("2.5% success fee")).toBeVisible()
-    await expect(main.getByRole("link", { name: "Forward it to offers@heirloom.com" })).toHaveAttribute(
-      "href",
-      "mailto:offers@heirloom.com"
-    )
   })
 })

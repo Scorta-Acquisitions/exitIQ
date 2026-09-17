@@ -1,10 +1,7 @@
 import * as fs from "fs"
 
-// https://github.com/francoismassart/eslint-plugin-tailwindcss/pull/381
-// import eslintPluginTailwindcss from "eslint-plugin-tailwindcss"
 import eslintPluginImport from "eslint-plugin-import"
 import eslintPluginNext from "@next/eslint-plugin-next"
-import eslintPluginStorybook from "eslint-plugin-storybook"
 import typescriptEslint from "typescript-eslint"
 
 const eslintIgnore = [
@@ -23,9 +20,6 @@ const config = typescriptEslint.config(
   {
     ignores: eslintIgnore,
   },
-  ...eslintPluginStorybook.configs["flat/recommended"],
-  //  https://github.com/francoismassart/eslint-plugin-tailwindcss/pull/381
-  // ...eslintPluginTailwindcss.configs["flat/recommended"],
   typescriptEslint.configs.recommended,
   eslintPluginImport.flatConfigs.recommended,
   {

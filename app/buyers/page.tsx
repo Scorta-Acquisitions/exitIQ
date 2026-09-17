@@ -1,110 +1,133 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { BuyerRegisterForm } from "@/components/site/buyers/BuyerRegisterForm"
 import { PassportTiers } from "@/components/site/buyers/PassportTiers"
 import { Button } from "@/components/site/ui/Button"
-import { Container } from "@/components/site/ui/primitives"
+import { Card, Container, Eyebrow, Tile } from "@/components/site/ui/primitives"
 import { BUYER_QUESTIONS, PASSPORT_BENEFITS } from "@/lib/site/buyers/passport"
-import { PAGE_META } from "@/lib/site/routes"
+import { ANCHORS, PAGE_META, ROUTES } from "@/lib/site/routes"
 
 export const metadata: Metadata = { title: PAGE_META.buyers.title, description: PAGE_META.buyers.description }
+
+/** `ANCHORS.buyerRegister` read from this page itself: the fragment alone, with the route prefix off. */
+const REGISTER_HREF = ANCHORS.buyerRegister.replace(ROUTES.buyers, "")
+const REGISTER_ID = REGISTER_HREF.slice(1)
+
+/** The page's CTA pair, opening and closing the page; both jump to the registration tile. */
+function RegisterCtas({ className }: { className: string }) {
+  return (
+    <div className={className}>
+      <Button href={REGISTER_HREF}>Get Heirloom Verified</Button>
+      <Button href={REGISTER_HREF} variant="secondary">
+        Register my criteria
+      </Button>
+    </div>
+  )
+}
 
 export default function BuyersPage() {
   return (
     <>
-      <section className="panel-hero text-d1 px-6 pt-[clamp(48px,6vw,80px)] pb-[clamp(48px,6vw,72px)]">
-        <Container>
-          <div className="mb-[38px] max-w-[820px]">
-            <div className="eyebrow text-signal mb-[18px]">Buyer Passport</div>
-            <h1 className="font-display mb-[22px] text-[clamp(34px,5.4vw,62px)] leading-[1.05] font-normal tracking-[-1.3px]">
-              A verified record of who you are and what you buy
-            </h1>
-            <p className="text-d2 mb-[18px] max-w-[660px] text-[17.5px] leading-[1.6]">
+      <Tile tone="light">
+        <Container className="desk:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)] desk:items-center grid grid-cols-1 gap-x-12 gap-y-12">
+          <div className="desk:text-left text-center">
+            <Eyebrow className="mb-4">Buyer Passport</Eyebrow>
+            <h1 className="type-hero text-fg">A verified record of who you are and what you buy</h1>
+            <p className="type-lead-airy text-fg-2 desk:mx-0 mx-auto mt-5 max-w-[560px]">
               Buyer Passport verifies your identity, acquisition criteria, and capacity range once. You choose which
               details each seller sees.
             </p>
-            <p className="text-d3 mb-7 font-mono text-[12px] tracking-[.4px]">
+            <RegisterCtas className="desk:justify-start mt-8 flex flex-wrap justify-center gap-3" />
+            <p className="type-caption text-fg-3 mt-5">
               Capacity is shown as a range. Heirloom represents sellers. Buyer Passport verifies buyers.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button href="#buyer-register" variant="cta" size="xl">
-                Get Heirloom Verified
-              </Button>
-              <Button href="#buyer-register" variant="outline-dark" size="xl" className="px-[22px]">
-                Register my criteria
-              </Button>
-            </div>
           </div>
-          <div className="mb-[34px]">
-            <h2 className="font-display text-d1 mb-[18px] text-[clamp(24px,3vw,34px)] leading-[1.14] font-normal">
-              What it does
-            </h2>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[18px]">
-              {PASSPORT_BENEFITS.map((b) => (
-                <div key={b.title}>
-                  <div className="text-d1 mb-[5px] text-[14.5px] font-semibold">{b.title}</div>
-                  <p className="text-d3 text-[13px] leading-[1.6]">{b.body}</p>
-                </div>
-              ))}
+          {/* The passport as an object beside the copy: the booklet on parchment, no caption of its own. Capped at 280px on phones so the plate does not swallow the viewport; 400px from the desktop breakpoint. */}
+          <figure
+            className="desk:justify-self-end desk:mx-0 desk:max-w-[400px] mx-auto my-0 w-full max-w-[280px]"
+            data-testid="passport-figure"
+          >
+            <div className="bg-canvas-parchment shadow-product relative aspect-[3/4] overflow-hidden rounded-lg">
+              <Image
+                src="/generated/passport.webp"
+                alt="A deep green Buyer Passport booklet with a brass Heirloom seal on the cover"
+                fill
+                priority
+                sizes="(max-width: 1068px) 100vw, 400px"
+                className="object-contain p-8"
+              />
             </div>
+          </figure>
+        </Container>
+      </Tile>
+
+      <Tile tone="parchment">
+        <Container>
+          <h2 className="type-display-md text-fg">What it does</h2>
+          <div className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-6 gap-y-10">
+            {PASSPORT_BENEFITS.map((b) => (
+              <div key={b.title}>
+                <div className="type-body-strong text-fg">{b.title}</div>
+                <p className="type-body text-fg-2 mt-2">{b.body}</p>
+              </div>
+            ))}
           </div>
+        </Container>
+      </Tile>
+
+      <Tile tone="dark" id="passport-tiers" className="anchor-target">
+        <Container>
           <PassportTiers />
         </Container>
-      </section>
+      </Tile>
 
-      <section className="bg-paper px-6 py-[clamp(56px,7vw,84px)]">
+      <Tile tone="light">
         <Container>
-          <div className="mb-8 max-w-[760px]">
-            <h2 className="font-display mb-4 text-[clamp(28px,3.8vw,44px)] leading-[1.1] font-normal tracking-[-.9px]">
-              Before a seller shares a name
-            </h2>
-            <p className="text-l2 text-[16.5px] leading-[1.6]">
-              Expect to sign an NDA and explain how you would finance the purchase.
-            </p>
-          </div>
-          <div className="border-hair-2 bg-card mb-[34px] max-w-[820px] rounded-[14px] border px-[26px] py-6">
-            <div className="text-l4 mb-4 font-mono text-[11.5px] tracking-[1px] uppercase">Questions buyers answer</div>
-            <div className="flex flex-col gap-3.5">
+          <h2 className="type-display-lg text-fg">Before a seller shares a name</h2>
+          <p className="type-body text-fg-2 mt-4 max-w-[692px]">
+            Expect to sign an NDA and explain how you would finance the purchase.
+          </p>
+          <Card padded={false} className="mt-10 overflow-hidden">
+            <div className="border-line-soft border-b px-6 py-4">
+              <Eyebrow as="span">Questions buyers answer</Eyebrow>
+            </div>
+            <div className="px-6 pt-1 pb-2">
               {BUYER_QUESTIONS.map((q, i) => (
-                <div key={q} className="grid grid-cols-[30px_1fr] gap-3">
-                  <span className="text-filament-ink font-mono text-[12px]">0{i + 1}</span>
-                  <span className="text-[16px] leading-[1.55]">{q}</span>
+                <div key={q} className="border-line flex items-baseline gap-4 border-b py-3 last:border-b-0">
+                  <span className="type-caption text-fg-3 tabular w-6 flex-none">0{i + 1}</span>
+                  <span className="type-body text-fg">{q}</span>
                 </div>
               ))}
             </div>
-            <p className="text-l3 mt-3.5 font-mono text-[11px]">
-              Answers may be shared with the seller and checked against available records.
-            </p>
-          </div>
-          <div id="buyer-register" className="border-hair-2 [scroll-margin-top:90px] border-t pt-[34px]">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,45%)),1fr))] gap-9">
-              <div>
-                <h2 className="font-display mb-3.5 text-[32px] leading-[1.12] font-normal">Register my criteria</h2>
-                <p className="text-l2 mb-3 text-[15.5px] leading-[1.6]">
-                  We contact you only about a relevant opportunity or a verification step. Your criteria are not shared
-                  with other buyers.
-                </p>
-                <p className="text-l3 font-mono text-[12px]">About three minutes.</p>
-              </div>
-              <BuyerRegisterForm />
-            </div>
-          </div>
-          <div className="border-hair-2 mt-11 max-w-[760px] border-t pt-[34px]">
-            <h2 className="font-display mb-3 text-[clamp(26px,3.4vw,38px)] leading-[1.12] font-normal tracking-[-.7px]">
-              Register once
-            </h2>
-            <p className="text-l2 mb-5 text-[15.5px] leading-[1.6]">
-              Complete Buyer Passport once and keep it current.
-            </p>
-            <div className="mb-3.5 flex flex-wrap gap-3">
-              <Button href="#buyer-register">Get Heirloom Verified</Button>
-              <Button href="#buyer-register" variant="outline-plain" className="px-5">
-                Register my criteria
-              </Button>
-            </div>
-            <p className="text-l3 font-mono text-[11.5px]">Buyer Passport is currently free.</p>
-          </div>
+          </Card>
+          <p className="type-caption text-fg-3 mt-4 max-w-[692px]">
+            Answers may be shared with the seller and checked against available records.
+          </p>
         </Container>
-      </section>
+      </Tile>
+
+      <Tile tone="parchment" id={REGISTER_ID} className="anchor-target">
+        <Container className="tab:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] tab:items-start grid grid-cols-1 gap-x-16 gap-y-10">
+          <div>
+            <h2 className="type-display-md text-fg">Register my criteria</h2>
+            <p className="type-body text-fg-2 mt-4">
+              We contact you only about a relevant opportunity or a verification step. Your criteria are not shared with
+              other buyers.
+            </p>
+            <p className="type-caption text-fg-3 mt-4">About three minutes.</p>
+          </div>
+          <BuyerRegisterForm />
+        </Container>
+      </Tile>
+
+      <Tile tone="light">
+        <Container size="text" className="text-center">
+          <h2 className="type-display-md text-fg">Register once</h2>
+          <p className="type-body text-fg-2 mt-4">Complete Buyer Passport once and keep it current.</p>
+          <RegisterCtas className="mt-8 flex flex-wrap justify-center gap-3" />
+          <p className="type-caption text-fg-3 mt-5">Buyer Passport is currently free.</p>
+        </Container>
+      </Tile>
     </>
   )
 }

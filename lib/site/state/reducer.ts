@@ -42,6 +42,25 @@ export interface SiteState {
   advisor: AdvisorState
 }
 
+/**
+ * What the provider keeps in sessionStorage: the live state without the four fields `hydrate` overrides
+ * anyway — the two in-flight `busy` flags, the dialog's `open`, and the hero's `boot`, which belong to the
+ * tab that is running, not to the session. Writing them was harmless and misleading; a record from an
+ * older build that still carries them parses all the same, because the schema strips what it does not know.
+ */
+export interface PersistedSiteState {
+  iq: Omit<ExitIqState, "busy">
+  funnel: Omit<FunnelState, "boot">
+  advisor: Omit<AdvisorState, "open" | "busy">
+}
+
+/** What `hydrate` may be given: any slice, any subset of its fields, over the initial state. */
+export interface HydratableState {
+  iq?: Partial<ExitIqState>
+  funnel?: Partial<FunnelState>
+  advisor?: Partial<AdvisorState>
+}
+
 export const INITIAL_SITE_STATE: SiteState = {
   iq: { phase: 0, answers: {}, busy: false, insight: null, done: false, started: false },
   funnel: { stage: "route", path: "sell", tick: 0, boot: true, sellTiming: null, sellRevenue: null },
@@ -67,7 +86,7 @@ export type SiteAction =
   | { type: "advisor/finish" }
   | { type: "advisor/emailed" }
   | { type: "advisor/restart" }
-  | { type: "hydrate"; state: Partial<SiteState> }
+  | { type: "hydrate"; state: HydratableState }
 
 const bumpTick = (t: number) => (t + 1) % 12
 
@@ -193,6 +212,7 @@ export function siteReducer(state: SiteState, action: SiteAction): SiteState {
       return { ...state, advisor: { ...state.advisor, emailed: true } }
 
     case "advisor/restart":
+      // A fresh briefing: answers and note all go.
       return { ...state, advisor: { ...INITIAL_ADVISOR_STATE, open: true } }
 
     default:
@@ -210,11 +230,14 @@ export function advisorAnsweredCount(a: AdvisorState): number {
   return Math.min(ADVISOR_QUESTIONS.length, Object.keys(a.answers).length)
 }
 
-/** Slice of state persisted to sessionStorage between routes and reloads. */
-export function persistableState(s: SiteState): Partial<SiteState> {
-  return {
-    iq: { ...s.iq, busy: false },
-    funnel: { ...s.funnel },
-    advisor: { ...s.advisor, open: false, busy: false },
-  }
+/**
+ * Slice of state persisted to sessionStorage between routes and reloads. The fields `hydrate` sets itself
+ * — `iq.busy`, `funnel.boot`, `advisor.open` and `advisor.busy` — are left out rather than written and
+ * then ignored, so nothing in the store reads as a promise the restore does not keep.
+ */
+export function persistableState(s: SiteState): PersistedSiteState {
+  const { busy: _iqBusy, ...iq } = s.iq
+  const { boot: _boot, ...funnel } = s.funnel
+  const { open: _open, busy: _advisorBusy, ...advisor } = s.advisor
+  return { iq, funnel, advisor }
 }

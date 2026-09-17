@@ -5,18 +5,22 @@ import { formatDollars } from "@/lib/site/format"
  * rate that is either a 10% illustration (valid through $5M) or a quoted rate typed by the visitor.
  */
 
-export type FeePath = "market" | "execution"
-export type RateMode = "illu" | "quoted"
+type FeePath = "market" | "execution"
+type RateMode = "illu" | "quoted"
 
 export const FEE_PRICE_MIN = 500_000
 export const FEE_PRICE_MAX = 10_000_000
 export const FEE_PRICE_STEP = 50_000
-export const FEE_PRICE_DEFAULT = 2_400_000
-export const ILLUSTRATION_RATE = 10
-export const ILLUSTRATION_CEILING = 5_000_000
-export const ENGAGEMENT_COMMITMENT = 5000
+/** The one quoted-rate range: the input's bounds, the values the calculator accepts, and the message's figures. */
+export const FEE_RATE_MIN = 1
+export const FEE_RATE_MAX = 25
+export const FEE_RATE_STEP = 0.5
+const FEE_PRICE_DEFAULT = 2_400_000
+const ILLUSTRATION_RATE = 10
+const ILLUSTRATION_CEILING = 5_000_000
+const ENGAGEMENT_COMMITMENT = 5000
 
-export const SUCCESS_FEE: Record<FeePath, number> = { market: 0.05, execution: 0.025 }
+const SUCCESS_FEE: Record<FeePath, number> = { market: 0.05, execution: 0.025 }
 
 export interface FeeInputs {
   path: FeePath
@@ -42,17 +46,20 @@ export interface FeeBreakdown {
   difference: string
 }
 
-export const RATE_INVALID = "Enter a rate between 0 and 50."
+export const RATE_INVALID = `Enter a rate between ${FEE_RATE_MIN} and ${FEE_RATE_MAX}.`
 export const RATE_PENDING = "Enter a rate to compare."
 export const RATE_LARGE = "Above $5M, enter the quoted rate to compare."
 /** Shown in the difference row whenever the traditional row carries an instruction instead of a figure. */
 export const NO_COMPARISON = "–"
 
-/** Parse the quoted rate; `null` when blank, `NaN` when out of range or not a number. */
+/**
+ * Parse the quoted rate; `null` when blank, `NaN` when out of range or not a number. The bounds are
+ * inclusive, so the input's own `min` and `max` are exactly the rates the calculator compares.
+ */
 function quotedRate(altRate: string): number | null {
   if (altRate === "") return null
   const r = parseFloat(altRate)
-  if (!isFinite(r) || r <= 0 || r > 50) return NaN
+  if (!isFinite(r) || r < FEE_RATE_MIN || r > FEE_RATE_MAX) return NaN
   return r
 }
 

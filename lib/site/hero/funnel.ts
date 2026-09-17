@@ -8,15 +8,6 @@ export type HeroPath = "sell" | "offer" | "ready"
 export type SellTiming = "now" | "mid" | "explore"
 export type SellRevenue = "u1" | "1-3" | "3-10" | "10+"
 
-/** Instrument-field intensity per stage (the `ready` stage uses the live exitIQ confidence instead). */
-export const STAGE_INTENSITY: Record<Exclude<HeroStage, "ready">, number> = {
-  route: 0.1,
-  sellQ1: 0.35,
-  sellQ2: 0.55,
-  sellDone: 0.85,
-  offer: 0.5,
-}
-
 export const STAGE_PROGRESS_LABEL: Record<HeroStage, string> = {
   route: "",
   sellQ1: "QUESTION 1 OF 2",
@@ -24,6 +15,15 @@ export const STAGE_PROGRESS_LABEL: Record<HeroStage, string> = {
   sellDone: "YOUR RESULT",
   offer: "FREE OFFER REVIEW",
   ready: "EXITIQ",
+}
+
+/** Instrument-field intensity per stage for the restored console (the `ready` stage uses the live exitIQ confidence instead). */
+export const STAGE_INTENSITY: Record<Exclude<HeroStage, "ready">, number> = {
+  route: 0.1,
+  sellQ1: 0.35,
+  sellQ2: 0.55,
+  sellDone: 0.85,
+  offer: 0.5,
 }
 
 export function pathForStage(stage: HeroStage): HeroPath {

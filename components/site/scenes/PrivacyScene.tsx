@@ -1,92 +1,176 @@
-// use client: disclosure level follows scroll position
+// use client: the demo clock, the buyer preview and the field count on resize
 "use client"
 
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { CompanyRecord } from "@/components/site/confidentiality/CompanyRecord"
-import { useSceneProgress } from "@/components/site/scenes/useSceneProgress"
+import { ROW_IN } from "@/components/site/demo/classes"
+import { DemoFrame } from "@/components/site/demo/DemoFrame"
+import { DemoSection } from "@/components/site/demo/DemoSection"
+import { hoverUnavailable } from "@/components/site/motion/reducedMotion"
+import { useDemoClock } from "@/components/site/motion/useDemoClock"
+import { useIdleTick } from "@/components/site/motion/useIdleTick"
+import { AccessLogLines } from "@/components/site/scenes/privacy/AccessLogLines"
+import { BuyerList } from "@/components/site/scenes/privacy/BuyerList"
 import { AmbientVideo } from "@/components/site/ui/AmbientVideo"
-import { TextLink } from "@/components/site/ui/TextLink"
-import { HOME_STAGE_NAMES, homeStageName, PERMISSION_LEVELS } from "@/lib/site/confidentiality/data"
-import { ROUTES } from "@/lib/site/routes"
-import { privacyLevel, veilOpacity } from "@/lib/site/scroll"
+import { VisuallyHidden } from "@/components/site/ui/primitives"
+import { cn } from "@/lib/site/cn"
+import type { StandInKey } from "@/lib/site/confidentiality/data"
+import {
+  levelLineFor,
+  NARROW_PHONE,
+  previewFor,
+  PRIVACY_SCRIPT,
+  PRIVACY_SECTION_ID,
+  PRIVACY_SUBJECT,
+  PRIVACY_WORDS,
+  privacyFieldCount,
+  privacyLogLimit,
+  privacyTitleLines,
+  RECORD_VALUE_LINES,
+  recordAt,
+} from "@/lib/site/confidentiality/demo"
+import { DEMO_IDLE_MS } from "@/lib/site/demo/clock"
+import { TAB_BREAKPOINT } from "@/lib/site/scroll"
 
+/**
+ * "Who sees what", playing itself: the Project Ridgeline company record opening one level at a time beside
+ * the four organisations that looked at it. Nothing is asked of the visitor. The play runs the owner's
+ * exclusion, the anonymous overview, the NDA, qualification and the finalist's selection; at every beat the
+ * record's values re-key (withheld ones sit in redaction bars), the line under it reads the level and how
+ * much is open, a buyer's caption moves to the stage it reached, and the access history gains the entry that
+ * beat wrote. It rests on the last beat with the band walking the record, then plays again.
+ *
+ * The pointer holds the play and previews one consequence: resting on a buyer shows the record exactly as
+ * that buyer sees it — the competitor an exclusion stopped sees the record's public column, and its own
+ * revocation leads the log — and leaving restores the beat. Where hover is unavailable a tap does the same and a second
+ * tap releases it. The arrow keys step the beats, Home replays and End stills; every step is spoken once in
+ * the live region.
+ *
+ * Under the tablet breakpoint the two panes stack, the room film steps aside and the record shows its first
+ * four rows over one log line, so the buyers, the record and the history share one screen with nothing
+ * scrolling inside the frame. Reduced motion (and `?demo=still`) renders the finished state with no frame
+ * loop at all, the film on its poster.
+ */
 export function PrivacyScene() {
-  const sceneRef = useRef<HTMLDivElement>(null)
-  const veilRef = useRef<HTMLDivElement>(null)
-  const [level, setLevel] = useState(1)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const { beat, cycle, state, announce, rootProps } = useDemoClock(rootRef, PRIVACY_SCRIPT)
+  const [preview, setPreview] = useState<StandInKey | null>(null)
+  // The server and the first client render lay out the wide record; a phone measures itself on mount.
+  const [width, setWidth] = useState(TAB_BREAKPOINT)
+  const [tapOnly, setTapOnly] = useState(false)
 
-  useSceneProgress(sceneRef, (p) => {
-    if (veilRef.current) veilRef.current.style.opacity = String(veilOpacity(p))
-    const next = privacyLevel(p)
-    setLevel((cur) => (cur === next ? cur : next))
-  })
+  useEffect(() => {
+    const measure = () => setWidth((current) => (current === window.innerWidth ? current : window.innerWidth))
+    measure()
+    setTapOnly(hoverUnavailable())
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [])
 
-  const perm = PERMISSION_LEVELS[level] ?? PERMISSION_LEVELS[1]!
+  const onPreview = useCallback(
+    (key: StandInKey | null) => {
+      // A device without hover fires pointerenter on a tap; there the tap handler owns the preview.
+      if (!tapOnly) setPreview(key)
+    },
+    [tapOnly]
+  )
+  const onSelect = useCallback(
+    (key: StandInKey) => setPreview((current) => (tapOnly && current === key ? null : key)),
+    [tapOnly]
+  )
+
+  const fieldCount = privacyFieldCount(width)
+  const narrow = width < TAB_BREAKPOINT
+  // The narrowest phones (320 × 640) trade a line of every value and a little of the frame's padding for the fit.
+  const narrowest = width < NARROW_PHONE
+  const base = recordAt(beat)
+  const view = preview ? previewFor(preview, base) : base
+  // The idle beat walks the record's rows once the play has finished, and only while nothing is previewed.
+  const resting = state === "ended" && !preview
+  const tick = useIdleTick(rootRef, DEMO_IDLE_MS, resting)
+  const bandedRow = resting ? tick % fieldCount : null
 
   return (
-    <div
-      ref={sceneRef}
-      className="bg-scene-paper-privacy relative h-[150vh] px-3 pt-[18px]"
-      data-testid="privacy-scene"
+    <DemoSection
+      id={PRIVACY_SECTION_ID}
+      tone="dark"
+      heading={PRIVACY_WORDS.heading}
+      sentence={PRIVACY_WORDS.sentence}
+      link={PRIVACY_WORDS.link}
+      testid="privacy-scene"
     >
-      <div className="aurora panel-privacy border-dfull/8 text-d1 sticky top-[78px] h-[calc(100vh-92px)] min-h-[440px] overflow-hidden rounded-[26px] border shadow-[inset_0_1px_0_rgba(240,248,243,.05),0_30px_70px_rgba(11,36,27,.18)]">
-        <AmbientVideo
-          src="/media/reveal.mp4"
-          className="absolute inset-0 h-full w-full object-cover opacity-[.14] mix-blend-screen"
-        />
-        <div
-          ref={veilRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(155deg,rgba(247,244,225,.14)_0%,rgba(76,226,126,.10)_55%,rgba(247,244,225,.05)_100%)] opacity-0"
-        />
-        <div className="relative mx-auto grid h-full max-w-[1132px] grid-cols-[repeat(auto-fit,minmax(min(100%,max(280px,44%)),1fr))] content-center gap-6 px-6 py-[clamp(20px,4vh,44px)]">
-          <div className="self-center">
-            <h2 className="font-display text-d1 mb-2 text-[clamp(28px,3.6vw,44px)] leading-[1.06] font-normal tracking-[-.9px]">
-              Who sees what
-            </h2>
-            <p className="text-d3 mb-4 max-w-[380px] text-[14.5px] leading-[1.55]">
-              Buyers start with an anonymous overview. They learn your name after signing an NDA and see detailed
-              records only after we qualify them.
-            </p>
-            <div className="mt-1.5 mb-2.5 flex items-baseline gap-3.5">
-              <span
-                className="text-glow-filament font-display text-filament text-[clamp(40px,5vw,64px)] leading-[.9]"
-                data-testid="privacy-level"
-              >
-                L{level}
-              </span>
-              <span className="font-display text-d1 text-[clamp(22px,2.4vw,30px)] leading-none">
-                {homeStageName(level)}
-              </span>
-            </div>
-            <p className="text-d3 mb-3.5 max-w-[380px] font-mono text-[11.5px] leading-[1.6]">{perm.trig}</p>
-            <div className="mb-3.5 flex flex-wrap gap-x-[7px] gap-y-[5px]">
-              {HOME_STAGE_NAMES.map((name, i) => {
-                const on = i + 1 === level
-                return (
-                  <span
-                    key={name}
-                    className={`ease-e1 rounded-full border px-2.5 py-[5px] font-mono text-[10px] tracking-[.5px] transition-all duration-300 ${
-                      on ? "border-filament/50 bg-filament/10 text-filament" : "border-dhair-2 text-d4"
-                    }`}
+      <div
+        ref={rootRef}
+        {...rootProps}
+        data-testid="priv-demo"
+        data-level={view.level}
+        data-viewer={view.viewer}
+        data-preview={preview ?? ""}
+      >
+        <DemoFrame subject={PRIVACY_SUBJECT} testid="priv-frame">
+          <div className={cn("tab:p-5", narrowest ? "p-2" : "p-3")}>
+            <div
+              className={cn(
+                "tab:grid tab:grid-cols-[minmax(0,176px)_minmax(0,1fr)] tab:gap-6 flex flex-col",
+                narrowest ? "gap-3" : "gap-4"
+              )}
+            >
+              <BuyerList rows={base.rows} active={preview} cycle={cycle} onPreview={onPreview} onSelect={onSelect} />
+              <div className="min-w-0">
+                {/* The record rests on the room film, which is framed to it and clipped to the card's radius. */}
+                <div className="relative" data-testid="privacy-record-frame">
+                  <div
+                    aria-hidden="true"
+                    className="tab:block pointer-events-none absolute inset-0 hidden overflow-hidden rounded-lg"
+                    data-testid="privacy-room-frame"
                   >
-                    {name}
-                  </span>
-                )
-              })}
+                    <AmbientVideo
+                      src="/media/privacy-room.mp4"
+                      poster="/media/privacy-room-poster.jpg"
+                      className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-60"
+                    />
+                  </div>
+                  <div className="tab:p-3 relative">
+                    <CompanyRecord
+                      level={view.level}
+                      fieldCount={fieldCount}
+                      size="sm"
+                      title={view.title}
+                      animated
+                      cycle={cycle}
+                      banded={bandedRow}
+                      valueLines={RECORD_VALUE_LINES}
+                      titleLines={privacyTitleLines(width)}
+                    />
+                  </div>
+                </div>
+                <p
+                  key={view.levelLine}
+                  className={cn("type-caption text-fg-2 tabular tab:px-3 mt-1 truncate px-1", ROW_IN)}
+                  data-testid="priv-level"
+                >
+                  {levelLineFor(view.level, width)}
+                </p>
+              </div>
             </div>
-            <TextLink href={ROUTES.confidentiality} tone="dark" className="text-[13.5px]">
-              See who can access what
-            </TextLink>
-            <p className="text-d4 mt-3 max-w-[380px] font-mono text-[10.5px] leading-[1.6]">
-              Employees, customers, suppliers, and competitors are never contacted without your approval.
-            </p>
+            {/* The history runs the frame's whole width, so every line reads on one line and none sits on the film. */}
+            <div className="border-line-soft tab:mt-4 mt-3 border-t pt-2">
+              <AccessLogLines
+                entries={view.log}
+                limit={privacyLogLimit(width)}
+                banded={view.banded}
+                cycle={cycle}
+                short={narrow}
+              />
+            </div>
           </div>
-          <div className="max-h-full min-h-0 self-center overflow-y-auto">
-            <CompanyRecord level={level} fieldCount={7} size="sm" />
-          </div>
-        </div>
+        </DemoFrame>
+        <VisuallyHidden>
+          <span aria-live="polite" data-testid="priv-announce">
+            {announce ?? ""}
+          </span>
+        </VisuallyHidden>
       </div>
-    </div>
+    </DemoSection>
   )
 }

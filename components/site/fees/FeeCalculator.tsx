@@ -2,28 +2,57 @@
 "use client"
 
 import { useState } from "react"
-import { Chip } from "@/components/site/ui/Chip"
+import { Chip, CHIP_IDLE, CHIP_SELECTED } from "@/components/site/ui/Chip"
+import { Card, CARD_CLASS, Eyebrow, KeyValueRow } from "@/components/site/ui/primitives"
+import { TextButton } from "@/components/site/ui/TextButton"
+import { cn } from "@/lib/site/cn"
 import {
   computeFees,
   DEFAULT_FEE_INPUTS,
   FEE_PRICE_MAX,
   FEE_PRICE_MIN,
   FEE_PRICE_STEP,
+  FEE_RATE_MAX,
+  FEE_RATE_MIN,
+  FEE_RATE_STEP,
   type FeeInputs,
 } from "@/lib/site/fees/calc"
 import { formatDollars } from "@/lib/site/format"
 
-/** Dollar figures read as tabular numerals; an instruction or a dash reads as small muted text so the row never looks like a broken value. */
+/** The form-label recipe, shared by the group headings and the two input labels. */
+const LABEL = "type-caption-strong text-fg-2 mb-2 block"
+
+/** Path cards are option chips grown into cards: the card recipe at compact padding, with the chip's selected ring. */
+const PATH_BASE = cn(CARD_CLASS, "pressable p-4 text-left")
+
+/** Dollar figures read as tabular numerals; an instruction or a dash reads as a right-aligned caption so the row never looks like a broken value. */
 function valueClass(value: string, figure: string): string {
-  return value.startsWith("$") ? figure : "text-l3 max-w-[230px] text-right text-[12px] leading-[1.5]"
+  return value.startsWith("$") ? figure : "type-caption text-fg-3 max-w-[230px] text-right"
 }
 
-function Row({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
+function Row({
+  label,
+  value,
+  divider = true,
+  valueClassName,
+  testId,
+}: {
+  label: string
+  value: string
+  divider?: boolean
+  valueClassName?: string
+  testId?: string
+}) {
   return (
-    <div className="border-hair flex items-baseline justify-between border-b py-3">
-      <span className={`flex-[1_1_190px] text-[14.5px] ${muted ? "text-l3" : "text-l2"}`}>{label}</span>
-      <span className={`tabular font-mono text-[16px] ${muted ? "text-l3" : ""}`}>{value}</span>
-    </div>
+    <KeyValueRow
+      label={label}
+      className={cn("py-3", divider && "border-line border-b")}
+      labelClassName="flex-[1_1_190px]"
+    >
+      <span className={valueClassName ?? "tabular type-body text-fg"} data-testid={testId}>
+        {value}
+      </span>
+    </KeyValueRow>
   )
 }
 
@@ -39,32 +68,26 @@ export function FeeCalculator() {
         type="button"
         aria-pressed={on}
         onClick={() => update({ path })}
-        className={`ease-e1 hover:bg-paper-2 rounded-[11px] border px-4 py-3.5 text-left transition-all duration-200 ${
-          on ? "border-filament-ink/50" : "border-hair-2"
-        }`}
+        className={cn(PATH_BASE, on ? CHIP_SELECTED : CHIP_IDLE)}
         data-testid={`fee-path-${path}`}
       >
-        {on ? (
-          <span className="text-filament-ink mb-[5px] block font-mono text-[11px] tracking-[1px] uppercase">
-            {selectedLabel}
-          </span>
-        ) : null}
-        <span className="mb-1 block text-[16px] font-semibold">{title}</span>
-        <span className="text-l3 block text-[13.5px] leading-[1.55]">{body}</span>
+        {/* The slot is always rendered (one caption line tall) so choosing a path never shifts the slider block. */}
+        <Eyebrow as="span" tone="accent" className="mb-1 min-h-[18px]">
+          {on ? selectedLabel : ""}
+        </Eyebrow>
+        <span className="type-body-strong text-fg block">{title}</span>
+        <span className="type-caption text-fg-2 mt-1 block">{body}</span>
       </button>
     )
   }
 
   return (
-    <div className="border-hair-2 bg-card overflow-hidden rounded-2xl border" data-testid="fee-calculator">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))]">
-        <div className="border-hair border-r px-[26px] pt-[26px] pb-[30px]">
-          <div className="text-l4 mb-3 font-mono text-[11.5px] tracking-[1px] uppercase">Which situation applies?</div>
-          <div
-            role="group"
-            aria-label="Choose full sale process or existing buyer"
-            className="mb-[26px] flex flex-col gap-2"
-          >
+    <Card padded={false} className="overflow-hidden" data-testid="fee-calculator">
+      {/* Two panes side by side from the tablet breakpoint (343px each inside the 736px viewport), stacked below it. */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,343px),1fr))]">
+        <div className="p-6">
+          <div className={LABEL}>Which situation applies?</div>
+          <div role="group" aria-label="Choose full sale process or existing buyer" className="flex flex-col gap-2">
             {pathCard(
               "market",
               "Full private sale selected",
@@ -78,11 +101,12 @@ export function FeeCalculator() {
               "We negotiate and manage your existing deal to closing."
             )}
           </div>
-          <label htmlFor="fees-price" className="text-l4 mb-2 block font-mono text-[11.5px] tracking-[1px] uppercase">
+
+          <label htmlFor="fees-price" className={cn(LABEL, "mt-8")}>
             Expected transaction value
           </label>
-          <div className="text-l3 mb-1 text-[13px]">Assume the business sells for</div>
-          <div className="tabular font-display mb-3 text-[42px] leading-none" data-testid="fee-price">
+          <div className="type-caption text-fg-3">Assume the business sells for</div>
+          <div className="type-display-md tabular text-fg mt-1" data-testid="fee-price">
             {formatDollars(inputs.price)}
           </div>
           <input
@@ -94,106 +118,78 @@ export function FeeCalculator() {
             value={inputs.price}
             onChange={(e) => update({ price: parseInt(e.target.value, 10) })}
             aria-label="Expected transaction value"
-            className="h-[22px] w-full cursor-pointer"
+            className="mt-3 h-11 w-full cursor-pointer"
           />
-          <div className="text-l4 mt-0.5 flex justify-between font-mono text-[11px]">
+          <div className="type-caption text-fg-3 tabular flex justify-between">
             <span>$500K</span>
             <span>$10M</span>
           </div>
-          <label
-            htmlFor="fees-rate"
-            className="text-l4 mt-[22px] mb-2 block font-mono text-[11.5px] tracking-[1px] uppercase"
-          >
+
+          <label htmlFor="fees-rate" className={cn(LABEL, "mt-8")}>
             Traditional comparison rate
           </label>
-          <div
-            role="group"
-            aria-label="Choose the traditional comparison basis"
-            className="mb-2.5 flex flex-wrap gap-1.5"
-          >
-            <Chip
-              tone="light-mono"
-              size="sm"
-              selected={inputs.rateMode === "illu"}
-              onClick={() => update({ rateMode: "illu" })}
-            >
+          <div role="group" aria-label="Choose the traditional comparison basis" className="flex flex-wrap gap-2">
+            <Chip selected={inputs.rateMode === "illu"} onClick={() => update({ rateMode: "illu" })}>
               Use 10% illustration
             </Chip>
-            <Chip
-              tone="light-mono"
-              size="sm"
-              selected={inputs.rateMode === "quoted"}
-              onClick={() => update({ rateMode: "quoted" })}
-            >
+            <Chip selected={inputs.rateMode === "quoted"} onClick={() => update({ rateMode: "quoted" })}>
               Enter quoted rate
             </Chip>
           </div>
           {inputs.rateMode === "quoted" ? (
-            <div className="flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <input
                 id="fees-rate"
                 type="number"
-                min={1}
-                max={15}
-                step={0.5}
+                min={FEE_RATE_MIN}
+                max={FEE_RATE_MAX}
+                step={FEE_RATE_STEP}
                 value={inputs.altRate}
                 onChange={(e) => update({ altRate: e.target.value })}
                 placeholder="Quoted rate"
                 aria-label="Traditional comparison rate"
-                className="border-hair-2 bg-paper-2 h-[42px] w-[150px] rounded-[9px] border px-3 text-[15px]"
+                className="type-body text-fg placeholder:text-fg-3 border-line bg-surface rounded-pill h-11 w-[150px] border px-5"
               />
-              <span className="text-l3 font-mono text-[13px]">%</span>
+              <span className="type-caption text-fg-3">%</span>
             </div>
           ) : null}
-          <p className="text-l3 mt-2 text-[12px] leading-[1.6]">
+          <p className="type-caption text-fg-3 mt-3">
             Enter the rate from a proposal if you have one. Through $5M the calculator starts at a 10% illustration.
             Above $5M, enter a quoted rate, since traditional schedules often decline as deals get larger.
           </p>
-          <button
-            type="button"
-            onClick={() => setInputs(DEFAULT_FEE_INPUTS)}
-            className="hover-green border-hair-2 text-l3 mt-4 border-b pb-0.5 font-mono text-[11.5px]"
-          >
+          <TextButton onClick={() => setInputs(DEFAULT_FEE_INPUTS)} className="mt-2 -mb-3">
             Reset calculator
-          </button>
+          </TextButton>
         </div>
-        <div className="bg-paper-2 p-[26px]">
-          <div className="text-l4 mb-[18px] font-mono text-[11.5px] tracking-[1px] uppercase">
-            What Heirloom is paid
-          </div>
+
+        <div className="bg-surface-2 border-line tab:border-t-0 tab:border-l border-t p-6">
+          <Eyebrow className="mb-4">What Heirloom is paid</Eyebrow>
           <Row label="Engagement commitment" value={fees.upfront} />
           <Row label="Success fee rate" value={fees.rateLabel} />
           <Row label="Credit at closing" value={fees.credit} />
           <Row label="Still due at closing" value={fees.atClose} />
-          <div className="border-ink flex items-baseline justify-between border-b-2 pt-4 pb-3">
-            <span className="flex-[1_1_140px] text-[15px] font-semibold">Total Heirloom fee</span>
-            <span className="tabular font-display text-[34px] leading-none" data-testid="fee-total">
+          <div className="border-line flex items-baseline justify-between gap-4 border-b pt-5 pb-3">
+            <span className="type-body-strong text-fg flex-[1_1_140px]">Total Heirloom fee</span>
+            <span className="type-lead tabular text-fg" data-testid="fee-total">
               {fees.total}
             </span>
           </div>
-          <div className="border-hair flex items-baseline justify-between border-b pt-3.5 pb-3">
-            <span className="text-l3 text-[14.5px]">Traditional fee at selected rate</span>
-            <span
-              className={valueClass(fees.traditional, "tabular text-l3 font-mono text-[16px]")}
-              data-testid="fee-traditional"
-            >
-              {fees.traditional}
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between py-3">
-            <span className="text-l2 flex-[1_1_190px] text-[14.5px]">Estimated difference</span>
-            <span
-              className={valueClass(fees.difference, "tabular text-filament-ink font-mono text-[16px]")}
-              data-testid="fee-difference"
-            >
-              {fees.difference}
-            </span>
-          </div>
-          <p className="text-l3 mt-3.5 font-mono text-[11px] leading-[1.65]">
-            The 10% rate is an illustration, not a quote.
-          </p>
+          <Row
+            label="Traditional fee at selected rate"
+            value={fees.traditional}
+            valueClassName={valueClass(fees.traditional, "tabular type-body text-fg-3")}
+            testId="fee-traditional"
+          />
+          <Row
+            label="Estimated difference"
+            value={fees.difference}
+            divider={false}
+            valueClassName={valueClass(fees.difference, "tabular type-body text-accent")}
+            testId="fee-difference"
+          />
+          <p className="type-caption text-fg-3 mt-4">The 10% rate is an illustration, not a quote.</p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

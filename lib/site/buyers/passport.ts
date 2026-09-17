@@ -147,7 +147,7 @@ export const BUYER_TYPES = [
   "Family office",
   "Private equity firm",
   "Strategic acquirer",
-]
+] as const
 
 export interface BuyerRegistration {
   name: string
@@ -166,7 +166,7 @@ export interface BuyerRegistration {
 export const EMPTY_BUYER_REGISTRATION: BuyerRegistration = {
   name: "",
   firm: "",
-  buyerType: BUYER_TYPES[0] ?? "",
+  buyerType: BUYER_TYPES[0],
   targetSize: "",
   geography: "",
   industries: "",
@@ -203,3 +203,18 @@ export function buyerRegistrationBody(r: BuyerRegistration): string {
     "\n\nPlease send the verification steps."
   )
 }
+
+/**
+ * What the registration confirmation says. The registration is sent either way: when the browser refuses
+ * the clipboard the confirmation drops the claim that the text was copied and names the draft instead.
+ */
+export const BUYER_SENT_COPY = {
+  copied: {
+    lead: "Your email app opened with the registration filled in. Send it to begin. The text has also been copied.",
+    line: `If your email app did not open, paste the copied registration into a message to ${CONTACT.buyers}.`,
+  },
+  notCopied: {
+    lead: "Your email app opened with the registration filled in. Send it to begin.",
+    line: "We could not copy the registration. The draft in your email app carries it.",
+  },
+} as const

@@ -13,7 +13,7 @@ type Props = Omit<Extract<ButtonProps, { href?: undefined }>, "onClick" | "child
 export function AdvisorCtaButton({ children = "Talk to an M&A advisor", ...rest }: Props) {
   const { openAdvisor } = useAdvisor()
   return (
-    <Button onClick={openAdvisor} data-testid="open-advisor" {...rest}>
+    <Button onClick={() => openAdvisor()} data-testid="open-advisor" {...rest}>
       {children}
     </Button>
   )
@@ -27,7 +27,7 @@ export function AdvisorTrigger({
 }: { children: ReactNode; className?: string } & Omit<React.ComponentPropsWithoutRef<"button">, "onClick">) {
   const { openAdvisor } = useAdvisor()
   return (
-    <button type="button" onClick={openAdvisor} className={className} data-testid="open-advisor" {...rest}>
+    <button type="button" onClick={() => openAdvisor()} className={className} data-testid="open-advisor" {...rest}>
       {children}
     </button>
   )
